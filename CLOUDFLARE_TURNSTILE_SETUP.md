@@ -6,6 +6,19 @@ This guide walks you through setting up Cloudflare Turnstile for bot protection 
 
 Cloudflare Turnstile is a privacy-first, CAPTCHA alternative that protects your forms from bots and automated attacks. It provides a better user experience than traditional CAPTCHAs while maintaining strong security.
 
+## Features Implemented
+
+### 1. First Visit Verification (NEW!)
+- **What**: Shows Turnstile verification on every user's first visit to the website
+- **Why**: Prevents bot traffic from scraping or accessing your site
+- **Duration**: Verification is valid for 24 hours (stored in localStorage)
+- **UX**: Users only need to verify once every 24 hours, seamless after that
+
+### 2. Login/Signup Form Protection
+- **What**: Turnstile widget on authentication forms
+- **Why**: Prevents automated account creation and credential stuffing attacks
+- **UX**: Widget appears on forms, usually verifies automatically
+
 ## Prerequisites
 
 - A Cloudflare account (free tier works)
@@ -114,25 +127,39 @@ vercel env pull .env.local
    npm start
    ```
 
-2. **Open Authentication Page**
+2. **Test First Visit Verification**
+   - Open site in new/incognito browser window
+   - You should see full-screen verification screen
+   - Complete Turnstile challenge (usually automatic)
+   - You'll be redirected to the app
+   - Refresh page - no verification needed (cached)
+   - Wait 24 hours or clear localStorage to test again
+
+3. **Test Authentication Pages**
    - Navigate to login/signup page
    - You should see the Cloudflare Turnstile widget (dark theme)
    - It may be a checkbox or may auto-verify
 
-3. **Check Browser Console**
+4. **Check Browser Console**
    - Open Developer Tools (F12)
    - Check console for any Turnstile-related errors
    - Should see no warnings about missing keys
 
 ### Backend Verification
 
-1. **Test Signup Flow**
+1. **Test First Visit Verification**
+   - Open site in incognito window
+   - Complete verification
+   - Check Network tab for `/api/auth?action=verify-first-visit` call
+   - Should return `{"success": true, "message": "First visit verified successfully"}`
+
+2. **Test Signup Flow**
    - Try creating a new account
    - Complete the Turnstile challenge
    - Submit the form
    - Should succeed without captcha errors
 
-2. **Test Login Flow**
+3. **Test Login Flow**
    - Try logging in
    - Complete the Turnstile challenge
    - Submit the form

@@ -2,6 +2,22 @@
 
 A modern e-commerce platform for gaming account sales and rentals, built with React, TypeScript, and Supabase.
 
+## 📊 System Health Status
+
+**Last Updated:** December 14, 2025  
+**Overall Health:** 7.2/10
+
+| Category | Status | Score | Priority Actions |
+|----------|--------|-------|-----------------|
+| Security | ⚠️ Needs Attention | 6.5/10 | Fix 25 vulnerabilities |
+| Performance | ⚠️ Needs Attention | 5.8/10 | Optimize 56+ queries |
+| Code Quality | ✅ Good | 7.8/10 | Enable strict mode |
+| Architecture | ✅ Good | 8.2/10 | Reduce service duplication |
+
+📖 **[View Full Analysis Report](./SYSTEM_ANALYSIS_REPORT.md)** | 🎯 **[See Action Plan](./RECOMMENDATIONS_AND_ACTION_PLAN.md)** | ⚡ **[Quick Start](./QUICK_START_IMMEDIATE_ACTIONS.md)**
+
+---
+
 ## Features
 
 - 🎮 Gaming account marketplace
@@ -140,10 +156,25 @@ See [SECRET_MANAGEMENT_GUIDELINES.md](./SECRET_MANAGEMENT_GUIDELINES.md) for com
 
 ## 📖 Documentation
 
+### 🎯 Getting Started (Start Here!)
+- **[Quick Start Guide](./QUICK_START_IMMEDIATE_ACTIONS.md)** - ⚡ Execute these steps first (30 min)
+- **[System Analysis Report](./SYSTEM_ANALYSIS_REPORT.md)** - 📊 Complete health check and current status
+- **[Recommendations & Action Plan](./RECOMMENDATIONS_AND_ACTION_PLAN.md)** - 🎯 Prioritized improvement roadmap
+
+### 🔐 Security & Configuration
 - [Cloudflare Turnstile Setup](./CLOUDFLARE_TURNSTILE_SETUP.md) - Complete guide for bot protection setup
 - [Secret Management Guidelines](./SECRET_MANAGEMENT_GUIDELINES.md) - Comprehensive security documentation
-- [Security Performance Fixes](./SECURITY_PERFORMANCE_FIXES.md) - Recent security improvements
-- [Final App Review](./FINAL_APP_REVIEW.md) - Complete system status
+- [Critical Missing Environment Variables](./CRITICAL_MISSING_ENV_VARS.md) - Required configuration
+
+### ⚡ Performance & Optimization
+- [Supabase Cache Egress Optimization](./SUPABASE_CACHE_EGRESS_OPTIMIZATION.md) - Database query optimization guide
+- [Cache Optimization Implementation](./CACHE_OPTIMIZATION_IMPLEMENTATION_SUMMARY.md) - Performance improvements
+
+### 📋 Feature Documentation
+- [GTM Implementation Plan](./GTM_IMPLEMENTATION_PLAN.md) - Google Tag Manager setup
+- [Enhanced WhatsApp Rental Messaging](./ENHANCED_WHATSAPP_RENTAL_MESSAGING.md) - Notification system
+- [Product Archive Visibility Fix](./PRODUCT_ARCHIVE_VISIBILITY_FIX.md) - Product management
+- [See all documentation files](.) - 30+ specialized guides available
 
 ## 🛠️ Development
 

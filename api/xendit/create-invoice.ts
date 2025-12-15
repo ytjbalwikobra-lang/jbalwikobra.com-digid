@@ -86,7 +86,7 @@ async function createOrderNotification(sb: any, orderId: string, customerName: s
     const { data, error } = await sb
       .from('admin_notifications')
       .insert(notification)
-      .select('*')
+      .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read')
       .single();
 
     if (error) {
@@ -163,7 +163,7 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       console.log('[createOrderIfProvided] Checking for existing order with client_external_id:', clientExternalId);
       const existingRes = await sb
         .from('orders')
-        .select('*')
+        .select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id')
         .eq('client_external_id', clientExternalId)
         .limit(1);
       if (existingRes.error) {
@@ -192,7 +192,7 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
             user_id: payload.user_id,
           })
           .eq('id', existing.id)
-          .select('*')
+          .select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id')
           .single();
         if (upd) console.log('[createOrderIfProvided] Updated existing order successfully');
         return upd || existing;
@@ -205,7 +205,7 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       const { data, error } = await sb
         .from('orders')
         .upsert(payload, { onConflict: 'client_external_id' })
-        .select('*')
+        .select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id')
         .single();
       if (error) {
         console.error('[createOrderIfProvided] Upsert error:', error);
@@ -246,7 +246,7 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       return data;
     } else {
       console.log('[createOrderIfProvided] Inserting new order without client_external_id');
-      const { data, error } = await sb.from('orders').insert(payload).select('*').single();
+      const { data, error } = await sb.from('orders').insert(payload).select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id').single();
       if (error) {
         console.error('[createOrderIfProvided] Insert error:', error);
         throw error;

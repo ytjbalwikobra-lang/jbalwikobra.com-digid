@@ -326,7 +326,7 @@ export class ProductService {
       if (error && (error as any).message !== 'REL_SKIP') {
         console.warn('Products relational select failed, trying basic select');
       }
-      let q2: any = supabase.from('products').select('*');
+      let q2: any = supabase.from('products').select('id, name, description, price, original_price, image, images, category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, stock, is_active, archived_at, created_at, updated_at');
       if (!opts?.includeArchived) {
         q2 = q2.eq('is_active', true).is('archived_at', null);
       }
@@ -340,7 +340,7 @@ export class ProductService {
       const categoriesMap = new Map<string, any>();
       if (allCatIds.length) {
         try {
-          const { data: cats } = await supabase.from('categories').select('*').in('id', allCatIds);
+          const { data: cats } = await supabase.from('categories').select('id, name, slug, description, icon, color, is_active, sort_order').in('id', allCatIds);
           for (const c of cats || []) categoriesMap.set(c.id, c);
         } catch (_) { /* ignore */ }
       }
@@ -350,7 +350,7 @@ export class ProductService {
       try {
         const ids = (basic || []).map((p: any) => p.id);
         if (ids.length) {
-          const { data: ros } = await supabase.from('rental_options').select('*').in('product_id', ids);
+          const { data: ros } = await supabase.from('rental_options').select('id, product_id, duration, price, description').in('product_id', ids);
           for (const ro of ros || []) {
             const arr = rentalsByProduct.get(ro.product_id) || [];
             arr.push(ro);
@@ -599,7 +599,7 @@ export class ProductService {
         }
         const { data: basic, error: err2 } = await supabase
           .from('flash_sales')
-          .select('*')
+          .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at, updated_at')
           .eq('is_active', true)
           .gte('end_time', new Date().toISOString())
           .order('end_time', { ascending: true }); // Sort by nearest countdown end first
@@ -622,7 +622,7 @@ export class ProductService {
         }
         hasFlashSaleJoin = false;
   const ids = (basic || []).map((b: any) => b.product_id);
-        const { data: prods } = await supabase.from('products').select('*').in('id', ids);
+        const { data: prods } = await supabase.from('products').select('id, name, description, price, original_price, image, images, category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, stock, is_active, archived_at, created_at, updated_at').in('id', ids);
         // Best-effort fetch rental options to derive hasRental when has_rental column is absent
   const rentalsMap = new Map<string, number>();
         try {
@@ -777,7 +777,7 @@ export class ProductService {
       const nowIso = new Date().toISOString();
       const { data, error } = await supabase
         .from('flash_sales')
-        .select('*')
+        .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at, updated_at')
         .eq('product_id', productId)
         .eq('is_active', true)
         .lte('start_time', nowIso)
@@ -794,10 +794,10 @@ export class ProductService {
       if (!data) return null;
 
       return {
-        salePrice: data.sale_price ?? data.salePrice,
-        originalPrice: data.original_price ?? data.originalPrice,
-        endTime: data.end_time ?? data.endTime,
-        startTime: data.start_time ?? data.startTime,
+        salePrice: data.sale_price,
+        originalPrice: data.original_price,
+        endTime: data.end_time,
+        startTime: data.start_time,
       };
     } catch (e) {
       console.error('Error getActiveFlashSaleByProductId:', e);
@@ -1176,7 +1176,7 @@ export class ProductService {
 
       const { data, error } = await supabase
         .from('tiers')
-        .select('*')
+        .select('id, name, slug, description, color, border_color, background_gradient, icon, price_range_min, price_range_max, is_active, sort_order, created_at, updated_at')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
@@ -1221,7 +1221,7 @@ export class ProductService {
 
       const { data, error } = await supabase
         .from('game_titles')
-        .select('*')
+        .select('id, slug, name, description, icon, color, logo_url, logo_path, is_popular, is_active, sort_order, created_at, updated_at')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 

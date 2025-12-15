@@ -239,7 +239,7 @@ class AdminService {
       if (externalIds.length > 0) {
         const { data: paymentsData, error: paymentsError } = await supabase
           .from('payments')
-          .select('*')
+          .select('external_id, xendit_id, payment_method, status, payment_data, created_at, expiry_date')
           .in('external_id', externalIds);
 
         if (!paymentsError && paymentsData) {
@@ -311,7 +311,7 @@ class AdminService {
         .from('products')
         .update(updatePayload)
         .eq('id', id)
-        .select('*')
+        .select('id, name, description, price, original_price, category_id, game_title, account_level, account_details, stock, is_active, created_at, updated_at, image, images, tier, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, archived_at')
         .single();
       if (error) throw error;
       // map legacy shape to new product interface minimally
@@ -391,7 +391,7 @@ class AdminService {
       if (orderData.client_external_id) {
         const { data: paymentData } = await supabase
           .from('payments')
-          .select('*')
+          .select('external_id, xendit_id, payment_method, status, payment_data, created_at, expiry_date')
           .eq('external_id', orderData.client_external_id)
           .single();
         paymentRecord = paymentData;
@@ -527,7 +527,7 @@ class AdminService {
     try {
       const { data, error } = await supabase
         .from('banners')
-        .select('*')
+        .select('id, title, subtitle, image_url, link_url, cta_text, sort_order, is_active, created_at, updated_at')
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -946,7 +946,7 @@ export const adminService = {
       if (externalIds.length > 0) {
         const { data: payments } = await supabase
           .from('payments')
-          .select('*')
+          .select('external_id, xendit_id, payment_method, status, payment_data, created_at, expiry_date')
           .in('external_id', externalIds);
         
         if (payments) {
@@ -1611,7 +1611,7 @@ export const adminService = {
       try {
         const { data, error } = await supabase
           .from('admin_notifications')
-          .select('*')
+          .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read')
           .order('created_at', { ascending: false })
           .range((page - 1) * limit, page * limit - 1);
 
@@ -1715,7 +1715,7 @@ export const adminService = {
     // Remove relational selects; search only local columns
     const { data } = await supabase
       .from('orders')
-      .select('*')
+      .select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id')
       .or(`id.ilike.%${query}%,customer_name.ilike.%${query}%,customer_email.ilike.%${query}%`)
       .limit(10);
 
@@ -1740,7 +1740,7 @@ export const adminService = {
   async searchUsers(query: string): Promise<User[]> {
     const { data } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, name, avatar_url, phone, created_at, is_admin, last_login')
       .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
       .limit(10);
     
@@ -1750,7 +1750,7 @@ export const adminService = {
   async searchProducts(query: string): Promise<Product[]> {
     const { data } = await supabase
       .from('products')
-      .select('*')
+      .select('id, name, description, price, original_price, category_id, game_title, account_level, account_details, stock, is_active, created_at, updated_at, image, images, tier, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, archived_at')
       .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
       .limit(10);
     
@@ -1761,7 +1761,7 @@ export const adminService = {
     try {
       const { data } = await supabase
         .from('reviews')
-        .select('*')
+        .select('id, product_id, user_id, rating, comment, created_at')
         .or(`comment.ilike.%${query}%`)
         .limit(10);
 

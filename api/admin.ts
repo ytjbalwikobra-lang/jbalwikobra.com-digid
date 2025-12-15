@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { setCacheHeaders, CacheStrategies } from './_utils/cacheControl';
 
 // Lazy supabase client (service role preferred for admin operations)
 const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
@@ -26,15 +27,15 @@ function rateLimit(key: string): boolean {
 function respond(res: VercelResponse, status: number, body: any, cacheSeconds: number = 0) {
   res.setHeader('Content-Type', 'application/json');
   
-  // Add cache headers for successful responses
+  // Add cache headers for successful responses using new caching utility
   if (status === 200 && cacheSeconds > 0) {
-    res.setHeader('Cache-Control', `public, s-maxage=${cacheSeconds}, stale-while-revalidate=${cacheSeconds * 2}`);
+    setCacheHeaders(res, { maxAge: cacheSeconds, staleWhileRevalidate: cacheSeconds * 2 });
   } else if (status === 200) {
     // No cache for real-time data or mutations
-    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    setCacheHeaders(res, CacheStrategies.NoCache);
   } else {
     // Don't cache errors
-    res.setHeader('Cache-Control', 'no-store');
+    setCacheHeaders(res, CacheStrategies.NoCache);
   }
   
   res.status(status).send(JSON.stringify(body));

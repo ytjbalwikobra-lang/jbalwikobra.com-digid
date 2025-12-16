@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Check orders table by client_external_id
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
-      .select('*')
+      .select('id, customer_name, customer_email, amount, status, payment_method, xendit_invoice_id, client_external_id, created_at, order_type, product_id')
       .eq('client_external_id', external_id)
       .single();
 

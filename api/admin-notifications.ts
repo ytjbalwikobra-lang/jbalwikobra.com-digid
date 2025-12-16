@@ -38,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const limit = parseLimit(req.query.limit, 10);
       const { data, error } = await sb
         .from('admin_notifications')
-        .select('*')
+        .select('id, type, title, message, order_id, user_id, product_name, amount, customer_name, created_at, is_read, metadata')
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) return respond(res, 500, { error: 'db_error', details: error.message });

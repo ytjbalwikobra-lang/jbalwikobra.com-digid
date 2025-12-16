@@ -127,7 +127,7 @@ export class SettingsService {
       console.log('🌐 Fetching from database...');
       const { data, error } = await (supabase as any)
         .from('website_settings')
-        .select('*')
+        .select('id, site_name, logo_url, favicon_url, contact_email, support_email, contact_phone, whatsapp_number, address, business_hours, company_description, facebook_url, instagram_url, tiktok_url, youtube_url, twitter_url, hero_title, hero_subtitle, footer_copyright_text, newsletter_enabled, social_media_enabled, topup_game_url, whatsapp_channel_url, hero_button_url, jual_akun_whatsapp_url, updated_at')
         .limit(1)
         .maybeSingle();
         

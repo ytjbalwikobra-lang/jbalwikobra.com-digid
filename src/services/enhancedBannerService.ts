@@ -46,7 +46,7 @@ export class EnhancedBannerService {
           if (supabase) {
             const { data, error } = await supabase
               .from('banners')
-              .select('*')
+              .select('id, title, subtitle, image_url, link_url, sort_order, is_active, created_at, updated_at')
               .order('sort_order', { ascending: true });
 
             if (error) {
@@ -124,7 +124,7 @@ export class EnhancedBannerService {
           if (supabase) {
             const { data, error } = await supabase
               .from('banners')
-              .select('*')
+              .select('id, title, subtitle, image_url, link_url, sort_order, is_active, created_at, updated_at')
               .eq('is_active', true)
               .order('sort_order', { ascending: true });
 

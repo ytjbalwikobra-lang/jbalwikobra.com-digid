@@ -30,7 +30,7 @@ class AdminNotificationService {
         if (supabase) {
           const { data, error } = await supabase
             .from('admin_notifications')
-            .select('*')
+            .select('id, type, title, message, order_id, user_id, product_name, amount, customer_name, created_at, is_read, metadata')
             .order('created_at', { ascending: false })
             .limit(limit);
 
@@ -400,7 +400,7 @@ class AdminNotificationService {
       // First, check if notification exists and current state
       const { data: beforeData, error: beforeError } = await supabase
         .from('admin_notifications')
-        .select('*')
+        .select('id, type, title, message, is_read, created_at')
         .eq('id', notificationId)
         .single();
       
@@ -435,7 +435,7 @@ class AdminNotificationService {
       // Verify the update
       const { data: afterData, error: afterError } = await supabase
         .from('admin_notifications')
-        .select('*')
+        .select('id, type, title, message, is_read, created_at, updated_at')
         .eq('id', notificationId)
         .single();
       

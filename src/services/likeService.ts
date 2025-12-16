@@ -58,7 +58,7 @@ class LikeService {
       // Check if current user/IP has liked
       const { data: userLike, error: userError } = await supabase
         .from('product_likes')
-        .select('*')
+        .select('id, product_id, user_id, ip_address')
         .eq('product_id', productId)
         .or(userId ? `user_id.eq.${userId},ip_address.eq.${ip}` : `ip_address.eq.${ip}`)
         .maybeSingle();
@@ -86,7 +86,7 @@ class LikeService {
       // Check if already liked
       const { data: existingLike, error: checkError } = await supabase
         .from('product_likes')
-        .select('*')
+        .select('id, product_id, user_id, ip_address')
         .eq('product_id', productId)
         .or(userId ? `user_id.eq.${userId},ip_address.eq.${ip}` : `ip_address.eq.${ip}`)
         .maybeSingle();

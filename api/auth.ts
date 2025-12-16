@@ -215,7 +215,7 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
     console.log('Attempting to find user in database...');
     const { data: users, error: userError } = await supabaseClient
       .from('users')
-      .select('*')
+      .select('id, email, phone, name, password_hash, is_admin, is_active, created_at')
       .or(`phone.eq.${identifier},email.eq.${identifier}`);
 
     if (userError) {
@@ -479,7 +479,7 @@ async function handleVerifyPhone(req: VercelRequest, res: VercelResponse) {
     // Find verification record
     const { data: verifications, error: verificationError } = await getSupabase()
       .from('phone_verifications')
-      .select('*')
+      .select('id, user_id, phone, verification_code, expires_at, is_used, created_at')
       .eq('user_id', user_id)
       .eq('verification_code', verification_code)
       .eq('is_used', false);

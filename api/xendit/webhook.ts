@@ -77,7 +77,7 @@ async function createOrderNotification(sb: any, orderId: string, customerName: s
     const { data, error } = await sb
       .from('admin_notifications')
       .insert(notification)
-      .select('*')
+      .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read, metadata')
       .single();
 
     if (error) {

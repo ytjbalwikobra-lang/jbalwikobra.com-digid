@@ -226,7 +226,7 @@ class OptimizedProductService {
 
       const { data, error } = await supabase
         .from('tiers')
-        .select('*')
+        .select('id, name, slug, description, color, border_color, background_gradient, icon, price_range_min, price_range_max, is_active, sort_order, created_at, updated_at')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 

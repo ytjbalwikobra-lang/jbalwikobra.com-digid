@@ -104,7 +104,7 @@ class AdminService {
     try {
       const { data, error } = await this.client
         .from('orders')
-        .select('*')
+        .select('id, product_id, customer_name, customer_email, customer_phone, order_type, amount, status, payment_method, rental_duration, created_at, updated_at, user_id, xendit_invoice_id, xendit_invoice_url, currency, expires_at, paid_at, payment_channel, payer_email, payer_phone, client_external_id')
         .eq('id', id)
         .single();
 
@@ -232,7 +232,7 @@ class AdminService {
       // Get all orders for calculations
       const { data: orders, error: ordersError } = await this.client
         .from('orders')
-        .select('*')
+        .select('id, amount, customer_email, created_at')
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
@@ -269,7 +269,7 @@ class AdminService {
     try {
       const { data, error } = await this.client
         .from('orders')
-        .select('*')
+        .select('id, product_id, customer_name, customer_email, customer_phone, order_type, amount, status, payment_method, rental_duration, created_at, updated_at, user_id, xendit_invoice_id, xendit_invoice_url, currency, expires_at, paid_at, payment_channel, payer_email, payer_phone, client_external_id')
         .or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,customer_phone.ilike.%${query}%,id.ilike.%${query}%`)
         .order('created_at', { ascending: false })
         .limit(50);

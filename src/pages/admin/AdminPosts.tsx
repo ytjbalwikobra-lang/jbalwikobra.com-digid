@@ -258,7 +258,7 @@ const AdminPosts: React.FC = () => {
       
       const { data, error } = await supabase
         .from('feed_posts')
-        .select('*')
+        .select('id, content, image_url, user_id, created_at, updated_at, is_deleted, likes_count, comments_count')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
@@ -317,7 +317,7 @@ const AdminPosts: React.FC = () => {
           comments_count: 0,
           is_deleted: false
         }])
-        .select('*')
+        .select('id, content, image_url, user_id, created_at, updated_at, is_deleted, likes_count, comments_count')
         .single();
         
       if (error) throw error;

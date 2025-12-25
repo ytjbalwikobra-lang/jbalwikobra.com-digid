@@ -32,7 +32,16 @@ const PaymentStatusPage: React.FC = () => {
       setAuthed(ok);
       if (!supabase) { setLoading(false); return; }
       if (orderId) {
-  const { data } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
+  const { data } = await supabase
+    .from('orders')
+    .select(
+      'id, customer_name, product_name, amount, status, order_type, ' +
+      'rental_duration, created_at, updated_at, user_id, product_id, ' +
+      'customer_email, customer_phone, payment_method, ' +
+      'xendit_invoice_id, client_external_id'
+    )
+    .eq('id', orderId)
+    .maybeSingle();
         setOrder(data as any);
         setLoading(false);
         return;
@@ -41,7 +50,12 @@ const PaymentStatusPage: React.FC = () => {
       if (ok) {
         const { data } = await supabase
           .from('orders')
-          .select('*')
+          .select(
+            'id, customer_name, product_name, amount, status, order_type, ' +
+            'rental_duration, created_at, updated_at, user_id, product_id, ' +
+            'customer_email, customer_phone, payment_method, ' +
+            'xendit_invoice_id, client_external_id'
+          )
           .order('created_at', { ascending: false })
           .limit(1);
         setOrder((data && data[0]) as any);

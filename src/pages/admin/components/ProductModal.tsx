@@ -111,7 +111,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               try {
                 const { data: rentalOptions } = await supabase
                   .from('rental_options')
-                  .select('*')
+                  .select('id, product_id, duration_days, display_label, price_modifier, created_at')
                   .eq('product_id', product.id)
                   .order('id');
                 existingRentalOptions = rentalOptions || [];

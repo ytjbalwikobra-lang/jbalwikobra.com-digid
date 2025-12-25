@@ -227,7 +227,7 @@ const AdminGameTitles: React.FC = () => {
 
       const { data, error } = await supabase
         .from('game_titles')
-        .select('*')
+        .select('id, name, slug, icon, sort_order, is_active, created_at, updated_at')
         .order('sort_order', { ascending: true });
 
       if (error) throw error;

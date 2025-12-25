@@ -18,7 +18,7 @@ function getSupabase() {
 async function getActiveProvider(supabase: any) {
   const { data, error } = await supabase
     .from('whatsapp_providers')
-    .select('*')
+    .select('id, name, api_url, is_active, created_at')
     .eq('is_active', true)
     .order('name')
     .limit(1)
@@ -32,7 +32,7 @@ async function handleValidation(sb: any, res: VercelResponse) {
     // Get active provider
     const { data: provider, error: pErr } = await sb
       .from('whatsapp_providers')
-      .select('*')
+      .select('id, name, api_url, is_active, created_at')
       .eq('is_active', true)
       .order('name')
       .limit(1)

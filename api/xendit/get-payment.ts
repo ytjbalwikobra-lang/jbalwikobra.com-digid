@@ -224,7 +224,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // If not in payments table, check orders table by xendit_invoice_id
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
-      .select('*')
+      .select('id, xendit_invoice_id, status, payment_channel, payment_method, amount, customer_name, customer_email, created_at')
       .eq('xendit_invoice_id', id)
       .single();
 

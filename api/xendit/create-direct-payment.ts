@@ -62,7 +62,7 @@ async function createOrderRecord(order: any, externalId: string, paymentMethodId
     const { data, error } = await supabase
       .from('orders')
       .insert(orderPayload)
-      .select('*')
+      .select('id, customer_name, customer_email, customer_phone, amount, status, order_type, rental_duration, product_id, created_at, client_external_id')
       .single();
 
     if (error) {
@@ -1062,7 +1062,7 @@ async function createNewOrderAdminNotification(sb: any, orderId: string, custome
     const { data, error } = await sb
       .from('admin_notifications')
       .insert(notification)
-      .select('*')
+      .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read, metadata')
       .single();
 
     if (error) {

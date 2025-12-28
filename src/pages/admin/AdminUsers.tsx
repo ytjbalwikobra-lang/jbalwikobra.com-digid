@@ -234,7 +234,15 @@ const AdminUsers: React.FC = () => {
         throw new Error(result.error || 'Failed to fetch users');
       }
       
-      setUsers(result.data || []);
+      // Map API response to UserRow format
+      const mappedUsers = (result.data || []).map((user: any) => ({
+        ...user,
+        full_name: user.name || user.full_name || 'Unknown',
+        role: user.is_admin ? 'admin' : 'user',
+        last_sign_in_at: user.last_login || null
+      }));
+      
+      setUsers(mappedUsers);
     } catch (e: any) {
       const message = e?.message || String(e);
       setError(message);

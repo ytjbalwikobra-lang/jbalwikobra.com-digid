@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/**/*": {
+      "includeFiles": "api/package.json"
+    }
+  },
   "rewrites": [
     {
       "source": "/:path((?!api/).*)",

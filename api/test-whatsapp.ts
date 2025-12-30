@@ -25,31 +25,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('[Test WhatsApp] Checking database configuration...');
 
-    // Check whatsapp_providers
-    const { data: providers, error: provErr } = await sb
+    // Check ALL whatsapp_providers (active and inactive)
+    const { data: allProviders, error: provErr } = await sb
       .from('whatsapp_providers')
       .select('*')
-      .eq('is_active', true)
       .order('created_at', { ascending: false });
+      
+    const providers = allProviders?.filter(p => p.is_active);
 
-    // Check whatsapp_api_keys
-    const { data: apiKeys, error: keyErr } = await sb
+    // Check ALL whatsapp_api_keys (active and inactive)
+    const { data: allKeys, error: keyErr } = await sb
       .from('whatsapp_api_keys')
       .select('*')
-      .eq('is_active', true)
       .order('is_primary', { ascending: false });
+      
+    const apiKeys = allKeys?.filter(k => k.is_active);
 
     console.log('[Test WhatsApp] Providers found:', providers?.length || 0);
     console.log('[Test WhatsApp] API Keys found:', apiKeys?.length || 0);
 
     const dbCheck = {
       providers: {
-        count: providers?.length || 0,
+        total: allProviders?.length || 0,
+        active_count: providers?.length || 0,
+        inactive_count: (allProviders?.length || 0) - (providers?.length || 0),
         data: providers || [],
+        all_providers: allProviders || [],
         error: provErr?.message || null
       },
       api_keys: {
-        count: apiKeys?.length || 0,
+        total: allKeys?.length || 0,
+        active_count: apiKeys?.length || 0,
+        inactive_count: (allKeys?.length || 0) - (apiKeys?.length || 0),
         data: apiKeys?.map(k => ({
           id: k.id,
           provider_id: k.provider_id,
@@ -57,6 +64,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           is_primary: k.is_primary,
           has_api_key: !!k.api_key,
           api_key_length: k.api_key?.length || 0
+        })) || [],
+        all_keys: allKeys?.map(k => ({
+          id: k.id,
+          provider_id: k.provider_id,
+          is_active: k.is_active,
+          is_primary: k.is_primary,
+          has_api_key: !!k.api_key
         })) || [],
         error: keyErr?.message || null
       }

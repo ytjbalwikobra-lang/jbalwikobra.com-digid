@@ -134,7 +134,7 @@ async function dashboardStats() {
     let pending = 0;
     
     (orderStats || []).forEach(order => {
-      const amount = Number(order.amount) || 0;
+      const amount = Number(order.total_amount) || 0;
       const status = (order.status || '').toLowerCase();
       
       if (status === 'completed' || status === 'paid') {

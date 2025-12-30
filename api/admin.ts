@@ -76,6 +76,7 @@ async function dashboardStats() {
   
   try {
     console.log('🔍 [API /api/admin] dashboardStats: Querying database...');
+    console.log('🔑 [API /api/admin] Using Supabase key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
     
     // Use optimized approach with separate queries and error handling
     const [ordersRes, usersRes, productsRes] = await Promise.all([
@@ -187,6 +188,9 @@ async function recentNotifications(limit: number) {
 }
 
 async function listOrders(page: number, limit: number, status?: string) {
+  console.log('📦 [API /api/admin] listOrders: page', page, 'limit', limit, 'status', status);
+  console.log('🔑 [API /api/admin] Using key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
+  
   if (!supabase) return { data: [], count: 0, page };
   const from = (page - 1) * limit; const to = from + limit - 1;
   
@@ -201,7 +205,18 @@ async function listOrders(page: number, limit: number, status?: string) {
     }
   }
   const { data: orders, error, count } = await query;
-  if (error) return { data: [], count: 0, page };
+  
+  console.log('📊 [API /api/admin] listOrders result:', {
+    count,
+    ordersLength: orders?.length,
+    hasError: !!error,
+    errorMessage: error?.message
+  });
+  
+  if (error) {
+    console.error('❌ [API /api/admin] listOrders error:', error);
+    return { data: [], count: 0, page };
+  }
   
   // Get payment data for these orders
   const orderRows = orders || [];
@@ -271,6 +286,9 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
 }
 
 async function listUsers(page: number, limit: number, search?: string) {
+  console.log('👥 [API /api/admin] listUsers: page', page, 'limit', limit, 'search', search);
+  console.log('🔑 [API /api/admin] Using key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
+  
   if (!supabase) {
     console.error('[listUsers] Supabase client not initialized');
     return { data: [], count: 0, page };
@@ -292,6 +310,14 @@ async function listUsers(page: number, limit: number, search?: string) {
   }
   
   const { data, error, count } = await query;
+  
+  console.log('📊 [API /api/admin] listUsers result:', {
+    count,
+    dataLength: data?.length,
+    hasError: !!error,
+    errorMessage: error?.message,
+    sampleUser: data?.[0] ? { id: data[0].id, email: data[0].email } : null
+  });
   
   if (error) {
     console.error('[listUsers] Query error:', error);

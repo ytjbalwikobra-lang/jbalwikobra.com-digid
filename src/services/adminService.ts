@@ -1083,9 +1083,15 @@ export const adminService = {
         });
         if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
 
+        const sessionToken = localStorage.getItem('session_token');
+        const headers: Record<string, string> = { 'Accept': 'application/json' };
+        if (sessionToken) {
+          headers['Authorization'] = `Bearer ${sessionToken}`;
+        }
+        
         const resp = await fetch(`/api/admin?${params.toString()}`, {
           method: 'GET',
-          headers: { 'Accept': 'application/json' }
+          headers
         });
 
         if (resp.ok) {
@@ -1229,9 +1235,15 @@ export const adminService = {
         });
         if (searchTerm) params.set('search', searchTerm);
 
+        const sessionToken = localStorage.getItem('session_token');
+        const headers: Record<string, string> = { 'Accept': 'application/json' };
+        if (sessionToken) {
+          headers['Authorization'] = `Bearer ${sessionToken}`;
+        }
+        
         const resp = await fetch(`/api/admin?${params.toString()}`, {
           method: 'GET',
-          headers: { 'Accept': 'application/json' }
+          headers
         });
 
         if (resp.ok) {
@@ -2055,11 +2067,18 @@ export const adminService = {
     try {
       console.log('[adminService.getDashboardStats] Calling /api/admin endpoint...');
       
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       const response = await fetch('/api/admin?action=dashboard-stats', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       if (!response.ok) {

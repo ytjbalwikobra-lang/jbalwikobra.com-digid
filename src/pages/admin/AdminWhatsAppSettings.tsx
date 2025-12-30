@@ -79,7 +79,13 @@ const AdminWhatsAppSettings: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/admin-whatsapp');
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const res = await fetch('/api/admin-whatsapp', { headers });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load provider');
       setProvider(data);
@@ -121,7 +127,13 @@ const AdminWhatsAppSettings: React.FC = () => {
   const loadGroups = async () => {
     setLoadingGroups(true);
     try {
-      const res = await fetch('/api/admin-whatsapp-groups');
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const res = await fetch('/api/admin-whatsapp-groups', { headers });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load groups');
       setGroups(data.groups || []);
@@ -151,9 +163,15 @@ const AdminWhatsAppSettings: React.FC = () => {
     setError('');
     setInfo('');
     try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       const res = await fetch('/api/admin-whatsapp', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           default_group_id: defaultGroupId || null,
           group_configurations: groupConfigurations

@@ -67,7 +67,13 @@ export class AdminService {
 
   static async fetchOrders(limit: number = 10): Promise<Order[]> {
     try {
-      const response = await fetch(`/api/admin?action=orders&limit=${limit}`);
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const response = await fetch(`/api/admin?action=orders&limit=${limit}`, { headers });
       if (!response.ok) {
         console.warn('Orders API failed, returning empty array');
         return [];
@@ -82,7 +88,13 @@ export class AdminService {
 
   static async fetchUsers(limit: number = 10): Promise<User[]> {
     try {
-      const response = await fetch(`/api/admin?action=users&limit=${limit}`);
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const response = await fetch(`/api/admin?action=users&limit=${limit}`, { headers });
       if (!response.ok) {
         console.warn('Users API failed, returning empty array');
         return [];

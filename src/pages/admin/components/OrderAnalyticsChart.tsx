@@ -62,7 +62,18 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
       
       // Get real data from API
       const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-      const response = await fetch(`/api/admin?action=time-series&days=${days}`);
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const response = await fetch(`/api/admin?action=time-series&days=${days}`, {
+        headers
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch chart data');

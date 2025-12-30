@@ -280,11 +280,17 @@ const AdminOrders: React.FC = () => {
   // Update order status function
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       const response = await fetch('/api/admin?action=update-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           orderId,
           status: newStatus
@@ -338,8 +344,14 @@ const AdminOrders: React.FC = () => {
     setLoading(true);
     setError('');
     try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       // Fetch more orders to ensure we get all completed orders (increased to 200)
-      const response = await fetch('/api/admin?action=orders&limit=200');
+      const response = await fetch('/api/admin?action=orders&limit=200', { headers });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }

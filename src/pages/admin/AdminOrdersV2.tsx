@@ -266,11 +266,17 @@ const AdminOrdersV2: React.FC = () => {
   // Update order status function
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       const response = await fetch('/api/admin?action=update-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           orderId,
           status: newStatus

@@ -13,12 +13,19 @@ export class SafeAdminService {
 
   static async safeFetch(url: string, options: RequestInit = {}) {
     try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...options.headers as Record<string, string>,
+      };
+      
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       const response = await fetch(url, {
         ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        }
+        headers
       });
 
       if (!response.ok) {

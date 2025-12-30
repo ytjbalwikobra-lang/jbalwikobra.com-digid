@@ -224,7 +224,13 @@ const AdminUsers: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/admin?action=users');
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const response = await fetch('/api/admin?action=users', { headers });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }

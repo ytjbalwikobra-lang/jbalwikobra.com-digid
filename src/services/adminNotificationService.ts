@@ -46,7 +46,13 @@ class AdminNotificationService {
 
       // Fallback to server API proxy using service-role on server
       try {
-        const resp = await fetch(`/api/admin-notifications?action=recent&limit=${encodeURIComponent(String(limit))}`);
+        const sessionToken = localStorage.getItem('session_token');
+        const headers: Record<string, string> = {};
+        if (sessionToken) {
+          headers['Authorization'] = `Bearer ${sessionToken}`;
+        }
+        
+        const resp = await fetch(`/api/admin-notifications?action=recent&limit=${encodeURIComponent(String(limit))}`, { headers });
         if (!resp.ok) throw new Error(`API ${resp.status}`);
         const body = await resp.json();
         const arr = (body?.data || []) as AdminNotification[];
@@ -202,9 +208,15 @@ class AdminNotificationService {
       if (!supabaseAdmin) {
         console.warn('⚠️ Service key client not available on client. Using server API.');
         try {
+          const sessionToken = localStorage.getItem('session_token');
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (sessionToken) {
+            headers['Authorization'] = `Bearer ${sessionToken}`;
+          }
+          
           const resp = await fetch('/api/admin-notifications?action=mark-read', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ id: notificationId })
           });
           if (!resp.ok) throw new Error(`API ${resp.status}`);
@@ -319,7 +331,16 @@ class AdminNotificationService {
       }
 
       // API fallback
-      const resp = await fetch('/api/admin-notifications?action=mark-all', { method: 'POST' });
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const resp = await fetch('/api/admin-notifications?action=mark-all', { 
+        method: 'POST',
+        headers
+      });
       if (!resp.ok) throw new Error(`API ${resp.status}`);
       this.invalidateCache();
       console.log('✅ Cache invalidated after mark all (API)');

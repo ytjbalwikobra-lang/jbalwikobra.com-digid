@@ -151,10 +151,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('[Payment] Order created:', data?.id);
           
           // Send WhatsApp notification to customer about new order
+          console.log('[Payment] Attempting to send WhatsApp notification...');
           if (data && customer?.mobile_number) {
+            console.log('[Payment] Customer mobile number:', customer.mobile_number);
             try {
-              const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService');
+              console.log('[Payment] Loading DynamicWhatsAppService...');
+              const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
               const wa = new DynamicWhatsAppService();
+              console.log('[Payment] WhatsApp service initialized');
               
               // Normalize phone number
               let customerPhone = String(customer.mobile_number || '').replace(/\D/g, '');
@@ -163,7 +167,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
               else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
               
+              console.log('[Payment] Normalized phone:', customerPhone);
+              
               if (/^62\d{8,15}$/.test(customerPhone)) {
+                console.log('[Payment] Phone number valid, preparing message...');
                 const isRental = orderData.order_type === 'rental';
                 const productName = (req.body.product_name as string) || 'Produk Digital';
                 
@@ -227,6 +234,9 @@ Silakan klik link yang dikirim atau check halaman payment
 Terima kasih! 🎮✨`;
 
                 const contextId = `order:${data.id}:created`;
+                console.log('[Payment] Sending WhatsApp message to:', customerPhone);
+                console.log('[Payment] Message length:', message.length);
+                
                 const sendRes = await wa.sendMessage({
                   phone: customerPhone,
                   message,
@@ -234,15 +244,21 @@ Terima kasih! 🎮✨`;
                   contextId
                 });
                 
+                console.log('[Payment] WhatsApp send result:', JSON.stringify(sendRes));
+                
                 if (sendRes.success) {
-                  console.log('[WhatsApp] New order notification sent to customer:', customerPhone);
+                  console.log('[WhatsApp] ✅ New order notification sent to customer:', customerPhone);
                 } else {
-                  console.error('[WhatsApp] Failed to send new order notification:', sendRes.error);
+                  console.error('[WhatsApp] ❌ Failed to send notification:', sendRes.error);
                 }
+              } else {
+                console.warn('[WhatsApp] ⚠️ Invalid phone number format:', customerPhone);
               }
             } catch (waError) {
-              console.error('[WhatsApp] Error sending new order notification:', waError);
+              console.error('[WhatsApp] ❌ Error sending new order notification:', waError);
             }
+          } else {
+            console.log('[Payment] ⚠️ Skipping WhatsApp - No customer mobile number or order data');
           }
         }
       } catch (err) {

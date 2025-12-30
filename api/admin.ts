@@ -425,7 +425,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.log('🎯 [API /api/admin] Handling dashboard-stats request');
         const data = await dashboardStats();
         console.log('📤 [API /api/admin] Sending dashboard-stats response:', JSON.stringify(data, null, 2));
-        return respond(res, 200, data, 60); // Cache for 1 minute
+        return respond(res, 200, data, 0); // No cache - always fresh data
       }
       case 'recent-notifications': {
         const data = await recentNotifications(limit);
@@ -434,12 +434,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'orders': {
         const status = typeof req.query.status === 'string' ? req.query.status : undefined;
         const data = await listOrders(page, limit, status);
-        return respond(res, 200, { success: true, ...data }, 60); // Cache for 1 minute
+        return respond(res, 200, { success: true, ...data }, 0); // No cache - always fresh data
       }
       case 'users': {
         const search = typeof req.query.search === 'string' ? req.query.search : undefined;
         const result = await listUsers(page, limit, search);
-        return respond(res, 200, { success: true, ...result }, 120); // Cache for 2 minutes
+        return respond(res, 200, { success: true, ...result }, 0); // No cache - always fresh data
       }
       case 'products': {
         const search = typeof req.query.search === 'string' ? req.query.search : undefined;

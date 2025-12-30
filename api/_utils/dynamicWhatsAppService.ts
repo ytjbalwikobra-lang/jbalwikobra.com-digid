@@ -115,7 +115,10 @@ export class DynamicWhatsAppService {
    */
   async getActiveProviderSettings(): Promise<any | null> {
     const api = await this.getActiveApiKey();
-    return api?.provider_config?.settings || null;
+    // FIX: Return the full provider_config, not just .settings
+    // The provider_config contains: name, base_url, is_active, send_message_endpoint, etc.
+    // The .settings field is just extra configuration like supports_async, default_group_id
+    return api?.provider_config || null;
   }
 
   /**

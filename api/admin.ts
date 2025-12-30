@@ -118,7 +118,7 @@ async function dashboardStats() {
     console.log('💰 [API /api/admin] dashboardStats: Fetching order statistics...');
     const { data: orderStats, error: statsError } = await supabase
       .from('orders')
-      .select('amount, status')
+      .select('total_amount, status')
       .limit(5000); // Increased limit for better accuracy
     
     if (statsError) {
@@ -134,7 +134,7 @@ async function dashboardStats() {
     let pending = 0;
     
     (orderStats || []).forEach(order => {
-      const amount = Number(order.amount) || 0;
+      const amount = Number(order.total_amount) || 0;
       const status = (order.status || '').toLowerCase();
       
       if (status === 'completed' || status === 'paid') {
@@ -191,7 +191,7 @@ async function listOrders(page: number, limit: number, status?: string) {
   const from = (page - 1) * limit; const to = from + limit - 1;
   
   // First get orders - only select columns that exist in the table
-  let query: any = supabase.from('orders').select('id, customer_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, client_external_id', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
+  let query: any = supabase.from('orders').select('id, customer_name, total_amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, client_external_id, external_id', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
   if (status && status !== 'all') {
     // Handle "completed" status to include both 'paid' and 'completed' orders
     if (status === 'completed') {

@@ -42,7 +42,7 @@
     "eslint-plugin-tailwindcss": "^3.18.2",
     "postcss": "^8.4.47",
     "puppeteer": "^24.22.3",
-    "supabase": "^2.45.5",
+    "supabase": "^2.70.5",
     "tailwindcss": "^3.4.17",
     "vercel": "^48.1.6",
     "webpack-bundle-analyzer": "^4.10.2"

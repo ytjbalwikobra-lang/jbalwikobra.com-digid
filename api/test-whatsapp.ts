@@ -80,6 +80,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { DynamicWhatsAppService } = await import('./_utils/dynamicWhatsAppService.js');
     const wa = new DynamicWhatsAppService();
     
+    // Debug: Call getActiveApiKey directly (private method via any cast)
+    console.log('[Test WhatsApp] Calling getActiveApiKey...');
+    const apiKeyResult = await (wa as any).getActiveApiKey('woo-wa');
+    console.log('[Test WhatsApp] API Key Result:', JSON.stringify(apiKeyResult, null, 2));
+    
     // Get test parameters
     const phone = req.query.phone as string || '6285157768097';
     const message = req.query.message as string || `🧪 *TEST WHATSAPP SERVICE*
@@ -96,10 +101,19 @@ Terima kasih! 🎮`;
     
     // Get provider settings first
     const settings = await wa.getActiveProviderSettings();
+    console.log('[Test WhatsApp] Provider Settings:', JSON.stringify(settings, null, 2));
     
     const result = {
       timestamp: new Date().toISOString(),
       database_check: dbCheck,
+      service_debug: {
+        api_key_result: apiKeyResult ? {
+          has_api_key: !!apiKeyResult.api_key,
+          has_provider_config: !!apiKeyResult.provider_config,
+          provider_name: apiKeyResult.provider_config?.name,
+          provider_has_settings: !!apiKeyResult.provider_config?.settings
+        } : null
+      },
       settings_check: {
         has_settings: !!settings,
         provider: settings?.provider || 'none',

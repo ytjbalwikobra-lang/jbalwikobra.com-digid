@@ -86,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('[Test WhatsApp] API Key Result:', JSON.stringify(apiKeyResult, null, 2));
     
     // Get test parameters
-    const phone = req.query.phone as string || '6285157768094';
+    const phone = req.query.phone as string || '6285157768097';
     const message = req.query.message as string || `🧪 *TEST WHATSAPP SERVICE*
 
 Halo! Ini adalah test message dari JB Alwikobra.

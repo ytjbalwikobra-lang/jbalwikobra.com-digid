@@ -1,0 +1,224 @@
+[36m
+============================================================[0m
+[1m 1. FILE STRUCTURE VALIDATION[0m
+[36m============================================================[0m
+[0m
+Checking required files...[0m
+[32m[32m✓[0m Found: src/pages/PaymentInterface.tsx[0m
+[32m[32m✓[0m Found: src/pages/PaymentStatusPage.tsx[0m
+[32m[32m✓[0m Found: src/pages/OrderHistoryPage.tsx[0m
+[32m[32m✓[0m Found: src/pages/ProductDetailPage.tsx[0m
+[32m[32m✓[0m Found: src/components/public/product-detail/CheckoutModal.tsx[0m
+[32m[32m✓[0m Found: src/components/purchase-form/CustomerInfoForm.tsx[0m
+[32m[32m✓[0m Found: src/components/purchase-form/PaymentMethods.tsx[0m
+[32m[32m✓[0m Found: src/components/purchase-form/PurchaseActions.tsx[0m
+[32m[32m✓[0m Found: api/xendit/create-invoice.ts[0m
+[32m[32m✓[0m Found: api/xendit/create-direct-payment.ts[0m
+[32m[32m✓[0m Found: api/xendit/get-payment.ts[0m
+[32m[32m✓[0m Found: api/xendit/check-order-status.ts[0m
+[32m[32m✓[0m Found: api/xendit/webhook.ts[0m
+[32m[32m✓[0m Found: api/xendit/payment-methods.ts[0m
+[32m[32m✓[0m Found: api/xendit/get-invoice-details.ts[0m
+[32m[32m✓[0m Found: src/services/paymentService.ts[0m
+[32m[32m✓[0m Found: src/services/ordersService.ts[0m
+[32m[32m✓[0m Found: src/services/xenditPaymentService.ts[0m
+[32m[32m✓[0m Found: api/_config/paymentChannels.ts[0m
+[32m[32m✓[0m Found: src/config/paymentMethodConfig.ts[0m
+[32m[32m✓[0m Found: src/__tests__/paymentFlow.test.ts[0m
+[32m[32m✓[0m Found: scripts/test-purchase-flow.ps1[0m
+[32m[32m✓[0m Found: PURCHASE_FLOW_DOCUMENTATION.md[0m
+[36m
+============================================================[0m
+[1m 2. ENVIRONMENT VARIABLES VALIDATION[0m
+[36m============================================================[0m
+[0m
+Checking backend environment variables...[0m
+[33m[33m⚠[0m dotenv not installed, checking environment directly[0m
+[33m[33m⚠[0m XENDIT_SECRET_KEY is not set (may be in deployment platform)[0m
+[33m[33m⚠[0m XENDIT_CALLBACK_TOKEN is not set (may be in deployment platform)[0m
+[33m[33m⚠[0m SUPABASE_URL is not set (may be in deployment platform)[0m
+[33m[33m⚠[0m SUPABASE_SERVICE_ROLE_KEY is not set (may be in deployment platform)[0m
+[0m
+Checking frontend environment variables...[0m
+[33m[33m⚠[0m REACT_APP_SUPABASE_URL is not set (may be in .env.local)[0m
+[33m[33m⚠[0m REACT_APP_SUPABASE_ANON_KEY is not set (may be in .env.local)[0m
+[36m
+============================================================[0m
+[1m 3. PAYMENT METHODS CONFIGURATION[0m
+[36m============================================================[0m
+[0m
+Validating payment method configurations...[0m
+[32m[32m✓[0m Backend config includes QRIS[0m
+[32m[32m✓[0m Backend config includes BNI[0m
+[32m[32m✓[0m Backend config includes BRI[0m
+[32m[32m✓[0m Backend config includes MANDIRI[0m
+[32m[32m✓[0m Backend config includes PERMATA[0m
+[32m[32m✓[0m Backend config includes ASTRAPAY[0m
+[32m[32m✓[0m Backend config includes INDOMARET[0m
+[32m[32m✓[0m Frontend payment config exists[0m
+[36m
+============================================================[0m
+[1m 4. API ENDPOINT STRUCTURE[0m
+[36m============================================================[0m
+[0m
+Validating API endpoint implementations...[0m
+[33m[33m⚠[0m api/xendit/create-invoice.ts missing expected code: createSupabaseClient[0m
+[32m[32m✓[0m api/xendit/webhook.ts structure validated[0m
+[33m[33m⚠[0m api/xendit/get-payment.ts missing expected code: payment_id[0m
+[36m
+============================================================[0m
+[1m 5. COMPONENT STRUCTURE[0m
+[36m============================================================[0m
+[0m
+Validating React component implementations...[0m
+[32m[32m✓[0m src/pages/PaymentInterface.tsx structure validated[0m
+[32m[32m✓[0m src/components/public/product-detail/CheckoutModal.tsx structure validated[0m
+[36m
+============================================================[0m
+[1m 6. TEST COVERAGE[0m
+[36m============================================================[0m
+[0m
+Validating test files...[0m
+[32m[32m✓[0m src/__tests__/paymentFlow.test.ts exists (6790 bytes)[0m
+[36m    Contains 7 test suites, 13 test cases[0m
+[32m[32m✓[0m scripts/test-purchase-flow.ps1 exists (7654 bytes)[0m
+[36m
+============================================================[0m
+[1m 7. DOCUMENTATION[0m
+[36m============================================================[0m
+[0m
+Validating documentation...[0m
+[32m[32m✓[0m Purchase flow documentation exists (14073 bytes)[0m
+[32m[32m✓[0m Documentation includes Overview section[0m
+[32m[32m✓[0m Documentation includes Product Selection section[0m
+[32m[32m✓[0m Documentation includes Customer Information section[0m
+[32m[32m✓[0m Documentation includes Payment Method Selection section[0m
+[32m[32m✓[0m Documentation includes Order Creation section[0m
+[32m[32m✓[0m Documentation includes Payment Invoice Creation section[0m
+[32m[32m✓[0m Documentation includes Payment Interface Display section[0m
+[32m[32m✓[0m Documentation includes Webhook Handling section[0m
+[32m[32m✓[0m Documentation includes Payment Completion section[0m
+[32m[32m✓[0m Documentation includes Testing section[0m
+[32m[32m✓[0m Documentation includes API Endpoints section[0m
+[36m
+============================================================[0m
+[1m 8. SECURITY VALIDATION[0m
+[36m============================================================[0m
+[0m
+Checking security configurations...[0m
+[32m[32m✓[0m .env files are gitignored[0m
+[32m[32m✓[0m node_modules is gitignored[0m
+[0m
+Scanning for potential hardcoded secrets...[0m
+[32m[32m✓[0m No hardcoded secrets in api/xendit/create-invoice.ts[0m
+[32m[32m✓[0m No hardcoded secrets in api/xendit/webhook.ts[0m
+[32m[32m✓[0m No hardcoded secrets in src/pages/PaymentInterface.tsx[0m
+[36m
+============================================================[0m
+[1m 9. DATABASE SCHEMA HINTS[0m
+[36m============================================================[0m
+[0m
+Providing database schema validation hints...[0m
+[36m  Manual verification required for:[0m
+[36m  - orders table exists with correct columns[0m
+[36m  - admin_notifications table exists[0m
+[36m  - Row Level Security (RLS) policies configured[0m
+[36m  - Indexes on frequently queried columns[0m
+[36m  [0m
+[33m[33m⚠[0m Run database migrations if not already done[0m
+[33m[33m⚠[0m Verify Supabase connection in admin panel[0m
+[36m
+============================================================[0m
+[1m VALIDATION SUMMARY[0m
+[36m============================================================[0m
+[0m
+Results:[0m
+[32m  [32m✓[0m Passed: 53[0m
+[31m  [31m✗[0m Failed: 0[0m
+[33m  [33m⚠[0m Warnings: 11[0m
+[0m
+Overall Status:[0m
+[32m  [32m✓[0m ALL CHECKS PASSED (82.8% success rate)[0m
+[36m
+============================================================[0m
+[1m DETAILED REPORT[0m
+[36m============================================================[0m
+[0m
+All Checks:[0m
+[0m1. [32m✓[0m Found: src/pages/PaymentInterface.tsx[0m
+[0m2. [32m✓[0m Found: src/pages/PaymentStatusPage.tsx[0m
+[0m3. [32m✓[0m Found: src/pages/OrderHistoryPage.tsx[0m
+[0m4. [32m✓[0m Found: src/pages/ProductDetailPage.tsx[0m
+[0m5. [32m✓[0m Found: src/components/public/product-detail/CheckoutModal.tsx[0m
+[0m6. [32m✓[0m Found: src/components/purchase-form/CustomerInfoForm.tsx[0m
+[0m7. [32m✓[0m Found: src/components/purchase-form/PaymentMethods.tsx[0m
+[0m8. [32m✓[0m Found: src/components/purchase-form/PurchaseActions.tsx[0m
+[0m9. [32m✓[0m Found: api/xendit/create-invoice.ts[0m
+[0m10. [32m✓[0m Found: api/xendit/create-direct-payment.ts[0m
+[0m11. [32m✓[0m Found: api/xendit/get-payment.ts[0m
+[0m12. [32m✓[0m Found: api/xendit/check-order-status.ts[0m
+[0m13. [32m✓[0m Found: api/xendit/webhook.ts[0m
+[0m14. [32m✓[0m Found: api/xendit/payment-methods.ts[0m
+[0m15. [32m✓[0m Found: api/xendit/get-invoice-details.ts[0m
+[0m16. [32m✓[0m Found: src/services/paymentService.ts[0m
+[0m17. [32m✓[0m Found: src/services/ordersService.ts[0m
+[0m18. [32m✓[0m Found: src/services/xenditPaymentService.ts[0m
+[0m19. [32m✓[0m Found: api/_config/paymentChannels.ts[0m
+[0m20. [32m✓[0m Found: src/config/paymentMethodConfig.ts[0m
+[0m21. [32m✓[0m Found: src/__tests__/paymentFlow.test.ts[0m
+[0m22. [32m✓[0m Found: scripts/test-purchase-flow.ps1[0m
+[0m23. [32m✓[0m Found: PURCHASE_FLOW_DOCUMENTATION.md[0m
+[0m24. [33m⚠[0m dotenv not installed, checking environment directly[0m
+[0m25. [33m⚠[0m XENDIT_SECRET_KEY is not set (may be in deployment platform)[0m
+[0m26. [33m⚠[0m XENDIT_CALLBACK_TOKEN is not set (may be in deployment platform)[0m
+[0m27. [33m⚠[0m SUPABASE_URL is not set (may be in deployment platform)[0m
+[0m28. [33m⚠[0m SUPABASE_SERVICE_ROLE_KEY is not set (may be in deployment platform)[0m
+[0m29. [33m⚠[0m REACT_APP_SUPABASE_URL is not set (may be in .env.local)[0m
+[0m30. [33m⚠[0m REACT_APP_SUPABASE_ANON_KEY is not set (may be in .env.local)[0m
+[0m31. [32m✓[0m Backend config includes QRIS[0m
+[0m32. [32m✓[0m Backend config includes BNI[0m
+[0m33. [32m✓[0m Backend config includes BRI[0m
+[0m34. [32m✓[0m Backend config includes MANDIRI[0m
+[0m35. [32m✓[0m Backend config includes PERMATA[0m
+[0m36. [32m✓[0m Backend config includes ASTRAPAY[0m
+[0m37. [32m✓[0m Backend config includes INDOMARET[0m
+[0m38. [32m✓[0m Frontend payment config exists[0m
+[0m39. [33m⚠[0m api/xendit/create-invoice.ts missing expected code: createSupabaseClient[0m
+[0m40. [32m✓[0m api/xendit/webhook.ts structure validated[0m
+[0m41. [33m⚠[0m api/xendit/get-payment.ts missing expected code: payment_id[0m
+[0m42. [32m✓[0m src/pages/PaymentInterface.tsx structure validated[0m
+[0m43. [32m✓[0m src/components/public/product-detail/CheckoutModal.tsx structure validated[0m
+[0m44. [32m✓[0m src/__tests__/paymentFlow.test.ts exists (6790 bytes)[0m
+[0m45. [32m✓[0m scripts/test-purchase-flow.ps1 exists (7654 bytes)[0m
+[0m46. [32m✓[0m Purchase flow documentation exists (14073 bytes)[0m
+[0m47. [32m✓[0m Documentation includes Overview section[0m
+[0m48. [32m✓[0m Documentation includes Product Selection section[0m
+[0m49. [32m✓[0m Documentation includes Customer Information section[0m
+[0m50. [32m✓[0m Documentation includes Payment Method Selection section[0m
+[0m51. [32m✓[0m Documentation includes Order Creation section[0m
+[0m52. [32m✓[0m Documentation includes Payment Invoice Creation section[0m
+[0m53. [32m✓[0m Documentation includes Payment Interface Display section[0m
+[0m54. [32m✓[0m Documentation includes Webhook Handling section[0m
+[0m55. [32m✓[0m Documentation includes Payment Completion section[0m
+[0m56. [32m✓[0m Documentation includes Testing section[0m
+[0m57. [32m✓[0m Documentation includes API Endpoints section[0m
+[0m58. [32m✓[0m .env files are gitignored[0m
+[0m59. [32m✓[0m node_modules is gitignored[0m
+[0m60. [32m✓[0m No hardcoded secrets in api/xendit/create-invoice.ts[0m
+[0m61. [32m✓[0m No hardcoded secrets in api/xendit/webhook.ts[0m
+[0m62. [32m✓[0m No hardcoded secrets in src/pages/PaymentInterface.tsx[0m
+[0m63. [33m⚠[0m Run database migrations if not already done[0m
+[0m64. [33m⚠[0m Verify Supabase connection in admin panel[0m
+[36m
+============================================================[0m
+[1m NEXT STEPS[0m
+[36m============================================================[0m
+[0m
+Recommended actions:[0m
+[33m1. Address any warnings marked with ⚠[0m
+[36m2. Run integration tests: npm test[0m
+[36m3. Run manual test: node scripts/test-purchase-flow.ps1[0m
+[36m4. Test on staging environment before production[0m
+[36m
+For detailed report, run: node scripts/validate-purchase-flow.js --detailed[0m
+[0m[0m

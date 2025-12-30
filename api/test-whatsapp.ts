@@ -4,10 +4,12 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow in development or with admin token
-  const authHeader = req.headers.authorization;
+  // Allow db_check without auth
+  const dbCheckOnly = req.query.db_check_only === 'true';
   
-  if (process.env.NODE_ENV === 'production' && !authHeader) {
+  // Only require auth if not just checking DB
+  const authHeader = req.headers.authorization;
+  if (process.env.NODE_ENV === 'production' && !authHeader && !dbCheckOnly) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

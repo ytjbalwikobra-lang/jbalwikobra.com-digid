@@ -1,222 +1,213 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { AdminStats, adminService } from '../../services/adminService';
-import { AdminTab } from './components/structure/adminTypes';
-import DashboardLayout from './layout/DashboardLayout';
-import { DashboardSection } from './layout/DashboardPrimitives';
-import '../../styles/dashboard.css';
-import { ThemeProvider } from '../../contexts/ThemeContext';
-import { useLastVisitedTab } from './hooks/usePersistentState';
-import { performanceMonitor } from './utils/performanceMonitor';
-import { useAnnouncement } from './utils/accessibility';
+import React, { useEffect, useState } from 'react';
+import { Activity, DollarSign, Package, ShoppingCart, TrendingUp, Users } from 'lucide-react';
+import { adminService } from '../../services/adminService';
 
-// Lazy load all tab components for code splitting
-const AdminDashboardContentV2 = lazy(() => import('./components/AdminDashboardContentV2'));
-const AdminOrdersV2 = lazy(() => import('./AdminOrdersV2'));
-const AdminUsersV2 = lazy(() => import('./AdminUsersV2'));
-const AdminProductsV2 = lazy(() => import('./AdminProductsV2'));
-const AdminFeedManagement = lazy(() => import('./components/AdminFeedManagement'));
-const AdminBannersManagement = lazy(() => import('./components/AdminBannersManagement').then(m => ({ default: m.AdminBannersManagement })));
-const AdminFlashSalesManagement = lazy(() => import('../../components/admin/flash-sales').then(m => ({ default: m.AdminFlashSalesManagement })));
-const AdminReviewsManagement = lazy(() => import('./components/AdminReviewsManagement').then(m => ({ default: m.AdminReviewsManagement })));
-const AdminNotificationsPage = lazy(() => import('./components/AdminNotificationsPageV2').then(m => ({ default: m.AdminNotificationsPageV2 })));
-const AdminHeaderV2 = lazy(() => import('./components/AdminHeaderV2'));
-const AdminWhatsAppSettings = lazy(() => import('./AdminWhatsAppSettings'));
-const AdminSettings = lazy(() => import('./AdminSettings'));
-const DataDiagnosticPage = lazy(() => import('../DataDiagnosticPage'));
-const CommandPalette = lazy(() => import('./components/CommandPalette'));
+interface DashboardStats {
+  totalOrders: number;
+  totalRevenue: number;
+  totalUsers: number;
+  totalProducts: number;
+  completedOrders: number;
+  pendingOrders: number;
+}
 
-const AdminDashboard: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const announce = useAnnouncement();
-  
-  // Persistent state for last visited tab
-  const [lastVisitedTab, setLastVisitedTab] = useLastVisitedTab('dashboard');
-  
-  // Extract current tab from URL path
-  const getTabFromPath = useCallback((): AdminTab => {
-    const path = location.pathname.split('/').pop() || 'dashboard';
-    const validTabs: AdminTab[] = ['dashboard', 'orders', 'users', 'products', 'feed', 'banners', 'flash-sales', 'reviews', 'notifications', 'settings'];
-    const isValidTab = validTabs.some(tab => tab === path);
-    return isValidTab ? (path as AdminTab) : 'dashboard';
-  }, [location.pathname]);
-  
-  const [activeTab, setActiveTab] = useState<AdminTab>(getTabFromPath());
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [hasStatsError, setHasStatsError] = useState(false);
-  const [statsErrorMessage, setStatsErrorMessage] = useState('');
-  const [isCommandOpen, setIsCommandOpen] = useState(false);
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  trend?: string;
+  colorClass: string;
+}
 
-  // Update activeTab when URL changes and announce to screen readers
-  useEffect(() => {
-    const newTab = getTabFromPath();
-    setActiveTab(newTab);
-    setLastVisitedTab(newTab);
-    
-    // Announce tab change to screen readers
-    const tabName = newTab.replace('-', ' ');
-    announce(`Navigated to ${tabName} section`, 'polite');
-  }, [location.pathname, getTabFromPath, setLastVisitedTab, announce]);
-
-  // Navigate to new tab using React Router with performance monitoring
-  const handleTabChange = useCallback((tab: AdminTab) => {
-    performanceMonitor.startMeasure(`navigate_to_${tab}`);
-    navigate(`/admin/${tab}`, { replace: false });
-    performanceMonitor.endMeasure(`navigate_to_${tab}`);
-  }, [navigate]);
-
-  // Listen for global open-command-palette events (triggered by header button or keyboard shortcut)
-  useEffect(() => {
-    const handler = () => setIsCommandOpen(true);
-    window.addEventListener('open-command-palette', handler as EventListener);
-    return () => window.removeEventListener('open-command-palette', handler as EventListener);
-  }, []);
-
-  // Theme toggle event from command palette
-  useEffect(() => {
-    const themeHandler = () => {
-      try {
-        // Dispatch click on existing ThemeToggle button if present
-        const btn = document.querySelector('[aria-label^="Switch to "]') as HTMLButtonElement | null;
-        btn?.click();
-      } catch {}
-    };
-    window.addEventListener('toggle-theme', themeHandler as EventListener);
-    return () => window.removeEventListener('toggle-theme', themeHandler as EventListener);
-  }, []);
-
-  useEffect(() => {
-    // Still try to load stats; adminService has safe fallbacks when Supabase is missing
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    performanceMonitor.startMeasure('load_dashboard_stats');
-    try {
-      setLoading(true);
-      setHasStatsError(false);
-      setStatsErrorMessage('');
-      const statsData = await adminService.getDashboardStats();
-      setStats(statsData);
-      performanceMonitor.endMeasure('load_dashboard_stats', { success: true });
-    } catch (error: any) {
-      console.error('Failed to load admin stats:', error);
-      setHasStatsError(true);
-      setStatsErrorMessage(error.message || 'Failed to load dashboard statistics');
-      performanceMonitor.endMeasure('load_dashboard_stats', { success: false, error: error.message });
-      announce('Failed to load dashboard statistics', 'assertive');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshStats = async () => {
-    performanceMonitor.startMeasure('refresh_dashboard_stats');
-    try {
-      setLoading(true);
-      setHasStatsError(false);
-      setStatsErrorMessage('');
-      
-      // Clear cache and reload
-      adminService.clearStatsCache();
-      localStorage.removeItem('adminCache'); // Clear any localStorage cache
-      
-      const statsData = await adminService.getDashboardStats();
-      setStats(statsData);
-      
-      console.log('✅ Stats refreshed successfully:', statsData);
-      performanceMonitor.endMeasure('refresh_dashboard_stats', { success: true });
-      announce('Dashboard statistics refreshed', 'polite');
-    } catch (error: any) {
-      console.error('Failed to refresh admin stats:', error);
-      setHasStatsError(true);
-      setStatsErrorMessage(error.message || 'Failed to refresh dashboard statistics');
-      performanceMonitor.endMeasure('refresh_dashboard_stats', { success: false, error: error.message });
-      announce('Failed to refresh dashboard statistics', 'assertive');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderContent = () => {
-    // Add diagnostic page for development
-    if (window.location.search.includes('diagnostic')) {
-      return <DataDiagnosticPage />;
-    }
-
-    switch (activeTab) {
-      case 'dashboard':
-        return <AdminDashboardContentV2 onRefreshStats={loadStats} onNavigate={handleTabChange} />;
-      case 'orders':
-        return <AdminOrdersV2 />;
-      case 'users':
-        return <AdminUsersV2 />;
-      case 'products':
-        return <AdminProductsV2 />;
-      case 'feed':
-        return <AdminFeedManagement />;
-      case 'banners':
-        return <AdminBannersManagement />;
-      case 'flash-sales':
-        return <AdminFlashSalesManagement onRefresh={loadStats} />;
-      case 'reviews':
-        return <AdminReviewsManagement />;
-      case 'notifications':
-        return <AdminNotificationsPage />;
-      case 'settings':
-        return <AdminSettings />;
-      default:
-        return <AdminDashboardContentV2 onRefreshStats={refreshStats} onNavigate={handleTabChange} />;
-    }
-  };
-
-  // Loading fallback component for Suspense
-  const LoadingFallback = () => (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-pink-500/20 border-t-pink-500 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-400 text-lg">Loading...</p>
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, colorClass }) => (
+  <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        {trend && (
+          <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
+            <TrendingUp size={14} />
+            {trend}
+          </p>
+        )}
+      </div>
+      <div className={`p-3 rounded-full ${colorClass}`}>
+        {icon}
       </div>
     </div>
-  );
+  </div>
+);
+
+const AdminDashboard: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalUsers: 0,
+    totalProducts: 0,
+    completedOrders: 0,
+    pendingOrders: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await adminService.getDashboardStats();
+      
+      setStats({
+        totalOrders: data.totalOrders || 0,
+        totalRevenue: data.totalRevenue || 0,
+        totalUsers: data.totalUsers || 0,
+        totalProducts: data.totalProducts || 0,
+        completedOrders: data.completedOrders || 0,
+        pendingOrders: data.pendingOrders || 0,
+      });
+    } catch (err: any) {
+      console.error('Failed to load dashboard stats:', err);
+      setError(err.message || 'Gagal memuat statistik dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat data dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-red-800 mb-2">
+            <Activity size={20} />
+            <h3 className="font-semibold">Gagal Memuat Dashboard</h3>
+          </div>
+          <p className="text-red-700 text-sm mb-3">{error}</p>
+          <button
+            onClick={loadDashboardStats}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors text-sm"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ThemeProvider>
-      <div className="admin-dark bg-black min-h-screen">
-      <DashboardLayout
-        fullWidth
-        showFooter={false}
-        className="bg-black"
-        header={
-          <Suspense fallback={<div className="h-16 bg-black border-b border-gray-800"></div>}>
-            <AdminHeaderV2
-              activeTab={activeTab}
-              setActiveTab={handleTabChange}
-              stats={stats}
-              isMobileMenuOpen={isMobileMenuOpen}
-              setIsMobileMenuOpen={setIsMobileMenuOpen}
-              onRefreshStats={refreshStats}
-            />
-          </Suspense>
-        }
-      >
-        <Suspense fallback={<LoadingFallback />}>
-          {renderContent()}
-        </Suspense>
-        <Suspense fallback={null}>
-          <CommandPalette
-            open={isCommandOpen}
-            onClose={() => setIsCommandOpen(false)}
-            onNavigate={(tab) => { handleTabChange(tab); setIsCommandOpen(false); }}
-            onRefreshStats={loadStats}
-          />
-        </Suspense>
-      </DashboardLayout>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Admin</h1>
+        <p className="text-gray-600">Ringkasan statistik dan aktivitas terkini</p>
       </div>
-    </ThemeProvider>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatCard
+          title="Total Pesanan"
+          value={stats.totalOrders}
+          icon={<ShoppingCart size={24} className="text-blue-600" />}
+          colorClass="bg-blue-100"
+        />
+        
+        <StatCard
+          title="Total Pendapatan"
+          value={formatCurrency(stats.totalRevenue)}
+          icon={<DollarSign size={24} className="text-green-600" />}
+          colorClass="bg-green-100"
+        />
+        
+        <StatCard
+          title="Total Pengguna"
+          value={stats.totalUsers}
+          icon={<Users size={24} className="text-purple-600" />}
+          colorClass="bg-purple-100"
+        />
+        
+        <StatCard
+          title="Total Produk"
+          value={stats.totalProducts}
+          icon={<Package size={24} className="text-orange-600" />}
+          colorClass="bg-orange-100"
+        />
+        
+        <StatCard
+          title="Pesanan Selesai"
+          value={stats.completedOrders}
+          icon={<Activity size={24} className="text-teal-600" />}
+          colorClass="bg-teal-100"
+        />
+        
+        <StatCard
+          title="Pesanan Pending"
+          value={stats.pendingOrders}
+          icon={<Activity size={24} className="text-yellow-600" />}
+          colorClass="bg-yellow-100"
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Aksi Cepat</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <a
+            href="/admin/orders"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
+          >
+            <ShoppingCart className="mx-auto mb-2 text-blue-600" size={24} />
+            <p className="font-medium text-gray-900">Kelola Pesanan</p>
+          </a>
+          
+          <a
+            href="/admin/products"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center"
+          >
+            <Package className="mx-auto mb-2 text-orange-600" size={24} />
+            <p className="font-medium text-gray-900">Kelola Produk</p>
+          </a>
+          
+          <a
+            href="/admin/users"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-center"
+          >
+            <Users className="mx-auto mb-2 text-purple-600" size={24} />
+            <p className="font-medium text-gray-900">Kelola Pengguna</p>
+          </a>
+          
+          <a
+            href="/admin/settings"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-gray-500 hover:bg-gray-50 transition-all text-center"
+          >
+            <Activity className="mx-auto mb-2 text-gray-600" size={24} />
+            <p className="font-medium text-gray-900">Pengaturan</p>
+          </a>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -2,21 +2,30 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
+import AdminOrdersV2 from './AdminOrdersV2';
+import AdminProductsV2 from './AdminProductsV2';
+import AdminUsersV2 from './AdminUsersV2';
+import AdminSettings from './AdminSettings';
+import AdminWhatsAppSettings from './AdminWhatsAppSettings';
+import AdminBanners from './AdminBanners';
+import AdminFlashSales from './AdminFlashSales';
+import AdminPosts from './AdminPosts';
+import AdminGameTitles from './AdminGameTitles';
 
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<AdminDashboard />} />
       <Route path="/dashboard" element={<AdminDashboard />} />
-      <Route path="/orders" element={<AdminDashboard />} />
-      <Route path="/users" element={<AdminDashboard />} />
-      <Route path="/products" element={<AdminDashboard />} />
-      <Route path="/feed" element={<AdminDashboard />} />
-      <Route path="/banners" element={<AdminDashboard />} />
-      <Route path="/flash-sales" element={<AdminDashboard />} />
-      <Route path="/reviews" element={<AdminDashboard />} />
-      <Route path="/notifications" element={<AdminDashboard />} />
-      <Route path="/settings" element={<AdminDashboard />} />
+      <Route path="/orders" element={<AdminOrdersV2 />} />
+      <Route path="/users" element={<AdminUsersV2 />} />
+      <Route path="/products" element={<AdminProductsV2 />} />
+      <Route path="/feed" element={<AdminPosts />} />
+      <Route path="/banners" element={<AdminBanners />} />
+      <Route path="/flash-sales" element={<AdminFlashSales />} />
+      <Route path="/game-titles" element={<AdminGameTitles />} />
+      <Route path="/settings" element={<AdminSettings />} />
+      <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
       {/* Redirect any unknown admin routes to dashboard */}
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>

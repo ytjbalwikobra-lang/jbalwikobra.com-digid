@@ -12,6 +12,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // First check database configuration directly
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+    
+    const sb = createClient(supabaseUrl, supabaseKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    console.log('[Test WhatsApp] Checking database configuration...');
+
+    // Check whatsapp_providers
+    const { data: providers, error: provErr } = await sb
+      .from('whatsapp_providers')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    // Check whatsapp_api_keys
+    const { data: apiKeys, error: keyErr } = await sb
+      .from('whatsapp_api_keys')
+      .select('*')
+      .eq('is_active', true)
+      .order('is_primary', { ascending: false });
+
+    console.log('[Test WhatsApp] Providers found:', providers?.length || 0);
+    console.log('[Test WhatsApp] API Keys found:', apiKeys?.length || 0);
+
+    const dbCheck = {
+      providers: {
+        count: providers?.length || 0,
+        data: providers || [],
+        error: provErr?.message || null
+      },
+      api_keys: {
+        count: apiKeys?.length || 0,
+        data: apiKeys?.map(k => ({
+          id: k.id,
+          provider_id: k.provider_id,
+          is_active: k.is_active,
+          is_primary: k.is_primary,
+          has_api_key: !!k.api_key,
+          api_key_length: k.api_key?.length || 0
+        })) || [],
+        error: keyErr?.message || null
+      }
+    };
+
+    // Now test with service
     const { DynamicWhatsAppService } = await import('./_utils/dynamicWhatsAppService.js');
     const wa = new DynamicWhatsAppService();
     
@@ -34,6 +83,7 @@ Terima kasih! 🎮`;
     
     const result = {
       timestamp: new Date().toISOString(),
+      database_check: dbCheck,
       settings_check: {
         has_settings: !!settings,
         provider: settings?.provider || 'none',

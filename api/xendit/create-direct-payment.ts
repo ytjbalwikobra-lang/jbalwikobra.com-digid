@@ -204,6 +204,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('[Payment] Payment link created:', xenditData.id);
+    console.log('[Payment] Xendit response structure:', {
+      has_available_banks: !!xenditData.available_banks,
+      available_banks_count: xenditData.available_banks?.length || 0,
+      available_banks: xenditData.available_banks
+    });
+
+    // Extract QR string for QRIS payments from available_banks
+    let qrString: string | undefined;
+    if (channelCode === 'QRIS' && xenditData.available_banks) {
+      const qrisBank = xenditData.available_banks.find((bank: any) => 
+        bank.bank_code === 'QRIS' || bank.bank_code === 'ID_QRIS'
+      );
+      if (qrisBank) {
+        // QR string is in the bank_account_number for QRIS
+        qrString = qrisBank.bank_account_number;
+        console.log('[Payment] QRIS QR string extracted:', qrString ? 'Present' : 'Not found');
+      }
+    }
 
     // Update order with Xendit payment ID
     if (createdOrder && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
@@ -220,8 +238,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // Store payment in payments table for better tracking
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        
+        const paymentData: any = {
+          qr_string: qrString,
+          invoice_url: xenditData.invoice_url,
+        };
+        
+        // Check if this is a VA payment and store VA details
+        if (xenditData.available_banks && xenditData.available_banks.length > 0) {
+          const bank = xenditData.available_banks[0];
+          if (bank.bank_code !== 'QRIS' && bank.bank_code !== 'ID_QRIS') {
+            paymentData.virtual_account_number = bank.bank_account_number;
+            paymentData.account_number = bank.bank_account_number;
+            paymentData.bank_code = bank.bank_code;
+            paymentData.bank_name = bank.bank_code;
+          }
+        }
+        
+        await supabase
+          .from('payments')
+          .upsert({
+            xendit_id: xenditData.id,
+            external_id: external_id,
+            payment_method: methodKey,
+            amount: xenditData.amount,
+            currency: xenditData.currency || 'IDR',
+            status: xenditData.status?.toUpperCase() || 'PENDING',
+            payment_data: paymentData,
+            description: description || 'Payment',
+            expiry_date: xenditData.expiry_date,
+            created_at: new Date().toISOString()
+          }, {
+            onConflict: 'xendit_id'
+          });
+        
+        console.log('[Payment] Payment stored in database');
+      } catch (err) {
+        console.error('[Payment] Failed to store payment in database:', err);
+      }
+    }
+
     // Return standardized response (Invoice API format)
-    return res.status(200).json({
+    const response: any = {
       id: xenditData.id,
       status: xenditData.status,
       payment_url: xenditData.invoice_url,
@@ -231,7 +294,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       currency: xenditData.currency,
       external_id: xenditData.external_id,
       expiry_date: xenditData.expiry_date
-    });
+    };
+    
+    // Include QR string in response if available
+    if (qrString) {
+      response.qr_string = qrString;
+      response.qr_url = qrString;
+    }
+    
+    return res.status(200).json(response);
 
   } catch (error: any) {
     console.error('[Payment] Error:', error);

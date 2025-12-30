@@ -118,7 +118,7 @@ async function dashboardStats() {
     console.log('💰 [API /api/admin] dashboardStats: Fetching order statistics...');
     const { data: orderStats, error: statsError } = await supabase
       .from('orders')
-      .select('total_amount, status')
+      .select('amount, status')
       .limit(5000); // Increased limit for better accuracy
     
     if (statsError) {
@@ -134,7 +134,7 @@ async function dashboardStats() {
     let pending = 0;
     
     (orderStats || []).forEach(order => {
-      const amount = Number(order.total_amount) || 0;
+      const amount = Number(order.amount) || 0;
       const status = (order.status || '').toLowerCase();
       
       if (status === 'completed' || status === 'paid') {

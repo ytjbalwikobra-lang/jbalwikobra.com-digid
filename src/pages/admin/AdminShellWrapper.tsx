@@ -9,6 +9,7 @@ import { Menu, Bell, User, LogOut } from 'lucide-react';
 import { AdminColors } from './design-tokens';
 import { useNavigate } from 'react-router-dom';
 import { AdminToastProvider } from './components/ui/AdminToast';
+import AdminNotificationPanel from './components/AdminNotificationPanel';
 import '../../styles/admin-design-system-v3.css';
 
 interface AdminShellProps {
@@ -17,6 +18,8 @@ interface AdminShellProps {
 
 export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -60,17 +63,35 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
               {/* Notifications */}
-              <button
-                className="relative p-2 rounded-lg hover:bg-gray-700 transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell size={20} style={{ color: AdminColors.text.secondary }} />
-                <span
-                  className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: AdminColors.error.DEFAULT }}
-                  aria-label="Unread notifications"
+              <div className="relative">
+                <button
+                  onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+                  className="relative p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  aria-label="Notifications"
+                >
+                  <Bell size={20} style={{ color: AdminColors.text.secondary }} />
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold"
+                      style={{ 
+                        backgroundColor: AdminColors.error.DEFAULT,
+                        color: 'white',
+                        padding: '0 4px'
+                      }}
+                      aria-label={`${unreadCount} unread notifications`}
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Notification Panel */}
+                <AdminNotificationPanel
+                  isOpen={notificationPanelOpen}
+                  onClose={() => setNotificationPanelOpen(false)}
+                  onNotificationCountChange={setUnreadCount}
                 />
-              </button>
+              </div>
 
               {/* User Profile */}
               <button

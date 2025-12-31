@@ -266,10 +266,12 @@ const AdminOrdersV2: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <AdminButton
-            variant="primary"
-            icon={<Plus size={18} />}
+            variant="secondary"
+            onClick={loadOrders}
+            disabled={loading}
+            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
           >
-            New Order
+            Refresh
           </AdminButton>
         </div>
       </div>

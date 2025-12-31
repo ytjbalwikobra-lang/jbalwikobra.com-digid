@@ -346,6 +346,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const productId = createdOrder.product_id;
           const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
           
+          // Generate payment URL to our own payment page
+          const paymentUrl = `https://jbalwikobra.com/payment?id=${xenditData.id}&method=${payment_method_id}`;
+          
           const message = `🔥 *SIAP BOSKU! ORDERAN UDAH DIBUAT*
 
 Halo Bosku ${customer.given_names || 'Customer'} 👋
@@ -368,7 +371,7 @@ Terima kasih ya, pesanan Bosku udah berhasil kami catat di sistem ✅. Tinggal s
 
 Tinggal klik link di bawah ya Bosku, langsung bisa bayar!
 
-🔗 *Link Bayar:* ${xenditData.invoice_url}
+🔗 *Link Bayar:* ${paymentUrl}
 
 ⚠️ *CATATAN PENTING:*
 

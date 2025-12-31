@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Activity, DollarSign, Package, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 
@@ -174,37 +175,37 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Aksi Cepat</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a
-            href="/admin/orders"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
+          <Link
+            to="/admin/orders"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center cursor-pointer"
           >
             <ShoppingCart className="mx-auto mb-2 text-blue-600" size={24} />
             <p className="font-medium text-gray-900">Kelola Pesanan</p>
-          </a>
+          </Link>
           
-          <a
-            href="/admin/products"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center"
+          <Link
+            to="/admin/products"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center cursor-pointer"
           >
             <Package className="mx-auto mb-2 text-orange-600" size={24} />
             <p className="font-medium text-gray-900">Kelola Produk</p>
-          </a>
+          </Link>
           
-          <a
-            href="/admin/users"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-center"
+          <Link
+            to="/admin/users"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-center cursor-pointer"
           >
             <Users className="mx-auto mb-2 text-purple-600" size={24} />
             <p className="font-medium text-gray-900">Kelola Pengguna</p>
-          </a>
+          </Link>
           
-          <a
-            href="/admin/settings"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-gray-500 hover:bg-gray-50 transition-all text-center"
+          <Link
+            to="/admin/settings"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-gray-500 hover:bg-gray-50 transition-all text-center cursor-pointer"
           >
             <Activity className="mx-auto mb-2 text-gray-600" size={24} />
             <p className="font-medium text-gray-900">Pengaturan</p>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@
  */
 
 import React, { forwardRef } from 'react';
-import '../../../../styles/admin-design-system-v3.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';

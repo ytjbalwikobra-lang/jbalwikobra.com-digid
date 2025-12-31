@@ -6,7 +6,6 @@
  */
 
 import React from 'react';
-import '../../../../styles/admin-design-system-v3.css';
 
 interface AdminCardProps {
   children: React.ReactNode;

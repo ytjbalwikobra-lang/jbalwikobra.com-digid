@@ -63,6 +63,8 @@ const AdminProductsV2: React.FC = () => {
   
   // Active rental tracking
   const [activeRentals, setActiveRentals] = useState<Map<string, boolean>>(new Map());
+  const [expiredRentals, setExpiredRentals] = useState<Map<string, { productName: string; expiredDate: Date }>>(new Map());
+  const [shownExpiredNotifications, setShownExpiredNotifications] = useState<Set<string>>(new Set());
   
   // Active rental tracking
   const [activeRentals, setActiveRentals] = useState<Map<string, boolean>>(new Map());
@@ -233,22 +235,25 @@ const AdminProductsV2: React.FC = () => {
     try {
       if (!supabase) return;
       
-      // Get all rental orders that are paid or completed
+      // Get all rental orders that are paid or completed, with product info
       const { data: rentalOrders } = await supabase
         .from('orders')
-        .select('product_id, created_at, rental_duration')
+        .select('product_id, created_at, rental_duration, products(name)')
         .eq('order_type', 'rental')
         .in('status', ['paid', 'completed'])
         .not('product_id', 'is', null);
       
       if (!rentalOrders || rentalOrders.length === 0) {
         setActiveRentals(new Map());
+        setExpiredRentals(new Map());
         return;
       }
       
-      // Calculate which products are currently being rented
+      // Calculate which products are currently being rented and which have expired
       const now = new Date();
       const activeRentalMap = new Map<string, boolean>();
+      const expiredRentalMap = new Map<string, { productName: string; expiredDate: Date }>();
+      const newExpiredProducts: string[] = [];
       
       for (const order of rentalOrders) {
         if (!order.product_id || !order.rental_duration) continue;
@@ -258,13 +263,13 @@ const AdminProductsV2: React.FC = () => {
         let daysToAdd = 0;
         
         if (duration.includes('hari')) {
-          const match = duration.match(/(\\d+)\\s*hari/);
+          const match = duration.match(/(\d+)\s*hari/);
           daysToAdd = match ? parseInt(match[1]) : 0;
         } else if (duration.includes('minggu')) {
-          const match = duration.match(/(\\d+)\\s*minggu/);
+          const match = duration.match(/(\d+)\s*minggu/);
           daysToAdd = match ? parseInt(match[1]) * 7 : 0;
         } else if (duration.includes('bulan')) {
-          const match = duration.match(/(\\d+)\\s*bulan/);
+          const match = duration.match(/(\d+)\s*bulan/);
           daysToAdd = match ? parseInt(match[1]) * 30 : 0;
         }
         
@@ -272,13 +277,43 @@ const AdminProductsV2: React.FC = () => {
         const orderDate = new Date(order.created_at);
         const rentalEndDate = new Date(orderDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
         
-        // Check if rental is still active
+        // Check if rental is still active or expired
         if (now <= rentalEndDate) {
           activeRentalMap.set(order.product_id, true);
+        } else {
+          // Rental has expired
+          const productName = (order as any).products?.name || 'Unknown Product';
+          expiredRentalMap.set(order.product_id, {
+            productName,
+            expiredDate: rentalEndDate
+          });
+          
+          // Check if we haven't shown notification for this expired rental yet
+          if (!shownExpiredNotifications.has(order.product_id)) {
+            newExpiredProducts.push(productName);
+          }
         }
       }
       
       setActiveRentals(activeRentalMap);
+      setExpiredRentals(expiredRentalMap);
+      
+      // Show notifications for newly expired rentals
+      if (newExpiredProducts.length > 0) {
+        const expiredCount = newExpiredProducts.length;
+        const productList = newExpiredProducts.slice(0, 3).join(', ');
+        const more = expiredCount > 3 ? ` dan ${expiredCount - 3} lainnya` : '';
+        
+        push(
+          `⚠️ ${expiredCount} produk masa rental habis: ${productList}${more}. Silakan ubah status ke Active.`,
+          'warning'
+        );
+        
+        // Mark these as shown
+        const newShownSet = new Set(shownExpiredNotifications);
+        expiredRentalMap.forEach((_, productId) => newShownSet.add(productId));
+        setShownExpiredNotifications(newShownSet);
+      }
     } catch (error) {
       console.error('Error loading active rentals:', error);
     }
@@ -288,6 +323,13 @@ const AdminProductsV2: React.FC = () => {
     loadProducts();
     loadDropdownData();
     loadActiveRentals(); // Load active rentals on mount
+    
+    // Set up periodic check for expired rentals (every 5 minutes)
+    const intervalId = setInterval(() => {
+      loadActiveRentals();
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    return () => clearInterval(intervalId);
   }, []); // Load products only once on component mount
 
   // Reload when search or major filters change (with caching)
@@ -429,6 +471,10 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const getStatusColor = (product: Product) => {
+    // Check if rental has expired (highest priority for admin attention)
+    if (expiredRentals.get(product.id)) {
+      return 'bg-orange-500/20 text-orange-300 border border-orange-500/30 animate-pulse';
+    }
     // Check if product is currently being rented
     if (activeRentals.get(product.id)) {
       return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
@@ -440,6 +486,12 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const getStatusText = (product: Product) => {
+    // Check if rental has expired
+    const expiredInfo = expiredRentals.get(product.id);
+    if (expiredInfo) {
+      const daysSinceExpired = Math.floor((new Date().getTime() - expiredInfo.expiredDate.getTime()) / (1000 * 60 * 60 * 24));
+      return `Rental Expired (${daysSinceExpired}d ago)`;
+    }
     // Check if product is currently being rented
     if (activeRentals.get(product.id)) {
       return 'Renting';
@@ -532,7 +584,7 @@ const AdminProductsV2: React.FC = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <AdminCard hover>
             <AdminCardBody>
               <div className="flex items-center justify-between">
@@ -572,6 +624,28 @@ const AdminProductsV2: React.FC = () => {
                   <Archive className="text-slate-500" size={24} />
                 </div>
               </div>
+            </AdminCardBody>
+          </AdminCard>
+          
+          {/* Expired Rentals Card */}
+          <AdminCard hover className={expiredRentals.size > 0 ? 'border-orange-500/50 animate-pulse' : ''}>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-400 mb-1">Rental Expired</p>
+                  <p className={`text-3xl font-bold ${expiredRentals.size > 0 ? 'text-orange-400' : 'text-slate-500'}`}>
+                    {loading ? '...' : expiredRentals.size}
+                  </p>
+                </div>
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${expiredRentals.size > 0 ? 'bg-orange-100' : 'bg-slate-100'}`}>
+                  <Calendar className={expiredRentals.size > 0 ? 'text-orange-600' : 'text-slate-500'} size={24} />
+                </div>
+              </div>
+              {expiredRentals.size > 0 && (
+                <div className="mt-2 text-xs text-orange-300">
+                  ⚠️ Perlu diaktifkan kembali
+                </div>
+              )}
             </AdminCardBody>
           </AdminCard>
 
@@ -816,13 +890,43 @@ const AdminProductsV2: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleStatus(product)}
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:scale-105 cursor-pointer ${getStatusColor(product)} hover:opacity-80`}
-                          title={`Click to ${product.is_active ? 'deactivate' : 'activate'} product`}
-                        >
-                          {getStatusText(product)}
-                        </button>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => handleToggleStatus(product)}
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:scale-105 cursor-pointer ${getStatusColor(product)} hover:opacity-80`}
+                            title={`Click to ${product.is_active ? 'deactivate' : 'activate'} product`}
+                          >
+                            {getStatusText(product)}
+                          </button>
+                          {/* Quick action for expired rentals */}
+                          {expiredRentals.get(product.id) && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  // Mark product as active and remove from expired list
+                                  await adminService.updateProductFields(product.id, { is_active: true });
+                                  
+                                  // Remove from expired rentals map
+                                  const newExpiredMap = new Map(expiredRentals);
+                                  newExpiredMap.delete(product.id);
+                                  setExpiredRentals(newExpiredMap);
+                                  
+                                  // Update product in list
+                                  setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_active: true } : p));
+                                  
+                                  push(`Produk "${product.name}" diaktifkan kembali`, 'success');
+                                } catch (error: any) {
+                                  push(`Gagal mengaktifkan produk: ${error.message}`, 'error');
+                                }
+                              }}
+                              className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 rounded text-xs font-medium transition-all duration-200"
+                              title="Aktifkan produk kembali"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                              Aktifkan
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-300">

@@ -46,26 +46,12 @@ const PurchaseNotificationTicker: React.FC = () => {
         return `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)`;
       }
       
-      // Fallback based on tier slug
-      switch (tierSlug) {
-        case 'pelajar':
-          return 'linear-gradient(135deg, #2563eb, #1d4ed8)'; // Blue
-        case 'reguler':
-          return 'linear-gradient(135deg, #71717a, #52525b)'; // Gray
-        default:
-          return 'linear-gradient(135deg, #6366f1, #4f46e5)'; // Indigo default
-      }
+      // Fallback to pink neon gradient for all other tiers
+      return 'linear-gradient(135deg, #ec4899, #db2777)';
     }
     
-    // For rental or no tier, use default rotating colors
-    const colors = [
-      'linear-gradient(135deg, #9333ea, #db2777)', // Purple to Pink
-      'linear-gradient(135deg, #2563eb, #06b6d4)', // Blue to Cyan
-      'linear-gradient(135deg, #059669, #10b981)', // Green to Emerald
-      'linear-gradient(135deg, #ea580c, #dc2626)', // Orange to Red
-      'linear-gradient(135deg, #6366f1, #a855f7)', // Indigo to Purple
-    ];
-    return colors[currentIndex % colors.length];
+    // For rental or no tier, use pink neon gradient
+    return 'linear-gradient(135deg, #ec4899, #db2777)';
   };
 
   // Check if tier is premium/sultan for special effects
@@ -144,7 +130,7 @@ const PurchaseNotificationTicker: React.FC = () => {
         className={`text-white shadow-lg transition-transform duration-700 ease-in-out ${isPremium ? 'animate-shimmer' : ''}`}
         style={{ 
           background: backgroundGradient,
-          transform: isAnimating ? 'translateX(0)' : 'translateX(-100%)',
+          transform: isAnimating ? 'translateY(0)' : 'translateY(-100%)',
           boxShadow: isPremium ? '0 4px 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(251, 191, 36, 0.3)' : undefined
         }}
       >

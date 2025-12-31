@@ -391,10 +391,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('[API /api/admin] Authenticated admin access:', {
       userId: auth.userId,
       email: auth.userEmail,
-      action: req.query.action
+      action: req.query.action || req.body?.action
     });
 
-    const action = normalizeAction(req.query.action);
+    // Get action from query string or body (for POST requests)
+    const action = normalizeAction(req.query.action || req.body?.action);
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'unknown';
     if (!rateLimit(ip + ':' + action)) return respond(res, 429, { error: 'rate_limited' });
 

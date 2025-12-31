@@ -426,6 +426,7 @@ export class ProductService {
 
       // Prefer single-call with nested rental options to reduce round-trips
       // Fix PGRST201 error by specifying exact relationship
+      // Fetch product by ID regardless of archived status (allows direct URL access)
       const { data, error } = await supabase
         .from('products')
         .select(`

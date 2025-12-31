@@ -264,6 +264,28 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     }
     console.log('[WhatsApp] Final product name for notification:', productName);
     
+    // Get product URL
+    const productId = order.product_id;
+    const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
+    
+    // Get payment channel and timestamp
+    const paymentChannel = order.payment_method || 'Xendit';
+    const paidTimestamp = order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }) : new Date().toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
     // Generate notification message (different for rental vs purchase)
     const message = isRental 
       ? `🔥 *NEW RENTAL ORDER PAID!* 💰
@@ -272,16 +294,18 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 👤 **Customer:** *${order.customer_name || 'Guest'}*
-📧 **Email:** ${order.customer_email || 'Not provided'}
-📱 **WhatsApp:** *${order.customer_phone || 'Not provided'}*
+📱 **WhatsApp:** *${order.customer_phone || 'Tidak tersedia'}*
 
-🆔 **Order ID:** \`${order.id}\`
-🎯 **Product:** *${productName}*
-⏰ **Duration:** *${order.rental_duration || 'Not specified'}*
-💰 **Amount:** *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
+🎯 **Produk:** *${productName}*
+🔗 **URL Produk:** ${productUrl}
+💳 **Channel Pembayaran:** ${paymentChannel}
+💰 **Nominal:** *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
+⏰ **Waktu Pembayaran:** ${paidTimestamp}
+✅ **Status:** *PAID*
+⏱️ **Durasi:** *${order.rental_duration || 'Tidak ditentukan'}*
 
-✅ **Status:** *PAID* ✅
-📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
+📧 **Email:** ${order.customer_email || 'Tidak tersedia'}
+🆔 **Invoice:** \`${order.id}\`
 
 🚨 **ACTION REQUIRED:**
 • Setup rental access dalam 5-15 menit
@@ -305,15 +329,17 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 👤 **Customer:** *${order.customer_name || 'Guest'}*
-📧 **Email:** ${order.customer_email || 'Not provided'}
-📱 **WhatsApp:** *${order.customer_phone || 'Not provided'}*
+📱 **WhatsApp:** *${order.customer_phone || 'Tidak tersedia'}*
 
-🆔 **Order ID:** \`${order.id}\`
-🎯 **Product:** *${productName}*
-💰 **Amount:** *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
+🎯 **Produk:** *${productName}*
+🔗 **URL Produk:** ${productUrl}
+💳 **Channel Pembayaran:** ${paymentChannel}
+💰 **Nominal:** *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
+⏰ **Waktu Pembayaran:** ${paidTimestamp}
+✅ **Status:** *PAID*
 
-✅ **Status:** *PAID* ✅
-📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
+📧 **Email:** ${order.customer_email || 'Tidak tersedia'}
+🆔 **Invoice:** \`${order.id}\`
 
 🚨 **ACTION REQUIRED:**
 • Prepare account delivery dalam 5-30 menit
@@ -400,6 +426,30 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
         }
 
         // Generate customer notification message (different for rental vs purchase)
+        // Get product URL
+        const productId = order.product_id;
+        const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
+        
+        // Get payment channel from order
+        const paymentChannel = order.payment_method || 'Xendit';
+        
+        // Format timestamp
+        const paidTimestamp = order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }) : new Date().toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        
         const customerMessage = isRental 
           ? `🎉 *RENTAL PAYMENT CONFIRMED!*
 
@@ -408,12 +458,14 @@ Halo ${order.customer_name || 'Customer'} 👋
 Terima kasih! Pembayaran rental Anda telah *BERHASIL DIPROSES* ✅
 
 📋 **DETAIL RENTAL:**
-• Order ID: *${order.id}*
-• Product: *${productName}*
-• Duration: *${order.rental_duration || 'Sesuai pesanan'}*
-• Total Paid: *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
-• Status: *PAID* ✅
-• Paid at: ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Baru saja'}
+🎯 *Produk:* ${productName}
+🔗 *URL Produk:* ${productUrl}
+📝 *Invoice:* ${order.id}
+⏰ *Waktu Pembayaran:* ${paidTimestamp}
+💳 *Channel Pembayaran:* ${paymentChannel}
+💰 *Nominal:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+✅ *Status:* PAID
+⏱️ *Durasi:* ${order.rental_duration || 'Sesuai pesanan'}
 
 🚀 **LANGKAH SELANJUTNYA:**
 • Tim kami akan mengatur akses rental dalam *5-15 menit*
@@ -443,11 +495,13 @@ Halo ${order.customer_name || 'Customer'} 👋
 Terima kasih! Pembayaran Anda telah *BERHASIL DIPROSES* ✅
 
 📋 **DETAIL PURCHASE:**
-• Order ID: *${order.id}*
-• Product: *${productName}*
-• Total Paid: *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
-• Status: *PAID* ✅
-• Paid at: ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Baru saja'}
+🎯 *Produk:* ${productName}
+🔗 *URL Produk:* ${productUrl}
+📝 *Invoice:* ${order.id}
+⏰ *Waktu Pembayaran:* ${paidTimestamp}
+💳 *Channel Pembayaran:* ${paymentChannel}
+💰 *Nominal:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+✅ *Status:* PAID
 
 🚀 **LANGKAH SELANJUTNYA:**
 • Tim kami akan memproses pesanan dalam *5-30 menit*

@@ -68,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           )
         )
       `)
-      .in('status', ['paid', 'completed'])
+      .eq('status', 'paid')
       .gte('created_at', threeDaysAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(10);

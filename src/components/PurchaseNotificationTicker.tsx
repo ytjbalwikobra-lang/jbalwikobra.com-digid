@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, Clock } from 'lucide-react';
+import { Rocket, Package } from 'lucide-react';
 
 interface RecentPurchase {
   id: string;
@@ -129,23 +129,20 @@ const PurchaseNotificationTicker: React.FC = () => {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 ${
-        isAnimating ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-[9999] overflow-hidden`}
     >
       <div
-        className="text-white shadow-lg"
-        style={{ background: backgroundGradient }}
+        className="text-white shadow-lg transition-transform duration-700 ease-in-out"
+        style={{ 
+          background: backgroundGradient,
+          transform: isAnimating ? 'translateX(0)' : 'translateX(-100%)'
+        }}
       >
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
-            {/* Animated Icon */}
-            <div className="animate-bounce flex-shrink-0">
-              {purchase.order_type === 'rental' ? (
-                <Clock className="w-4 h-4 md:w-5 md:h-5" />
-              ) : (
-                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
-              )}
+            {/* Rocket Icon with Light Pulse */}
+            <div className="animate-pulse-slow flex-shrink-0">
+              <Rocket className="w-4 h-4 md:w-5 md:h-5" />
             </div>
 
             {/* Purchase Info - New Format: {nama user} {tipe transaksi} {nama akun} {timestamp} */}
@@ -163,7 +160,7 @@ const PurchaseNotificationTicker: React.FC = () => {
             </div>
 
             {/* Animated Package Icon */}
-            <div className="animate-pulse flex-shrink-0">
+            <div className="animate-pulse-slow flex-shrink-0">
               <Package className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </div>
@@ -199,3 +196,23 @@ function getTimeAgo(dateString: string): string {
 }
 
 export default PurchaseNotificationTicker;
+
+// Add custom styles for light pulse animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+`;
+if (typeof document !== 'undefined' && !document.querySelector('style[data-ticker-animations]')) {
+  style.setAttribute('data-ticker-animations', 'true');
+  document.head.appendChild(style);
+}

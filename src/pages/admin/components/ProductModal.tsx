@@ -391,69 +391,67 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const title = mode === 'create' ? 'Add New Product' : mode === 'edit' ? 'Edit Product' : 'Product Details';
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-black bg-opacity-75" onClick={onClose} />
-        
-        <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-black border border-gray-800 shadow-xl rounded-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-pink-600 bg-clip-text text-transparent">
-              {title}
-            </h3>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+    <div className="admin-modal-overlay">
+      <div className="admin-modal-content max-w-2xl">
+        {/* Header */}
+        <div className="admin-modal-header">
+          <h2 className="admin-modal-title">
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+            type="button"
+          >
+            <X size={20} className="text-slate-400" />
+          </button>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Name */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="Enter product name"
-                  required
-                  disabled={isReadOnly}
-                />
-              </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="admin-modal-body space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Product Name */}
+            <div className="md:col-span-2">
+              <label className="admin-label">
+                Product Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="admin-input"
+                placeholder="Enter product name"
+                required
+                disabled={isReadOnly}
+              />
+            </div>
 
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="Enter product description"
-                  disabled={isReadOnly}
-                />
-              </div>
+            {/* Description */}
+            <div className="md:col-span-2">
+              <label className="admin-label">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+                className="admin-input"
+                placeholder="Enter product description"
+                disabled={isReadOnly}
+              />
+            </div>
 
-              {/* Price */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Price *
-                </label>
+            {/* Price */}
+            <div>
+              <label className="admin-label">
+                Price <span className="text-red-500">*</span>
+              </label>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={formData.price ? `Rp ${formatNumberWithSeparator(formData.price)}` : ''}
                   onChange={(e) => handlePriceChange(e.target.value, 'price')}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="admin-input"
                   placeholder="Rp 0"
                   required
                   disabled={isReadOnly}
@@ -465,7 +463,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Original Price */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="admin-label">
                   Original Price
                 </label>
                 <input
@@ -473,7 +471,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   inputMode="numeric"
                   value={formData.original_price ? `Rp ${formatNumberWithSeparator(formData.original_price)}` : ''}
                   onChange={(e) => handlePriceChange(e.target.value, 'original_price')}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="admin-input"
                   placeholder="Rp 0"
                   disabled={isReadOnly}
                 />
@@ -484,13 +482,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="admin-label">
                   Category
                 </label>
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="admin-select"
                   disabled={isReadOnly}
                 >
                   <option value="">Select Category</option>
@@ -502,13 +500,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Game Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="admin-label">
                   Game Title
                 </label>
                 <select
                   value={formData.game_title_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, game_title_id: e.target.value }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="admin-select"
                   disabled={isReadOnly}
                 >
                   <option value="">Select Game Title</option>
@@ -520,13 +518,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Tier */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="admin-label">
                   Tier
                 </label>
                 <select
                   value={formData.tier_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, tier_id: e.target.value }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="admin-select"
                   disabled={isReadOnly}
                 >
                   <option value="">Select Tier</option>
@@ -538,14 +536,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Stock */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="admin-label">
                   Stock
                 </label>
                 <input
                   type="number"
                   value={formData.stock}
                   onChange={(e) => setFormData(prev => ({ ...prev, stock: Number(e.target.value) }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="admin-input"
                   placeholder="1"
                   min="0"
                   disabled={isReadOnly}
@@ -846,7 +844,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
             {/* Actions */}
             {!isReadOnly && (
-              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-800">
+              <div className="admin-modal-footer">
                 <button
                   type="button"
                   onClick={onClose}
@@ -872,7 +870,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </form>
         </div>
       </div>
-    </div>
   );
 };
 

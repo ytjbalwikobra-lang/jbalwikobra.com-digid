@@ -370,15 +370,15 @@ const AdminProductsV2: React.FC = () => {
   };
 
   return (
-    <div className="admin-page">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Header */}
-      <div className="admin-page-header">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="admin-page-title">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
             <Package className="inline-block mr-2" size={28} />
             Product Management
           </h1>
-          <p className="admin-page-subtitle">Manage your products and inventory</p>
+          <p className="text-gray-400 mt-1">Manage your products and inventory</p>
         </div>
         <div className="flex gap-3">
           <AdminButton

@@ -258,51 +258,62 @@ const AdminBanners: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <AdminPageHeaderV2
-        title="Banners"
-        subtitle="Manage website banners and promotional content"
-        icon={ImageIcon}
-        actions={[
-          {
-            key: 'add',
-            label: 'Create Banner',
-            onClick: startCreate,
-            variant: 'primary',
-            icon: Plus
-          }
-        ]}
-      />
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
+            <ImageIcon className="inline-block mr-2" size={28} />
+            Banners
+          </h1>
+          <p className="text-gray-400 mt-1">Manage website banners and promotional content</p>
+        </div>
+        <button
+          onClick={startCreate}
+          className="flex items-center space-x-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded-xl text-white transition-all duration-200"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create Banner</span>
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <AdminStatCard
-          title="Total Banners"
-          value={stats.total}
-          icon={ImageIcon}
-          iconColor="text-blue-400"
-          iconBgColor="bg-blue-500/20"
-        />
-        <AdminStatCard
-          title="Active"
-          value={stats.active}
-          icon={Eye}
-          iconColor="text-green-400"
-          iconBgColor="bg-green-500/20"
-        />
-        <AdminStatCard
-          title="Inactive"
-          value={stats.inactive}
-          icon={Edit3}
-          iconColor="text-gray-400"
-          iconBgColor="bg-gray-500/20"
-        />
-        <AdminStatCard
-          title="With Links"
-          value={stats.withLinks}
-          icon={Globe}
-          iconColor="text-purple-400"
-          iconBgColor="bg-purple-500/20"
-        />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400 mb-1">Total Banners</p>
+              <p className="text-3xl font-bold text-white">{loading ? "..." : stats.total}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <ImageIcon className="text-blue-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400 mb-1">Active</p>
+              <p className="text-3xl font-bold text-green-600">{loading ? "..." : stats.active}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <Eye className="text-green-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400 mb-1">Inactive</p>
+              <p className="text-3xl font-bold text-gray-600">{loading ? "..." : stats.inactive}</p>
+            </div>
+            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+              <Edit3 className="text-gray-600" size={24} />
+            </div>
+          </div>
+        </div>
       </div>
 
       <AdminFilters

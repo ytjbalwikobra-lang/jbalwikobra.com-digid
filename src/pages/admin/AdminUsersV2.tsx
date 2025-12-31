@@ -194,8 +194,8 @@ const AdminUsersV2: React.FC = () => {
             <AdminCardBody>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Total Users</p>
-                  <p className="text-3xl font-bold text-slate-900">{loading ? "..." : stats.total}</p>
+                  <p className="text-sm text-slate-400 mb-1">Total Users</p>
+                  <p className="text-3xl font-bold text-white">{loading ? "..." : stats.total}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Users className="text-blue-600" size={24} />

@@ -125,8 +125,8 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total Flash Sales</p>
-                <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+                <p className="text-sm text-slate-400 mb-1">Total Flash Sales</p>
+                <p className="text-3xl font-bold text-white">{stats.total}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Package className="text-blue-600" size={24} />
@@ -139,7 +139,7 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Active Sales</p>
+                <p className="text-sm text-slate-400 mb-1">Active Sales</p>
                 <p className="text-3xl font-bold text-green-600">{stats.active}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -153,7 +153,7 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Ongoing</p>
+                <p className="text-sm text-slate-400 mb-1">Ongoing</p>
                 <p className="text-3xl font-bold text-pink-600">{stats.ongoing}</p>
               </div>
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
@@ -167,7 +167,7 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Upcoming</p>
+                <p className="text-sm text-slate-400 mb-1">Upcoming</p>
                 <p className="text-3xl font-bold text-orange-600">{stats.upcoming}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -188,12 +188,12 @@ const AdminFlashSales: React.FC = () => {
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-              <p className="mt-4 text-slate-600">Loading flash sales...</p>
+              <p className="mt-4 text-slate-400">Loading flash sales...</p>
             </div>
           ) : flashSales.length === 0 ? (
             <div className="text-center py-12">
               <Zap className="mx-auto text-slate-300" size={48} />
-              <p className="mt-4 text-slate-600">No flash sales found</p>
+              <p className="mt-4 text-slate-400">No flash sales found</p>
               <p className="text-sm text-slate-500 mt-2">Create your first flash sale to get started</p>
             </div>
           ) : (
@@ -220,7 +220,7 @@ const AdminFlashSales: React.FC = () => {
                       <tr key={sale.id}>
                         <td>
                           <div>
-                            <p className="font-medium text-slate-900">
+                            <p className="font-medium text-white">
                               {sale.product?.name || 'Unknown Product'}
                             </p>
                             <p className="text-sm text-slate-500">
@@ -254,7 +254,7 @@ const AdminFlashSales: React.FC = () => {
                           </div>
                         </td>
                         <td>
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-white">
                             {sale.stock || 0} units
                           </span>
                         </td>

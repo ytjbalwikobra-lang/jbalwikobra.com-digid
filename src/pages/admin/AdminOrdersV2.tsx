@@ -281,8 +281,8 @@ const AdminOrdersV2: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total Orders</p>
-                <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+                <p className="text-sm text-slate-400 mb-1">Total Orders</p>
+                <p className="text-3xl font-bold text-white">{stats.total}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <ShoppingCart className="text-blue-600" size={24} />
@@ -295,7 +295,7 @@ const AdminOrdersV2: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Today's Orders</p>
+                <p className="text-sm text-slate-400 mb-1">Today's Orders</p>
                 <p className="text-3xl font-bold text-green-600">{stats.todayOrders}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -309,7 +309,7 @@ const AdminOrdersV2: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total Revenue</p>
+                <p className="text-sm text-slate-400 mb-1">Total Revenue</p>
                 <p className="text-3xl font-bold text-pink-600">{formatCurrency(stats.totalRevenue)}</p>
               </div>
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
@@ -323,7 +323,7 @@ const AdminOrdersV2: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Pending Orders</p>
+                <p className="text-sm text-slate-400 mb-1">Pending Orders</p>
                 <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">

@@ -450,80 +450,25 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
           second: '2-digit'
         });
         
-        const customerMessage = isRental 
-          ? `🎉 *RENTAL PAYMENT CONFIRMED!*
+        const customerMessage = `✅ *MANTAP BOSKU! PEMBAYARAN DITERIMA*
 
-Halo ${order.customer_name || 'Customer'} 👋
+Halo Bosku ${order.customer_name || 'Customer'} 👋
 
-Terima kasih! Pembayaran rental Anda telah *BERHASIL DIPROSES* ✅
+Uangnya udah masuk dengan aman ya! Status pesanan Bosku sekarang udah LUNAS.
 
-📋 **DETAIL RENTAL:**
-🎯 *Produk:* ${productName}
-🔗 *URL Produk:* ${productUrl}
-📝 *Invoice:* ${order.id}
-⏰ *Waktu Pembayaran:* ${paidTimestamp}
-💳 *Channel Pembayaran:* ${paymentChannel}
-💰 *Nominal:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
-✅ *Status:* PAID
-⏱️ *Durasi:* ${order.rental_duration || 'Sesuai pesanan'}
+🚀 *STATUS SAAT INI: SEDANG DIPROSES*
 
-🚀 **LANGKAH SELANJUTNYA:**
-• Tim kami akan mengatur akses rental dalam *5-15 menit*
-• Informasi login akan dikirim via WhatsApp
-• Anda akan diminta verifikasi data via *Video Call*
-• Rental dimulai setelah verifikasi selesai
+Tim kami lagi siapin ${productName} pesanan Bosku.
 
-⚠️ **PERSIAPKAN DOKUMEN:**
-• KTP/Passport/SIM yang masih aktif
-• Foto selfie dengan dokumen
-• Koneksi internet stabil untuk video call
+Mohon ditunggu sebentar ya Bosku, nanti detail akun/kodenya bakal langsung dikirim ke WhatsApp ini begitu selesai. Nggak bakal lama kok! 😎
 
-📝 **PENTING:**
-• Rental tidak bisa diperpanjang otomatis
-• Backup data pribadi sebelum rental berakhir
-• Gunakan akun sesuai aturan yang berlaku
-• Jangan ubah password atau data akun
+Kalau butuh bantuan lain, kabarin aja.
 
-💬 **Support 24/7:** wa.me/6289653510125
-🌐 **Website:** https://jbalwikobra.com
+💬 *Support:* wa.me/6289653510125
 
-Terima kasih telah mempercayai JB Alwikobra! 🎮✨`
-          : `🎉 *PURCHASE PAYMENT CONFIRMED!*
+🌐 *Website:* https://jbalwikobra.com
 
-Halo ${order.customer_name || 'Customer'} 👋
-
-Terima kasih! Pembayaran Anda telah *BERHASIL DIPROSES* ✅
-
-📋 **DETAIL PURCHASE:**
-🎯 *Produk:* ${productName}
-🔗 *URL Produk:* ${productUrl}
-📝 *Invoice:* ${order.id}
-⏰ *Waktu Pembayaran:* ${paidTimestamp}
-💳 *Channel Pembayaran:* ${paymentChannel}
-💰 *Nominal:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
-✅ *Status:* PAID
-
-🚀 **LANGKAH SELANJUTNYA:**
-• Tim kami akan memproses pesanan dalam *5-30 menit*
-• Akun game akan dikirim melalui WhatsApp
-• Detail login dan panduan akan disertakan
-• Akun menjadi milik Anda *SEPENUHNYA*
-
-✅ **YANG ANDA DAPATKAN:**
-• *Full access permanent* - selamanya
-• *Support after sales* berkelanjutan
-• *Panduan lengkap* penggunaan akun
-• *Free konsultasi* setup dan optimasi
-
-🔒 **KEAMANAN TERJAMIN:**
-• Akun original dan legal
-• Data aman dan terlindungi
-• Transaksi tercatat resmi
-
-💬 **Support 24/7:** wa.me/6289653510125
-🌐 **Website:** https://jbalwikobra.com
-
-Terima kasih telah berbelanja di JB Alwikobra! 🎮✨`;
+Happy Gaming Bosku! 🔥`;
 
         // Idempotency per order+status for customer
   const alreadySentCustomer = await wa.hasMessageLog('order-paid-customer', contextId);

@@ -183,68 +183,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 // For now, store placeholder that will be updated in response
                 const paymentLinkPlaceholder = 'Link akan dikirim setelah invoice dibuat';
                 
-                const message = isRental
-                  ? `🎮 *ORDER RENTAL CREATED!*
+                const message = `🔥 *SIAP BOSKU! ORDERAN UDAH DIBUAT*
 
-Halo ${customer.given_names || 'Customer'} 👋
+Halo Bosku ${customer.given_names || 'Customer'} 👋
 
-Order rental Anda telah *BERHASIL DIBUAT* ✅
+Terima kasih ya, pesanan Bosku udah berhasil kami catat di sistem ✅. Tinggal satu langkah lagi nih biar bisa langsung diproses!
 
-📋 **DETAIL RENTAL:**
+📋 *DETAIL PESANAN:*
+
 👤 *Nama:* ${customer.given_names || 'Customer'}
+
 🎯 *Produk:* ${productName}
-🔗 *URL Produk:* ${productUrl}
-⏰ *Durasi:* ${orderData.rental_duration || 'Sesuai pesanan'}
+
+🔗 *Link Produk:* ${productUrl}
+
 💰 *Total:* Rp ${Number(amount || 0).toLocaleString('id-ID')}
-⏱️ *Masa Pembayaran:* 24 jam
-📌 *Status:* Menunggu Pembayaran ⏳
 
-💳 **LANGKAH SELANJUTNYA:**
-• Selesaikan pembayaran dalam 24 jam
-• Akses rental akan diaktifkan setelah payment verified
-• Detail login akan dikirim via WhatsApp
+⏳ *Batas Waktu:* 24 Jam
 
-🔗 **Link Pembayaran:**
-Link pembayaran akan dikirim dalam pesan terpisah atau check halaman payment
+💳 *CARA BAYARNYA GAMPANG:*
 
-⚠️ **PENTING:**
-• Pesanan akan otomatis dibatalkan jika tidak dibayar dalam 24 jam
-• Simpan Order ID untuk tracking: *${data.id}*
+Tinggal klik link di bawah atau cek pesan terpisah ya Bosku.
 
-💬 **Support:** wa.me/6289653510125
-🌐 **Website:** https://jbalwikobra.com
+🔗 *Link Bayar:* Link akan dikirim dalam pesan terpisah
 
-Terima kasih! 🎮✨`
-                  : `🎮 *ORDER PURCHASE CREATED!*
+⚠️ *CATATAN PENTING:*
 
-Halo ${customer.given_names || 'Customer'} 👋
+• Jangan lupa lunasin sebelum 24 jam ya Bosku, biar orderannya nggak hangus otomatis.
 
-Order Anda telah *BERHASIL DIBUAT* ✅
+• Simpan Order ID buat jaga-jaga: *${data.id}*
 
-📋 **DETAIL PURCHASE:**
-👤 *Nama:* ${customer.given_names || 'Customer'}
-🎯 *Produk:* ${productName}
-🔗 *URL Produk:* ${productUrl}
-💰 *Total:* Rp ${Number(amount || 0).toLocaleString('id-ID')}
-⏱️ *Masa Pembayaran:* 24 jam
-📌 *Status:* Menunggu Pembayaran ⏳
+💬 *Support:* wa.me/6289653510125
 
-💳 **LANGKAH SELANJUTNYA:**
-• Selesaikan pembayaran dalam 24 jam
-• Akun akan diproses setelah payment verified
-• Detail akun akan dikirim via WhatsApp
+🌐 *Website:* https://jbalwikobra.com
 
-🔗 **Link Pembayaran:**
-Link pembayaran akan dikirim dalam pesan terpisah atau check halaman payment
-
-⚠️ **PENTING:**
-• Pesanan akan otomatis dibatalkan jika tidak dibayar dalam 24 jam
-• Simpan Order ID untuk tracking: *${data.id}*
-
-💬 **Support:** wa.me/6289653510125
-🌐 **Website:** https://jbalwikobra.com
-
-Terima kasih! 🎮✨`;
+Terima kasih Bosku! 🎮✨`;
 
                 const contextId = `order:${data.id}:created`;
                 console.log('[Payment] Sending WhatsApp message to:', customerPhone);

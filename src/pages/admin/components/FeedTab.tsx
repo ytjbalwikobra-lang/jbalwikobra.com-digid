@@ -1,16 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, Plus, Edit, Trash2, Calendar, User, Share2, Check } from 'lucide-react';
-// DS migration: replace iOS components with DS primitives
-import { useFeedPosts } from '../hooks/useAdminData';
-import { FeedPost } from '../types';
+import { adminService, type FeedPost } from '../../../services/adminService';
 import FeedPostDialog from './FeedPostDialog';
 
 const FeedTab: React.FC = () => {
-  const { feedPosts, loading, error, saveFeedPost, deleteFeedPost } = useFeedPosts();
+  const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showPostDialog, setShowPostDialog] = useState(false);
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
-  // Share state placed before any early returns to respect hook rules
   const [sharedPostId, setSharedPostId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadFeedPosts();
+  }, []);
+
+  const loadFeedPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getFeedPosts(1, 50);
+      setFeedPosts(response.data);
+    } catch (err) {
+      setError('Failed to load feed posts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateFeedPost = async (post: Partial<FeedPost>) => {
+    try {
+      if (post.id) {
+        await adminService.updateFeedPost(post.id, post as any);
+      }
+      await loadFeedPosts();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const deleteFeedPost = async (id: string) => {
+    try {
+      await adminService.deleteFeedPost(id);
+      await loadFeedPosts();
+    } catch (err) {
+      throw err;
+    }
+  };
 
   const handleAddPost = () => {
     setEditingPost(null);
@@ -34,7 +69,7 @@ const FeedTab: React.FC = () => {
 
   const handleSavePost = async (postData: Partial<FeedPost>) => {
     try {
-      await saveFeedPost(postData);
+      await updateFeedPost(postData);
       setShowPostDialog(false);
       setEditingPost(null);
     } catch (err) {
@@ -190,7 +225,7 @@ const FeedTab: React.FC = () => {
       {/* Post Dialog */}
       {showPostDialog && (
         <FeedPostDialog
-          post={editingPost}
+          post={editingPost as any}
           onSave={handleSavePost}
           onClose={() => {
             setShowPostDialog(false);

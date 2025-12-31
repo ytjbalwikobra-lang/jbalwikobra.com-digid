@@ -224,7 +224,7 @@ const CheckoutModal: React.FC<Props> = ({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start md:items-center justify-center p-2 pt-4 md:p-6 z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start md:items-center justify-center p-2 pt-4 md:p-6 z-[99999]">
       <div className="relative max-w-2xl w-full mt-0 md:mt-0">
         {/* Glow effects */}
         <div className="absolute inset-0 pointer-events-none">

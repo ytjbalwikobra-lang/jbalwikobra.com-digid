@@ -11,7 +11,7 @@ interface ProductModalProps {
   onClose: () => void;
   product?: Product | null;
   mode: 'view' | 'edit' | 'create';
-  onSuccess?: () => void;
+  onSuccess?: (savedProduct?: Product) => void;
 }
 
 interface FormData {
@@ -246,7 +246,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         }
       }
       
-      onSuccess?.();
+      onSuccess?.(savedProduct);
       onClose();
     } catch (error: any) {
       push(`Failed to ${mode} product: ${error.message}`, 'error');

@@ -114,18 +114,30 @@ const AdminBanners: React.FC = () => {
         // Update existing banner
         const existingBanner = banners.find(b => b.id === editingId);
         if (existingBanner) {
-          const updated = await BannerService.update(editingId, {
+          // Optimistic UI update
+          const optimisticBanner = {
             ...existingBanner,
             ...formData
-          });
-          if (updated) {
-            setBanners(prev => prev.map(b => b.id === editingId ? updated : b));
-            push('Banner updated successfully', 'success');
-            resetForm();
+          };
+          setBanners(prev => prev.map(b => b.id === editingId ? optimisticBanner : b));
+          push('Banner updated successfully', 'success');
+          resetForm();
+          
+          // Update in background
+          try {
+            const updated = await BannerService.update(editingId, optimisticBanner);
+            if (updated) {
+              setBanners(prev => prev.map(b => b.id === editingId ? updated : b));
+            }
+          } catch (error: any) {
+            // Rollback on failure
+            setBanners(prev => prev.map(b => b.id === editingId ? existingBanner : b));
+            push(`Failed to update banner: ${error.message}`, 'error');
           }
         }
       } else {
-        // Create new banner
+        // Create new banner - show loading state
+        push('Creating banner...', 'info');
         const created = await BannerService.create({
           title: formData.title,
           subtitle: formData.subtitle,

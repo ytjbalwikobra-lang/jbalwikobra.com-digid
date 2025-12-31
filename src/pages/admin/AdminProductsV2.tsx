@@ -90,8 +90,10 @@ const AdminProductsV2: React.FC = () => {
       }
 
       // Status filter
+      // Default behavior: 'all' shows only non-archived products, 'active' shows active non-archived, 'archived' shows archived only
+      if (filters.status === 'all' && product.archived_at) return false; // Hide archived from 'all' view
       if (filters.status === 'active' && (!product.is_active || product.archived_at)) return false;
-      if (filters.status === 'archived' && (product.is_active && !product.archived_at)) return false;
+      if (filters.status === 'archived' && !product.archived_at) return false; // Only show archived in 'archived' view
 
       // Category filter
       if (filters.category !== 'all') {
@@ -258,16 +260,25 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const handleToggleStatus = async (product: Product) => {
+    const newStatus = !product.is_active;
+    
+    // Optimistic UI update
+    const prev = products;
+    setProducts(prev.map(p => p.id === product.id ? { ...p, is_active: newStatus } : p));
+    
+    // Show success immediately
+    push(`Product ${newStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
+    
     try {
-      const newStatus = !product.is_active;
       await adminService.updateProductFields(product.id, { 
         is_active: newStatus 
       });
       
-      push(`Product ${newStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
-      setCachedResults(new Map()); // Clear cache
-      loadProducts(true); // Force reload to see changes
+      // Clear cache for consistency
+      setCachedResults(new Map());
     } catch (error: any) {
+      // Rollback on failure
+      setProducts(prev);
       push(`Failed to update product status: ${error.message}`, 'error');
     }
   };
@@ -283,21 +294,26 @@ const AdminProductsV2: React.FC = () => {
     
     if (!confirmed) return;
     
-    // Optimistic UI: update immediately in local state
+    // Optimistic UI: update immediately in local state with archived timestamp
     const prev = products;
-    setProducts(prev.map(p => p.id === product.id ? { ...p, archived_at: new Date().toISOString(), is_active: false } : p));
+    const archivedProduct = { ...product, archived_at: new Date().toISOString(), is_active: false };
+    setProducts(prev.map(p => p.id === product.id ? archivedProduct : p));
+    
+    // Show success immediately for instant feedback
+    push(`Product "${product.name}" has been archived successfully`, 'success');
     
     try {
       const ok = await adminService.deleteProduct(product.id);
       if (!ok) throw new Error('Archive failed');
-      push(`Product "${product.name}" has been archived successfully`, 'success');
-      // Invalidate cache and hard refresh from server bypassing cache
+      
+      // Clear cache for instant update
       setCachedResults(new Map());
-      await loadProducts(true);
+      
+      // No need to reload - filter will handle hiding archived products
     } catch (error: any) {
       // Rollback UI on failure
       setProducts(prev);
-      push(`Failed to archive product: ${error.message || 'Unknown error'}`, 'error');
+      push(`Failed to archive product: ${error.message || 'Unknown error'}. Reverting changes.`, 'error');
     }
   };
 
@@ -317,10 +333,22 @@ const AdminProductsV2: React.FC = () => {
     });
   };
 
-  const handleModalSuccess = () => {
-    // Clear cache and reload products after successful create/edit
+  const handleModalSuccess = (savedProduct?: Product) => {
+    // Clear cache
     setCachedResults(new Map());
-    loadProducts(true);
+    
+    if (modalState.mode === 'create' && savedProduct) {
+      // Add new product to the list instantly
+      setProducts(prev => [savedProduct, ...prev]);
+      push('Product created and added to list!', 'success');
+    } else if (modalState.mode === 'edit' && savedProduct) {
+      // Update existing product in the list instantly
+      setProducts(prev => prev.map(p => p.id === savedProduct.id ? savedProduct : p));
+      push('Product updated in list!', 'success');
+    } else {
+      // Fallback: reload if savedProduct not provided
+      loadProducts(true);
+    }
   };
 
   const formatPrice = (price?: number) => {

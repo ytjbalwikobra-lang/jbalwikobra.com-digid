@@ -53,10 +53,16 @@ const AdminFlashSales: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this flash sale?')) return;
     
     try {
-      await ProductService.deleteFlashSale(id);
+      // Optimistic UI update
+      const prev = flashSales;
+      setFlashSales(prev.filter(s => s.id !== id));
       push('Flash sale deleted successfully', 'success');
-      loadFlashSales();
+      
+      // Delete in background
+      await ProductService.deleteFlashSale(id);
     } catch (error) {
+      // Rollback on failure
+      loadFlashSales();
       push('Failed to delete flash sale', 'error');
     }
   };
@@ -77,6 +83,7 @@ const AdminFlashSales: React.FC = () => {
   };
 
   const handleModalSuccess = () => {
+    // Reload to get updated data (flash sales have complex relationships)
     loadFlashSales();
   };
 

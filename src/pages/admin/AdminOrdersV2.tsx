@@ -141,6 +141,14 @@ const AdminOrdersV2: React.FC = () => {
   // Update order status function
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      // Optimistic UI update
+      const prev = orders;
+      setOrders(prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+      push('Status pesanan berhasil diperbarui', 'success');
+      
+      // Update in background
       const sessionToken = localStorage.getItem('session_token');
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -163,14 +171,12 @@ const AdminOrdersV2: React.FC = () => {
       }
       
       const result = await response.json();
-      if (result.success) {
-        push('Status pesanan berhasil diperbarui', 'success');
-        // Refresh orders
-        loadOrders();
-      } else {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to update status');
       }
     } catch (error: any) {
+      // Rollback on failure
+      setOrders(prev);
       push(`Gagal memperbarui status: ${error.message}`, 'error');
     }
   };

@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Users, UserCheck, Shield, Clock, Search, Filter, RefreshCw, Plus, Edit, Trash2, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
 import { adminService, User } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
+import { AdminButton } from './components/ui/AdminButton';
+import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
+import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import '../../styles/admin-design-system-v3.css';
 
 interface UserStats {
   total: number;
@@ -16,68 +20,7 @@ interface UserFilters {
   search: string;
 }
 
-// Dashboard-style MetricCard component
-interface MetricCardProps {
-  title: string;
-  value: string | number;
-  change?: number;
-  changeType?: 'increase' | 'decrease' | 'neutral';
-  icon: React.ComponentType<any>;
-  trend?: 'up' | 'down' | 'neutral';
-  color?: 'pink' | 'blue' | 'green' | 'orange' | 'purple';
-}
-
-const MetricCard: React.FC<MetricCardProps> = ({ 
-  title, 
-  value, 
-  change, 
-  changeType = 'neutral', 
-  icon: Icon, 
-  trend = 'neutral', 
-  color = 'blue' 
-}) => {
-  const colorMap = {
-    pink: 'from-pink-500 to-fuchsia-600',
-    blue: 'from-blue-500 to-cyan-600',
-    green: 'from-emerald-500 to-green-600',
-    orange: 'from-orange-500 to-red-600',
-    purple: 'from-purple-500 to-violet-600'
-  };
-
-  const trendIcon = trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : Activity;
-  const TrendIcon = trendIcon;
-
-  return (
-    <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-pink-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
-      {/* Background gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${colorMap[color]} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
-      
-      {/* Content */}
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${colorMap[color]} shadow-lg`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-          {change !== undefined && (
-            <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium ${
-              changeType === 'increase' ? 'bg-emerald-500/10 text-emerald-400' :
-              changeType === 'decrease' ? 'bg-red-500/10 text-red-400' :
-              'bg-gray-500/10 text-gray-400'
-            }`}>
-              <TrendIcon className="w-3 h-3" />
-              <span>{Math.abs(change)}%</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="space-y-1">
-          <p className="text-2xl font-bold text-white">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-          <p className="text-sm text-gray-400 font-medium">{title}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Remove old MetricCard - now using AdminCard from V3
 
 const AdminUsersV2: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -245,43 +188,62 @@ const AdminUsersV2: React.FC = () => {
         )}
 
         {/* Modern Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
-            title="Total Users"
-            value={loading ? "..." : stats.total}
-            change={12.5}
-            changeType="increase"
-            icon={Users}
-            trend="up"
-            color="blue"
-          />
-          <MetricCard
-            title="Active Users"
-            value={loading ? "..." : stats.active}
-            change={8.2}
-            changeType="increase"
-            icon={UserCheck}
-            trend="up"
-            color="green"
-          />
-          <MetricCard
-            title="Admin Users"
-            value={loading ? "..." : stats.admin}
-            change={-2.1}
-            changeType="decrease"
-            icon={Shield}
-            trend="down"
-            color="purple"
-          />
-          <MetricCard
-            title="New This Month"
-            value={loading ? "..." : stats.recent}
-            change={15.3}
-            changeType="increase"
-            icon={Clock}
-            trend="up"
-            color="orange"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Total Users</p>
+                  <p className="text-3xl font-bold text-slate-900">{loading ? "..." : stats.total}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Users className="text-blue-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
+
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Active Users</p>
+                  <p className="text-3xl font-bold text-green-600">{loading ? "..." : stats.active}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <UserCheck className="text-green-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
+
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Admin Users</p>
+                  <p className="text-3xl font-bold text-purple-600">{loading ? "..." : stats.admin}</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Shield className="text-purple-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
+
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">New This Month</p>
+                  <p className="text-3xl font-bold text-orange-600">{loading ? "..." : stats.recent}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <Clock className="text-orange-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
         </div>
 
         {/* Quick Actions Section */}

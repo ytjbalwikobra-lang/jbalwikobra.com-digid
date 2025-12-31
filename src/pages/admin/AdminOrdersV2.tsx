@@ -21,6 +21,10 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { adminService, type Order as AdminOrder } from '../../services/adminService';
+import { AdminButton } from './components/ui/AdminButton';
+import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
+import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import '../../styles/admin-design-system-v3.css';
 
 type OrderStatus = 'pending' | 'paid' | 'completed' | 'cancelled';
 type OrderType = 'purchase' | 'rental';
@@ -35,94 +39,15 @@ interface OrderStats {
   todayOrders: number;
 }
 
-// Modern Status Badge Component
-const StatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => {
-  const variants = {
-    pending: {
-      bg: 'bg-gradient-to-r from-amber-500/20 to-orange-500/20',
-      border: 'border-amber-500/30',
-      text: 'text-amber-300',
-      icon: Clock,
-      label: 'Pending'
-    },
-    paid: {
-      bg: 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20',
-      border: 'border-blue-500/30',
-      text: 'text-blue-300',
-      icon: CreditCard,
-      label: 'Paid'
-    },
-    completed: {
-      bg: 'bg-gradient-to-r from-emerald-500/20 to-green-500/20',
-      border: 'border-emerald-500/30',
-      text: 'text-emerald-300',
-      icon: CheckCircle,
-      label: 'Completed'
-    },
-    cancelled: {
-      bg: 'bg-gradient-to-r from-red-500/20 to-pink-500/20',
-      border: 'border-red-500/30',
-      text: 'text-red-300',
-      icon: XCircle,
-      label: 'Cancelled'
-    }
+// Map OrderStatus to AdminStatusBadge status
+const mapOrderStatus = (status: OrderStatus): 'pending' | 'processing' | 'completed' | 'cancelled' | 'active' | 'inactive' | 'paid' => {
+  const statusMap: Record<OrderStatus, 'pending' | 'processing' | 'completed' | 'cancelled' | 'active' | 'inactive' | 'paid'> = {
+    pending: 'pending',
+    paid: 'paid',
+    completed: 'completed',
+    cancelled: 'cancelled'
   };
-
-  const variant = variants[status];
-  const Icon = variant.icon;
-
-  return (
-    <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full border ${variant.bg} ${variant.border} backdrop-blur-sm`}>
-      <Icon className={`w-3.5 h-3.5 ${variant.text}`} />
-      <span className={`text-xs font-semibold ${variant.text} uppercase tracking-wide`}>
-        {variant.label}
-      </span>
-    </div>
-  );
-};
-
-
-
-// Modern Stats Card Component
-const StatsCard: React.FC<{ 
-  title: string; 
-  value: string | number; 
-  icon: React.ComponentType<any>; 
-  color: string;
-  trend?: number;
-  subtitle?: string;
-}> = ({ title, value, icon: Icon, color, trend, subtitle }) => {
-  return (
-    <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-pink-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
-      {/* Background gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
-      
-      {/* Content */}
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${color} shadow-lg`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-          {trend !== undefined && (
-            <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium ${
-              trend >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-            }`}>
-              <TrendingUp className={`w-3 h-3 ${trend < 0 ? 'rotate-180' : ''}`} />
-              <span>{Math.abs(trend)}%</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="space-y-1">
-          <p className="text-3xl font-bold text-white">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-          <p className="text-sm text-gray-400 font-medium">{title}</p>
-          {subtitle && (
-            <p className="text-xs text-gray-500">{subtitle}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  return statusMap[status];
 };
 
 // Modern Filter Component
@@ -194,17 +119,21 @@ const OrderFilters: React.FC<{
         </div>
 
         {/* Actions */}
-        <div className="flex items-end space-x-2">
-          <button
+        <div className="flex items-end gap-2">
+          <AdminButton
+            variant="secondary"
             onClick={onRefresh}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-3 bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white rounded-xl transition-all duration-200 font-medium"
+            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all duration-200 font-medium">
-            <Download className="w-4 h-4" />
-          </button>
+            Refresh
+          </AdminButton>
+          <AdminButton
+            variant="secondary"
+            icon={<Download size={18} />}
+          >
+            Export
+          </AdminButton>
         </div>
       </div>
     </div>
@@ -414,61 +343,86 @@ const AdminOrdersV2: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-              Orders Management
-            </h1>
-            <p className="text-gray-400 mt-2">Manage and track all customer orders</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg shadow-pink-500/25">
-              <Plus className="w-5 h-5 mr-2 inline" />
-              New Order
-            </button>
-          </div>
+    <div className="admin-page">
+      {/* Header */}
+      <div className="admin-page-header">
+        <div>
+          <h1 className="admin-page-title">
+            <ShoppingCart className="inline-block mr-2" size={28} />
+            Orders Management
+          </h1>
+          <p className="admin-page-subtitle">Manage and track all customer orders</p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Total Orders"
-            value={stats.total}
-            icon={ShoppingCart}
-            color="from-blue-500 to-cyan-600"
-            trend={12.5}
-            subtitle="All time orders"
-          />
-          <StatsCard
-            title="Today's Orders"
-            value={stats.todayOrders}
-            icon={Calendar}
-            color="from-emerald-500 to-green-600"
-            trend={8.2}
-            subtitle="Orders placed today"
-          />
-          <StatsCard
-            title="Total Revenue"
-            value={formatCurrency(stats.totalRevenue)}
-            icon={DollarSign}
-            color="from-purple-500 to-violet-600"
-            trend={15.3}
-            subtitle="From completed orders"
-          />
-          <StatsCard
-            title="Pending Orders"
-            value={stats.pending}
-            icon={Clock}
-            color="from-amber-500 to-orange-600"
-            trend={-2.1}
-            subtitle="Awaiting processing"
-          />
+        <div className="flex gap-3">
+          <AdminButton
+            variant="primary"
+            icon={<Plus size={18} />}
+          >
+            New Order
+          </AdminButton>
         </div>
+      </div>
 
-        {/* Filters */}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600 mb-1">Total Orders</p>
+                <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <ShoppingCart className="text-blue-600" size={24} />
+              </div>
+            </div>
+          </AdminCardBody>
+        </AdminCard>
+
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600 mb-1">Today's Orders</p>
+                <p className="text-3xl font-bold text-green-600">{stats.todayOrders}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Calendar className="text-green-600" size={24} />
+              </div>
+            </div>
+          </AdminCardBody>
+        </AdminCard>
+
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600 mb-1">Total Revenue</p>
+                <p className="text-3xl font-bold text-pink-600">{formatCurrency(stats.totalRevenue)}</p>
+              </div>
+              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="text-pink-600" size={24} />
+              </div>
+            </div>
+          </AdminCardBody>
+        </AdminCard>
+
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600 mb-1">Pending Orders</p>
+                <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Clock className="text-orange-600" size={24} />
+              </div>
+            </div>
+          </AdminCardBody>
+        </AdminCard>
+      </div>
+
+      {/* Filters */}
         <OrderFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -481,20 +435,21 @@ const AdminOrdersV2: React.FC = () => {
         />
 
         {/* Orders Table */}
-        <div className="bg-black border border-gray-800 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider">Customer</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider">Order Details</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider">Amount</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider">Date</th>
-                  <th className="text-right px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
+        <AdminCard>
+          <AdminCardBody>
+            <div className="overflow-x-auto">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Order Details</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {loading ? (
                   // Loading skeleton
                   [...Array(5)].map((_, i) => (
@@ -570,7 +525,10 @@ const AdminOrdersV2: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={order.status as OrderStatus} />
+                        <AdminStatusBadge 
+                          status={mapOrderStatus(order.status as OrderStatus)} 
+                          label={order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        />
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-300">
@@ -617,7 +575,8 @@ const AdminOrdersV2: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
+          </AdminCardBody>
+        </AdminCard>
 
         {/* Enhanced Pagination */}
         {filteredOrders.length > 0 && (
@@ -720,7 +679,6 @@ const AdminOrdersV2: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 

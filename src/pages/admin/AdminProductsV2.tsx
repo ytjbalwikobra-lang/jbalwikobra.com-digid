@@ -4,9 +4,10 @@ import { Package, Search, Filter, RefreshCw, Plus, Edit, Trash2, Eye, ShoppingCa
 import { adminService, Product } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
-import { 
-  AdminStatCard
-} from './components/ui';
+import { AdminButton } from './components/ui/AdminButton';
+import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
+import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import '../../styles/admin-design-system-v3.css';
 
 interface ProductStats {
   total: number;
@@ -367,29 +368,32 @@ const AdminProductsV2: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header - Flash Sales Style */}
-      <div className="flex items-center justify-between">
+    <div className="admin-page">
+      {/* Header */}
+      <div className="admin-page-header">
         <div>
-          <h1 className="text-2xl font-bold text-white">Product Management</h1>
-          <p className="text-gray-400 text-sm">Manage your products and inventory</p>
+          <h1 className="admin-page-title">
+            <Package className="inline-block mr-2" size={28} />
+            Product Management
+          </h1>
+          <p className="admin-page-subtitle">Manage your products and inventory</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <button
+        <div className="flex gap-3">
+          <AdminButton
+            variant="secondary"
             onClick={handleRefresh}
             disabled={loading || refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
+            icon={<RefreshCw className={(loading || refreshing) ? 'animate-spin' : ''} size={18} />}
           >
-            <RefreshCw className={`h-4 w-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
             Refresh
-          </button>
-          <button
+          </AdminButton>
+          <AdminButton
+            variant="primary"
             onClick={handleAddProduct}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-colors"
+            icon={<Plus size={18} />}
           >
-            <Plus className="h-4 w-4" />
             Add Product
-          </button>
+          </AdminButton>
         </div>
       </div>
 
@@ -417,35 +421,62 @@ const AdminProductsV2: React.FC = () => {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <AdminStatCard
-            title="Total Products"
-            value={loading ? '...' : stats.total}
-            icon={Package}
-            iconColor="text-blue-400"
-            iconBgColor="bg-blue-500/20"
-          />
-          <AdminStatCard
-            title="Active Products"
-            value={loading ? '...' : stats.active}
-            icon={ShoppingCart}
-            iconColor="text-green-400"
-            iconBgColor="bg-green-500/20"
-          />
-          <AdminStatCard
-            title="Archived Products"
-            value={loading ? '...' : stats.archived}
-            icon={Archive}
-            iconColor="text-gray-400"
-            iconBgColor="bg-gray-500/20"
-          />
-          <AdminStatCard
-            title="Total Value"
-            value={loading ? '...' : formatPrice(stats.totalValue)}
-            icon={DollarSign}
-            iconColor="text-yellow-400"
-            iconBgColor="bg-yellow-500/20"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Total Products</p>
+                  <p className="text-3xl font-bold text-slate-900">{loading ? '...' : stats.total}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Package className="text-blue-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
+
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Active Products</p>
+                  <p className="text-3xl font-bold text-green-600">{loading ? '...' : stats.active}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <ShoppingCart className="text-green-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
+
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Archived Products</p>
+                  <p className="text-3xl font-bold text-slate-500">{loading ? '...' : stats.archived}</p>
+                </div>
+                <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+                  <Archive className="text-slate-500" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
+
+          <AdminCard hover>
+            <AdminCardBody>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-1">Total Value</p>
+                  <p className="text-3xl font-bold text-pink-600">{loading ? '...' : formatPrice(stats.totalValue)}</p>
+                </div>
+                <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="text-pink-600" size={24} />
+                </div>
+              </div>
+            </AdminCardBody>
+          </AdminCard>
         </div>
 
         {/* Filters */}

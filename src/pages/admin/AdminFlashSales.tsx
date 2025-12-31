@@ -9,15 +9,18 @@ import { useToast } from '../../components/Toast';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
-import { Zap, TrendingUp, Clock, Package, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Zap, TrendingUp, Clock, Package, Plus, Trash2, RefreshCw, Edit2 } from 'lucide-react';
 import '../../styles/admin-design-system-v3.css';
 import { Product, FlashSale } from '../../types';
+import FlashSaleModal from './components/FlashSaleModal';
 
 type FlashSaleWithProduct = FlashSale & { product: Product };
 
 const AdminFlashSales: React.FC = () => {
   const [flashSales, setFlashSales] = useState<FlashSaleWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedFlashSale, setSelectedFlashSale] = useState<FlashSale | null>(null);
   const { push } = useToast();
 
   useEffect(() => {
@@ -58,6 +61,25 @@ const AdminFlashSales: React.FC = () => {
     }
   };
 
+  const handleCreate = () => {
+    setSelectedFlashSale(null);
+    setModalOpen(true);
+  };
+
+  const handleEdit = (sale: FlashSaleWithProduct) => {
+    setSelectedFlashSale(sale);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedFlashSale(null);
+  };
+
+  const handleModalSuccess = () => {
+    loadFlashSales();
+  };
+
   const stats = {
     total: flashSales.length,
     active: flashSales.filter(s => s.isActive).length,
@@ -90,6 +112,7 @@ const AdminFlashSales: React.FC = () => {
           <AdminButton
             variant="primary"
             icon={<Plus size={18} />}
+            onClick={handleCreate}
           >
             Create Flash Sale
           </AdminButton>
@@ -250,6 +273,15 @@ const AdminFlashSales: React.FC = () => {
                         <td>
                           <div className="flex gap-2">
                             <AdminButton
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleEdit(sale)}
+                              icon={<Edit2 size={16} />}
+                              aria-label="Edit flash sale"
+                            >
+                              Edit
+                            </AdminButton>
+                            <AdminButton
                               variant="danger"
                               size="sm"
                               onClick={() => handleDelete(sale.id)}
@@ -269,6 +301,14 @@ const AdminFlashSales: React.FC = () => {
           )}
         </AdminCardBody>
       </AdminCard>
+
+      {/* Flash Sale Modal */}
+      <FlashSaleModal
+        isOpen={modalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleModalSuccess}
+        flashSale={selectedFlashSale}
+      />
     </div>
   );
 };

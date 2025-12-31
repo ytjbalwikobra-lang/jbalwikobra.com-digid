@@ -134,9 +134,9 @@ const AdminSettings: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            <SettingsIcon className="inline-block mr-2" size={28} />
-            Website Settings
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent flex items-center gap-2">
+            <SettingsIcon size={28} />
+            <span>Website Settings</span>
           </h1>
           <p className="text-gray-400 mt-1">
             Manage your website configuration and information

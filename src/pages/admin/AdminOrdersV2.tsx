@@ -259,9 +259,9 @@ const AdminOrdersV2: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            <ShoppingCart className="inline-block mr-2" size={28} />
-            Orders Management
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent flex items-center gap-2">
+            <ShoppingCart size={28} />
+            <span>Orders Management</span>
           </h1>
           <p className="text-gray-400 mt-1">Manage and track all customer orders</p>
         </div>

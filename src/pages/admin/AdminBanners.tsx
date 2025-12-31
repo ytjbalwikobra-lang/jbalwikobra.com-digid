@@ -3,8 +3,6 @@ import { Banner } from '../../types';
 import { BannerService } from '../../services/bannerService';
 import { Plus, Trash2, Save, Edit3, Image as ImageIcon, Link as LinkIcon, Loader2, Eye, Edit, Globe } from 'lucide-react';
 import { 
-  AdminPageHeaderV2, 
-  AdminStatCard, 
   AdminFilters, 
   AdminDataTable, 
   StatusBadge 
@@ -262,9 +260,9 @@ const AdminBanners: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            <ImageIcon className="inline-block mr-2" size={28} />
-            Banners
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent flex items-center gap-2">
+            <ImageIcon size={28} />
+            <span>Banners</span>
           </h1>
           <p className="text-gray-400 mt-1">Manage website banners and promotional content</p>
         </div>

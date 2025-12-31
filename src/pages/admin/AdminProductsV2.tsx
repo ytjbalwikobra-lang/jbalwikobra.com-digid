@@ -9,6 +9,7 @@ import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/Admin
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
+import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import '../../styles/admin-design-system-v3.css';
 
 interface ProductStats {
@@ -72,6 +73,7 @@ const AdminProductsV2: React.FC = () => {
 
   const { push } = useToast();
   const navigate = useNavigate();
+  const { showConfirm, ConfirmModal } = useAdminConfirm();
 
   // Use actual stats from database instead of calculated from visible data
   const stats = productStats;
@@ -271,12 +273,20 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const handleArchiveProduct = async (product: Product) => {
-    if (!confirm(`Are you sure you want to archive product: ${product.name}?\n\nThis will hide the product from both admin panel and public pages. You can restore it later if needed.`)) {
-      return;
-    }
+    const confirmed = await showConfirm({
+      title: 'Archive Product',
+      message: `Are you sure you want to archive "${product.name}"?\n\nThis will hide the product from both admin panel and public pages. You can restore it later if needed.`,
+      type: 'warning',
+      confirmText: 'Archive',
+      cancelText: 'Cancel'
+    });
+    
+    if (!confirmed) return;
+    
     // Optimistic UI: update immediately in local state
     const prev = products;
     setProducts(prev.map(p => p.id === product.id ? { ...p, archived_at: new Date().toISOString(), is_active: false } : p));
+    
     try {
       const ok = await adminService.deleteProduct(product.id);
       if (!ok) throw new Error('Archive failed');
@@ -374,9 +384,9 @@ const AdminProductsV2: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            <Package className="inline-block mr-2" size={28} />
-            Product Management
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent flex items-center gap-2">
+            <Package size={28} />
+            <span>Product Management</span>
           </h1>
           <p className="text-gray-400 mt-1">Manage your products and inventory</p>
         </div>
@@ -774,6 +784,9 @@ const AdminProductsV2: React.FC = () => {
         mode={modalState.mode}
         onSuccess={handleModalSuccess}
       />
+      
+      {/* Confirmation Modal */}
+      <ConfirmModal />
     </div>
   );
 };

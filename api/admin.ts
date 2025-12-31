@@ -190,8 +190,16 @@ async function recentNotifications(limit: number) {
 async function listOrders(page: number, limit: number, status?: string) {
   console.log('📦 [API /api/admin] listOrders: page', page, 'limit', limit, 'status', status);
   console.log('🔑 [API /api/admin] Using key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
+  console.log('🔑 [API /api/admin] Supabase URL:', supabaseUrl);
+  console.log('🔑 [API /api/admin] SERVICE_KEY present:', !!supabaseServiceKey);
   
   if (!supabase) return { data: [], count: 0, page };
+  
+  // FIRST: Test raw count without any filters
+  console.log('[listOrders] Testing raw table access...');
+  const rawTest = await supabase.from('orders').select('*', { count: 'exact', head: true });
+  console.log('[listOrders] Raw table count test:', { count: rawTest.count, error: rawTest.error });
+  
   const from = (page - 1) * limit; const to = from + limit - 1;
   
   // First get orders - only select columns that exist in the table
@@ -288,6 +296,8 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
 async function listUsers(page: number, limit: number, search?: string) {
   console.log('👥 [API /api/admin] listUsers: page', page, 'limit', limit, 'search', search);
   console.log('🔑 [API /api/admin] Using key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
+  console.log('🔑 [API /api/admin] Supabase URL:', supabaseUrl);
+  console.log('🔑 [API /api/admin] SERVICE_KEY present:', !!supabaseServiceKey);
   
   if (!supabase) {
     console.error('[listUsers] Supabase client not initialized');
@@ -295,6 +305,11 @@ async function listUsers(page: number, limit: number, search?: string) {
   }
   
   console.log('[listUsers] Querying users - page:', page, 'limit:', limit, 'search:', search);
+  
+  // FIRST: Test raw count without any filters
+  console.log('[listUsers] Testing raw table access...');
+  const rawTest = await supabase.from('users').select('*', { count: 'exact', head: true });
+  console.log('[listUsers] Raw table count test:', { count: rawTest.count, error: rawTest.error });
   
   const from = (page - 1) * limit; 
   const to = from + limit - 1;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Search, Filter, RefreshCw, Plus, Edit, Trash2, Eye, ShoppingCart, DollarSign, Archive, Calendar, Tag, ArrowUpRight, ArrowDownRight, Activity, FileDown, TrendingUp } from 'lucide-react';
 import { adminService, Product } from '../../services/adminService';
+import { supabase } from '../../services/supabase';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
@@ -59,6 +60,12 @@ const AdminProductsV2: React.FC = () => {
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [gameTitles, setGameTitles] = useState<Array<{ id: string; name: string }>>([]);
   const [tiers, setTiers] = useState<Array<{ id: string; name: string }>>([]);
+  
+  // Active rental tracking
+  const [activeRentals, setActiveRentals] = useState<Map<string, boolean>>(new Map());
+  
+  // Active rental tracking
+  const [activeRentals, setActiveRentals] = useState<Map<string, boolean>>(new Map());
 
   // Modal state
   const [modalState, setModalState] = useState<{
@@ -221,9 +228,66 @@ const AdminProductsV2: React.FC = () => {
     }
   };
 
+  // Load active rentals from orders
+  const loadActiveRentals = async () => {
+    try {
+      if (!supabase) return;
+      
+      // Get all rental orders that are paid or completed
+      const { data: rentalOrders } = await supabase
+        .from('orders')
+        .select('product_id, created_at, rental_duration')
+        .eq('order_type', 'rental')
+        .in('status', ['paid', 'completed'])
+        .not('product_id', 'is', null);
+      
+      if (!rentalOrders || rentalOrders.length === 0) {
+        setActiveRentals(new Map());
+        return;
+      }
+      
+      // Calculate which products are currently being rented
+      const now = new Date();
+      const activeRentalMap = new Map<string, boolean>();
+      
+      for (const order of rentalOrders) {
+        if (!order.product_id || !order.rental_duration) continue;
+        
+        // Parse rental duration (e.g., "3 HARI", "1 MINGGU")
+        const duration = order.rental_duration.toLowerCase();
+        let daysToAdd = 0;
+        
+        if (duration.includes('hari')) {
+          const match = duration.match(/(\\d+)\\s*hari/);
+          daysToAdd = match ? parseInt(match[1]) : 0;
+        } else if (duration.includes('minggu')) {
+          const match = duration.match(/(\\d+)\\s*minggu/);
+          daysToAdd = match ? parseInt(match[1]) * 7 : 0;
+        } else if (duration.includes('bulan')) {
+          const match = duration.match(/(\\d+)\\s*bulan/);
+          daysToAdd = match ? parseInt(match[1]) * 30 : 0;
+        }
+        
+        // Calculate rental end date
+        const orderDate = new Date(order.created_at);
+        const rentalEndDate = new Date(orderDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+        
+        // Check if rental is still active
+        if (now <= rentalEndDate) {
+          activeRentalMap.set(order.product_id, true);
+        }
+      }
+      
+      setActiveRentals(activeRentalMap);
+    } catch (error) {
+      console.error('Error loading active rentals:', error);
+    }
+  };
+
   useEffect(() => {
     loadProducts();
     loadDropdownData();
+    loadActiveRentals(); // Load active rentals on mount
   }, []); // Load products only once on component mount
 
   // Reload when search or major filters change (with caching)
@@ -365,6 +429,10 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const getStatusColor = (product: Product) => {
+    // Check if product is currently being rented
+    if (activeRentals.get(product.id)) {
+      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+    }
     if (product.archived_at || !product.is_active) {
       return 'bg-gray-500/20 text-gray-300';
     }
@@ -372,6 +440,10 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const getStatusText = (product: Product) => {
+    // Check if product is currently being rented
+    if (activeRentals.get(product.id)) {
+      return 'Renting';
+    }
     if (product.archived_at) return 'Archived';
     if (!product.is_active) return 'Inactive';
     return 'Active';

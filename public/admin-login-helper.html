@@ -147,11 +147,10 @@
             resultDiv.innerHTML = '<p class="info">🔄 Testing login...</p>';
 
             try {
-                const response = await fetch('/api/auth', {
+                const response = await fetch('/api/auth?action=login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'login',
                         identifier: identifier,
                         password: password
                     })
@@ -200,11 +199,10 @@
 
             for (const password of passwords) {
                 try {
-                    const response = await fetch('/api/auth', {
+                    const response = await fetch('/api/auth?action=login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            action: 'login',
                             identifier: identifier,
                             password: password
                         })
@@ -272,11 +270,10 @@
                 // If user doesn't exist, try to create new user
                 resultDiv.innerHTML += '<p class="warning">User not found. Step 2: Creating new user...</p>';
 
-                const signupResponse = await fetch('/api/auth', {
+                const signupResponse = await fetch('/api/auth?action=signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'signup',
                         phone: phone,
                         password: password,
                         name: name,

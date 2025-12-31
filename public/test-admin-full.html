@@ -119,19 +119,18 @@
         }
 
         async function doLogin() {
-            const phone = document.getElementById('phone').value;
+            const identifier = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
             const loginStatus = document.getElementById('loginStatus');
 
             loginStatus.innerHTML = '<p class="info">🔄 Logging in...</p>';
 
             try {
-                const response = await fetch('/api/auth', {
+                const response = await fetch('/api/auth?action=login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'login',
-                        phone: phone,
+                        identifier: identifier,
                         password: password
                     })
                 });

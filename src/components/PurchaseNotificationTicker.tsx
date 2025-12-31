@@ -94,12 +94,14 @@ const PurchaseNotificationTicker: React.FC = () => {
       const response = await fetch('/api/recent-purchases');
       if (response.ok) {
         const result = await response.json();
+        console.log('📊 Purchase Ticker - Fetched data:', result);
         if (result.success && result.data.length > 0) {
           setPurchases(result.data);
+          console.log('✅ Purchase Ticker - Set purchases:', result.data.length, 'items');
         }
       }
     } catch (error) {
-      console.error('Failed to fetch recent purchases:', error);
+      console.error('❌ Purchase Ticker - Failed to fetch:', error);
     }
   };
 
@@ -135,43 +137,48 @@ const PurchaseNotificationTicker: React.FC = () => {
         }}
       >
         <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
-            {/* Premium Sparkle */}
-            {isPremium && (
-              <span className="text-yellow-200 text-lg animate-pulse-slow">✨</span>
-            )}
-            
-            {/* Rocket Icon with Light Pulse */}
-            <div className="animate-pulse-slow flex-shrink-0">
-              <Rocket className="w-4 h-4 md:w-5 md:h-5" />
-            </div>
-
-            {/* Purchase Info - New Format: {nama user} {tipe transaksi} {nama akun} {timestamp} */}
-            <div className="flex items-center gap-1.5 md:gap-2 font-medium flex-1 min-w-0">
-              <span className="truncate max-w-[100px] sm:max-w-[150px]">
-                {purchase.customer_name}
-              </span>
-              <span className="flex-shrink-0">{transactionType}</span>
-              <span className={`font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-none ${isPremium ? 'text-yellow-100' : ''}`}>
-                {purchase.product_name}
-              </span>
+          <div className="flex items-center justify-between gap-2 md:gap-3 text-sm md:text-base">
+            {/* Left side: Icons and Purchase Info */}
+            <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+              {/* Premium Sparkle */}
               {isPremium && (
-                <span className="text-yellow-200 font-bold">👑</span>
+                <span className="text-yellow-200 text-lg animate-pulse-slow">✨</span>
               )}
-              <span className="text-xs md:text-sm opacity-90 flex-shrink-0">
-                {timeAgo}
-              </span>
+              
+              {/* Rocket Icon with Light Pulse */}
+              <div className="animate-pulse-slow flex-shrink-0">
+                <Rocket className="w-4 h-4 md:w-5 md:h-5" />
+              </div>
+
+              {/* Purchase Info - Format: {nama user} {tipe transaksi} {nama akun} */}
+              <div className="flex items-center gap-1.5 md:gap-2 font-medium flex-1 min-w-0">
+                <span className="truncate max-w-[100px] sm:max-w-[150px]">
+                  {purchase.customer_name}
+                </span>
+                <span className="flex-shrink-0">{transactionType}</span>
+                <span className={`font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-none ${isPremium ? 'text-yellow-100' : ''}`}>
+                  {purchase.product_name}
+                </span>
+                {isPremium && (
+                  <span className="text-yellow-200 font-bold">👑</span>
+                )}
+              </div>
+
+              {/* Animated Package Icon */}
+              <div className="animate-pulse-slow flex-shrink-0">
+                <Package className="w-4 h-4 md:w-5 md:h-5" />
+              </div>
+              
+              {/* Premium Sparkle */}
+              {isPremium && (
+                <span className="text-yellow-200 text-lg animate-pulse-slow">✨</span>
+              )}
             </div>
 
-            {/* Animated Package Icon */}
-            <div className="animate-pulse-slow flex-shrink-0">
-              <Package className="w-4 h-4 md:w-5 md:h-5" />
+            {/* Right side: Timestamp */}
+            <div className="flex-shrink-0 text-xs md:text-sm opacity-90 font-medium">
+              {timeAgo}
             </div>
-            
-            {/* Premium Sparkle */}
-            {isPremium && (
-              <span className="text-yellow-200 text-lg animate-pulse-slow">✨</span>
-            )}
           </div>
         </div>
       </div>

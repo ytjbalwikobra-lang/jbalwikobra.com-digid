@@ -68,4 +68,4 @@ export type DashboardStats = {
   flashSales: { count: number };
 };
 
-export type AdminTab = 'products' | 'orders' | 'users' | 'feed';
+export type AdminTab = 'products' | 'orders' | 'users';

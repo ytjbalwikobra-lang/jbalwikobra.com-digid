@@ -4,7 +4,6 @@ export type AdminTab =
   | 'orders'
   | 'users'
   | 'products'
-  | 'feed'
   | 'banners'
   | 'flash-sales'
   | 'reviews'

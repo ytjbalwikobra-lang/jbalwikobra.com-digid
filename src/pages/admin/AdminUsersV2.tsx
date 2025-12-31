@@ -161,10 +161,9 @@ const AdminUsersV2: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Dashboard-Style Header */}
-        <div className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Dashboard-Style Header */}
+      <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
               User Management
@@ -458,7 +457,6 @@ const AdminUsersV2: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 

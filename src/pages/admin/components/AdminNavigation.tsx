@@ -10,14 +10,12 @@ import {
   ShoppingCart,
   Users,
   Package,
-  MessageSquare,
   Image,
   Zap,
   Settings,
   Menu,
   X,
   Star,
-  Gamepad2,
 } from 'lucide-react';
 import { AdminColors } from '../design-tokens';
 
@@ -32,10 +30,8 @@ const navigationItems: NavItem[] = [
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/products', label: 'Products', icon: Package },
-  { path: '/admin/game-titles', label: 'Game Titles', icon: Gamepad2 },
   { path: '/admin/flash-sales', label: 'Flash Sales', icon: Zap },
   { path: '/admin/banners', label: 'Banners', icon: Image },
-  { path: '/admin/feed', label: 'Feed', icon: MessageSquare },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

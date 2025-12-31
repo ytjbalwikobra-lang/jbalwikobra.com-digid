@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, ShoppingCart, Users, MessageSquare } from 'lucide-react';
+import { Package, ShoppingCart, Users } from 'lucide-react';
 import { IOSButton } from '../../../components/ios/IOSDesignSystemV2';
 import { AdminTab } from '../types';
 
@@ -27,11 +27,6 @@ const AdminTabNavigation: React.FC<AdminTabNavigationProps> = ({
       id: 'users' as AdminTab,
       label: 'Users',
       icon: <Users className="w-5 h-5" />
-    },
-    {
-      id: 'feed' as AdminTab,
-      label: 'Feed',
-      icon: <MessageSquare className="w-5 h-5" />
     }
   ];
 

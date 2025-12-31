@@ -45,7 +45,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose, o
     { id: 'nav-orders', label: 'Go to Orders', type: 'nav', tab: 'orders', keywords: ['transactions','sales'] },
     { id: 'nav-users', label: 'Go to Users', type: 'nav', tab: 'users', keywords: ['customers','accounts'] },
     { id: 'nav-products', label: 'Go to Products', type: 'nav', tab: 'products', keywords: ['inventory','items'] },
-    { id: 'nav-feed', label: 'Go to Feed', type: 'nav', tab: 'feed', keywords: ['posts','content'] },
     { id: 'nav-banners', label: 'Go to Banners', type: 'nav', tab: 'banners', keywords: ['promo','ads'] },
     { id: 'nav-flash', label: 'Go to Flash Sales', type: 'nav', tab: 'flash-sales', keywords: ['sale','discount'] },
     { id: 'nav-reviews', label: 'Go to Reviews', type: 'nav', tab: 'reviews', keywords: ['feedback','rating'] },

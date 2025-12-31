@@ -10,8 +10,6 @@ import AdminSettings from './AdminSettings';
 import AdminWhatsAppSettings from './AdminWhatsAppSettings';
 import AdminBanners from './AdminBanners';
 import AdminFlashSales from './AdminFlashSales';
-import AdminPosts from './AdminPosts';
-import AdminGameTitles from './AdminGameTitles';
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -22,8 +20,6 @@ const AdminRoutes: React.FC = () => {
         <Route path="/orders" element={<AdminOrdersV2 />} />
         <Route path="/users" element={<AdminUsersV2 />} />
         <Route path="/products" element={<AdminProductsV2 />} />
-        <Route path="/game-titles" element={<AdminGameTitles />} />
-        <Route path="/feed" element={<AdminPosts />} />
         <Route path="/banners" element={<AdminBanners />} />
         <Route path="/flash-sales" element={<AdminFlashSales />} />
         <Route path="/settings" element={<AdminSettings />} />

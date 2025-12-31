@@ -55,7 +55,7 @@ const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const MaintenancePage = React.lazy(() => import('./pages/MaintenancePage'));
 
 // Lazy load admin pages (biggest performance impact)
-const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminRoutes = React.lazy(() => import('./pages/admin/AdminRoutes'));
 
 // Optimized loading component for better perceived performance (iOS skeleton)
 const PageLoader = () => (
@@ -178,7 +178,7 @@ function App() {
                   // Development: Allow admin access without authentication
                   <Route path="/admin/*" element={
                     <Suspense fallback={<PageLoader />}>
-                      <AdminDashboard />
+                      <AdminRoutes />
                     </Suspense>
                   } />
                 ) : (
@@ -186,7 +186,7 @@ function App() {
                   <Route element={<RequireAdmin />}>
                     <Route path="/admin/*" element={
                       <Suspense fallback={<PageLoader />}>
-                        <AdminDashboard />
+                        <AdminRoutes />
                       </Suspense>
                     } />
                   </Route>

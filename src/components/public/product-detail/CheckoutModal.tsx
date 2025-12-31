@@ -237,9 +237,9 @@ const CheckoutModal: React.FC<Props> = ({
           {/* Scrollable Content */}
           <div 
             ref={modalContentRef}
-            className="overflow-y-auto max-h-[95vh] md:max-h-[85vh] p-4 md:p-6"
+            className="overflow-y-auto max-h-[95vh] md:max-h-[85vh] p-3 md:p-5"
           >
-            <form className="space-y-4 md:space-y-6">
+            <form className="space-y-3 md:space-y-5">
               {/* Header */}
               <PurchaseFormHeader
                 checkoutType={checkoutType}
@@ -283,7 +283,7 @@ const CheckoutModal: React.FC<Props> = ({
                       
                       {/* Step title */}
                       <div 
-                        className={`mt-2 text-xs md:text-sm font-medium transition-colors duration-300 text-center ${
+                        className={`mt-1.5 text-[10px] md:text-xs font-medium transition-colors duration-300 text-center max-w-[70px] md:max-w-none ${
                           currentStep >= step.number ? 'text-white' : 'text-gray-500'
                         }`}
                       >
@@ -295,13 +295,13 @@ const CheckoutModal: React.FC<Props> = ({
               </div>
 
               {/* Step Content */}
-              <div className="min-h-[300px]">
+              <div className="min-h-[250px]">
                 {/* Step 1: Customer Information */}
                 {currentStep === 1 && (
-                  <div className="animate-fade-in space-y-4">
+                  <div className="animate-fade-in space-y-3">
                     {/* Step Info */}
-                    <div className="bg-pink-500/10 border border-pink-500/30 rounded-xl p-3 md:p-4">
-                      <p className="text-sm text-pink-200">
+                    <div className="bg-pink-500/10 border border-pink-500/30 rounded-lg p-2.5 md:p-3">
+                      <p className="text-xs md:text-sm text-pink-200">
                         📝 <strong>Langkah 1 dari 3:</strong> Masukkan informasi pembeli untuk pengiriman detail akun.
                       </p>
                     </div>
@@ -318,10 +318,10 @@ const CheckoutModal: React.FC<Props> = ({
 
                 {/* Step 2: Payment Methods */}
                 {currentStep === 2 && (
-                  <div className="animate-fade-in space-y-4">
+                  <div className="animate-fade-in space-y-3">
                     {/* Step Info */}
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 md:p-4">
-                      <p className="text-sm text-blue-200">
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2.5 md:p-3">
+                      <p className="text-xs md:text-sm text-blue-200">
                         💳 <strong>Langkah 2 dari 3:</strong> Pilih metode pembayaran yang paling sesuai untuk Anda.
                       </p>
                     </div>
@@ -340,18 +340,18 @@ const CheckoutModal: React.FC<Props> = ({
 
                 {/* Step 3: Terms and Confirmation */}
                 {currentStep === 3 && (
-                  <div className="animate-fade-in space-y-4">
+                  <div className="animate-fade-in space-y-3">
                     {/* Step Info */}
-                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 md:p-4">
-                      <p className="text-sm text-green-200">
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2.5 md:p-3">
+                      <p className="text-xs md:text-sm text-green-200">
                         ✅ <strong>Langkah 3 dari 3:</strong> Tinjau pesanan dan setujui syarat & ketentuan untuk melanjutkan.
                       </p>
                     </div>
 
                     {/* Order Summary */}
-                    <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4">
-                      <h3 className="text-lg font-semibold text-white mb-3">Ringkasan Pesanan</h3>
-                      <div className="space-y-2 text-sm">
+                    <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3">
+                      <h3 className="text-base font-semibold text-white mb-2">Ringkasan Pesanan</h3>
+                      <div className="space-y-1.5 text-xs md:text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Nama:</span>
                           <span className="text-white font-medium">{customer.name}</span>
@@ -392,15 +392,15 @@ const CheckoutModal: React.FC<Props> = ({
 
               {/* Navigation Buttons */}
               {currentStep < 3 && (
-                <div className="flex space-x-3 pt-4 border-t border-white/10">
+                <div className="flex gap-2 pt-3 border-t border-white/10">
                   <PNButton
                     variant="ghost"
                     size="lg"
                     onClick={currentStep === 1 ? onClose : handlePrevStep}
-                    className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-800"
+                    className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-800 flex items-center justify-center gap-1 min-w-0 whitespace-nowrap"
                   >
-                    <ChevronLeft size={20} className="mr-1" />
-                    {currentStep === 1 ? 'Tutup' : 'Kembali'}
+                    <ChevronLeft size={18} className="flex-shrink-0" />
+                    <span className="truncate">{currentStep === 1 ? 'Tutup' : 'Kembali'}</span>
                   </PNButton>
                   
                   <PNButton
@@ -411,14 +411,14 @@ const CheckoutModal: React.FC<Props> = ({
                       (currentStep === 1 && !isStep1Valid) ||
                       (currentStep === 2 && !isStep2Valid)
                     }
-                    className={`flex-1 flex items-center justify-center space-x-2 ${
+                    className={`flex-1 flex items-center justify-center gap-1 min-w-0 whitespace-nowrap ${
                       ((currentStep === 1 && isStep1Valid) || (currentStep === 2 && isStep2Valid))
                         ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700'
                         : 'opacity-50 cursor-not-allowed'
                     }`}
                   >
-                    <span>Lanjutkan</span>
-                    <ChevronRight size={20} className="ml-1" />
+                    <span className="truncate">Lanjutkan</span>
+                    <ChevronRight size={18} className="flex-shrink-0" />
                   </PNButton>
                 </div>
               )}

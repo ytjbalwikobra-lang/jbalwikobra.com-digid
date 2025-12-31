@@ -317,8 +317,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Send WhatsApp notification to customer AFTER invoice is created
-    if (createdOrder && customer?.mobile_number && xenditData.invoice_url) {
-      console.log('[Payment] Attempting to send WhatsApp notification with payment link...');
+    console.log('[Payment] Checking WhatsApp notification conditions:', {
+      hasCreatedOrder: !!createdOrder,
+      hasCustomerMobile: !!customer?.mobile_number,
+      hasInvoiceUrl: !!xenditData?.invoice_url,
+      customerMobile: customer?.mobile_number,
+      invoiceUrl: xenditData?.invoice_url
+    });
+    
+    if (createdOrder && customer?.mobile_number && xenditData?.invoice_url) {
+      console.log('[Payment] All conditions met, attempting to send WhatsApp notification...');
       try {
         const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
         const wa = new DynamicWhatsAppService();
@@ -330,7 +338,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
         else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
         
+        console.log('[Payment] Normalized phone number:', customerPhone);
+        
         if (/^62\d{8,15}$/.test(customerPhone)) {
+          console.log('[Payment] Phone number valid, preparing message...');
           const productName = createdOrder.product_name || 'Produk Digital';
           const productId = createdOrder.product_id;
           const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
@@ -373,6 +384,8 @@ Terima kasih Bosku! 🎮✨`;
 
           const contextId = `order:${createdOrder.id}:created`;
           
+          console.log('[Payment] Sending WhatsApp message, contextId:', contextId);
+          
           const sendRes = await wa.sendMessage({
             phone: customerPhone,
             message,
@@ -380,15 +393,21 @@ Terima kasih Bosku! 🎮✨`;
             contextId
           });
           
+          console.log('[Payment] WhatsApp send result:', JSON.stringify(sendRes));
+          
           if (sendRes.success) {
             console.log('[WhatsApp] ✅ New order notification with payment link sent to:', customerPhone);
           } else {
             console.error('[WhatsApp] ❌ Failed to send notification:', sendRes.error);
           }
+        } else {
+          console.error('[Payment] Invalid phone number format after normalization:', customerPhone);
         }
       } catch (waError) {
         console.error('[WhatsApp] ❌ Error sending notification:', waError);
       }
+    } else {
+      console.log('[Payment] WhatsApp notification skipped - conditions not met');
     }
 
     // Return standardized response (Invoice API format)

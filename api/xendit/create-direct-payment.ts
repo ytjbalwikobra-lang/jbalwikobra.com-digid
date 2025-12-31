@@ -318,15 +318,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Send WhatsApp notification to customer AFTER invoice is created
     console.log('[Payment] Checking WhatsApp notification conditions:', {
+      hasOrder: !!order,
       hasCreatedOrder: !!createdOrder,
       hasCustomerMobile: !!customer?.mobile_number,
       hasInvoiceUrl: !!xenditData?.invoice_url,
+      hasXenditId: !!xenditData?.id,
       customerMobile: customer?.mobile_number,
-      invoiceUrl: xenditData?.invoice_url
+      invoiceUrl: xenditData?.invoice_url,
+      xenditId: xenditData?.id
     });
     
-    if (createdOrder && customer?.mobile_number && xenditData?.invoice_url) {
-      console.log('[Payment] All conditions met, attempting to send WhatsApp notification...');
+    // Send WhatsApp if we have customer mobile and payment was created successfully
+    // Don't require createdOrder because database might not be configured
+    if (customer?.mobile_number && xenditData?.id && order) {
+      console.log('[Payment] Required conditions met, attempting to send WhatsApp notification...');
       try {
         const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
         const wa = new DynamicWhatsAppService();
@@ -342,9 +347,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         if (/^62\d{8,15}$/.test(customerPhone)) {
           console.log('[Payment] Phone number valid, preparing message...');
-          const productName = createdOrder.product_name || 'Produk Digital';
-          const productId = createdOrder.product_id;
+          // Use order data from request, fallback to createdOrder if available
+          const productName = order.product_name || createdOrder?.product_name || 'Produk Digital';
+          const productId = order.product_id || createdOrder?.product_id;
           const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
+          const orderId = createdOrder?.id || xenditData.external_id;
           
           // Generate payment URL to our own payment page
           const paymentUrl = `https://jbalwikobra.com/payment?id=${xenditData.id}&method=${payment_method_id}`;
@@ -377,7 +384,7 @@ Tinggal klik link di bawah ya Bosku, langsung bisa bayar!
 
 • Jangan lupa lunasin sebelum 24 jam ya Bosku, biar orderannya nggak hangus otomatis.
 
-• Simpan Order ID buat jaga-jaga: *${createdOrder.id}*
+• Simpan Order ID buat jaga-jaga: *${orderId}*
 
 💬 *Support:* wa.me/6289653510125
 
@@ -385,9 +392,10 @@ Tinggal klik link di bawah ya Bosku, langsung bisa bayar!
 
 Terima kasih Bosku! 🎮✨`;
 
-          const contextId = `order:${createdOrder.id}:created`;
+          const contextId = `order:${xenditData.external_id}:created`;
           
           console.log('[Payment] Sending WhatsApp message, contextId:', contextId);
+          console.log('[Payment] Message preview:', message.substring(0, 200) + '...');
           
           const sendRes = await wa.sendMessage({
             phone: customerPhone,
@@ -401,16 +409,21 @@ Terima kasih Bosku! 🎮✨`;
           if (sendRes.success) {
             console.log('[WhatsApp] ✅ New order notification with payment link sent to:', customerPhone);
           } else {
-            console.error('[WhatsApp] ❌ Failed to send notification:', sendRes.error);
+            console.error('[WhatsApp] ❌ Failed to send notification. Error:', sendRes.error);
           }
         } else {
           console.error('[Payment] Invalid phone number format after normalization:', customerPhone);
         }
-      } catch (waError) {
+      } catch (waError: any) {
         console.error('[WhatsApp] ❌ Error sending notification:', waError);
+        console.error('[WhatsApp] ❌ Error stack:', waError?.stack);
       }
     } else {
-      console.log('[Payment] WhatsApp notification skipped - conditions not met');
+      console.log('[Payment] WhatsApp notification skipped - required conditions not met:', {
+        hasCustomerMobile: !!customer?.mobile_number,
+        hasXenditId: !!xenditData?.id,
+        hasOrder: !!order
+      });
     }
 
     // Return standardized response (Invoice API format)

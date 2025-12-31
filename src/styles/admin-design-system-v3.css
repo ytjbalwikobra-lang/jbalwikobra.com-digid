@@ -874,3 +874,357 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================
+   TOAST NOTIFICATIONS - V3
+   Floating notifications for order updates
+======================================== */
+.admin-toast-container {
+  position: fixed;
+  bottom: var(--admin-space-6);
+  right: var(--admin-space-6);
+  z-index: var(--admin-z-notification);
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-space-3);
+  max-width: 420px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.admin-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--admin-space-3);
+  padding: var(--admin-space-4);
+  background: var(--admin-primary-light);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: var(--admin-shadow-xl);
+  pointer-events: auto;
+  animation: admin-toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--admin-transition-normal);
+}
+
+@keyframes admin-toast-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.admin-toast-exit {
+  animation: admin-toast-slide-out 0.3s cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+@keyframes admin-toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.admin-toast-icon-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--admin-radius-lg);
+}
+
+.admin-toast-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.admin-toast-success {
+  border-left: 4px solid var(--admin-success);
+}
+
+.admin-toast-success .admin-toast-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.admin-toast-success .admin-toast-icon {
+  color: var(--admin-success);
+}
+
+.admin-toast-error {
+  border-left: 4px solid var(--admin-error);
+}
+
+.admin-toast-error .admin-toast-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.admin-toast-error .admin-toast-icon {
+  color: var(--admin-error);
+}
+
+.admin-toast-warning {
+  border-left: 4px solid var(--admin-warning);
+}
+
+.admin-toast-warning .admin-toast-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.admin-toast-warning .admin-toast-icon {
+  color: var(--admin-warning);
+}
+
+.admin-toast-info {
+  border-left: 4px solid var(--admin-info);
+}
+
+.admin-toast-info .admin-toast-icon-wrapper {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.admin-toast-info .admin-toast-icon {
+  color: var(--admin-info);
+}
+
+.admin-toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-toast-title {
+  font-size: var(--admin-text-sm);
+  font-weight: var(--admin-font-semibold);
+  color: var(--admin-text-primary);
+  margin-bottom: var(--admin-space-1);
+}
+
+.admin-toast-message {
+  font-size: var(--admin-text-sm);
+  color: var(--admin-text-secondary);
+  line-height: 1.5;
+}
+
+.admin-toast-action {
+  margin-top: var(--admin-space-2);
+  padding: var(--admin-space-2) var(--admin-space-3);
+  background: var(--admin-accent);
+  color: white;
+  border: none;
+  border-radius: var(--admin-radius-md);
+  font-size: var(--admin-text-xs);
+  font-weight: var(--admin-font-medium);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+}
+
+.admin-toast-action:hover {
+  background: var(--admin-accent-hover);
+  transform: translateY(-1px);
+}
+
+.admin-toast-close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--admin-radius-md);
+  color: var(--admin-text-tertiary);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+}
+
+.admin-toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--admin-text-primary);
+}
+
+@media (max-width: 640px) {
+  .admin-toast-container {
+    bottom: var(--admin-space-4);
+    right: var(--admin-space-4);
+    left: var(--admin-space-4);
+    max-width: none;
+  }
+}
+
+/* ========================================
+   CONFIRMATION MODAL - V3
+   Modal for confirming critical actions
+======================================== */
+.admin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: var(--admin-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--admin-space-4);
+  animation: admin-confirm-fade-in 0.2s ease-out;
+}
+
+@keyframes admin-confirm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.admin-confirm-modal {
+  position: relative;
+  background: var(--admin-primary-light);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-xl);
+  box-shadow: var(--admin-shadow-2xl);
+  max-width: 480px;
+  width: 100%;
+  padding: var(--admin-space-6);
+  animation: admin-confirm-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes admin-confirm-scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.admin-confirm-danger { border-top: 4px solid var(--admin-error); }
+.admin-confirm-warning { border-top: 4px solid var(--admin-warning); }
+.admin-confirm-success { border-top: 4px solid var(--admin-success); }
+.admin-confirm-info { border-top: 4px solid var(--admin-info); }
+
+.admin-confirm-close {
+  position: absolute;
+  top: var(--admin-space-4);
+  right: var(--admin-space-4);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--admin-radius-md);
+  color: var(--admin-text-tertiary);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+}
+
+.admin-confirm-close:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--admin-text-primary);
+}
+
+.admin-confirm-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--admin-space-4);
+  border-radius: var(--admin-radius-full);
+}
+
+.admin-confirm-icon { width: 32px; height: 32px; }
+.admin-confirm-icon-danger { color: var(--admin-error); }
+.admin-confirm-danger .admin-confirm-icon-wrapper { background: rgba(239, 68, 68, 0.15); }
+.admin-confirm-icon-warning { color: var(--admin-warning); }
+.admin-confirm-warning .admin-confirm-icon-wrapper { background: rgba(245, 158, 11, 0.15); }
+.admin-confirm-icon-success { color: var(--admin-success); }
+.admin-confirm-success .admin-confirm-icon-wrapper { background: rgba(16, 185, 129, 0.15); }
+.admin-confirm-icon-info { color: var(--admin-info); }
+.admin-confirm-info .admin-confirm-icon-wrapper { background: rgba(59, 130, 246, 0.15); }
+
+.admin-confirm-content {
+  text-align: center;
+  margin-bottom: var(--admin-space-6);
+}
+
+.admin-confirm-title {
+  font-size: var(--admin-text-xl);
+  font-weight: var(--admin-font-bold);
+  color: var(--admin-text-primary);
+  margin: 0 0 var(--admin-space-2);
+}
+
+.admin-confirm-message {
+  font-size: var(--admin-text-base);
+  color: var(--admin-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.admin-confirm-actions {
+  display: flex;
+  gap: var(--admin-space-3);
+}
+
+.admin-confirm-button {
+  flex: 1;
+  padding: var(--admin-space-3) var(--admin-space-4);
+  font-size: var(--admin-text-base);
+  font-weight: var(--admin-font-semibold);
+  border: none;
+  border-radius: var(--admin-radius-lg);
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-space-2);
+  min-height: 44px;
+}
+
+.admin-confirm-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.admin-confirm-button-cancel {
+  background: var(--admin-primary-lighter);
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border);
+}
+
+.admin-confirm-button-cancel:hover:not(:disabled) {
+  background: var(--admin-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow-md);
+}
+
+.admin-confirm-button-confirm { color: white; }
+.admin-confirm-button-danger { background: var(--admin-error); }
+.admin-confirm-button-danger:hover:not(:disabled) { background: #dc2626; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+.admin-confirm-button-warning { background: var(--admin-warning); }
+.admin-confirm-button-warning:hover:not(:disabled) { background: #d97706; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); }
+.admin-confirm-button-success { background: var(--admin-success); }
+.admin-confirm-button-success:hover:not(:disabled) { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+.admin-confirm-button-info { background: var(--admin-info); }
+.admin-confirm-button-info:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+
+.admin-confirm-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: admin-confirm-spin 0.6s linear infinite;
+}
+
+@keyframes admin-confirm-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .admin-confirm-modal { padding: var(--admin-space-5); }
+  .admin-confirm-actions { flex-direction: column-reverse; }
+}

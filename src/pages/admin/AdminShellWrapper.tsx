@@ -8,6 +8,7 @@ import { AdminNavigation } from './components/AdminNavigation';
 import { Menu, Bell, User, LogOut } from 'lucide-react';
 import { AdminColors } from './design-tokens';
 import { useNavigate } from 'react-router-dom';
+import { AdminToastProvider } from './components/ui/AdminToast';
 import '../../styles/admin-design-system-v3.css';
 
 interface AdminShellProps {
@@ -25,24 +26,25 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: AdminColors.primary.DEFAULT }}>
-      {/* Navigation Sidebar */}
-      <AdminNavigation
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
+    <AdminToastProvider>
+      <div className="min-h-screen" style={{ backgroundColor: AdminColors.primary.DEFAULT }}>
+        {/* Navigation Sidebar */}
+        <AdminNavigation
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
 
-      {/* Main Content Area */}
-      <div className="lg:ml-64">
-        {/* Top Header Bar */}
-        <header
-          className="sticky top-0 z-30 border-b"
-          style={{
-            backgroundColor: AdminColors.primary.light,
-            borderColor: AdminColors.border.DEFAULT,
-          }}
-        >
-          <div className="flex items-center justify-between px-4 lg:px-6 h-16">
+        {/* Main Content Area */}
+        <div className="lg:ml-64">
+          {/* Top Header Bar */}
+          <header
+            className="sticky top-0 z-30 border-b"
+            style={{
+              backgroundColor: AdminColors.primary.light,
+              borderColor: AdminColors.border.DEFAULT,
+            }}
+          >
+            <div className="flex items-center justify-between px-4 lg:px-6 h-16">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -103,6 +105,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
         </main>
       </div>
     </div>
+    </AdminToastProvider>
   );
 };
 

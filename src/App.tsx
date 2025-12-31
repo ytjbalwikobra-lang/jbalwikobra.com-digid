@@ -25,6 +25,7 @@ import { productionMonitor } from './utils/productionMonitor';
 import { onIdle, warmImport } from './utils/prefetch';
 import { enhancedProductService } from './services/enhancedProductService';
 import UserFloatingNotifications from './components/UserFloatingNotifications';
+import PurchaseNotificationTicker from './components/PurchaseNotificationTicker';
 // Cloudflare Turnstile verification - enabled when maintenance mode is off
 import FirstVisitVerification from './components/FirstVisitVerification';
 
@@ -197,6 +198,8 @@ function App() {
                   <div className="App min-h-screen flex flex-col bg-black text-white relative">
           {/* New PN public header; keep legacy header import for compatibility in other routes */}
           <PNHeader />
+                    {/* Purchase notification ticker - shows on all pages */}
+                    <PurchaseNotificationTicker />
                     {/* Floating notifications for public app */}
                     <UserFloatingNotifications />
                     <main className="flex-1 pb-4 lg:pt-20 lg:pb-4 overflow-x-hidden min-h-screen">

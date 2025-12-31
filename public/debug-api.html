@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><title>Admin API Test</title></head>
+<body>
+<h2>Admin API Response Test</h2>
+<div id="result"></div>
+<script>
+const token = localStorage.getItem('session_token');
+const resultDiv = document.getElementById('result');
+
+if (!token) {
+  resultDiv.innerHTML = '<p style="color:red">No session_token found in localStorage. Please login first at https://www.jbalwikobra.com/admin</p>';
+} else {
+  resultDiv.innerHTML = '<p>Token found: ' + token.substring(0, 20) + '...</p>';
+  
+  // Test dashboard-stats
+  fetch('/api/admin?action=dashboard-stats', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(r => r.json())
+  .then(data => {
+    resultDiv.innerHTML += '<h3>Dashboard Stats:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  })
+  .catch(e => {
+    resultDiv.innerHTML += '<p style="color:red">Error: ' + e.message + '</p>';
+  });
+  
+  // Test orders
+  fetch('/api/admin?action=orders&page=1&limit=5', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(r => r.json())
+  .then(data => {
+    resultDiv.innerHTML += '<h3>Orders (first 5):</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  })
+  .catch(e => {
+    resultDiv.innerHTML += '<p style="color:red">Error: ' + e.message + '</p>';
+  });
+  
+  // Test users
+  fetch('/api/admin?action=users&page=1&limit=5', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(r => r.json())
+  .then(data => {
+    resultDiv.innerHTML += '<h3>Users (first 5):</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  })
+  .catch(e => {
+    resultDiv.innerHTML += '<p style="color:red">Error: ' + e.message + '</p>';
+  });
+}
+</script>
+</body>
+</html>

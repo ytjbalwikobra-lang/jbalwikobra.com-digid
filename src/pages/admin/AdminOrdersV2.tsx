@@ -24,6 +24,8 @@ import { adminService, type Order as AdminOrder } from '../../services/adminServ
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminFilter } from './components/AdminFilter';
+import { AdminPagination } from './components/AdminPagination';
 import '../../styles/admin-design-system-v3.css';
 
 type OrderStatus = 'pending' | 'paid' | 'completed' | 'cancelled';
@@ -48,96 +50,6 @@ const mapOrderStatus = (status: OrderStatus): 'pending' | 'processing' | 'comple
     cancelled: 'cancelled'
   };
   return statusMap[status];
-};
-
-// Modern Filter Component
-const OrderFilters: React.FC<{
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
-  typeFilter: string;
-  setTypeFilter: (type: string) => void;
-  onRefresh: () => void;
-  loading: boolean;
-}> = ({ 
-  searchTerm, 
-  setSearchTerm, 
-  statusFilter, 
-  setStatusFilter,
-  typeFilter,
-  setTypeFilter,
-  onRefresh,
-  loading
-}) => {
-  return (
-    <div className="bg-black border border-gray-800 rounded-2xl p-6 space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search orders by customer name, email, or phone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-200"
-        />
-      </div>
-
-      {/* Filters Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Status Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-900/80 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-200 hover:bg-gray-800/80"
-          >
-            <option value="" className="bg-gray-800 text-white">All Status</option>
-            <option value="pending" className="bg-gray-800 text-white">Pending</option>
-            <option value="paid" className="bg-gray-800 text-white">Paid</option>
-            <option value="completed" className="bg-gray-800 text-white">Completed (Including Paid)</option>
-            <option value="cancelled" className="bg-gray-800 text-white">Cancelled</option>
-          </select>
-        </div>
-
-
-
-        {/* Order Type Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-900/80 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-200 hover:bg-gray-800/80"
-          >
-            <option value="" className="bg-gray-800 text-white">All Types</option>
-            <option value="purchase" className="bg-gray-800 text-white">Purchase</option>
-            <option value="rental" className="bg-gray-800 text-white">Rental</option>
-          </select>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-end gap-2">
-          <AdminButton
-            variant="secondary"
-            onClick={onRefresh}
-            disabled={loading}
-            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-          >
-            Refresh
-          </AdminButton>
-          <AdminButton
-            variant="secondary"
-            icon={<Download size={18} />}
-          >
-            Export
-          </AdminButton>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 // Main Orders Page Component
@@ -423,16 +335,37 @@ const AdminOrdersV2: React.FC = () => {
       </div>
 
       {/* Filters */}
-        <OrderFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          onRefresh={loadOrders}
-          loading={loading}
-        />
+      <AdminFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search orders by customer name, email, or phone..."
+        filters={[
+          {
+            label: 'Status',
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: '', label: 'All Status' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'paid', label: 'Paid' },
+              { value: 'completed', label: 'Completed (Including Paid)' },
+              { value: 'cancelled', label: 'Cancelled' }
+            ]
+          },
+          {
+            label: 'Type',
+            value: typeFilter,
+            onChange: setTypeFilter,
+            options: [
+              { value: '', label: 'All Types' },
+              { value: 'purchase', label: 'Purchase' },
+              { value: 'rental', label: 'Rental' }
+            ]
+          }
+        ]}
+        onRefresh={loadOrders}
+        loading={loading}
+      />
 
         {/* Orders Table */}
         <AdminCard>
@@ -578,106 +511,18 @@ const AdminOrdersV2: React.FC = () => {
           </AdminCardBody>
         </AdminCard>
 
-        {/* Enhanced Pagination */}
-        {filteredOrders.length > 0 && (
-          <div className="bg-black border border-gray-800 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              {/* Items per page selector */}
-              <div className="flex items-center space-x-3">
-                <label className="text-sm font-medium text-gray-300">Items per page:</label>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-200 text-sm"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={1000}>All</option>
-                </select>
-              </div>
-
-              {/* Page info - Center */}
-              <div className="text-sm text-gray-400 text-center">
-                Showing <span className="font-medium text-white">{startIndex + 1}</span> to{' '}
-                <span className="font-medium text-white">{Math.min(endIndex, filteredOrders.length)}</span> of{' '}
-                <span className="font-medium text-white">{filteredOrders.length}</span> orders
-                {filteredOrders.length !== orders.length && (
-                  <span className="text-xs text-gray-500 ml-1">(filtered from {orders.length} total)</span>
-                )}
-              </div>
-
-              {/* Page navigation */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 text-sm font-medium"
-                >
-                  Previous
-                </button>
-                
-                <div className="flex items-center space-x-1">
-                  {/* First page */}
-                  {currentPage > 3 && (
-                    <>
-                      <button
-                        onClick={() => setCurrentPage(1)}
-                        className="px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm font-medium transition-all duration-200"
-                      >
-                        1
-                      </button>
-                      {currentPage > 4 && (
-                        <span className="px-2 text-gray-500">...</span>
-                      )}
-                    </>
-                  )}
-
-                  {/* Page numbers around current page */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => page >= Math.max(1, currentPage - 2) && page <= Math.min(totalPages, currentPage + 2))
-                    .map(page => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                          page === currentPage
-                            ? 'bg-pink-500 text-white'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                  {/* Last page */}
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && (
-                        <span className="px-2 text-gray-500">...</span>
-                      )}
-                      <button
-                        onClick={() => setCurrentPage(totalPages)}
-                        className="px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm font-medium transition-all duration-200"
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 text-sm font-medium"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Pagination */}
+      {filteredOrders.length > 0 && (
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredOrders.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          loading={loading}
+        />
+      )}
       </div>
   );
 };

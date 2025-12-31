@@ -7,6 +7,8 @@ import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminFilter } from './components/AdminFilter';
+import { AdminPagination } from './components/AdminPagination';
 import '../../styles/admin-design-system-v3.css';
 
 interface ProductStats {
@@ -480,92 +482,66 @@ const AdminProductsV2: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-black border border-gray-800 rounded-xl p-6">
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as any }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active Only</option>
-              <option value="archived">Archived Only</option>
-            </select>
-
-            {/* Price Range Filter */}
-            <select
-              value={filters.priceRange}
-              onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value as any }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Prices</option>
-              <option value="under-100k">Under Rp 100K</option>
-              <option value="100k-500k">Rp 100K - 500K</option>
-              <option value="above-500k">Above Rp 500K</option>
-            </select>
-
-            {/* Category Filter */}
-            <select
-              value={filters.category}
-              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>{category.name}</option>
-              ))}
-            </select>
-
-            {/* Game Title Filter */}
-            <select
-              value={filters.gameTitle}
-              onChange={(e) => setFilters(prev => ({ ...prev, gameTitle: e.target.value }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Games</option>
-              {gameTitles.map(gameTitle => (
-                <option key={gameTitle.id} value={gameTitle.id}>{gameTitle.name}</option>
-              ))}
-            </select>
-
-            {/* Tier Filter */}
-            <select
-              value={filters.tier}
-              onChange={(e) => setFilters(prev => ({ ...prev, tier: e.target.value }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Tiers</option>
-              {tiers.map(tier => (
-                <option key={tier.id} value={tier.id}>{tier.name}</option>
-              ))}
-            </select>
-
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="flex items-center justify-center px-4 py-2 bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white rounded-lg transition-all duration-200 font-medium"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
+        <AdminFilter
+          searchTerm={filters.search}
+          onSearchChange={(value) => setFilters(prev => ({ ...prev, search: value }))}
+          searchPlaceholder="Search products by name or description..."
+          filters={[
+            {
+              label: 'Status',
+              value: filters.status,
+              onChange: (value) => setFilters(prev => ({ ...prev, status: value as any })),
+              options: [
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active Only' },
+                { value: 'archived', label: 'Archived Only' }
+              ]
+            },
+            {
+              label: 'Price Range',
+              value: filters.priceRange,
+              onChange: (value) => setFilters(prev => ({ ...prev, priceRange: value as any })),
+              options: [
+                { value: 'all', label: 'All Prices' },
+                { value: 'under-100k', label: 'Under Rp 100K' },
+                { value: '100k-500k', label: 'Rp 100K - 500K' },
+                { value: 'above-500k', label: 'Above Rp 500K' }
+              ]
+            },
+            {
+              label: 'Category',
+              value: filters.category,
+              onChange: (value) => setFilters(prev => ({ ...prev, category: value })),
+              options: [
+                { value: 'all', label: 'All Categories' },
+                ...categories.map(cat => ({ value: cat.id, label: cat.name }))
+              ]
+            },
+            {
+              label: 'Game Title',
+              value: filters.gameTitle,
+              onChange: (value) => setFilters(prev => ({ ...prev, gameTitle: value })),
+              options: [
+                { value: 'all', label: 'All Games' },
+                ...gameTitles.map(game => ({ value: game.id, label: game.name }))
+              ]
+            },
+            {
+              label: 'Tier',
+              value: filters.tier,
+              onChange: (value) => setFilters(prev => ({ ...prev, tier: value })),
+              options: [
+                { value: 'all', label: 'All Tiers' },
+                ...tiers.map(tier => ({ value: tier.id, label: tier.name }))
+              ]
+            }
+          ]}
+          onRefresh={handleRefresh}
+          loading={loading}
+        />
 
         {/* Products Table */}
-        <div className="bg-black border border-gray-800 rounded-2xl overflow-hidden">
+        <div className="admin-table-wrapper">
           <div className="overflow-x-auto">
             <table className="w-full table-fixed">
               <thead>
@@ -777,106 +753,17 @@ const AdminProductsV2: React.FC = () => {
           </div>
         </div>
 
-        {/* Enhanced Pagination */}
+        {/* Pagination */}
         {filteredProducts.length > 0 && (
-          <div className="bg-black border border-gray-800 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              {/* Items per page selector */}
-              <div className="flex items-center space-x-3">
-                <label className="text-sm font-medium text-gray-300">Items per page:</label>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all duration-200 text-sm"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-
-              {/* Page info - Center */}
-              <div className="text-sm text-gray-400 text-center">
-                Showing <span className="font-medium text-white">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
-                <span className="font-medium text-white">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> of{' '}
-                <span className="font-medium text-white">{filteredProducts.length}</span> products
-                {filteredProducts.length !== totalCount && (
-                  <span className="text-gray-500 ml-2">
-                    (filtered from {totalCount} total)
-                  </span>
-                )}
-              </div>
-
-              {/* Page navigation */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 text-sm font-medium"
-                >
-                  Previous
-                </button>
-                
-                <div className="flex items-center space-x-1">
-                  {/* First page */}
-                  {currentPage > 3 && (
-                    <>
-                      <button
-                        onClick={() => setCurrentPage(1)}
-                        className="px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm font-medium transition-all duration-200"
-                      >
-                        1
-                      </button>
-                      {currentPage > 4 && (
-                        <span className="px-2 text-gray-500">...</span>
-                      )}
-                    </>
-                  )}
-
-                  {/* Page numbers around current page */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => page >= Math.max(1, currentPage - 2) && page <= Math.min(totalPages, currentPage + 2))
-                    .map(page => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                          page === currentPage
-                            ? 'bg-pink-500 text-white'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                  {/* Last page */}
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && (
-                        <span className="px-2 text-gray-500">...</span>
-                      )}
-                      <button
-                        onClick={() => setCurrentPage(totalPages)}
-                        className="px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm font-medium transition-all duration-200"
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 text-sm font-medium"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredProducts.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            loading={loading}
+          />
         )}
 
       {/* Product Modal */}

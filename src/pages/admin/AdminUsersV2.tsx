@@ -5,6 +5,7 @@ import { useToast } from '../../components/Toast';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminFilter } from './components/AdminFilter';
 import '../../styles/admin-design-system-v3.css';
 
 interface UserStats {
@@ -250,7 +251,7 @@ const AdminUsersV2: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <div className="lg:col-span-1">
-            <div className="bg-black border border-gray-800 rounded-2xl p-6">
+            <AdminCard>
               <div className="flex items-center space-x-2 mb-6">
                 <div className="p-2 bg-pink-500/10 rounded-lg">
                   <TrendingUp className="w-5 h-5 text-pink-400" />
@@ -289,12 +290,12 @@ const AdminUsersV2: React.FC = () => {
                   </div>
                 </button>
               </div>
-            </div>
+            </AdminCard>
           </div>
 
           {/* User Analytics Preview */}
           <div className="lg:col-span-2">
-            <div className="bg-black border border-gray-800 rounded-2xl p-6">
+            <AdminCard>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
                   <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -322,52 +323,46 @@ const AdminUsersV2: React.FC = () => {
                   <p className="text-sm text-gray-400">Growth Rate</p>
                 </div>
               </div>
-            </div>
+            </AdminCard>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-black border border-gray-800 rounded-xl p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-              />
-            </div>
-
-            {/* Role Filter */}
-            <select
-              value={filters.role}
-              onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value as any }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin Only</option>
-              <option value="user">Users Only</option>
-            </select>
-
-            {/* Status Filter */}
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as any }))}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive Only</option>
-            </select>
-
-            {/* Results Count */}
-            <div className="flex items-center text-gray-400 text-sm">
-              Showing {filteredUsers.length} of {users.length} users
-            </div>
-          </div>
+        <AdminFilter
+          searchTerm={filters.search}
+          onSearchChange={(value) => setFilters(prev => ({ ...prev, search: value }))}
+          searchPlaceholder="Search users by name, email, or phone..."
+          filters={[
+            {
+              label: 'Role',
+              value: filters.role,
+              onChange: (value) => setFilters(prev => ({ ...prev, role: value as any })),
+              options: [
+                { value: 'all', label: 'All Roles' },
+                { value: 'admin', label: 'Admin Only' },
+                { value: 'user', label: 'Users Only' }
+              ]
+            },
+            {
+              label: 'Status',
+              value: filters.status,
+              onChange: (value) => setFilters(prev => ({ ...prev, status: value as any })),
+              options: [
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active Only' },
+                { value: 'inactive', label: 'Inactive Only' }
+              ]
+            }
+          ]}
+          onRefresh={handleRefresh}
+          loading={refreshing}
+        />
+        
+        {/* Results Count */}
+        <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-lg">
+          <span className="text-slate-400 text-sm">
+            Showing <span className="font-semibold text-white">{filteredUsers.length}</span> of <span className="font-semibold text-white">{users.length}</span> users
+          </span>
         </div>
 
         {/* Users Grid */}
@@ -384,7 +379,7 @@ const AdminUsersV2: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredUsers.map((user) => (
-              <div key={user.id} className="bg-black border border-gray-800 rounded-xl p-6 hover:border-pink-500/50 transition-colors">
+              <AdminCard key={user.id} hover>
                 {/* User Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -458,7 +453,7 @@ const AdminUsersV2: React.FC = () => {
                     <span>Last login: {formatLastLogin(user.last_login)}</span>
                   </div>
                 </div>
-              </div>
+              </AdminCard>
             ))}
           </div>
         )}

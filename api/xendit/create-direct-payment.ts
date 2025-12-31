@@ -151,101 +151,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .single();
           createdOrder = data;
           console.log('[Payment] Order created:', data?.id);
-          
-          // Send WhatsApp notification to customer about new order
-          console.log('[Payment] Attempting to send WhatsApp notification...');
-          if (data && customer?.mobile_number) {
-            console.log('[Payment] Customer mobile number:', customer.mobile_number);
-            try {
-              console.log('[Payment] Loading DynamicWhatsAppService...');
-              const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
-              const wa = new DynamicWhatsAppService();
-              console.log('[Payment] WhatsApp service initialized');
-              
-              // Normalize phone number
-              let customerPhone = String(customer.mobile_number || '').replace(/\D/g, '');
-              if (customerPhone.startsWith('8')) customerPhone = '62' + customerPhone;
-              else if (customerPhone.startsWith('08')) customerPhone = '62' + customerPhone.substring(1);
-              else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
-              else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
-              
-              console.log('[Payment] Normalized phone:', customerPhone);
-              
-              if (/^62\d{8,15}$/.test(customerPhone)) {
-                console.log('[Payment] Phone number valid, preparing message...');
-                const isRental = orderData.order_type === 'rental';
-                // Try to get product name from order data first, then from request body, fallback to default
-                const productName = orderData.product_name || (req.body.product_name as string) || 'Produk Digital';
-                const productId = order?.product_id || orderData.product_id;
-                const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
-                
-                // We'll get the payment link after creating the invoice
-                // For now, store placeholder that will be updated in response
-                const paymentLinkPlaceholder = 'Link akan dikirim setelah invoice dibuat';
-                
-                const message = `🔥 *SIAP BOSKU! ORDERAN UDAH DIBUAT*
-
-Halo Bosku ${customer.given_names || 'Customer'} 👋
-
-Terima kasih ya, pesanan Bosku udah berhasil kami catat di sistem ✅. Tinggal satu langkah lagi nih biar bisa langsung diproses!
-
-📋 *DETAIL PESANAN:*
-
-👤 *Nama:* ${customer.given_names || 'Customer'}
-
-🎯 *Produk:* ${productName}
-
-🔗 *Link Produk:* ${productUrl}
-
-💰 *Total:* Rp ${Number(amount || 0).toLocaleString('id-ID')}
-
-⏳ *Batas Waktu:* 24 Jam
-
-💳 *CARA BAYARNYA GAMPANG:*
-
-Tinggal klik link di bawah atau cek pesan terpisah ya Bosku.
-
-🔗 *Link Bayar:* Link akan dikirim dalam pesan terpisah
-
-⚠️ *CATATAN PENTING:*
-
-• Jangan lupa lunasin sebelum 24 jam ya Bosku, biar orderannya nggak hangus otomatis.
-
-• Simpan Order ID buat jaga-jaga: *${data.id}*
-
-💬 *Support:* wa.me/6289653510125
-
-🌐 *Website:* https://jbalwikobra.com
-
-Terima kasih Bosku! 🎮✨`;
-
-                const contextId = `order:${data.id}:created`;
-                console.log('[Payment] Sending WhatsApp message to:', customerPhone);
-                console.log('[Payment] Message length:', message.length);
-                
-                const sendRes = await wa.sendMessage({
-                  phone: customerPhone,
-                  message,
-                  contextType: 'order-created-customer',
-                  contextId
-                });
-                
-                console.log('[Payment] WhatsApp send result:', JSON.stringify(sendRes));
-                
-                if (sendRes.success) {
-                  console.log('[WhatsApp] ✅ New order notification sent to customer:', customerPhone);
-                } else {
-                  console.error('[WhatsApp] ❌ Failed to send notification:', sendRes.error);
-                }
-              } else {
-                console.warn('[WhatsApp] ⚠️ Invalid phone number format:', customerPhone);
-              }
-            } catch (waError) {
-              console.error('[WhatsApp] ❌ Error sending new order notification:', waError);
-            }
-          } else {
-            console.log('[Payment] ⚠️ Skipping WhatsApp - No customer mobile number or order data');
-          }
         }
       } catch (err) {
         console.error('[Payment] Database error:', err);
@@ -408,6 +313,81 @@ Terima kasih Bosku! 🎮✨`;
         }
       } catch (err) {
         console.error('[Payment] Database error:', err);
+      }
+    }
+
+    // Send WhatsApp notification to customer AFTER invoice is created
+    if (createdOrder && customer?.mobile_number && xenditData.invoice_url) {
+      console.log('[Payment] Attempting to send WhatsApp notification with payment link...');
+      try {
+        const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
+        const wa = new DynamicWhatsAppService();
+        
+        // Normalize phone number
+        let customerPhone = String(customer.mobile_number || '').replace(/\D/g, '');
+        if (customerPhone.startsWith('8')) customerPhone = '62' + customerPhone;
+        else if (customerPhone.startsWith('08')) customerPhone = '62' + customerPhone.substring(1);
+        else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
+        else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
+        
+        if (/^62\d{8,15}$/.test(customerPhone)) {
+          const productName = createdOrder.product_name || 'Produk Digital';
+          const productId = createdOrder.product_id;
+          const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
+          
+          const message = `🔥 *SIAP BOSKU! ORDERAN UDAH DIBUAT*
+
+Halo Bosku ${customer.given_names || 'Customer'} 👋
+
+Terima kasih ya, pesanan Bosku udah berhasil kami catat di sistem ✅. Tinggal satu langkah lagi nih biar bisa langsung diproses!
+
+📋 *DETAIL PESANAN:*
+
+👤 *Nama:* ${customer.given_names || 'Customer'}
+
+🎯 *Produk:* ${productName}
+
+🔗 *Link Produk:* ${productUrl}
+
+💰 *Total:* Rp ${Number(amount || 0).toLocaleString('id-ID')}
+
+⏳ *Batas Waktu:* 24 Jam
+
+💳 *CARA BAYARNYA GAMPANG:*
+
+Tinggal klik link di bawah ya Bosku, langsung bisa bayar!
+
+🔗 *Link Bayar:* ${xenditData.invoice_url}
+
+⚠️ *CATATAN PENTING:*
+
+• Jangan lupa lunasin sebelum 24 jam ya Bosku, biar orderannya nggak hangus otomatis.
+
+• Simpan Order ID buat jaga-jaga: *${createdOrder.id}*
+
+💬 *Support:* wa.me/6289653510125
+
+🌐 *Website:* https://jbalwikobra.com
+
+Terima kasih Bosku! 🎮✨`;
+
+          const contextId = `order:${createdOrder.id}:created`;
+          
+          const sendRes = await wa.sendMessage({
+            phone: customerPhone,
+            message,
+            contextType: 'order-created-customer',
+            contextId
+          });
+          
+          if (sendRes.success) {
+            console.log('[WhatsApp] ✅ New order notification with payment link sent to:', customerPhone);
+          } else {
+            console.error('[WhatsApp] ❌ Failed to send notification:', sendRes.error);
+          }
+        }
+      } catch (waError) {
+        console.error('[WhatsApp] ❌ Error sending notification:', waError);
       }
     }
 

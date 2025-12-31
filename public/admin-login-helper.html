@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Helper</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+        }
+        h1 { color: #ec4899; }
+        .container {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #999;
+            font-size: 14px;
+        }
+        input, button {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #fff;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+            margin-top: 15px;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled {
+            background: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        pre {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        .warning { color: #f59e0b; }
+        .hint {
+            background: #252525;
+            padding: 10px;
+            border-left: 3px solid #ec4899;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Admin Login Helper</h1>
+
+    <div class="container">
+        <h2>Login dengan Email atau Phone</h2>
+        <div class="hint">
+            <strong>📝 Known Admin Credentials:</strong><br>
+            • Email: admin@jbalwikobra.com<br>
+            • Phone: 6282242417788<br>
+            • Password: ??? (silakan coba atau reset)
+        </div>
+
+        <label>Identifier (email atau phone):</label>
+        <input type="text" id="identifier" placeholder="admin@jbalwikobra.com atau 6282242417788">
+
+        <label>Password:</label>
+        <input type="password" id="password" placeholder="Masukkan password">
+
+        <button onclick="testLogin()">🔑 Test Login</button>
+
+        <div id="loginResult" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="container">
+        <h2>Create/Reset Admin User</h2>
+        <div class="hint">
+            <strong>⚠️ Development Only:</strong> Gunakan ini untuk membuat atau reset admin user jika lupa password.
+        </div>
+
+        <label>Email:</label>
+        <input type="email" id="newEmail" placeholder="admin@jbalwikobra.com" value="admin@jbalwikobra.com">
+
+        <label>Phone (format: 628xxx):</label>
+        <input type="text" id="newPhone" placeholder="6282242417788" value="6282242417788">
+
+        <label>Name:</label>
+        <input type="text" id="newName" placeholder="JB Admin" value="JB Admin">
+
+        <label>New Password:</label>
+        <input type="password" id="newPassword" placeholder="admin123" value="admin123">
+
+        <button onclick="createOrResetAdmin()">🔄 Create/Reset Admin User</button>
+
+        <div id="createResult" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="container">
+        <h2>Quick Password Test</h2>
+        <div class="hint">
+            Test berbagai password untuk admin yang ada
+        </div>
+
+        <label>Passwords to test (comma separated):</label>
+        <input type="text" id="passwordsToTest" placeholder="admin123, password, 123456" value="admin123, password, 123456, Admin123, jbalwikobra">
+
+        <button onclick="testPasswords()">🔍 Test Multiple Passwords</button>
+
+        <div id="testResult" style="margin-top: 15px;"></div>
+    </div>
+
+    <script>
+        async function testLogin() {
+            const identifier = document.getElementById('identifier').value.trim();
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+
+            if (!identifier || !password) {
+                resultDiv.innerHTML = '<p class="error">❌ Identifier dan password harus diisi!</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="info">🔄 Testing login...</p>';
+
+            try {
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        identifier: identifier,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    localStorage.setItem('session_token', data.session_token);
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Login Successful!</p>
+                        <p class="info">User: ${data.user.name}</p>
+                        <p class="info">Email: ${data.user.email || 'N/A'}</p>
+                        <p class="info">Phone: ${data.user.phone || 'N/A'}</p>
+                        <p class="info">Admin: ${data.user.is_admin ? 'Yes ✅' : 'No ❌'}</p>
+                        <p class="success">Session token saved to localStorage!</p>
+                        <p class="info">Token: ${data.session_token.substring(0, 30)}...</p>
+                        <p class="success">🎉 You can now access admin panel!</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Login Failed</p>
+                        <p class="warning">Error: ${data.error || 'Unknown error'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Request error: ${error.message}</p>`;
+            }
+        }
+
+        async function testPasswords() {
+            const identifier = 'admin@jbalwikobra.com'; // Default to admin email
+            const passwordsStr = document.getElementById('passwordsToTest').value;
+            const passwords = passwordsStr.split(',').map(p => p.trim()).filter(p => p);
+            const resultDiv = document.getElementById('testResult');
+
+            if (passwords.length === 0) {
+                resultDiv.innerHTML = '<p class="error">❌ Masukkan minimal 1 password!</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = `<p class="info">🔄 Testing ${passwords.length} passwords...</p>`;
+
+            let results = '<div style="margin-top: 10px;">';
+
+            for (const password of passwords) {
+                try {
+                    const response = await fetch('/api/auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'login',
+                            identifier: identifier,
+                            password: password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        results += `<p class="success">✅ Password FOUND: <strong>${password}</strong></p>`;
+                        localStorage.setItem('session_token', data.session_token);
+                        results += `<p class="info">Session token saved! You can now access admin panel.</p>`;
+                        break; // Stop after first success
+                    } else {
+                        results += `<p class="error">❌ "${password}" - ${data.error}</p>`;
+                    }
+                } catch (error) {
+                    results += `<p class="error">❌ "${password}" - ${error.message}</p>`;
+                }
+            }
+
+            results += '</div>';
+            resultDiv.innerHTML = results;
+        }
+
+        async function createOrResetAdmin() {
+            const email = document.getElementById('newEmail').value.trim();
+            const phone = document.getElementById('newPhone').value.trim();
+            const name = document.getElementById('newName').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const resultDiv = document.getElementById('createResult');
+
+            if (!email || !password) {
+                resultDiv.innerHTML = '<p class="error">❌ Email dan password harus diisi!</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="info">🔄 Step 1: Trying to reset password for existing user...</p>';
+
+            try {
+                // First, try to reset password for existing user
+                const resetResponse = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        newPassword: password
+                    })
+                });
+
+                const resetData = await resetResponse.json();
+
+                if (resetResponse.ok && resetData.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Password Reset Successful!</p>
+                        <p class="info">User: ${resetData.user.name}</p>
+                        <p class="info">Email: ${resetData.user.email}</p>
+                        <p class="info">Admin: ${resetData.user.is_admin ? 'Yes ✅' : 'No ❌'}</p>
+                        <p class="info">New Password: ${password}</p>
+                        <p class="success">You can now login with this password!</p>
+                        <button onclick="document.getElementById('identifier').value='${email}'; document.getElementById('password').value='${password}'; testLogin();">🔑 Test Login Now</button>
+                    `;
+                    return;
+                }
+
+                // If user doesn't exist, try to create new user
+                resultDiv.innerHTML += '<p class="warning">User not found. Step 2: Creating new user...</p>';
+
+                const signupResponse = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'signup',
+                        phone: phone,
+                        password: password,
+                        name: name,
+                        email: email
+                    })
+                });
+
+                const signupData = await signupResponse.json();
+
+                if (signupResponse.ok && signupData.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ User Created Successfully!</p>
+                        <p class="info">Name: ${name}</p>
+                        <p class="info">Email: ${email}</p>
+                        <p class="info">Phone: ${phone}</p>
+                        <p class="warning">⚠️ Note: User created but NOT admin yet.</p>
+                        <p class="info">You need to manually set is_admin=true in Supabase dashboard:</p>
+                        <pre>UPDATE users SET is_admin = true WHERE email = '${email}';</pre>
+                        <button onclick="document.getElementById('identifier').value='${email}'; document.getElementById('password').value='${password}'; testLogin();">🔑 Test Login Now</button>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Failed to reset or create user</p>
+                        <p class="warning">Reset error: ${resetData.error || 'Unknown'}</p>
+                        <p class="warning">Signup error: ${signupData.error || 'Unknown'}</p>
+                        <p class="info">Try testing common passwords:</p>
+                        <button onclick="document.getElementById('passwordsToTest').value='admin123,password,123456,Admin123,jbalwikobra'; testPasswords();">🔍 Test Common Passwords</button>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Request error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

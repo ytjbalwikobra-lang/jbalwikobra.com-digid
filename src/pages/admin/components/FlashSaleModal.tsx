@@ -202,24 +202,24 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="admin-modal-overlay">
+      <div className="admin-modal-content max-w-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">
+        <div className="admin-modal-header">
+          <h2 className="admin-modal-title">
             {flashSale ? 'Edit Flash Sale' : 'Create Flash Sale'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
             aria-label="Close modal"
           >
-            <X size={20} className="text-slate-600" />
+            <X size={20} className="text-slate-400" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="admin-modal-body space-y-6">
           {/* Product Selection */}
           <div>
             <label className="admin-label">
@@ -330,7 +330,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
             {errors.stock && (
               <p className="text-sm text-red-600 mt-1">{errors.stock}</p>
             )}
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-400 mt-1">
               Leave as 0 for unlimited stock
             </p>
           </div>
@@ -344,13 +344,13 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               onChange={(e) => handleChange('isActive', e.target.checked)}
               className="w-5 h-5 text-pink-600 border-slate-300 rounded focus:ring-pink-500"
             />
-            <label htmlFor="isActive" className="text-sm font-medium text-slate-700">
+            <label htmlFor="isActive" className="text-sm font-medium text-slate-300">
               Active (Flash sale will be visible to customers)
             </label>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <div className="admin-modal-footer">
             <AdminButton
               type="button"
               variant="secondary"

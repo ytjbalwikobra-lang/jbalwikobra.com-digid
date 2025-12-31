@@ -1,258 +1,177 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * Admin Banners Management - V3 Design System
+ * Clean implementation with modern design
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, Eye, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { Banner } from '../../types';
 import { BannerService } from '../../services/bannerService';
-import { Plus, Trash2, Save, Edit3, Image as ImageIcon, Link as LinkIcon, Loader2, Eye, Edit, Globe } from 'lucide-react';
-import { 
-  AdminFilters, 
-  AdminDataTable, 
-  StatusBadge 
-} from './components/ui';
-import type { AdminFiltersConfig, TableColumn, TableAction } from './components/ui';
+import { useToast } from '../../components/Toast';
+import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { AdminButton } from './components/ui/AdminButton';
+import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
+import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import '../../styles/admin-design-system-v3.css';
+
+interface BannerFormData {
+  title: string;
+  subtitle: string;
+  link_url: string;
+  cta_text: string;
+  sort_order: number;
+  is_active: boolean;
+}
 
 const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<Banner | null>(null);
-  const [form, setForm] = useState<{ title: string; subtitle?: string; linkUrl?: string; ctaText?: string; sortOrder: number; isActive: boolean; file: File | null }>(
-    { title: '', subtitle: '', linkUrl: '', ctaText: '', sortOrder: 1, isActive: true, file: null }
-  );
+  const [formData, setFormData] = useState<BannerFormData>({
+    title: '',
+    subtitle: '',
+    link_url: '',
+    cta_text: '',
+    sort_order: 1,
+    is_active: true
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  // Filter state for our AdminFilters component
-  const [filterValues, setFilterValues] = useState<Record<string, any>>({
-    search: '',
-    status: 'all',
-    sortBy: 'sort_order',
-    sortOrder: 'asc'
-  });
+  const { push } = useToast();
+  const { showConfirm, ConfirmModal } = useAdminConfirm();
 
-  // Filter configuration for our AdminFilters component
-  const filtersConfig: AdminFiltersConfig = {
-    searchPlaceholder: 'Search banners by title...',
-    filters: [
-      {
-        key: 'status',
-        label: 'Status',
-        options: [
-          { value: 'all', label: 'All Status' },
-          { value: 'active', label: 'Active' },
-          { value: 'inactive', label: 'Inactive' }
-        ]
-      }
-    ],
-    sortOptions: [
-      { value: 'sort_order', label: 'Sort Order' },
-      { value: 'title', label: 'Title' },
-      { value: 'created_at', label: 'Created Date' }
-    ]
+  useEffect(() => {
+    loadBanners();
+  }, []);
+
+  const loadBanners = async () => {
+    try {
+      setLoading(true);
+      const data = await BannerService.list();
+      setBanners(data || []);
+    } catch (error: any) {
+      push(`Failed to load banners: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter handling
-  const handleFilterChange = (filters: Record<string, any>) => {
-    setFilterValues(filters);
-  };
-
-  // Apply filters to banners
-  const filteredBanners = banners.filter(banner => {
-    // Search filter
-    if (filterValues.search) {
-      const searchTerm = filterValues.search.toLowerCase();
-      if (!banner.title.toLowerCase().includes(searchTerm) &&
-          !banner.subtitle?.toLowerCase().includes(searchTerm)) {
-        return false;
-      }
-    }
-
-    // Status filter
-    if (filterValues.status !== 'all') {
-      if (filterValues.status === 'active' && !banner.is_active) return false;
-      if (filterValues.status === 'inactive' && banner.is_active) return false;
-    }
-
-    return true;
-  }).sort((a, b) => {
-    const sortBy = filterValues.sortBy;
-    const order = filterValues.sortOrder === 'desc' ? -1 : 1;
-    
-    if (sortBy === 'sort_order') {
-      return (a.sort_order - b.sort_order) * order;
-    }
-    
-    if (sortBy === 'title') {
-      return a.title.localeCompare(b.title) * order;
-    }
-    
-    if (sortBy === 'created_at') {
-      const aDate = new Date(a.created_at || 0).getTime();
-      const bDate = new Date(b.created_at || 0).getTime();
-      return (aDate - bDate) * order;
-    }
-    
-    return 0;
-  });
-
-  // Statistics calculation
-  const stats = {
-    total: banners.length,
-    active: banners.filter(banner => banner.is_active).length,
-    inactive: banners.filter(banner => !banner.is_active).length,
-    withLinks: banners.filter(banner => banner.link_url).length
-  };
-
-  // Table columns configuration
-  const columns: TableColumn<Banner>[] = [
-    {
-      key: 'image',
-      label: 'Image',
-      render: (banner) => (
-        <div className="w-16 h-10 bg-ds-surface-secondary rounded overflow-hidden">
-          {banner.image_url ? (
-            <img 
-              src={banner.image_url} 
-              alt={banner.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon size={16} className="text-ds-text-secondary" />
-            </div>
-          )}
-        </div>
-      )
-    },
-    {
-      key: 'title',
-      label: 'Banner Details',
-      render: (banner) => (
-        <div>
-          <div className="font-medium text-ds-text">{banner.title}</div>
-          {banner.subtitle && (
-            <div className="text-sm text-ds-text-secondary">{banner.subtitle}</div>
-          )}
-          {banner.cta_text && (
-            <div className="text-xs text-ds-primary mt-1">{banner.cta_text}</div>
-          )}
-        </div>
-      )
-    },
-    {
-      key: 'link',
-      label: 'Link',
-      render: (banner) => banner.link_url ? (
-        <div className="flex items-center gap-2">
-          <Globe size={14} className="text-ds-text-secondary" />
-          <span className="text-sm text-ds-text truncate max-w-[200px]">
-            {banner.link_url}
-          </span>
-        </div>
-      ) : (
-        <span className="text-ds-text-secondary">-</span>
-      )
-    },
-    {
-      key: 'sort_order',
-      label: 'Sort Order',
-      render: (banner) => (
-        <span className="text-ds-text">{banner.sort_order}</span>
-      )
-    },
-    {
-      key: 'is_active',
-      label: 'Status',
-      render: (banner) => (
-        <StatusBadge
-          status={banner.is_active ? 'active' : 'inactive'}
-        />
-      )
-    }
-  ];
-
-  // Table actions configuration
-  const actions: TableAction<Banner>[] = [
-    {
-      label: 'View',
-      icon: <Eye size={16} />,
-      onClick: (banner) => {
-        if (banner.link_url) {
-          window.open(banner.link_url, '_blank');
-        }
-      }
-    },
-    {
-      label: 'Edit',
-      icon: <Edit size={16} />,
-      onClick: (banner) => {
-        startEdit(banner);
-      }
-    },
-    {
-      label: 'Delete',
-      icon: <Trash2 size={16} />,
-      onClick: (banner) => {
-        remove(banner);
-      },
-      variant: 'danger'
-    }
-  ];
-
-  useEffect(() => { (async () => { setLoading(true); setBanners(await BannerService.list()); setLoading(false); })(); }, []);
-
-  const resetForm = () => { setForm({ title: '', subtitle: '', linkUrl: '', ctaText: '', sortOrder: 1, isActive: true, file: null }); setPreviewUrl(''); };
-
-  const startCreate = () => { setEditing(null); resetForm(); };
-
-  const startEdit = (b: Banner) => {
-    setEditing(b);
-    setForm({ 
-      title: b.title, 
-      subtitle: b.subtitle || '', 
-      linkUrl: b.link_url || '', 
-      ctaText: b.cta_text || '', 
-      sortOrder: b.sort_order, 
-      isActive: b.is_active, 
-      file: null 
-    });
-    setPreviewUrl(b.image_url || '');
-  };
-
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0] || null;
-    setForm(prev => ({ ...prev, file: f }));
-    if (f) {
-      const url = URL.createObjectURL(f);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
   };
 
-  const save = async () => {
-    if (!form.title || !form.file && !editing) return alert('Judul dan Gambar wajib diisi');
-    if (editing) {
-  const updated = await BannerService.update(editing.id, { ...editing, ...form });
-      if (updated) {
-        setBanners(prev => prev.map(b => b.id === updated.id ? updated : b));
-        setEditing(null); resetForm();
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      subtitle: '',
+      link_url: '',
+      cta_text: '',
+      sort_order: 1,
+      is_active: true
+    });
+    setSelectedFile(null);
+    setPreviewUrl('');
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (banner: Banner) => {
+    setFormData({
+      title: banner.title,
+      subtitle: banner.subtitle || '',
+      link_url: banner.link_url || '',
+      cta_text: banner.cta_text || '',
+      sort_order: banner.sort_order,
+      is_active: banner.is_active
+    });
+    setPreviewUrl(banner.image_url || '');
+    setEditingId(banner.id);
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      push('Title is required', 'error');
+      return;
+    }
+
+    if (!editingId && !selectedFile) {
+      push('Image is required for new banner', 'error');
+      return;
+    }
+
+    try {
+      if (editingId) {
+        // Update existing banner
+        const existingBanner = banners.find(b => b.id === editingId);
+        if (existingBanner) {
+          const updated = await BannerService.update(editingId, {
+            ...existingBanner,
+            ...formData
+          });
+          if (updated) {
+            setBanners(prev => prev.map(b => b.id === editingId ? updated : b));
+            push('Banner updated successfully', 'success');
+            resetForm();
+          }
+        }
+      } else {
+        // Create new banner
+        const created = await BannerService.create({
+          title: formData.title,
+          subtitle: formData.subtitle,
+          image_url: '', // Will be set by service
+          link_url: formData.link_url,
+          cta_text: formData.cta_text,
+          sort_order: formData.sort_order,
+          is_active: formData.is_active
+        });
+        if (created) {
+          setBanners(prev => [...prev, created].sort((a, b) => a.sort_order - b.sort_order));
+          push('Banner created successfully', 'success');
+          resetForm();
+        }
       }
-    } else {
-      const created = await BannerService.create({
-        title: form.title,
-        subtitle: form.subtitle,
-        image_url: '',
-        link_url: form.linkUrl,
-        cta_text: form.ctaText,
-        sort_order: form.sortOrder,
-        is_active: form.isActive,
-      });
-      if (created) {
-        setBanners(prev => [...prev, created].sort((a,b)=>a.sort_order-b.sort_order));
-        resetForm();
-      }
+    } catch (error: any) {
+      push(`Failed to save banner: ${error.message}`, 'error');
     }
   };
 
-  const remove = async (b: Banner) => {
-    if (!confirm('Hapus banner ini?')) return;
-    const ok = await BannerService.remove(b.id, b.image_url);
-    if (ok) setBanners(prev => prev.filter(x => x.id !== b.id));
+  const handleDelete = async (banner: Banner) => {
+    const confirmed = await showConfirm({
+      title: 'Delete Banner',
+      message: `Are you sure you want to delete "${banner.title}"? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const success = await BannerService.remove(banner.id, banner.image_url || '');
+      if (success) {
+        setBanners(prev => prev.filter(b => b.id !== banner.id));
+        push('Banner deleted successfully', 'success');
+      }
+    } catch (error: any) {
+      push(`Failed to delete banner: ${error.message}`, 'error');
+    }
+  };
+
+  const stats = {
+    total: banners.length,
+    active: banners.filter(b => b.is_active).length,
+    inactive: banners.filter(b => !b.is_active).length
   };
 
   return (
@@ -260,199 +179,321 @@ const AdminBanners: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent flex items-center gap-2">
-            <ImageIcon size={28} />
-            <span>Banners</span>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
+            Banners Management
           </h1>
           <p className="text-gray-400 mt-1">Manage website banners and promotional content</p>
         </div>
-        <button
-          onClick={startCreate}
-          className="flex items-center space-x-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded-xl text-white transition-all duration-200"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Banner</span>
-        </button>
+        <div className="flex gap-3">
+          <AdminButton
+            variant="secondary"
+            onClick={loadBanners}
+            disabled={loading}
+            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
+          >
+            Refresh
+          </AdminButton>
+          <AdminButton
+            variant="primary"
+            onClick={() => setShowForm(true)}
+            icon={<Plus size={18} />}
+          >
+            Add Banner
+          </AdminButton>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">Total Banners</p>
-              <p className="text-3xl font-bold text-white">{loading ? "..." : stats.total}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400 mb-1">Total Banners</p>
+                <p className="text-3xl font-bold text-white">{stats.total}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <ImageIcon className="text-blue-600" size={24} />
+              </div>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <ImageIcon className="text-blue-600" size={24} />
-            </div>
-          </div>
-        </div>
+          </AdminCardBody>
+        </AdminCard>
 
-        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">Active</p>
-              <p className="text-3xl font-bold text-green-600">{loading ? "..." : stats.active}</p>
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400 mb-1">Active</p>
+                <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Eye className="text-green-600" size={24} />
+              </div>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Eye className="text-green-600" size={24} />
-            </div>
-          </div>
-        </div>
+          </AdminCardBody>
+        </AdminCard>
 
-        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400 mb-1">Inactive</p>
-              <p className="text-3xl font-bold text-gray-600">{loading ? "..." : stats.inactive}</p>
+        <AdminCard hover>
+          <AdminCardBody>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400 mb-1">Inactive</p>
+                <p className="text-3xl font-bold text-gray-600">{stats.inactive}</p>
+              </div>
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Eye className="text-gray-600" size={24} />
+              </div>
             </div>
-            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Edit3 className="text-gray-600" size={24} />
-            </div>
-          </div>
-        </div>
+          </AdminCardBody>
+        </AdminCard>
       </div>
 
-      <AdminFilters
-        config={filtersConfig}
-        values={filterValues}
-        onFiltersChange={handleFilterChange}
-        totalItems={banners.length}
-        filteredItems={filteredBanners.length}
-  loading={loading}
-  defaultCollapsed={true}
-      />
-
-      <AdminDataTable
-        data={filteredBanners}
-        columns={columns}
-        actions={actions}
-        loading={loading}
-        emptyMessage="No banners found"
-      />
-
-      {(editing || !banners.length) && (
-        <div className="bg-ds-surface border border-ds-border rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-ds-text mb-4">
-            {editing ? 'Edit Banner' : 'Create Banner'}
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  Title
-                </label>
-                <input 
-                  value={form.title} 
-                  onChange={e => setForm(p => ({...p, title: e.target.value}))} 
-                  className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-ds-text"
-                  placeholder="Enter banner title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  Subtitle
-                </label>
-                <input 
-                  value={form.subtitle || ''} 
-                  onChange={e => setForm(p => ({...p, subtitle: e.target.value}))} 
-                  className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-ds-text"
-                  placeholder="Enter banner subtitle"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  CTA Text (Optional)
-                </label>
-                <input 
-                  value={form.ctaText || ''} 
-                  onChange={e => setForm(p => ({...p, ctaText: e.target.value}))} 
-                  className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-ds-text"
-                  placeholder="e.g., Learn More, Shop Now, Get Started"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  Link URL
-                </label>
-                <div className="flex items-center gap-2">
-                  <LinkIcon size={16} className="text-ds-text-secondary" />
-                  <input 
-                    value={form.linkUrl || ''} 
-                    onChange={e => setForm(p => ({...p, linkUrl: e.target.value}))} 
-                    className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-ds-text"
-                    placeholder="/flash-sales or https://..."
+      {/* Form Card */}
+      {showForm && (
+        <AdminCard>
+          <AdminCardHeader
+            title={editingId ? 'Edit Banner' : 'Create New Banner'}
+            subtitle="Fill in the banner details"
+          />
+          <AdminCardBody>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Title */}
+                <div className="md:col-span-2">
+                  <label className="admin-label">
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    className="admin-input"
+                    placeholder="Enter banner title"
+                    required
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+
+                {/* Subtitle */}
+                <div className="md:col-span-2">
+                  <label className="admin-label">Subtitle</label>
+                  <input
+                    type="text"
+                    value={formData.subtitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+                    className="admin-input"
+                    placeholder="Enter banner subtitle (optional)"
+                  />
+                </div>
+
+                {/* CTA Text */}
                 <div>
-                  <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                    Sort Order
-                  </label>
-                  <input 
-                    type="number" 
-                    value={form.sortOrder} 
-                    onChange={e => setForm(p => ({...p, sortOrder: parseInt(e.target.value || '1', 10)}))} 
-                    className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-ds-text"
+                  <label className="admin-label">CTA Text</label>
+                  <input
+                    type="text"
+                    value={formData.cta_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
+                    className="admin-input"
+                    placeholder="e.g., Learn More, Shop Now"
                   />
                 </div>
-                <div className="flex items-center gap-2 pb-2">
-                  <input 
-                    id="isActive" 
-                    type="checkbox" 
-                    checked={form.isActive} 
-                    onChange={e => setForm(p => ({...p, isActive: e.target.checked}))}
-                    className="rounded border-ds-border"
+
+                {/* Link URL */}
+                <div>
+                  <label className="admin-label">Link URL</label>
+                  <input
+                    type="text"
+                    value={formData.link_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
+                    className="admin-input"
+                    placeholder="/products or https://..."
                   />
-                  <label htmlFor="isActive" className="text-ds-text">
-                    Active
-                  </label>
                 </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  Banner Image
-                </label>
-                <div className="flex items-center gap-4">
-                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-ds-border hover:bg-ds-surface-secondary cursor-pointer transition-colors">
-                    <ImageIcon size={16} /> Choose File
-                    <input type="file" className="hidden" accept="image/*" onChange={onFile} />
-                  </label>
-                  <span className="text-sm text-ds-text-secondary">
-                    {form.file?.name || (editing ? 'Keep empty to not change image' : 'No file selected')}
-                  </span>
-                  {previewUrl && (
-                    <img 
-                      src={previewUrl} 
-                      alt="preview" 
-                      className="h-16 w-24 object-cover rounded border border-ds-border"
+
+                {/* Sort Order */}
+                <div>
+                  <label className="admin-label">Sort Order</label>
+                  <input
+                    type="number"
+                    value={formData.sort_order}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 1 }))}
+                    className="admin-input"
+                    min="1"
+                  />
+                </div>
+
+                {/* Active Status */}
+                <div className="flex items-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                      className="w-4 h-4 text-pink-600 bg-gray-800 border-gray-700 rounded focus:ring-pink-500 focus:ring-2"
                     />
+                    <span className="text-sm font-medium text-gray-300">Active</span>
+                  </label>
+                </div>
+
+                {/* Image Upload */}
+                <div className="md:col-span-2">
+                  <label className="admin-label">
+                    Banner Image {!editingId && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="admin-input"
+                  />
+                  {previewUrl && (
+                    <div className="mt-4">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="max-h-48 rounded-lg border border-slate-700"
+                      />
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
-            <div className="flex items-center justify-end gap-3">
-              {editing && (
-                <button 
-                  onClick={() => {setEditing(null); resetForm();}} 
-                  className="px-4 py-2 rounded-lg border border-ds-border text-ds-text hover:bg-ds-surface-secondary transition-colors"
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-700">
+                <AdminButton
+                  type="button"
+                  variant="secondary"
+                  onClick={resetForm}
                 >
                   Cancel
-                </button>
-              )}
-              <button 
-                onClick={save} 
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-ds-primary text-white hover:bg-ds-primary-hover transition-colors"
-              >
-                <Save size={16} /> Save
-              </button>
-            </div>
-          </div>
-        </div>
+                </AdminButton>
+                <AdminButton
+                  type="submit"
+                  variant="primary"
+                >
+                  {editingId ? 'Update Banner' : 'Create Banner'}
+                </AdminButton>
+              </div>
+            </form>
+          </AdminCardBody>
+        </AdminCard>
       )}
+
+      {/* Banners List */}
+      <AdminCard>
+        <AdminCardHeader
+          title="All Banners"
+          subtitle={`${banners.length} total banners`}
+        />
+        <AdminCardBody>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+              <p className="mt-4 text-slate-400">Loading banners...</p>
+            </div>
+          ) : banners.length === 0 ? (
+            <div className="text-center py-12">
+              <ImageIcon className="mx-auto text-slate-600" size={48} />
+              <p className="mt-4 text-slate-400">No banners found</p>
+              <p className="text-sm text-slate-500 mt-2">Create your first banner to get started</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>Link</th>
+                    <th>Sort Order</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {banners.map((banner) => (
+                    <tr key={banner.id}>
+                      <td>
+                        <div className="w-24 h-16 bg-slate-800 rounded overflow-hidden">
+                          {banner.image_url ? (
+                            <img
+                              src={banner.image_url}
+                              alt={banner.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon size={20} className="text-slate-600" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div>
+                          <p className="font-medium text-white">{banner.title}</p>
+                          {banner.subtitle && (
+                            <p className="text-sm text-slate-400">{banner.subtitle}</p>
+                          )}
+                          {banner.cta_text && (
+                            <p className="text-xs text-pink-400 mt-1">{banner.cta_text}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        {banner.link_url ? (
+                          <a
+                            href={banner.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-400 hover:text-blue-300 underline"
+                          >
+                            {banner.link_url.length > 30
+                              ? banner.link_url.substring(0, 30) + '...'
+                              : banner.link_url}
+                          </a>
+                        ) : (
+                          <span className="text-slate-500">-</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="text-white">{banner.sort_order}</span>
+                      </td>
+                      <td>
+                        <AdminStatusBadge
+                          status={banner.is_active ? 'active' : 'inactive'}
+                          label={banner.is_active ? 'Active' : 'Inactive'}
+                        />
+                      </td>
+                      <td>
+                        <div className="flex gap-2">
+                          <AdminButton
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleEdit(banner)}
+                            icon={<Edit size={16} />}
+                          >
+                            Edit
+                          </AdminButton>
+                          <AdminButton
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(banner)}
+                            icon={<Trash2 size={16} />}
+                          >
+                            Delete
+                          </AdminButton>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </AdminCardBody>
+      </AdminCard>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal />
     </div>
   );
 };

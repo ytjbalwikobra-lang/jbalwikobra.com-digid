@@ -92,9 +92,8 @@ const AdminFlashSales: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent flex items-center gap-2">
-            <Zap size={28} />
-            <span>Flash Sales Management</span>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
+            Flash Sales Management
           </h1>
           <p className="text-gray-400 mt-1">
             Manage special limited-time product offers

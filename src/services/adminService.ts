@@ -569,9 +569,9 @@ class AdminService {
       console.log('[adminService.getUsers] Successfully fetched', data?.length || 0, 'users out of', count || 0, 'total');
 
       // Map last_login_at to last_login for backward compatibility
-      const mappedData = (data || []).map(user => ({
+      const mappedData = (data || []).map((user: any) => ({
         ...user,
-        last_login: user.last_login_at || user.last_login
+        last_login: user.last_login_at
       }));
 
       return { data: mappedData, count: count || 0 };

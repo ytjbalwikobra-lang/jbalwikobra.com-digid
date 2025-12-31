@@ -395,27 +395,31 @@ class AdminService {
   /** Archive a product (hide from both admin and public) */
   async deleteProduct(id: string): Promise<boolean> {
     try {
-      if (!supabase) {
-        console.error('[adminService.deleteProduct] Supabase not configured');
-        return false;
+      // Use API endpoint to bypass RLS with service role key
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
       }
 
-      // Archive the product by setting archived_at and is_active to false
-      const { error } = await supabase
-        .from('products')
-        .update({ 
-          is_active: false, 
-          archived_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'archive_product',
+          productId: id
         })
-        .eq('id', id);
+      });
 
-      if (error) {
-        console.error('[adminService.deleteProduct] Failed to archive product:', error);
-        throw new Error(`Failed to archive product: ${error.message || error.details || 'Unknown error'}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to archive product');
       }
-      
+
       console.log(`[adminService.deleteProduct] Successfully archived product ${id}`);
+      
       return true;
     } catch (e: any) {
       console.error('[adminService.deleteProduct] error', e);

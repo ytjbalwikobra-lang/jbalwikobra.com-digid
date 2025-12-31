@@ -23,6 +23,7 @@ interface PaymentRequest {
   failure_redirect_url?: string;
   order?: {
     product_id?: string;
+    product_name?: string;
     customer_name: string;
     customer_email: string;
     customer_phone: string;
@@ -113,6 +114,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         const orderData = {
           product_id: order.product_id || null,
+          product_name: order.product_name || null,
           customer_name: order.customer_name,
           customer_email: order.customer_email,
           customer_phone: order.customer_phone,
@@ -172,7 +174,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               if (/^62\d{8,15}$/.test(customerPhone)) {
                 console.log('[Payment] Phone number valid, preparing message...');
                 const isRental = orderData.order_type === 'rental';
-                const productName = (req.body.product_name as string) || 'Produk Digital';
+                // Try to get product name from order data first, then from request body, fallback to default
+                const productName = orderData.product_name || (req.body.product_name as string) || 'Produk Digital';
                 const productId = order?.product_id || orderData.product_id;
                 const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
                 

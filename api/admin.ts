@@ -511,6 +511,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return respond(res, 500, { error: 'settings_fetch_failed', message: e.message });
         }
       }
+      case 'archive_product': {
+        if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+        
+        try {
+          const { productId } = req.body || {};
+          if (!productId) {
+            return respond(res, 400, { error: 'missing_product_id' });
+          }
+          
+          console.log('🗄️ Admin API: Archiving product', productId);
+          
+          const { data, error } = await supabase
+            .from('products')
+            .update({ 
+              archived_at: new Date().toISOString(),
+              is_active: false 
+            })
+            .eq('id', productId)
+            .select()
+            .single();
+            
+          if (error) {
+            console.error('❌ Admin API: Archive product error', error);
+            return respond(res, 400, { error: 'archive_failed', details: error.message });
+          }
+          
+          console.log('✅ Admin API: Product archived successfully');
+          return respond(res, 200, { success: true, data });
+        } catch (e: any) {
+          console.error('❌ Admin API: Archive product failed', e);
+          return respond(res, 500, { error: 'archive_operation_failed', message: e.message });
+        }
+      }
       default:
         return respond(res, 400, { error: 'unknown_action', action });
     }

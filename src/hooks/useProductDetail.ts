@@ -408,6 +408,7 @@ export const useProductDetail = () => {
         },
         order: {
           product_id: state.product.id,
+          product_name: state.product.name,
           customer_name: checkoutState.customer.name,
           customer_email: checkoutState.customer.email,
           customer_phone: checkoutState.customer.phone,

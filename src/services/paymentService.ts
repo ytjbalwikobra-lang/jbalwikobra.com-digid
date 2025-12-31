@@ -19,6 +19,7 @@ export type CreateInvoiceInput = {
   };
   order?: {
     product_id?: string;
+    product_name?: string;
     customer_name: string;
     customer_email: string;
     customer_phone: string;

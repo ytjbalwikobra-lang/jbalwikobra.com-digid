@@ -140,11 +140,13 @@ const AdminOrdersV2: React.FC = () => {
 
   // Update order status function
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    // Store previous state for rollback
+    const prev = orders;
+    
     try {
       // Optimistic UI update
-      const prev = orders;
       setOrders(prev.map(order => 
-        order.id === orderId ? { ...order, status: newStatus } : order
+        order.id === orderId ? { ...order, status: newStatus as OrderStatus } : order
       ));
       push('Status pesanan berhasil diperbarui', 'success');
       

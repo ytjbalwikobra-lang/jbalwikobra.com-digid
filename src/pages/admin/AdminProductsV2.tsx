@@ -65,9 +65,6 @@ const AdminProductsV2: React.FC = () => {
   const [activeRentals, setActiveRentals] = useState<Map<string, boolean>>(new Map());
   const [expiredRentals, setExpiredRentals] = useState<Map<string, { productName: string; expiredDate: Date }>>(new Map());
   const [shownExpiredNotifications, setShownExpiredNotifications] = useState<Set<string>>(new Set());
-  
-  // Active rental tracking
-  const [activeRentals, setActiveRentals] = useState<Map<string, boolean>>(new Map());
 
   // Modal state
   const [modalState, setModalState] = useState<{
@@ -306,7 +303,7 @@ const AdminProductsV2: React.FC = () => {
         
         push(
           `⚠️ ${expiredCount} produk masa rental habis: ${productList}${more}. Silakan ubah status ke Active.`,
-          'warning'
+          'error'
         );
         
         // Mark these as shown

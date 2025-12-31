@@ -9,6 +9,13 @@ interface RecentPurchase {
   created_at: string;
   order_type: 'purchase' | 'rental';
   rental_duration?: string;
+  tier?: {
+    id: string;
+    name: string;
+    slug: string;
+    color?: string;
+    background_gradient?: string;
+  };
 }
 
 const PurchaseNotificationTicker: React.FC = () => {
@@ -17,14 +24,45 @@ const PurchaseNotificationTicker: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Dynamic background colors
-  const colors = [
-    'from-purple-600 to-pink-600',
-    'from-blue-600 to-cyan-600',
-    'from-green-600 to-emerald-600',
-    'from-orange-600 to-red-600',
-    'from-indigo-600 to-purple-600',
-  ];
+  // Get background gradient based on tier
+  const getBackgroundGradient = (purchase: RecentPurchase): string => {
+    // If purchase has tier data and it's a purchase type, use tier colors
+    if (purchase.order_type === 'purchase' && purchase.tier) {
+      const tier = purchase.tier;
+      
+      // Use background_gradient if available
+      if (tier.background_gradient) {
+        return tier.background_gradient;
+      }
+      
+      // Otherwise create gradient from color
+      if (tier.color) {
+        return `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)`;
+      }
+      
+      // Fallback based on tier slug
+      switch (tier.slug) {
+        case 'pelajar':
+          return 'linear-gradient(135deg, #2563eb, #1d4ed8)'; // Blue
+        case 'reguler':
+          return 'linear-gradient(135deg, #71717a, #52525b)'; // Gray
+        case 'premium':
+          return 'linear-gradient(135deg, #f59e0b, #d97706)'; // Gold
+        default:
+          return 'linear-gradient(135deg, #6366f1, #4f46e5)'; // Indigo default
+      }
+    }
+    
+    // For rental or no tier, use default rotating colors
+    const colors = [
+      'linear-gradient(135deg, #9333ea, #db2777)', // Purple to Pink
+      'linear-gradient(135deg, #2563eb, #06b6d4)', // Blue to Cyan
+      'linear-gradient(135deg, #059669, #10b981)', // Green to Emerald
+      'linear-gradient(135deg, #ea580c, #dc2626)', // Orange to Red
+      'linear-gradient(135deg, #6366f1, #a855f7)', // Indigo to Purple
+    ];
+    return colors[currentIndex % colors.length];
+  };
 
   useEffect(() => {
     fetchRecentPurchases();
@@ -74,8 +112,8 @@ const PurchaseNotificationTicker: React.FC = () => {
   if (!isVisible || purchases.length === 0) return null;
 
   const purchase = purchases[currentIndex];
-  const colorIndex = currentIndex % colors.length;
   const timeAgo = getTimeAgo(purchase.created_at);
+  const backgroundGradient = getBackgroundGradient(purchase);
 
   // Format rupiah
   const formatRupiah = (amount: number) => {
@@ -86,6 +124,9 @@ const PurchaseNotificationTicker: React.FC = () => {
     }).format(amount);
   };
 
+  // Get transaction type text
+  const transactionType = purchase.order_type === 'rental' ? 'menyewa' : 'membeli';
+
   return (
     <div
       className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 ${
@@ -93,51 +134,37 @@ const PurchaseNotificationTicker: React.FC = () => {
       }`}
     >
       <div
-        className={`bg-gradient-to-r ${colors[colorIndex]} text-white shadow-lg`}
+        className="text-white shadow-lg"
+        style={{ background: backgroundGradient }}
       >
         <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-center gap-3 text-sm md:text-base">
+          <div className="flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
             {/* Animated Icon */}
-            <div className="animate-bounce">
+            <div className="animate-bounce flex-shrink-0">
               {purchase.order_type === 'rental' ? (
-                <Clock className="w-5 h-5 md:w-6 md:h-6" />
+                <Clock className="w-4 h-4 md:w-5 md:h-5" />
               ) : (
-                <ShoppingBag className="w-5 h-5 md:w-6 md:h-6" />
+                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
               )}
             </div>
 
-            {/* Purchase Info */}
-            <div className="flex items-center gap-2 font-medium">
-              <span className="hidden sm:inline">🎉</span>
-              <span className="truncate max-w-[120px] sm:max-w-none">
+            {/* Purchase Info - New Format: {nama user} {tipe transaksi} {nama akun} {timestamp} */}
+            <div className="flex items-center gap-1.5 md:gap-2 font-medium flex-1 min-w-0">
+              <span className="truncate max-w-[100px] sm:max-w-[150px]">
                 {purchase.customer_name}
               </span>
-              <span className="hidden sm:inline">
-                {purchase.order_type === 'rental' ? 'menyewa' : 'membeli'}
-              </span>
-              <span className="font-bold truncate max-w-[150px] sm:max-w-none">
+              <span className="flex-shrink-0">{transactionType}</span>
+              <span className="font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
                 {purchase.product_name}
               </span>
-              {purchase.order_type === 'rental' && purchase.rental_duration && (
-                <span className="hidden md:inline text-xs bg-white/20 px-2 py-1 rounded">
-                  {purchase.rental_duration}
-                </span>
-              )}
-            </div>
-
-            {/* Amount */}
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="font-bold text-yellow-300">
-                {formatRupiah(purchase.amount)}
-              </span>
-              <span className="text-xs opacity-80 hidden sm:inline">
+              <span className="text-xs md:text-sm opacity-90 flex-shrink-0">
                 {timeAgo}
               </span>
             </div>
 
             {/* Animated Package Icon */}
-            <div className="animate-pulse">
-              <Package className="w-5 h-5 md:w-6 md:h-6" />
+            <div className="animate-pulse flex-shrink-0">
+              <Package className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </div>
         </div>

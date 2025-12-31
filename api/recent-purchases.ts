@@ -17,6 +17,13 @@ interface RecentPurchase {
   created_at: string;
   order_type: 'purchase' | 'rental';
   rental_duration?: string;
+  tier?: {
+    id: string;
+    name: string;
+    slug: string;
+    color?: string;
+    background_gradient?: string;
+  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -50,13 +57,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rental_duration,
         product_id,
         products (
-          name
+          name,
+          tier_id,
+          tiers (
+            id,
+            name,
+            slug,
+            color,
+            background_gradient
+          )
         )
       `)
       .in('status', ['paid', 'completed'])
       .gte('created_at', threeDaysAgo.toISOString())
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(10);
 
     if (error) {
       console.error('Error fetching recent purchases:', error);
@@ -71,7 +86,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       amount: order.amount,
       created_at: order.created_at,
       order_type: order.order_type || 'purchase',
-      rental_duration: order.rental_duration
+      rental_duration: order.rental_duration,
+      tier: order.products?.tiers || undefined
     }));
 
     // Cache for 2 minutes (dynamic data but can have short cache)

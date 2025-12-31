@@ -117,36 +117,31 @@ async function dashboardStats() {
       console.warn('⚠️ [API /api/admin] dashboardStats: Reviews query failed:', e);
     }
     
-    // Get completed/paid orders count and sum - more efficient with single query
+    // Get order statistics efficiently with separate targeted queries
     console.log('💰 [API /api/admin] dashboardStats: Fetching order statistics...');
-    const { data: orderStats, error: statsError } = await supabase
-      .from('orders')
-      .select('amount, status')
-      .limit(5000); // Increased limit for better accuracy
     
-    if (statsError) {
-      console.error('❌ [API /api/admin] dashboardStats: Error fetching order stats:', statsError);
-    } else {
-      console.log('✅ [API /api/admin] dashboardStats: Order stats fetched:', orderStats?.length, 'orders');
+    // Get completed/paid orders
+    const [completedRes, pendingRes, paidOrdersRes] = await Promise.all([
+      supabase.from('orders').select('id', { count: 'exact', head: true }).in('status', ['completed', 'paid']),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('orders').select('amount').in('status', ['completed', 'paid'])
+    ]);
+    
+    const completed = completedRes.count || 0;
+    const pending = pendingRes.count || 0;
+    
+    // Calculate revenue from paid/completed orders
+    let revenue = 0;
+    if (paidOrdersRes.data) {
+      revenue = paidOrdersRes.data.reduce((sum, order) => {
+        return sum + (Number(order.amount) || 0);
+      }, 0);
     }
     
-    // Calculate statistics from fetched orders
-    let revenue = 0;
-    let completedRevenue = 0;
-    let completed = 0;
-    let pending = 0;
-    
-    (orderStats || []).forEach(order => {
-      const amount = Number(order.amount) || 0;
-      const status = (order.status || '').toLowerCase();
-      
-      if (status === 'completed' || status === 'paid') {
-        completed++;
-        revenue += amount;
-        completedRevenue += amount;
-      } else if (status === 'pending') {
-        pending++;
-      }
+    console.log('✅ [API /api/admin] dashboardStats: Order stats calculated:', {
+      completed,
+      pending,
+      revenue
     });
     
     const stats = {
@@ -155,7 +150,7 @@ async function dashboardStats() {
         completed, 
         pending, 
         revenue, 
-        completedRevenue 
+        completedRevenue: revenue // Same as revenue for completed/paid orders
       },
       users: { count: usersRes.count || 0 },
       products: { count: productsRes.count || 0 },

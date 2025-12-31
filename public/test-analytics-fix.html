@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Analytics Fix</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .error {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Analytics Fix</h1>
+        
+        <div class="info">
+            <strong>Testing:</strong> Dashboard stats API with optimized queries
+            <br><strong>Admin:</strong> admin@jbalwikobra.com
+        </div>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button onclick="quickLogin()">🔑 Quick Login</button>
+            <button onclick="testDashboardStats()">📊 Test Dashboard Stats</button>
+            <button onclick="testOrdersCount()">📦 Test Orders Count</button>
+            <button onclick="testUsersCount()">👥 Test Users Count</button>
+        </div>
+
+        <div id="status"></div>
+        
+        <div id="statsDisplay" class="stats-grid" style="display: none;"></div>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let sessionToken = localStorage.getItem('session_token');
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.innerHTML = message;
+            statusDiv.style.display = 'block';
+        }
+
+        function showStats(stats) {
+            const statsDiv = document.getElementById('statsDisplay');
+            statsDiv.style.display = 'grid';
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Orders</h3>
+                    <div class="value">${stats.totalOrders || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Orders</h3>
+                    <div class="value">${stats.pendingOrders || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Completed Orders</h3>
+                    <div class="value">${stats.completedOrders || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Revenue</h3>
+                    <div class="value">Rp ${(stats.totalRevenue || 0).toLocaleString('id-ID')}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="value">${stats.totalUsers || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <div class="value">${stats.totalProducts || 0}</div>
+                </div>
+            `;
+        }
+
+        function showOutput(data) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        async function quickLogin() {
+            showStatus('🔄 Logging in...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/auth?action=login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@jbalwikobra.com',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.sessionToken) {
+                    sessionToken = data.sessionToken;
+                    localStorage.setItem('session_token', sessionToken);
+                    showStatus(`✅ Login successful! Token: ${sessionToken.substring(0, 20)}...`, 'success');
+                    showOutput(data);
+                } else {
+                    showStatus(`❌ Login failed: ${data.error || 'Unknown error'}`, 'error');
+                    showOutput(data);
+                }
+            } catch (error) {
+                showStatus(`❌ Login error: ${error.message}`, 'error');
+                console.error('Login error:', error);
+            }
+        }
+
+        async function testDashboardStats() {
+            if (!sessionToken) {
+                showStatus('❌ Please login first', 'error');
+                return;
+            }
+
+            showStatus('🔄 Fetching dashboard stats...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/admin?action=dashboard-stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Transform to AdminStats format
+                const stats = {
+                    totalOrders: data.orders?.count || 0,
+                    totalRevenue: data.orders?.revenue || 0,
+                    totalUsers: data.users?.count || 0,
+                    totalProducts: data.products?.count || 0,
+                    totalReviews: data.reviews?.count || 0,
+                    averageRating: data.reviews?.averageRating || 0,
+                    pendingOrders: data.orders?.pending || 0,
+                    completedOrders: data.orders?.completed || 0,
+                    totalFlashSales: data.flashSales?.count || 0,
+                };
+
+                showStatus('✅ Dashboard stats loaded successfully!', 'success');
+                showStats(stats);
+                showOutput(data);
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('Dashboard stats error:', error);
+            }
+        }
+
+        async function testOrdersCount() {
+            if (!sessionToken) {
+                showStatus('❌ Please login first', 'error');
+                return;
+            }
+
+            showStatus('🔄 Counting orders...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/admin?action=orders&page=1&limit=1`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                showStatus(`✅ Found ${data.total || 0} orders`, 'success');
+                showOutput({
+                    total: data.total,
+                    loaded: data.data?.length || 0,
+                    sample: data.data?.slice(0, 3)
+                });
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('Orders count error:', error);
+            }
+        }
+
+        async function testUsersCount() {
+            if (!sessionToken) {
+                showStatus('❌ Please login first', 'error');
+                return;
+            }
+
+            showStatus('🔄 Counting users...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/admin?action=users&page=1&limit=1`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                showStatus(`✅ Found ${data.total || 0} users`, 'success');
+                showOutput({
+                    total: data.total,
+                    loaded: data.data?.length || 0,
+                    sample: data.data?.slice(0, 3)
+                });
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('Users count error:', error);
+            }
+        }
+
+        // Auto-test on load if logged in
+        window.addEventListener('load', () => {
+            if (sessionToken) {
+                showStatus(`✅ Already logged in: ${sessionToken.substring(0, 20)}...`, 'success');
+                testDashboardStats();
+            } else {
+                showStatus('💡 Click "Quick Login" to start testing', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

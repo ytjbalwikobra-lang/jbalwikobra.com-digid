@@ -215,6 +215,16 @@ const OrderFilters: React.FC<{
 const AdminOrdersV2: React.FC = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [realStats, setRealStats] = useState<OrderStats>({
+    total: 0,
+    pending: 0,
+    paid: 0,
+    completed: 0,
+    cancelled: 0,
+    totalRevenue: 0,
+    todayOrders: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const { push } = useToast();
@@ -234,25 +244,49 @@ const AdminOrdersV2: React.FC = () => {
       setLoading(true);
       setError('');
       
+      // Load real stats from dashboard API for accurate counts
+      try {
+        const dashboardStats = await adminService.getDashboardStats();
+        setRealStats({
+          total: dashboardStats.totalOrders || 0,
+          pending: dashboardStats.pendingOrders || 0,
+          paid: 0, // Will be calculated from completed
+          completed: dashboardStats.completedOrders || 0,
+          cancelled: 0, // Not available in dashboard stats
+          totalRevenue: dashboardStats.totalRevenue || 0,
+          todayOrders: 0 // Will be calculated from loaded orders
+        });
+        setTotalOrdersCount(dashboardStats.totalOrders || 0);
+      } catch (statsErr) {
+        console.warn('[AdminOrdersV2] Failed to load dashboard stats:', statsErr);
+      }
+      
       // Clear cache to ensure fresh data
       if (adminService.clearOrdersCache) {
         adminService.clearOrdersCache();
       }
       
-      // Use adminService directly instead of API call
-      // Increase limit to ensure we get all orders (1000 should be enough for most cases)
-      const result = await adminService.getOrders(1, 1000);
+      // Load paginated orders for display (not for stats)
+      const result = await adminService.getOrders(1, 100); // Load first 100 for display
       
       console.log('[AdminOrdersV2] Loaded orders:', {
-        total: result.data.length,
-        paid: result.data.filter(o => o.status === 'paid').length,
-        completed: result.data.filter(o => o.status === 'completed').length,
-        paidAndCompleted: result.data.filter(o => o.status === 'paid' || o.status === 'completed').length,
-        paidOrders: result.data.filter(o => o.status === 'paid').map(o => ({id: o.id, customer: o.customer_name, amount: o.amount})),
-        completedOrders: result.data.filter(o => o.status === 'completed').map(o => ({id: o.id, customer: o.customer_name, amount: o.amount}))
+        displayed: result.data.length,
+        total: totalOrdersCount
       });
       
       setOrders(result.data);
+      
+      // Update today's orders count from loaded data
+      const today = new Date().toDateString();
+      const todayCount = result.data.filter(order => 
+        new Date(order.created_at).toDateString() === today
+      ).length;
+      
+      setRealStats(prev => ({
+        ...prev,
+        todayOrders: todayCount
+      }));
+      
       push('Orders data loaded successfully!', 'success');
     } catch (err: any) {
       console.error('Error loading orders:', err);
@@ -336,23 +370,8 @@ const AdminOrdersV2: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, typeFilter, itemsPerPage]);
 
-  // Calculate statistics
-  const stats: OrderStats = useMemo(() => {
-    const today = new Date().toDateString();
-    const todayOrders = orders.filter(order => 
-      new Date(order.created_at).toDateString() === today
-    ).length;
-
-    return {
-      total: orders.length,
-      pending: orders.filter(o => o.status === 'pending').length,
-      paid: orders.filter(o => o.status === 'paid').length,
-      completed: orders.filter(o => o.status === 'completed').length,
-      cancelled: orders.filter(o => o.status === 'cancelled').length,
-      totalRevenue: orders.filter(o => o.status === 'paid' || o.status === 'completed').reduce((sum, o) => sum + o.amount, 0),
-      todayOrders
-    };
-  }, [orders]);
+  // Use real stats from API instead of calculating from paginated array
+  const stats: OrderStats = realStats;
 
   // Format currency
   const formatCurrency = (amount: number) => {

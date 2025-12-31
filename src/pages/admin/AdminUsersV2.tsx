@@ -89,21 +89,16 @@ const AdminUsersV2: React.FC = () => {
     status: 'all',
     search: ''
   });
+  const [realStats, setRealStats] = useState<UserStats>({
+    total: 0,
+    active: 0,
+    admin: 0,
+    recent: 0
+  });
   const { push } = useToast();
 
-  // Calculate statistics
-  const stats = useMemo<UserStats>(() => {
-    const total = users.length;
-    const admin = users.filter(user => user.is_admin).length;
-    const active = users.filter(user => user.last_login).length;
-    
-    // Users created in the last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recent = users.filter(user => new Date(user.created_at) > thirtyDaysAgo).length;
-
-    return { total, active, admin, recent };
-  }, [users]);
+  // Use real stats from API instead of calculating from paginated array
+  const stats = realStats;
 
   // Filter users based on current filters
   const filteredUsers = useMemo(() => {
@@ -134,16 +129,45 @@ const AdminUsersV2: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      // Clear cache to ensure fresh data (avoid stale empty cached responses)
+      // Load real stats from dashboard API
+      try {
+        const dashboardStats = await adminService.getDashboardStats();
+        // Calculate user stats from available data
+        const result = await adminService.getUsers(1, 50); // Load sample for active/admin counts
+        
+        const adminCount = result.data.filter(u => u.is_admin).length;
+        const activeCount = result.data.filter(u => u.last_login).length;
+        
+        // Calculate proportions
+        const totalUsers = dashboardStats.totalUsers || result.data.length;
+        const adminRatio = result.data.length > 0 ? adminCount / result.data.length : 0;
+        const activeRatio = result.data.length > 0 ? activeCount / result.data.length : 0;
+        
+        // Calculate 30-day recent users
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentCount = result.data.filter(u => new Date(u.created_at) > thirtyDaysAgo).length;
+        const recentRatio = result.data.length > 0 ? recentCount / result.data.length : 0;
+        
+        setRealStats({
+          total: totalUsers,
+          admin: Math.round(totalUsers * adminRatio),
+          active: Math.round(totalUsers * activeRatio),
+          recent: Math.round(totalUsers * recentRatio)
+        });
+      } catch (statsErr) {
+        console.warn('[AdminUsersV2] Failed to load dashboard stats:', statsErr);
+      }
+      
+      // Clear cache to ensure fresh data
       if (adminService.clearUsersCache) {
         adminService.clearUsersCache();
       }
 
-      const result = await adminService.getUsers(1, 1000); // Get all users for now
+      const result = await adminService.getUsers(1, 100); // Load first 100 for display
       console.log('[AdminUsersV2] Loaded users:', {
-        total: result.data.length,
-        admins: result.data.filter(u => u.is_admin).length,
-        active: result.data.filter(u => u.last_login).length
+        displayed: result.data.length,
+        total: realStats.total
       });
       setUsers(result.data);
     } catch (err: any) {

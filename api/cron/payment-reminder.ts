@@ -77,7 +77,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
     const wa = new DynamicWhatsAppService();
 
-    const results = [];
+    const results: Array<{
+      order_id: string;
+      external_id: string;
+      phone: string;
+      success: boolean;
+      error?: string;
+    }> = [];
 
     for (const order of pendingOrders) {
       // Skip if no mobile number

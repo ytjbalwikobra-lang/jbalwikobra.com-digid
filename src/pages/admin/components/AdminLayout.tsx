@@ -1,6 +1,6 @@
 import React from 'react';
 import { AdminPageHeader, AdminStats, StatItem } from './ui';
-import { IOSCard } from '../../../components/ios/IOSDesignSystemV2';
+import '../../../styles/admin-design-system-v3.css';
 
 interface AdminLayoutProps {
   title: string;
@@ -22,9 +22,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   showStats = true
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="admin-container">
       {/* Main Content */}
-      <div className="p-stack-lg space-y-stack-lg">
+      <div className="admin-main">
         {/* Page Header */}
         <AdminPageHeader
           title={title}
@@ -35,11 +35,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         {/* Stats Section */}
         {showStats && stats && stats.length > 0 && (
-          <AdminStats stats={stats} />
+          <div className="mb-6">
+            <AdminStats stats={stats} />
+          </div>
         )}
 
         {/* Main Content Area */}
-        <div className="space-y-stack-lg">
+        <div className="space-y-6">
           {children}
         </div>
       </div>

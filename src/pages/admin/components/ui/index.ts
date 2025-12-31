@@ -1,13 +1,21 @@
-// Admin UI Components - Reusable components following AdminProducts pattern
+// Admin UI Components - Modern Design System V3
+// WCAG 2.1 AA Compliant
 
-// Original admin components
+// Core Layout Components
 export { AdminPageHeader } from './AdminPageHeader';
 export { AdminFilterPanel } from './AdminFilterPanel';
 export { AdminDataTable } from './AdminDataTable';
 export { AdminStats } from './AdminStats';
 export { AdminModal, ModalActions } from './AdminModal';
 
-// New reusable admin components
+// Modern Design System V3 Components
+export { default as AdminButton } from './AdminButton';
+export { default as AdminCard, AdminCardHeader, AdminCardBody, AdminCardFooter } from './AdminCard';
+export { default as AdminStatusBadge } from './AdminStatusBadge';
+export type { ButtonVariant, ButtonSize } from './AdminButton';
+export type { StatusType } from './AdminStatusBadge';
+
+// Reusable Admin Components
 export { AdminStatCard } from './AdminStatCard';
 export { AdminFilters } from './AdminFilters';
 export { AdminTable } from './AdminTable';
@@ -27,3 +35,4 @@ export type { FilterOption, SortOption, AdminFiltersConfig } from './AdminFilter
 export type { TableColumn as TableColumnV2, TableAction as TableActionV2 } from './AdminTable';
 export type { PageHeaderAction } from './AdminPageHeaderComponent';
 export type { BadgeProps } from './AdminBadge';
+

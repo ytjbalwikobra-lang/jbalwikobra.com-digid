@@ -127,7 +127,11 @@ export interface User {
   phone?: string;
   created_at: string;
   is_admin?: boolean;
-  last_login?: string;
+  last_login?: string; // For backward compatibility
+  last_login_at?: string; // Actual column name in database
+  is_active?: boolean;
+  phone_verified?: boolean;
+  profile_completed?: boolean;
 }
 
 export interface Product {
@@ -547,7 +551,7 @@ class AdminService {
       // Optimize: Select only needed fields to reduce cache egress
       let query = supabase
         .from('users')
-        .select('id, email, name, phone, created_at, is_admin, last_login, is_active', { count: 'exact' })
+        .select('id, email, name, phone, created_at, is_admin, last_login_at, is_active, phone_verified, profile_completed', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
 
@@ -564,7 +568,13 @@ class AdminService {
       
       console.log('[adminService.getUsers] Successfully fetched', data?.length || 0, 'users out of', count || 0, 'total');
 
-      return { data: data || [], count: count || 0 };
+      // Map last_login_at to last_login for backward compatibility
+      const mappedData = (data || []).map(user => ({
+        ...user,
+        last_login: user.last_login_at || user.last_login
+      }));
+
+      return { data: mappedData, count: count || 0 };
     } catch (error) {
       console.error('[adminService.getUsers] Error fetching users:', error);
       return { data: [], count: 0 };

@@ -316,7 +316,7 @@ async function listUsers(page: number, limit: number, search?: string) {
   
   let query: any = supabase
     .from('users')
-    .select('id,name,email,phone,avatar_url,is_admin,created_at,is_active,last_login', { count: 'exact' })
+    .select('id,name,email,phone,avatar_url,is_admin,created_at,is_active,last_login_at,phone_verified,profile_completed', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
     

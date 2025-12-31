@@ -417,7 +417,7 @@ export const AdminHeaderV2: React.FC<AdminHeaderV2Props> = ({
               <button 
                 onClick={async () => {
                   try {
-                    if (window.confirm('Are you sure you want to logout?')) {
+                    if (window.confirm('Apakah Anda yakin ingin keluar?')) {
                       // Clear any stored admin sessions
                       localStorage.removeItem('adminAuth');
                       localStorage.removeItem('adminSession');
@@ -576,7 +576,7 @@ export const AdminHeaderV2: React.FC<AdminHeaderV2Props> = ({
                 <button 
                   onClick={async () => {
                     try {
-                      if (window.confirm('Are you sure you want to logout?')) {
+                      if (window.confirm('Apakah Anda yakin ingin keluar?')) {
                         // Clear any stored admin sessions
                         localStorage.removeItem('adminAuth');
                         localStorage.removeItem('adminSession');

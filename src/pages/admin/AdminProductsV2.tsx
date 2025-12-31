@@ -388,11 +388,11 @@ const AdminProductsV2: React.FC = () => {
 
   const handleArchiveProduct = async (product: Product) => {
     const confirmed = await showConfirm({
-      title: 'Archive Product',
-      message: `Are you sure you want to archive "${product.name}"?\n\nThis will hide the product from both admin panel and public pages. You can restore it later if needed.`,
+      title: 'Arsipkan Produk',
+      message: `Apakah Anda yakin ingin mengarsipkan "${product.name}"?\n\nProduk akan disembunyikan dari panel admin dan halaman publik. Anda bisa mengembalikannya nanti jika diperlukan.`,
       type: 'warning',
-      confirmText: 'Archive',
-      cancelText: 'Cancel'
+      confirmText: 'Arsipkan',
+      cancelText: 'Batal'
     });
     
     if (!confirmed) return;

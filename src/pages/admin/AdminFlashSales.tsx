@@ -50,7 +50,7 @@ const AdminFlashSales: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this flash sale?')) return;
+    if (!window.confirm('Apakah Anda yakin ingin menghapus flash sale ini?')) return;
     
     try {
       // Optimistic UI update
@@ -292,9 +292,9 @@ const AdminFlashSales: React.FC = () => {
                               size="sm"
                               onClick={() => handleDelete(sale.id)}
                               icon={<Trash2 size={16} />}
-                              aria-label="Delete flash sale"
+                              aria-label="Hapus flash sale"
                             >
-                              Delete
+                              Hapus
                             </AdminButton>
                           </div>
                         </td>

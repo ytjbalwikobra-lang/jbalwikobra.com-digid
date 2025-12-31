@@ -128,7 +128,7 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
   };
 
   const handleDeleteProduct = async (product: { id: string }) => {
-    if (!window.confirm('Are you sure you want to archive this product? This will hide it from both admin panel and public pages.')) {
+    if (!window.confirm('Apakah Anda yakin ingin mengarsipkan produk ini? Produk akan disembunyikan dari panel admin dan halaman publik.')) {
       return;
     }
 

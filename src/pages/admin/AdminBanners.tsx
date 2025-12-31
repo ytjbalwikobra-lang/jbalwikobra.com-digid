@@ -160,11 +160,11 @@ const AdminBanners: React.FC = () => {
 
   const handleDelete = async (banner: Banner) => {
     const confirmed = await showConfirm({
-      title: 'Delete Banner',
-      message: `Are you sure you want to delete "${banner.title}"? This action cannot be undone.`,
+      title: 'Hapus Banner',
+      message: `Apakah Anda yakin ingin menghapus "${banner.title}"? Tindakan ini tidak dapat dibatalkan.`,
       type: 'danger',
-      confirmText: 'Delete',
-      cancelText: 'Cancel'
+      confirmText: 'Hapus',
+      cancelText: 'Batal'
     });
 
     if (!confirmed) return;
@@ -376,13 +376,13 @@ const AdminBanners: React.FC = () => {
                   variant="secondary"
                   onClick={resetForm}
                 >
-                  Cancel
+                  Batal
                 </AdminButton>
                 <AdminButton
                   type="submit"
                   variant="primary"
                 >
-                  {editingId ? 'Update Banner' : 'Create Banner'}
+                  {editingId ? 'Perbarui Banner' : 'Buat Banner'}
                 </AdminButton>
               </div>
             </form>
@@ -491,7 +491,7 @@ const AdminBanners: React.FC = () => {
                             onClick={() => handleDelete(banner)}
                             icon={<Trash2 size={16} />}
                           >
-                            Delete
+                            Hapus
                           </AdminButton>
                         </div>
                       </td>

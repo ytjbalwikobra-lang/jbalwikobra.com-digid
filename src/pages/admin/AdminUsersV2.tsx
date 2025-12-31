@@ -138,7 +138,7 @@ const AdminUsersV2: React.FC = () => {
   };
 
   const handleDeleteUser = (user: User) => {
-    if (confirm(`Are you sure you want to delete user: ${user.name}?`)) {
+    if (confirm(`Apakah Anda yakin ingin menghapus pengguna: ${user.name}?`)) {
       push(`Delete functionality coming soon for: ${user.name}`, 'error');
     }
   };

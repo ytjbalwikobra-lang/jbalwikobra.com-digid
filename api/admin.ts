@@ -203,7 +203,7 @@ async function listOrders(page: number, limit: number, status?: string) {
   const from = (page - 1) * limit; const to = from + limit - 1;
   
   // First get orders - only select columns that exist in the table
-  let query: any = supabase.from('orders').select('id, customer_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, client_external_id, external_id', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
+  let query: any = supabase.from('orders').select('id, customer_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, client_external_id, xendit_invoice_id, product_name, currency, paid_at, expires_at', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
   if (status && status !== 'all') {
     // Handle "completed" status to include both 'paid' and 'completed' orders
     if (status === 'completed') {

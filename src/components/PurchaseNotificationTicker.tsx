@@ -29,6 +29,12 @@ const PurchaseNotificationTicker: React.FC = () => {
     // If purchase has tier data and it's a purchase type, use tier colors
     if (purchase.order_type === 'purchase' && purchase.tier) {
       const tier = purchase.tier;
+      const tierSlug = tier.slug.toLowerCase();
+      
+      // Premium/Sultan tier - Festive gold with shimmer effect
+      if (tierSlug === 'premium' || tierSlug === 'sultan' || tierSlug === 'gold') {
+        return 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 25%, #f59e0b 50%, #fbbf24 75%, #f59e0b 100%)';
+      }
       
       // Use background_gradient if available
       if (tier.background_gradient) {
@@ -41,13 +47,11 @@ const PurchaseNotificationTicker: React.FC = () => {
       }
       
       // Fallback based on tier slug
-      switch (tier.slug) {
+      switch (tierSlug) {
         case 'pelajar':
           return 'linear-gradient(135deg, #2563eb, #1d4ed8)'; // Blue
         case 'reguler':
           return 'linear-gradient(135deg, #71717a, #52525b)'; // Gray
-        case 'premium':
-          return 'linear-gradient(135deg, #f59e0b, #d97706)'; // Gold
         default:
           return 'linear-gradient(135deg, #6366f1, #4f46e5)'; // Indigo default
       }
@@ -64,6 +68,13 @@ const PurchaseNotificationTicker: React.FC = () => {
     return colors[currentIndex % colors.length];
   };
 
+  // Check if tier is premium/sultan for special effects
+  const isPremiumTier = (purchase: RecentPurchase): boolean => {
+    if (!purchase.tier) return false;
+    const tierSlug = purchase.tier.slug.toLowerCase();
+    return tierSlug === 'premium' || tierSlug === 'sultan' || tierSlug === 'gold';
+  };
+
   useEffect(() => {
     fetchRecentPurchases();
     // Refresh every 5 minutes
@@ -74,25 +85,22 @@ const PurchaseNotificationTicker: React.FC = () => {
   useEffect(() => {
     if (purchases.length === 0) return;
 
-    // Show notification
-    const showTimer = setTimeout(() => {
-      setIsVisible(true);
-      setIsAnimating(true);
-      
-      // Hide after 5 seconds
-      const hideTimer = setTimeout(() => {
-        setIsAnimating(false);
-        setTimeout(() => {
-          setIsVisible(false);
-          // Move to next purchase
-          setCurrentIndex((prev) => (prev + 1) % purchases.length);
-        }, 500);
-      }, 5000);
+    // Show notification immediately
+    setIsVisible(true);
+    setIsAnimating(true);
+    
+    // Hide after 5 seconds and immediately show next
+    const hideTimer = setTimeout(() => {
+      setIsAnimating(false);
+      // Immediately move to next without delay
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % purchases.length);
+        // Reset animation state immediately for seamless transition
+        setIsAnimating(true);
+      }, 700); // Match slide animation duration
+    }, 5000);
 
-      return () => clearTimeout(hideTimer);
-    }, 2000);
-
-    return () => clearTimeout(showTimer);
+    return () => clearTimeout(hideTimer);
   }, [currentIndex, purchases.length]);
 
   const fetchRecentPurchases = async () => {
@@ -114,6 +122,7 @@ const PurchaseNotificationTicker: React.FC = () => {
   const purchase = purchases[currentIndex];
   const timeAgo = getTimeAgo(purchase.created_at);
   const backgroundGradient = getBackgroundGradient(purchase);
+  const isPremium = isPremiumTier(purchase);
 
   // Format rupiah
   const formatRupiah = (amount: number) => {
@@ -132,14 +141,20 @@ const PurchaseNotificationTicker: React.FC = () => {
       className={`fixed top-0 left-0 right-0 z-[9999] overflow-hidden`}
     >
       <div
-        className="text-white shadow-lg transition-transform duration-700 ease-in-out"
+        className={`text-white shadow-lg transition-transform duration-700 ease-in-out ${isPremium ? 'animate-shimmer' : ''}`}
         style={{ 
           background: backgroundGradient,
-          transform: isAnimating ? 'translateX(0)' : 'translateX(-100%)'
+          transform: isAnimating ? 'translateX(0)' : 'translateX(-100%)',
+          boxShadow: isPremium ? '0 4px 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(251, 191, 36, 0.3)' : undefined
         }}
       >
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
+            {/* Premium Sparkle */}
+            {isPremium && (
+              <span className="text-yellow-200 text-lg animate-pulse-slow">✨</span>
+            )}
+            
             {/* Rocket Icon with Light Pulse */}
             <div className="animate-pulse-slow flex-shrink-0">
               <Rocket className="w-4 h-4 md:w-5 md:h-5" />
@@ -151,9 +166,12 @@ const PurchaseNotificationTicker: React.FC = () => {
                 {purchase.customer_name}
               </span>
               <span className="flex-shrink-0">{transactionType}</span>
-              <span className="font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
+              <span className={`font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-none ${isPremium ? 'text-yellow-100' : ''}`}>
                 {purchase.product_name}
               </span>
+              {isPremium && (
+                <span className="text-yellow-200 font-bold">👑</span>
+              )}
               <span className="text-xs md:text-sm opacity-90 flex-shrink-0">
                 {timeAgo}
               </span>
@@ -163,6 +181,11 @@ const PurchaseNotificationTicker: React.FC = () => {
             <div className="animate-pulse-slow flex-shrink-0">
               <Package className="w-4 h-4 md:w-5 md:h-5" />
             </div>
+            
+            {/* Premium Sparkle */}
+            {isPremium && (
+              <span className="text-yellow-200 text-lg animate-pulse-slow">✨</span>
+            )}
           </div>
         </div>
       </div>
@@ -210,6 +233,19 @@ style.textContent = `
   }
   .animate-pulse-slow {
     animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  .animate-shimmer {
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
   }
 `;
 if (typeof document !== 'undefined' && !document.querySelector('style[data-ticker-animations]')) {

@@ -5,9 +5,10 @@ import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
 import { validateAdminAuth } from './_middleware/authMiddleware.js';
 
 // Lazy supabase client (service role preferred for admin operations)
-const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
+// Clean environment variables to remove any CRLF characters
+const supabaseUrl = (process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '').replace(/[\r\n\\]/g, '').trim();
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').replace(/[\r\n\\]/g, '').trim();
+const supabaseAnonKey = (process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '').replace(/[\r\n\\]/g, '').trim();
 
 // CRITICAL: Use service role key for admin operations to bypass RLS
 const supabaseKey = supabaseServiceKey || supabaseAnonKey;
@@ -17,6 +18,7 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 if (supabase) {
   const keyType = supabaseServiceKey ? 'SERVICE_ROLE' : 'ANON';
   console.log(`[admin.ts] Supabase initialized with ${keyType} key`);
+  console.log(`[admin.ts] URL length: ${supabaseUrl.length}, Key length: ${supabaseKey.length}`);
   if (!supabaseServiceKey) {
     console.warn('[admin.ts] WARNING: Using ANON key instead of SERVICE_ROLE key - RLS policies will apply!');
   }

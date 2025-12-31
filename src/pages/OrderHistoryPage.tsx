@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { AuthRequired } from '../components/ProtectedRoute';
+import { useToast } from '../components/Toast';
 // Removed legacy standardClasses helper – using direct utilities
 
 type Order = {
@@ -17,34 +19,53 @@ const OrderHistoryPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { showToast } = useToast();
+
+  const fetchOrders = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (!supabase) {
+      setLoading(false);
+      showToast('Database tidak tersedia. Silakan coba lagi nanti.', 'error');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      // Fetch orders for the current user
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, amount, status, created_at, payment_channel, xendit_invoice_url')
+        .eq('user_id', user.id) // Filter by user_id
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching orders:', error);
+        showToast('Gagal memuat riwayat order. Silakan coba lagi.', 'error');
+        return;
+      }
+      
+      if (data) {
+        setOrders(data as Order[]);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      showToast('Terjadi kesalahan saat memuat data. Silakan coba lagi.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user || !supabase) { 
-        setLoading(false); 
-        return; 
-      }
-      
-      try {
-        // Fetch orders for the current user
-        const { data, error } = await supabase
-          .from('orders')
-          .select('id, amount, status, created_at, payment_channel, xendit_invoice_url')
-          .eq('user_id', user.id) // Filter by user_id
-          .order('created_at', { ascending: false });
-          
-        if (!error && data) {
-          setOrders(data as any);
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
-      
-      setLoading(false);
-    };
-
     fetchOrders();
   }, [user]);
+
+  const handleRefresh = () => {
+    fetchOrders();
+  };
 
 
 
@@ -53,7 +74,24 @@ const OrderHistoryPage: React.FC = () => {
       <div className="min-h-screen bg-app-dark">
         <div className="pt-20 pb-20 px-4">
           <div className="w-full max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold text-white mb-6">Riwayat Order Saya</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-white">
+                Riwayat Order Saya
+                {!loading && orders.length > 0 && (
+                  <span className="ml-2 text-sm text-gray-400">
+                    ({orders.length} order)
+                  </span>
+                )}
+              </h1>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="p-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Refresh"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             {loading ? (
               <div className="bg-black border border-gray-700 rounded-lg p-6">
                 <div className="ios-skeleton h-5 w-48 mb-4"></div>

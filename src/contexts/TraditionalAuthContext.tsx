@@ -33,7 +33,7 @@ interface AuthContextType {
   login: (identifier: string, password: string, turnstileToken?: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; profileCompleted?: boolean}>;
   signup: (phone: string, password: string, name?: string, turnstileToken?: string) => Promise<{error?: any; success?: boolean; userId?: string; message?: string}>;
   verifyPhone: (userId: string, code: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; nextStep?: string}>;
-  completeProfile: (email: string, name: string, password: string) => Promise<{error?: any; success?: boolean; user?: User}>;
+  completeProfile: (email: string, name: string) => Promise<{error?: any; success?: boolean; user?: User}>;
   logout: (logoutAll?: boolean) => Promise<void>;
   refreshSession: () => Promise<boolean>;
 }
@@ -241,7 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const completeProfile = async (email: string, name: string, password: string) => {
+  const completeProfile = async (email: string, name: string) => {
     try {
       const userData = localStorage.getItem('user_data');
       
@@ -259,8 +259,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ 
           user_id: user.id, 
           email, 
-          name, 
-          password 
+          name
+          // Note: password removed - already set during signup
         }),
       });
 

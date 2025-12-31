@@ -196,20 +196,22 @@ const AuthPage: React.FC = () => {
   const handleProfileCompletion = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (profileData.password !== profileData.confirmPassword) {
-      showToast('Password tidak cocok', 'error');
+    // Validate email and name
+    if (!profileData.email.trim()) {
+      showToast('Email wajib diisi', 'error');
       return;
     }
 
-    if (profileData.password.length < 6) {
-      showToast('Password minimal 6 karakter', 'error');
+    if (!profileData.name.trim()) {
+      showToast('Nama wajib diisi', 'error');
       return;
     }
 
     setLoading(true);
 
     try {
-      const result = await completeProfile(profileData.email, profileData.name, profileData.password);
+      // Note: Password already set during signup, no need to send again
+      const result = await completeProfile(profileData.email, profileData.name);
       
       if (result.error) {
         showToast(result.error, 'error');
@@ -527,22 +529,10 @@ const AuthPage: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <PasswordInput
-                  value={profileData.password}
-                  onChange={(value) => setProfileData({ ...profileData, password: value })}
-                  placeholder="Buat password (min. 6 karakter)"
-                  required
-                />
-              </div>
-
-              <div>
-                <PasswordInput
-                  value={profileData.confirmPassword}
-                  onChange={(value) => setProfileData({ ...profileData, confirmPassword: value })}
-                  placeholder="Konfirmasi password"
-                  required
-                />
+              <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4">
+                <p className="text-sm text-white/60">
+                  <span className="text-green-400">✓</span> Password sudah diatur saat pendaftaran
+                </p>
               </div>
 
               <button type="submit" disabled={loading} className="ios-button w-full disabled:opacity-50">

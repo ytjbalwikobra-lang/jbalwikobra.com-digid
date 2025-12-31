@@ -156,6 +156,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleVerifyPhone(req, res);
       case 'complete-profile':
         return await handleCompleteProfile(req, res);
+      case 'update-profile':
+        return await handleUpdateProfile(req, res);
       case 'validate-session':
         return await handleValidateSession(req, res);
       case 'logout':
@@ -557,30 +559,34 @@ async function handleCompleteProfile(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { user_id, name, email, password } = req.body;
+    const { user_id, name, email } = req.body;
 
-    if (!user_id || !name || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!user_id || !name || !email) {
+      return res.status(400).json({ error: 'User ID, name, and email are required' });
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
 
-    // Update user profile
+    // Update user profile (NO password update - already set during signup)
     const { data: user, error: userError } = await getSupabase()
       .from('users')
       .update({
-        name,
-        email,
-        password_hash: passwordHash,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
         profile_completed: true,
-        profile_completed_at: new Date().toISOString()
+        profile_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .eq('id', user_id)
       .select()
       .single();
 
     if (userError) {
+      console.error('Failed to complete profile:', userError);
       return res.status(500).json({ error: 'Failed to complete profile' });
     }
 
@@ -619,6 +625,100 @@ async function handleCompleteProfile(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Complete profile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleUpdateProfile(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { name, email, phone } = req.body;
+    
+    // Get session token from Authorization header
+    const authHeader = req.headers.authorization;
+    const sessionToken = authHeader?.replace('Bearer ', '') || req.body.session_token;
+
+    if (!sessionToken) {
+      return res.status(401).json({ error: 'Unauthorized. Session token required.' });
+    }
+
+    // Validate session and get user
+    const { data: sessions, error: sessionError } = await getSupabase()
+      .from('user_sessions')
+      .select('user_id, expires_at')
+      .eq('session_token', sessionToken)
+      .single();
+
+    if (sessionError || !sessions) {
+      return res.status(401).json({ error: 'Invalid or expired session' });
+    }
+
+    // Check if session is expired
+    if (new Date(sessions.expires_at) < new Date()) {
+      return res.status(401).json({ error: 'Session has expired' });
+    }
+
+    const userId = sessions.user_id;
+
+    // Validate input - at least one field must be provided
+    if (!name && !email && !phone) {
+      return res.status(400).json({ error: 'At least one field (name, email, or phone) must be provided' });
+    }
+
+    // Build update object dynamically
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (name !== undefined && name !== null) {
+      if (!name.trim()) {
+        return res.status(400).json({ error: 'Name cannot be empty' });
+      }
+      updateData.name = name.trim();
+    }
+
+    if (email !== undefined && email !== null) {
+      if (!email.trim()) {
+        return res.status(400).json({ error: 'Email cannot be empty' });
+      }
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
+      updateData.email = email.trim().toLowerCase();
+    }
+
+    if (phone !== undefined && phone !== null) {
+      if (phone.trim()) {
+        // Phone is optional, but if provided, validate format
+        updateData.phone = phone.trim();
+      }
+    }
+
+    // Update user profile in database
+    const { data: user, error: userError } = await getSupabase()
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+      .select('id, phone, email, name, is_admin, is_active, phone_verified, profile_completed, created_at')
+      .single();
+
+    if (userError) {
+      console.error('Failed to update user profile:', userError);
+      return res.status(500).json({ error: 'Failed to update profile' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: user
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

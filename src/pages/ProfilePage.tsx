@@ -179,24 +179,62 @@ const ProfilePage: React.FC = () => {
     });
 
     if (confirmed) {
-      // Persist via enhanced auth service (writes to unified user_profile cache)
       try {
-        await enhancedAuthService.updateProfile({
-          name: profile.name,
-          email: profile.email,
-          phone: profile.whatsapp
+        // Get session token for API authentication
+        const sessionToken = localStorage.getItem('session_token');
+        
+        if (!sessionToken) {
+          showToast('Sesi Anda telah berakhir. Silakan login kembali.', 'error');
+          navigate('/auth');
+          return;
+        }
+
+        // Call new API endpoint to update profile in database
+        const response = await fetch('/api/auth?action=update-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`
+          },
+          body: JSON.stringify({
+            name: profile.name.trim(),
+            email: profile.email.trim(),
+            phone: profile.whatsapp || ''
+          })
         });
-        setIsEditing(false);
-        showToast('Profil berhasil disimpan', 'success');
-      } catch (e) {
-        // Fallback to local storage for resilience
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to update profile');
+        }
+
+        // Update localStorage with new data
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+          const currentUser = JSON.parse(userData);
+          const updatedUser = {
+            ...currentUser,
+            name: profile.name.trim(),
+            email: profile.email.trim(),
+            phone: profile.whatsapp || currentUser.phone
+          };
+          localStorage.setItem('user_data', JSON.stringify(updatedUser));
+        }
+
+        // Also update user_profile cache
         localStorage.setItem('user_profile', JSON.stringify({
-          name: profile.name,
-          email: profile.email,
+          name: profile.name.trim(),
+          email: profile.email.trim(),
           phone: profile.whatsapp
         }));
+
         setIsEditing(false);
-        showToast('Profil disimpan secara lokal', 'info');
+        showToast('Profil berhasil disimpan', 'success');
+        
+      } catch (error: any) {
+        console.error('Failed to save profile:', error);
+        showToast(error.message || 'Gagal menyimpan profil. Silakan coba lagi.', 'error');
       }
     }
   };

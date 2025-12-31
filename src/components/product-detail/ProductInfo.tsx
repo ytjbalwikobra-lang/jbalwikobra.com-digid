@@ -5,12 +5,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, Star, ThumbsUp } from 'lucide-react';
-import { User } from '@supabase/supabase-js';
 import { formatCurrency } from '../../utils/helpers';
 import { Product } from '../../types';
 import { PNCard, PNHeading, PNPill, PNText, PNButton } from '../ui/PinkNeonDesignSystem';
 import { likeService, LikeStats } from '../../services/likeService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/TraditionalAuthContext';
 import FlashSaleTimer from '../FlashSaleTimer';
 
 interface TimeRemaining {
@@ -36,14 +35,8 @@ export const ProductInfo = React.memo(({
   timeRemaining,
   description
 }: ProductInfoProps) => {
-  // Safely get user, fallback to null if auth context not available
-  let user: User | null = null;
-  try {
-    const authContext = useAuth();
-    user = authContext.user;
-  } catch (error) {
-    console.warn('Auth context not available, using guest mode');
-  }
+  // Safely get user from auth context
+  const { user } = useAuth();
   
   const [likeStats, setLikeStats] = useState<LikeStats>({
     total_likes: 0,

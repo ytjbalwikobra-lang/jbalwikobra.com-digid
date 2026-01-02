@@ -193,6 +193,8 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
 
 async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
   try {
+    console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
+    
     // Get order details with product information and rental details
     // Include both 'paid' and 'completed' statuses to handle providers that emit SETTLED/COMPLETED
     let q = sb.from('orders')
@@ -207,6 +209,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
         rental_duration,
         created_at,
         paid_at,
+        payment_method,
         product_id,
         products:product_id (
           id,
@@ -218,14 +221,28 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
       .in('status', ['paid', 'completed'])
       .limit(1);
     
-    if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
-    else if (externalId) q = q.eq('client_external_id', externalId);
+    if (invoiceId) {
+      q = q.eq('xendit_invoice_id', invoiceId);
+      console.log('[WhatsApp] Querying by xendit_invoice_id:', invoiceId);
+    } else if (externalId) {
+      q = q.eq('client_external_id', externalId);
+      console.log('[WhatsApp] Querying by client_external_id:', externalId);
+    }
     
-    const { data: orders } = await q;
+    const { data: orders, error: queryError } = await q;
+    
+    if (queryError) {
+      console.error('[WhatsApp] Query error:', queryError);
+      return;
+    }
+    
+    console.log('[WhatsApp] Query returned', orders?.length || 0, 'orders');
+    
     const order = orders?.[0];
     
     if (!order) {
       console.log('[WhatsApp] No paid order found for notification');
+      console.log('[WhatsApp] Query filters used:', { invoiceId, externalId });
       return;
     }
 
@@ -571,9 +588,18 @@ export default async function handler(req: any, res: any) {
     const { createClient } = await import('@supabase/supabase-js');
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    console.log('[Webhook] Processing payment webhook:', {
+      event,
+      invoiceId,
+      externalId,
+      status,
+      rawStatus
+    });
+
     // Try update by invoice id first
     let updated = 0;
     if (invoiceId) {
+      console.log('[Webhook] Attempting update by xendit_invoice_id:', invoiceId);
       const { data: up, error } = await sb
         .from('orders')
         .update({
@@ -587,12 +613,21 @@ export default async function handler(req: any, res: any) {
           expires_at: expiresAt,
         })
         .eq('xendit_invoice_id', invoiceId)
-        .select('id');
-      if (!error) updated = (up || []).length;
+        .select('id, status, xendit_invoice_id, client_external_id');
+      if (!error) {
+        updated = (up || []).length;
+        console.log('[Webhook] Updated', updated, 'orders by xendit_invoice_id');
+        if (up && up.length > 0) {
+          console.log('[Webhook] Updated order details:', up[0]);
+        }
+      } else {
+        console.error('[Webhook] Error updating by xendit_invoice_id:', error);
+      }
     }
 
   // Fallback: update by client_external_id (we set external_id === client_external_id when creating invoice)
   if (updated === 0 && externalId) {
+      console.log('[Webhook] Attempting update by client_external_id:', externalId);
       const { data: up2, error: e2 } = await sb
         .from('orders')
         .update({
@@ -606,8 +641,16 @@ export default async function handler(req: any, res: any) {
           expires_at: expiresAt,
         })
     .eq('client_external_id', externalId)
-        .select('id');
-      if (!e2) updated = (up2 || []).length;
+        .select('id, status, xendit_invoice_id, client_external_id');
+      if (!e2) {
+        updated = (up2 || []).length;
+        console.log('[Webhook] Updated', updated, 'orders by client_external_id');
+        if (up2 && up2.length > 0) {
+          console.log('[Webhook] Updated order details:', up2[0]);
+        }
+      } else {
+        console.error('[Webhook] Error updating by client_external_id:', e2);
+      }
     }
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling
@@ -798,44 +841,29 @@ export default async function handler(req: any, res: any) {
     try {
       console.log('[Webhook] Processing complete:', { updated, status, invoiceId, externalId });
       
-      if (updated > 0 && (status === 'paid' || status === 'completed')) {
-        console.log('[Webhook] Order updated successfully, proceeding with notifications');
+      // Always attempt to send notification if status is paid/completed, regardless of update count
+      // This handles edge cases where webhook is called multiple times or order was already updated
+      if (status === 'paid' || status === 'completed') {
+        console.log('[Webhook] Payment status is paid/completed, attempting notification');
         
         // Send WhatsApp notifications for successful payments
         // Some channels report final state as 'completed' (e.g., SETTLED), not 'paid'
-        if (status === 'paid' || status === 'completed') {
-          console.log('[Webhook] Calling sendOrderPaidNotification with:', { invoiceId, externalId });
-          await sendOrderPaidNotification(sb, invoiceId, externalId);
-          
-          // Create admin database notification separately
-          console.log('[Webhook] Creating admin database notification for paid order');
-          try {
-            await createAdminPaidNotification(sb, invoiceId, externalId);
-            console.log('[Webhook] Admin database notification completed successfully');
-          } catch (adminNotificationError) {
-            console.error('[Webhook] Admin database notification failed:', adminNotificationError);
-          }
+        console.log('[Webhook] Calling sendOrderPaidNotification with:', { invoiceId, externalId });
+        await sendOrderPaidNotification(sb, invoiceId, externalId);
+        
+        // Create admin database notification separately
+        console.log('[Webhook] Creating admin database notification for paid order');
+        try {
+          await createAdminPaidNotification(sb, invoiceId, externalId);
+          console.log('[Webhook] Admin database notification completed successfully');
+        } catch (adminNotificationError) {
+          console.error('[Webhook] Admin database notification failed:', adminNotificationError);
         }
       } else {
-        console.log('[Webhook] No orders updated or status not paid/completed:', { updated, status });
-        
-        // Still try to send notification if we have identifiers and the status is paid
-        if ((status === 'paid' || status === 'completed') && (invoiceId || externalId)) {
-          console.log('[Webhook] Attempting notification despite no updates');
-          await sendOrderPaidNotification(sb, invoiceId, externalId);
-          
-          // Also try admin database notification
-          console.log('[Webhook] Attempting admin database notification despite no updates');
-          try {
-            await createAdminPaidNotification(sb, invoiceId, externalId);
-            console.log('[Webhook] Admin database notification completed successfully (fallback)');
-          } catch (adminNotificationError) {
-            console.error('[Webhook] Admin database notification failed (fallback):', adminNotificationError);
-          }
-        }
+        console.log('[Webhook] Status not paid/completed, skipping notifications:', { status });
       }
     } catch (e) {
-      console.error('Failed to send notifications after payment:', e);
+      console.error('[Webhook] Failed to send notifications after payment:', e);
     }
 
     // Final verification: Check if both tables are in sync

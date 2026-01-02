@@ -26,44 +26,93 @@ const PaymentStatusPage: React.FC = () => {
   const orderId = params.get('order_id');
   const [authed, setAuthed] = useState(false);
 
+  // Function to fetch order data
+  const fetchOrder = async () => {
+    if (!supabase) { 
+      setLoading(false); 
+      return null;
+    }
+    
+    if (orderId) {
+      const { data } = await supabase
+        .from('orders')
+        .select(
+          'id, customer_name, product_name, amount, status, order_type, ' +
+          'rental_duration, created_at, updated_at, user_id, product_id, ' +
+          'customer_email, customer_phone, payment_method, ' +
+          'xendit_invoice_id, xendit_invoice_url, client_external_id, ' +
+          'paid_at, payment_channel, payer_email, currency, expires_at'
+        )
+        .eq('id', orderId)
+        .maybeSingle();
+      return data as Order | null;
+    }
+    
+    // Fallback: show latest order for logged-in user
+    const ok = await isLoggedIn();
+    if (ok) {
+      const { data } = await supabase
+        .from('orders')
+        .select(
+          'id, customer_name, product_name, amount, status, order_type, ' +
+          'rental_duration, created_at, updated_at, user_id, product_id, ' +
+          'customer_email, customer_phone, payment_method, ' +
+          'xendit_invoice_id, xendit_invoice_url, client_external_id, ' +
+          'paid_at, payment_channel, payer_email, currency, expires_at'
+        )
+        .order('created_at', { ascending: false })
+        .limit(1);
+      return (data && data[0]) as Order | null;
+    }
+    
+    return null;
+  };
+
+  // Initial load
   useEffect(() => {
     const run = async () => {
       const ok = await isLoggedIn();
       setAuthed(ok);
-      if (!supabase) { setLoading(false); return; }
-      if (orderId) {
-  const { data } = await supabase
-    .from('orders')
-    .select(
-      'id, customer_name, product_name, amount, status, order_type, ' +
-      'rental_duration, created_at, updated_at, user_id, product_id, ' +
-      'customer_email, customer_phone, payment_method, ' +
-      'xendit_invoice_id, client_external_id'
-    )
-    .eq('id', orderId)
-    .maybeSingle();
-        setOrder(data as any);
-        setLoading(false);
-        return;
-      }
-      // Fallback: show latest order for logged-in user
-      if (ok) {
-        const { data } = await supabase
-          .from('orders')
-          .select(
-            'id, customer_name, product_name, amount, status, order_type, ' +
-            'rental_duration, created_at, updated_at, user_id, product_id, ' +
-            'customer_email, customer_phone, payment_method, ' +
-            'xendit_invoice_id, client_external_id'
-          )
-          .order('created_at', { ascending: false })
-          .limit(1);
-        setOrder((data && data[0]) as any);
-      }
+      const orderData = await fetchOrder();
+      setOrder(orderData);
       setLoading(false);
     };
     run();
   }, [orderId]);
+
+  // Polling for status updates when payment is pending
+  useEffect(() => {
+    if (!order || order.status !== 'pending') {
+      return; // Don't poll if no order or already paid/completed/cancelled
+    }
+
+    console.log('[PaymentStatus] Starting polling for order status updates...');
+    
+    // Poll every 5 seconds for status updates
+    const pollInterval = setInterval(async () => {
+      try {
+        const updatedOrder = await fetchOrder();
+        if (updatedOrder && updatedOrder.status !== order.status) {
+          console.log('[PaymentStatus] Status changed from', order.status, 'to', updatedOrder.status);
+          setOrder(updatedOrder);
+          
+          // Stop polling if status is no longer pending
+          if (updatedOrder.status !== 'pending') {
+            clearInterval(pollInterval);
+            console.log('[PaymentStatus] Payment status updated, stopping poll');
+          }
+        }
+      } catch (error) {
+        console.error('[PaymentStatus] Error polling order status:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    // Cleanup on unmount or when order changes
+    return () => {
+      console.log('[PaymentStatus] Stopping polling');
+      clearInterval(pollInterval);
+    };
+  }, [order?.id, order?.status]);
 
   if (loading) {
     return (

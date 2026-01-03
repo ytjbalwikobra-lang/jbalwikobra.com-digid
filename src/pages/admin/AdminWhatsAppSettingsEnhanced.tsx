@@ -412,120 +412,310 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
             </div>
           )}
 
-          {/* API Key Management Section */}
+          {/* Current Configuration Status */}
           <div className="dashboard-section-header">
             <div>
-              <h2 className="text-lg font-semibold text-ds-text">API Key Management</h2>
-              <p className="text-sm text-ds-text-secondary">Manage WooWA API authentication credentials</p>
+              <h2 className="text-lg font-semibold text-ds-text">Current Configuration</h2>
+              <p className="text-sm text-ds-text-secondary">Active settings for WhatsApp notifications</p>
             </div>
           </div>
 
-          <div className="dashboard-data-panel padded rounded-xl">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current API Key */}
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <Key className="w-5 h-5 text-ds-pink" />
-                  <h3 className="font-semibold text-ds-text">Current API Key</h3>
+          <div className="dashboard-data-panel padded rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+            <div className="space-y-4">
+              {/* Provider Info */}
+              <div className="flex items-center justify-between pb-4 border-b border-token">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/20">
+                    <Globe className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-ds-text-secondary">Provider</p>
+                    <p className="text-base font-semibold text-ds-text">{provider?.display_name || 'Not configured'}</p>
+                  </div>
                 </div>
-                
-                {apiKey && (
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-ds-text-secondary">Key Name</span>
-                        <span className="text-sm font-medium text-ds-text">{apiKey.key_name}</span>
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-ds-text-secondary">Status</span>
-                        <span className={`text-sm font-medium ${apiKey.is_active ? 'text-green-400' : 'text-red-400'}`}>
-                          {apiKey.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-ds-text-secondary">Usage Count</span>
-                        <span className="text-sm font-medium text-ds-text">{apiKey.usage_count.toLocaleString()}</span>
-                      </div>
-                    </div>
+                <div className="text-right">
+                  <p className="text-sm text-ds-text-secondary">Base URL</p>
+                  <p className="text-sm font-mono text-ds-text">{provider?.base_url || '-'}</p>
+                </div>
+              </div>
 
+              {/* API Key Info */}
+              <div className="flex items-center justify-between pb-4 border-b border-token">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/20">
+                    <Key className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-ds-text-secondary">API Key</p>
+                    <p className="text-base font-mono text-ds-text">
+                      {apiKey ? maskApiKey(apiKey.api_key) : 'Not configured'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-ds-text-secondary">Status</p>
+                  <p className={`text-sm font-semibold ${apiKey?.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                    {apiKey?.is_active ? '● Active' : '● Inactive'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Default Group */}
+              <div className="flex items-center justify-between pb-4 border-b border-token">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/20">
+                    <Users className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-ds-text-secondary">Default Group</p>
+                    <p className="text-base font-semibold text-ds-text">
+                      {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Not set'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-ds-text-secondary">Group ID</p>
+                  <p className="text-xs font-mono text-ds-text-tertiary">{defaultGroupId || '-'}</p>
+                </div>
+              </div>
+
+              {/* Routing Configuration */}
+              <div>
+                <p className="text-sm text-ds-text-secondary mb-3">Notification Routing</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                    <p className="text-xs text-ds-text-tertiary mb-1">Purchase Orders</p>
+                    <p className="text-sm font-medium text-ds-text">
+                      {groups.find(g => g.id === groupConfigurations.purchase_orders)?.name || groupConfigurations.purchase_orders || 'Using default'}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                    <p className="text-xs text-ds-text-tertiary mb-1">Rental Orders</p>
+                    <p className="text-sm font-medium text-ds-text">
+                      {groups.find(g => g.id === groupConfigurations.rental_orders)?.name || groupConfigurations.rental_orders || 'Using default'}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                    <p className="text-xs text-ds-text-tertiary mb-1">Flash Sales</p>
+                    <p className="text-sm font-medium text-ds-text">
+                      {groups.find(g => g.id === groupConfigurations.flash_sales)?.name || groupConfigurations.flash_sales || 'Using default'}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                    <p className="text-xs text-ds-text-tertiary mb-1">General Notifications</p>
+                    <p className="text-sm font-medium text-ds-text">
+                      {groups.find(g => g.id === groupConfigurations.general_notifications)?.name || groupConfigurations.general_notifications || 'Using default'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Usage Stats */}
+              <div className="pt-4 border-t border-token">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Activity className="w-5 h-5 text-ds-pink" />
                     <div>
-                      <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                        API Key
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type={showApiKey ? 'text' : 'password'}
-                          className="flex-1 px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text font-mono text-sm"
-                          value={apiKey.api_key}
-                          readOnly
-                        />
-                        <button
-                          onClick={() => setShowApiKey(!showApiKey)}
-                          className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text hover:opacity-90 transition-opacity"
-                        >
-                          {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                      <p className="text-sm text-ds-text-secondary">Total Messages Sent</p>
+                      <p className="text-2xl font-bold text-ds-text">{apiKey?.usage_count?.toLocaleString() || '0'}</p>
+                    </div>
+                  </div>
+                  {apiKey?.last_used_at && (
+                    <div className="text-right">
+                      <p className="text-sm text-ds-text-secondary">Last Activity</p>
+                      <p className="text-sm text-ds-text">{new Date(apiKey.last_used_at).toLocaleString('id-ID')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions - API Key & Group Change */}
+          <div className="dashboard-section-header">
+            <div>
+              <h2 className="text-lg font-semibold text-ds-text">Quick Configuration</h2>
+              <p className="text-sm text-ds-text-secondary">Easily change API key and default group</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Change API Key - Prominent */}
+            <div className="dashboard-data-panel padded rounded-xl border-2 border-ds-pink/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-ds-pink/20">
+                  <Key className="w-6 h-6 text-ds-pink" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-ds-text text-lg">Change API Key</h3>
+                  <p className="text-sm text-ds-text-tertiary">Update WooWA authentication</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Current Key Display */}
+                <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-ds-text">Current Key</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                      >
+                        {showApiKey ? <EyeOff className="w-4 h-4 text-ds-text-secondary" /> : <Eye className="w-4 h-4 text-ds-text-secondary" />}
+                      </button>
+                      {apiKey && (
                         <button
                           onClick={() => copyToClipboard(apiKey.api_key)}
-                          className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text hover:opacity-90 transition-opacity"
+                          className="p-1.5 rounded hover:bg-white/10 transition-colors"
                         >
-                          {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                          {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-ds-text-secondary" />}
                         </button>
-                      </div>
-                      {apiKey.last_used_at && (
-                        <p className="text-xs text-ds-text-tertiary mt-1">
-                          Last used: {new Date(apiKey.last_used_at).toLocaleString()}
-                        </p>
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Update API Key */}
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <Shield className="w-5 h-5 text-ds-pink" />
-                  <h3 className="font-semibold text-ds-text">Update API Key</h3>
+                  <p className="text-sm font-mono text-ds-text break-all">
+                    {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Not configured'}
+                  </p>
+                  {apiKey && (
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+                      <span className="text-xs text-ds-text-tertiary">Usage: {apiKey.usage_count.toLocaleString()}</span>
+                      <span className={`text-xs font-semibold ${apiKey.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                        {apiKey.is_active ? '● Active' : '● Inactive'}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                      New API Key
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors font-mono text-sm"
-                      value={newApiKey}
-                      onChange={(e) => setNewApiKey(e.target.value)}
-                      placeholder="Enter new WooWA API key"
-                    />
-                    <p className="text-xs text-ds-text-tertiary mt-1">
-                      Get your API key from WooWA dashboard at notifapi.com
+
+                {/* New Key Input */}
+                <div>
+                  <label className="block text-sm font-medium text-ds-text mb-2">
+                    New API Key <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors font-mono text-sm"
+                    value={newApiKey}
+                    onChange={(e) => setNewApiKey(e.target.value)}
+                    placeholder="Paste new API key here"
+                  />
+                  <p className="text-xs text-ds-text-tertiary mt-1.5">
+                    Get your API key from <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer" className="text-ds-pink hover:underline">notifapi.com</a>
+                  </p>
+                </div>
+
+                <button
+                  onClick={updateApiKey}
+                  disabled={updatingKey || !newApiKey.trim()}
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ds-pink text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-ds-pink/20"
+                >
+                  {updatingKey ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5" />
+                  )}
+                  {updatingKey ? 'Updating API Key...' : 'Update API Key'}
+                </button>
+
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <p className="text-xs text-amber-300">
+                      Changing API key affects all notifications immediately
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
 
-                  <button
-                    onClick={updateApiKey}
-                    disabled={updatingKey || !newApiKey.trim()}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-ds-pink text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            {/* Change Default Group - Prominent */}
+            <div className="dashboard-data-panel padded rounded-xl border-2 border-green-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-green-500/20">
+                  <Users className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-ds-text text-lg">Change Default Group</h3>
+                  <p className="text-sm text-ds-text-tertiary">Update fallback notification group</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Current Group Display */}
+                <div className="p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                  <span className="text-sm font-medium text-ds-text block mb-2">Current Default Group</span>
+                  <p className="text-base font-semibold text-green-400">
+                    {groups.find(g => g.id === defaultGroupId)?.name || 'Not set'}
+                  </p>
+                  {defaultGroupId && (
+                    <p className="text-xs font-mono text-ds-text-tertiary mt-2 break-all">
+                      {defaultGroupId}
+                    </p>
+                  )}
+                </div>
+
+                {/* Group Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-ds-text">
+                      Select New Default Group
+                    </label>
+                    <button
+                      onClick={loadGroups}
+                      disabled={loadingGroups}
+                      className="text-xs text-ds-pink hover:underline flex items-center gap-1"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${loadingGroups ? 'animate-spin' : ''}`} />
+                      Reload
+                    </button>
+                  </div>
+                  <select
+                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-base"
+                    value={defaultGroupId}
+                    onChange={(e) => setDefaultGroupId(e.target.value)}
                   >
-                    {updatingKey ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                    {updatingKey ? 'Updating...' : 'Update API Key'}
-                  </button>
+                    <option value="">-- Select default group --</option>
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-ds-text-tertiary mt-1.5">
+                    {groups.length} groups available
+                  </p>
+                </div>
 
-                  <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Info className="w-4 h-4 text-blue-400" />
-                      <span className="text-sm font-medium text-blue-400">Important</span>
-                    </div>
+                {/* Or Manual Entry */}
+                <div>
+                  <label className="block text-sm font-medium text-ds-text-secondary mb-2">
+                    Or Enter Group ID Manually
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors font-mono text-sm"
+                    value={defaultGroupId}
+                    onChange={(e) => setDefaultGroupId(e.target.value)}
+                    placeholder="120363405729592501@g.us"
+                  />
+                </div>
+
+                <button
+                  onClick={save}
+                  disabled={saving}
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-green-600/20"
+                >
+                  {saving ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5" />
+                  )}
+                  {saving ? 'Saving...' : 'Save Default Group'}
+                </button>
+
+                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />
                     <p className="text-xs text-blue-300">
-                      Updating the API key will immediately affect all WhatsApp notifications. Make sure the new key is active and valid before saving.
+                      Used when specific routing is not configured
                     </p>
                   </div>
                 </div>

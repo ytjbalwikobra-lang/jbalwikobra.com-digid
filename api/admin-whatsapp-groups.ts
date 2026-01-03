@@ -69,12 +69,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Get active provider
+    // Get active provider - use same query as admin-whatsapp.ts that works
     const { data: provider, error: providerError } = await supabase
       .from('whatsapp_providers')
-      .select('id, name, api_url, is_active, settings, key_field_name')
+      .select('*')
       .eq('is_active', true)
-      .single();
+      .order('name')
+      .limit(1)
+      .maybeSingle();
     
     if (providerError || !provider) {
       return res.status(400).json({ 
@@ -86,10 +88,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Get API key
     const { data: apiKeyData, error: keyError } = await supabase
       .from('whatsapp_api_keys')
-      .select('id, key, provider_id, is_active, api_key')
+      .select('*')
       .eq('provider_id', provider.id)
       .eq('is_active', true)
-      .single();
+      .order('is_primary', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
     if (keyError || !apiKeyData) {
       return res.status(400).json({ 

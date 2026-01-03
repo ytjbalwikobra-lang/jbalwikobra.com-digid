@@ -195,6 +195,13 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
   console.log('[WhatsApp] ============ NOTIFICATION START ============');
   console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
   console.log('[WhatsApp] Timestamp:', new Date().toISOString());
+  console.log('[WhatsApp] Supabase client provided:', !!sb);
+  console.log('[WhatsApp] Environment check:', {
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    hasReactUrl: !!process.env.REACT_APP_SUPABASE_URL,
+    hasAltKey: !!process.env.SUPABASE_SERVICE_KEY
+  });
   
   try {
     

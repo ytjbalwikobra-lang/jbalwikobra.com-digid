@@ -397,7 +397,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 #PurchasePaid #ActionRequired #FullOwnership`;
 
     // Use dynamic WhatsApp service for unified logging and idempotency
-    const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService');
+    const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
     const wa = new DynamicWhatsAppService();
     
     console.log('[WhatsApp] ✓ WhatsApp service initialized');
@@ -555,7 +555,7 @@ export default async function handler(req: any, res: any) {
   if ((req.query && (req.query as any).testGroupSend) || (req.body && (req.body as any).testGroupSend)) {
     try {
       const { message, groupId } = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-      const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService');
+      const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
       const wa = new DynamicWhatsAppService();
       const resp = await wa.sendGroupMessage({ message: message || 'Admin test message', groupId, contextType: 'admin-test', contextId: String(Date.now()) });
       return res.status(resp.success ? 200 : 400).json(resp);

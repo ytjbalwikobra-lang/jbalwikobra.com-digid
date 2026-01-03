@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProductDetail } from '../hooks/useProductDetail';
 import {
   ProductDetailLoadingSkeleton,
@@ -19,11 +20,11 @@ import {
   ProductRentalOptions,
   ProductActions
 } from '../components/product-detail';
-import CheckoutModal from '../components/public/product-detail/CheckoutModal';
 import PublicPageHeader from '../components/shared/PublicPageHeader';
 import { PNSection, PNContainer } from '../components/ui/PinkNeonDesignSystem';
 
 const ProductDetailPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     // Product data
     product,
@@ -64,6 +65,27 @@ const ProductDetailPage: React.FC = () => {
     // Wishlist
     isInWishlist
   } = useProductDetail();
+
+  // Navigate to checkout page when checkout is triggered
+  React.useEffect(() => {
+    if (checkoutState.showCheckoutForm && product) {
+      navigate('/checkout', {
+        state: {
+          checkoutType: checkoutState.checkoutType,
+          productName: product.name,
+          effectivePrice: effectivePrice,
+          selectedRental: rentalState.selectedRental,
+          customer: checkoutState.customer,
+          isPhoneValid: checkoutState.isPhoneValid,
+          acceptedTerms: checkoutState.acceptedTerms,
+          creatingInvoice: checkoutState.creatingInvoice,
+          productId: product.id
+        }
+      });
+      // Close the checkout state after navigation
+      closeCheckout();
+    }
+  }, [checkoutState.showCheckoutForm, product, checkoutState.checkoutType, effectivePrice, rentalState.selectedRental, checkoutState.customer, checkoutState.isPhoneValid, checkoutState.acceptedTerms, checkoutState.creatingInvoice, navigate, closeCheckout]);
 
   // Loading state
   if (loading || !product) {
@@ -150,33 +172,6 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </PNSection>
       </PNContainer>
-
-      {/* Checkout Modal */}
-      {checkoutState.showCheckoutForm && (
-        <CheckoutModal
-          visible={checkoutState.showCheckoutForm}
-          onClose={closeCheckout}
-          checkoutType={checkoutState.checkoutType}
-          productName={product.name}
-          effectivePrice={effectivePrice}
-          selectedRental={rentalState.selectedRental}
-          customer={checkoutState.customer}
-          setCustomer={(customer) => 
-            setCheckoutState(prev => ({ ...prev, customer }))
-          }
-          isPhoneValid={checkoutState.isPhoneValid}
-          setIsPhoneValid={(isPhoneValid) => 
-            setCheckoutState(prev => ({ ...prev, isPhoneValid }))
-          }
-          acceptedTerms={checkoutState.acceptedTerms}
-          setAcceptedTerms={(acceptedTerms) => 
-            setCheckoutState(prev => ({ ...prev, acceptedTerms }))
-          }
-          creatingInvoice={checkoutState.creatingInvoice}
-          onCheckout={handleCheckout}
-          onWhatsAppRental={handleWhatsAppRental}
-        />
-      )}
     </div>
   );
 };

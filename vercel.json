@@ -4,5 +4,21 @@
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"
     }
+  ],
+  "functions": {
+    "api/xendit/webhook.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/xendit/webhook",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    }
   ]
 }

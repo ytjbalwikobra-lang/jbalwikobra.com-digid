@@ -120,13 +120,17 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       });
       
       setMessage('');
+      
+      // Set connected status based on provider and API key existence
+      const hasValidConfig = !!(data.provider || data) && !!data.api_key;
+      
       setProviderStatus({
-        isConnected: true,
+        isConnected: hasValidConfig,
         lastChecked: new Date().toLocaleString(),
         activeGroups: groups.length,
         lastActivity: data.api_key?.last_used_at 
           ? `Last used: ${new Date(data.api_key.last_used_at).toLocaleString()}` 
-          : 'Not used yet'
+          : hasValidConfig ? 'Ready to use' : 'Not configured'
       });
     } catch (e: any) {
       setError(e.message || 'Failed to load');

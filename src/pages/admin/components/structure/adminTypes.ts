@@ -8,4 +8,5 @@ export type AdminTab =
   | 'flash-sales'
   | 'reviews'
   | 'notifications'
-  | 'settings';
+  | 'settings'
+  | 'whatsapp';

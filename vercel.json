@@ -1,15 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/api/xendit/callback",
+      "destination": "/api/xendit/webhook"
+    },
+    {
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"
     }
   ],
   "functions": {
     "api/xendit/webhook.ts": {
-      "maxDuration": 30
-    },
-    "api/xendit/callback.ts": {
       "maxDuration": 30
     }
   },

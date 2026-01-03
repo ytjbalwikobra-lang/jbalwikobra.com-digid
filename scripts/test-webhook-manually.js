@@ -33,8 +33,8 @@ const options = {
   headers: {
     'Content-Type': 'application/json',
     'Content-Length': postData.length,
-    // Add callback token if you have it
-    // 'x-callback-token': 'YOUR_XENDIT_CALLBACK_TOKEN'
+    // Xendit callback token for authentication
+    'x-callback-token': 'idsvSC1p1immz2LDhgTbj2iqYVlvOl3o0mYsMnB9UGGmctsm'
   }
 };
 

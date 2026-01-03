@@ -183,12 +183,14 @@ const PurchaseNotificationTicker: React.FC = () => {
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress bar - Reset every new item */}
       <div className="h-1 bg-white/30 overflow-hidden">
         <div
-          className="h-full bg-white transition-all duration-[5000ms] ease-linear"
+          key={currentIndex}
+          className="h-full bg-white ease-linear"
           style={{
             width: isAnimating ? '100%' : '0%',
+            transition: 'width 5s linear'
           }}
         />
       </div>

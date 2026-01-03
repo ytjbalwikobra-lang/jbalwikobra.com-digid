@@ -75,16 +75,16 @@ const PurchaseNotificationTicker: React.FC = () => {
     setIsVisible(true);
     setIsAnimating(true);
     
-    // Hide after 5 seconds and immediately show next
+    // Timeline: 0-1s masuk, 1-2s tampil, 2-4s keluar (overlap dengan next)
     const hideTimer = setTimeout(() => {
       setIsAnimating(false);
-      // Immediately move to next without delay
+      // Start next immediately to create overlap
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % purchases.length);
         // Reset animation state immediately for seamless transition
         setIsAnimating(true);
-      }, 1000); // Match 1 second transition duration
-    }, 5000);
+      }, 1000); // 1 second transition
+    }, 2000); // Display for only 2 seconds (1s in + 1s display)
 
     return () => clearTimeout(hideTimer);
   }, [currentIndex, purchases.length]);

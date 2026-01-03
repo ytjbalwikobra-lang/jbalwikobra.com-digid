@@ -190,23 +190,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleValidation(sb, res);
       }
       
-      // Return active provider and settings
-      const provider = await getActiveProvider(sb);
+      // Return active provider and settings WITH API key info
+      const { data: provider, error: pErr } = await sb
+        .from('whatsapp_providers')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+        .limit(1)
+        .maybeSingle();
+      
+      if (pErr) return respond(res, 500, { error: pErr.message });
       if (!provider) return respond(res, 404, { error: 'no_active_provider' });
+      
+      // Get active API key
+      const { data: apiKey, error: kErr } = await sb
+        .from('whatsapp_api_keys')
+        .select('id, key_name, api_key, is_active, is_primary, usage_count, last_used_at')
+        .eq('provider_id', provider.id)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (kErr) return respond(res, 500, { error: kErr.message });
+      
       return respond(res, 200, {
-        id: provider.id,
-        name: provider.name,
-        display_name: provider.display_name,
-        settings: provider.settings || {}
+        provider: {
+          id: provider.id,
+          name: provider.name,
+          display_name: provider.display_name,
+          base_url: provider.base_url,
+          settings: provider.settings || {}
+        },
+        api_key: apiKey || null
       });
     }
 
     if (req.method === 'PUT' || req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-      const { default_group_id, group_configurations, settings: newSettings } = body;
-      const provider = await getActiveProvider(sb);
+      const { default_group_id, group_configurations, settings: newSettings, api_key: newApiKey } = body;
+      
+      const { data: provider, error: pErr } = await sb
+        .from('whatsapp_providers')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+        .limit(1)
+        .maybeSingle();
+      
+      if (pErr) return respond(res, 500, { error: pErr.message });
       if (!provider) return respond(res, 404, { error: 'no_active_provider' });
 
+      // If updating API key
+      if (newApiKey && typeof newApiKey === 'string' && newApiKey.trim()) {
+        const { data: updatedKey, error: keyErr } = await sb
+          .from('whatsapp_api_keys')
+          .update({ api_key: newApiKey.trim() })
+          .eq('provider_id', provider.id)
+          .eq('is_active', true)
+          .select('id, key_name, api_key, is_active, is_primary, usage_count, last_used_at')
+          .maybeSingle();
+        
+        if (keyErr) return respond(res, 400, { error: keyErr.message || 'api_key_update_failed' });
+        
+        return respond(res, 200, { 
+          success: true, 
+          message: 'API key updated successfully',
+          api_key: updatedKey,
+          provider: {
+            id: provider.id,
+            name: provider.name,
+            display_name: provider.display_name,
+            base_url: provider.base_url,
+            settings: provider.settings || {}
+          }
+        });
+      }
+
+      // Otherwise update provider settings
       const settings = { ...(provider.settings || {}) };
       if (default_group_id !== undefined) settings.default_group_id = default_group_id || null;
       if (group_configurations !== undefined) settings.group_configurations = group_configurations || {};
@@ -216,8 +277,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .from('whatsapp_providers')
         .update({ settings })
         .eq('id', provider.id)
-        .select('id,name,display_name,settings')
+        .select('id, name, display_name, base_url, settings')
         .maybeSingle();
+      
       if (error) return respond(res, 400, { error: error.message || 'update_failed' });
       return respond(res, 200, { success: true, provider: data });
     }

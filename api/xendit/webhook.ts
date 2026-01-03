@@ -193,7 +193,9 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
 
 async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
   try {
+    console.log('[WhatsApp] ============ NOTIFICATION START ============');
     console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
+    console.log('[WhatsApp] Timestamp:', new Date().toISOString());
     
     // First, try to find the order without status filter to see if it exists
     let checkQuery = sb.from('orders')
@@ -260,6 +262,9 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     }
     
     console.log('[WhatsApp] ✅ Order is paid/completed, proceeding with notification');
+    console.log('[WhatsApp] Will attempt to send to:');
+    console.log('[WhatsApp]   - Group notification for order type:', order.order_type);
+    console.log('[WhatsApp]   - Customer notification to:', order.customer_phone);
     
     const product = order.products;
     let productName = product?.name;
@@ -386,6 +391,9 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     // Use dynamic WhatsApp service for unified logging and idempotency
     const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService');
     const wa = new DynamicWhatsAppService();
+    
+    console.log('[WhatsApp] ✓ WhatsApp service initialized');
+    
     // Use a single success context across paid/completed to prevent duplicates on SETTLED after PAID
     const contextId = `order:${order.id}:success`;
 

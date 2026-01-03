@@ -336,6 +336,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
         const wa = new DynamicWhatsAppService();
         
+        // Get contact phone for customer support
+        const contactPhone = await wa.getContactPhone();
+        
         // Normalize phone number
         let customerPhone = String(customer.mobile_number || '').replace(/\D/g, '');
         if (customerPhone.startsWith('8')) customerPhone = '62' + customerPhone;
@@ -419,7 +422,7 @@ Nanti akan dijelaskan lengkap setelah pembayaran ya Bosku
 Jangan lupa simpan Order ID ini ya: *${orderId}*
 
 Ada pertanyaan? Chat aja:
-💬 wa.me/6289653510125
+💬 wa.me/${contactPhone}
 🌐 jbalwikobra.com
 
 Ditunggu pembayarannya Bosku! 🔥`
@@ -477,7 +480,7 @@ Akun 100% jadi milik Bosku! Bebas ganti email, password, dll.
 Jangan lupa simpan Order ID ini ya: *${orderId}*
 
 Ada pertanyaan? Chat aja:
-💬 wa.me/6289653510125
+💬 wa.me/${contactPhone}
 🌐 jbalwikobra.com
 
 Ditunggu pembayarannya Bosku! 🔥`;

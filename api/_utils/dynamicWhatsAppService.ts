@@ -122,6 +122,38 @@ export class DynamicWhatsAppService {
   }
 
   /**
+   * Get contact phone from website_settings for customer support
+   */
+  async getContactPhone(): Promise<string> {
+    try {
+      const sb = getSupabase();
+      if (!sb) return '6289653510125'; // fallback
+      
+      const { data, error } = await sb
+        .from('website_settings')
+        .select('contact_phone')
+        .limit(1)
+        .maybeSingle();
+      
+      if (error || !data?.contact_phone) {
+        console.warn('[WhatsApp] Failed to get contact_phone, using fallback');
+        return '6289653510125'; // fallback
+      }
+      
+      // Format phone number for wa.me link (remove non-digits, ensure starts with 62)
+      let phone = String(data.contact_phone).replace(/\D/g, '');
+      if (phone.startsWith('0')) phone = '62' + phone.substring(1);
+      else if (phone.startsWith('8')) phone = '62' + phone;
+      else if (!phone.startsWith('62')) phone = '62' + phone;
+      
+      return phone;
+    } catch (error) {
+      console.error('[WhatsApp] Error getting contact_phone:', error);
+      return '6289653510125'; // fallback
+    }
+  }
+
+  /**
    * Send WhatsApp message using dynamic provider configuration
    */
   async sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {

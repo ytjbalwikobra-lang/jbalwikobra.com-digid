@@ -472,6 +472,9 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
     
     console.log('[WhatsApp] ✓ WhatsApp service initialized');
     
+    // Get contact phone for customer support
+    const contactPhone = await wa.getContactPhone();
+    
     // Use a single success context across paid/completed to prevent duplicates on SETTLED after PAID
     const contextId = `order:${order.id}:success`;
 
@@ -610,7 +613,7 @@ Alhamdulillah, uangnya udah masuk dengan aman!
 Ditunggu ya Bosku, sebentar lagi kami hubungi! 📞
 
 Ada pertanyaan? Chat aja:
-💬 wa.me/6289653510125
+💬 wa.me/${contactPhone}
 
 Happy Gaming! 🔥`
           : `✅ *MANTAP BOSKU! PEMBAYARAN DITERIMA* 💰
@@ -658,7 +661,7 @@ Alhamdulillah, uangnya udah masuk dengan aman!
 Mohon ditunggu ya Bosku, nanti langsung kami kirim detail akunnya! 🚀
 
 Ada pertanyaan? Chat aja:
-💬 wa.me/6289653510125
+💬 wa.me/${contactPhone}
 
 Happy Gaming Bosku! 🔥`;
 

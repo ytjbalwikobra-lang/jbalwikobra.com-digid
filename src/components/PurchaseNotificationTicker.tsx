@@ -20,6 +20,8 @@ interface RecentPurchase {
 
 const PurchaseNotificationTicker: React.FC = () => {
   const [purchases, setPurchases] = useState<RecentPurchase[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Get background gradient based on order type and tier
   const getBackgroundGradient = (purchase: RecentPurchase): string => {
@@ -50,6 +52,27 @@ const PurchaseNotificationTicker: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Slideshow effect - change item every 3 seconds
+  useEffect(() => {
+    if (purchases.length === 0) return;
+    
+    const slideInterval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % purchases.length);
+    }, 3000);
+    
+    return () => clearInterval(slideInterval);
+  }, [purchases.length]);
+
+  // Detect scroll position for desktop positioning
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const fetchRecentPurchases = async () => {
     try {
       const response = await fetch('/api/recent-purchases');
@@ -68,15 +91,6 @@ const PurchaseNotificationTicker: React.FC = () => {
 
   if (purchases.length === 0) return null;
 
-  // Format rupiah
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
   // Get time ago
   const getTimeAgo = (dateString: string): string => {
     const now = new Date();
@@ -92,39 +106,33 @@ const PurchaseNotificationTicker: React.FC = () => {
     return `${diffDays}h`;
   };
 
-  // Duplicate purchases for seamless loop
-  const displayPurchases = [...purchases, ...purchases];
+  const currentPurchase = purchases[currentIndex];
+  const transactionType = currentPurchase.order_type === 'rental' ? 'menyewa' : 'membeli';
+  const timeAgo = getTimeAgo(currentPurchase.created_at);
+  const backgroundGradient = getBackgroundGradient(currentPurchase);
+
+  // Dynamic positioning: on desktop, move to top when scrolled
+  const positionClass = isScrolled 
+    ? 'top-0' 
+    : 'top-0 md:top-[64px]';
 
   return (
-    <div className="fixed left-0 right-0 z-[45] overflow-hidden top-0 md:top-[64px]">
-      <div className="relative overflow-hidden">
-        <div className="ticker-wrapper">
-          <div className="ticker-content">
-            {displayPurchases.map((purchase, index) => {
-              const transactionType = purchase.order_type === 'rental' ? 'menyewa' : 'membeli';
-              const timeAgo = getTimeAgo(purchase.created_at);
-              const backgroundGradient = getBackgroundGradient(purchase);
-
-              return (
-                <div
-                  key={`${purchase.id}-${index}`}
-                  className="ticker-item"
-                  style={{ background: backgroundGradient }}
-                >
-                  <div className="flex items-center gap-2 px-4 py-2 text-white text-sm whitespace-nowrap">
-                    <Rocket className="w-4 h-4 flex-shrink-0 animate-pulse-slow" />
-                    <span className="font-medium">{purchase.customer_name}</span>
-                    <span>{transactionType}</span>
-                    <span className="font-bold">{purchase.product_name}</span>
-                    {purchase.order_type === 'rental' && purchase.rental_duration && (
-                      <span className="text-xs opacity-90">({purchase.rental_duration})</span>
-                    )}
-                    <span className="text-xs opacity-80">• {timeAgo}</span>
-                  </div>
-                </div>
-              );
-            })}
+    <div className={`fixed left-0 right-0 z-[45] overflow-hidden transition-all duration-300 ${positionClass}`}>
+      <div 
+        className="relative transition-all duration-500"
+        style={{ background: backgroundGradient }}
+      >
+        <div className="flex items-center justify-between gap-2 px-4 py-2.5 text-white text-sm animate-slide-in">
+          <div className="flex items-center gap-2">
+            <Rocket className="w-4 h-4 flex-shrink-0 animate-pulse-slow" />
+            <span className="font-medium">{currentPurchase.customer_name}</span>
+            <span>{transactionType}</span>
+            <span className="font-bold">{currentPurchase.product_name}</span>
+            {currentPurchase.order_type === 'rental' && currentPurchase.rental_duration && (
+              <span className="text-xs opacity-90">({currentPurchase.rental_duration})</span>
+            )}
           </div>
+          <span className="text-xs opacity-80">{timeAgo}</span>
         </div>
       </div>
     </div>
@@ -133,7 +141,7 @@ const PurchaseNotificationTicker: React.FC = () => {
 
 export default PurchaseNotificationTicker;
 
-// Add custom styles for ticker animation
+// Add custom styles for slideshow animation
 const style = document.createElement('style');
 style.textContent = `
   @keyframes pulse-slow {
@@ -148,32 +156,19 @@ style.textContent = `
     animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
   
-  @keyframes ticker-scroll {
+  @keyframes slide-in {
     0% {
-      transform: translateX(0);
+      opacity: 0;
+      transform: translateY(-10px);
     }
     100% {
-      transform: translateX(-50%);
+      opacity: 1;
+      transform: translateY(0);
     }
   }
   
-  .ticker-wrapper {
-    width: 100%;
-    overflow: hidden;
-  }
-  
-  .ticker-content {
-    display: flex;
-    animation: ticker-scroll 30s linear infinite;
-    will-change: transform;
-  }
-  
-  .ticker-content:hover {
-    animation-play-state: paused;
-  }
-  
-  .ticker-item {
-    flex-shrink: 0;
+  .animate-slide-in {
+    animation: slide-in 0.5s ease-out;
   }
 `;
 if (typeof document !== 'undefined' && !document.querySelector('style[data-ticker-animations]')) {

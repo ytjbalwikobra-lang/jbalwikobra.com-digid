@@ -3,7 +3,7 @@
 
 function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancelled' {
   const s = (x || '').toUpperCase();
-  if (s === 'PAID' || s === 'SUCCEEDED' || s === 'SUCCESS') return 'paid';
+  if (s === 'PAID' || s === 'SUCCEEDED' || s === 'SUCCESS' || s === 'COMPLETED') return 'paid';
   if (s === 'SETTLED') return 'completed';
   if (s === 'EXPIRED' || s === 'CANCELLED') return 'cancelled';
   return 'pending';
@@ -555,6 +555,8 @@ export default async function handler(req: any, res: any) {
     const event = (payload.event || payload.type || '').toString();
     const data = payload.data || payload;
 
+    console.log('[Webhook] Raw payload received:', JSON.stringify(payload, null, 2));
+
     // Extract identifiers from various possible shapes
     const invoiceId: string | undefined =
       data.id || data.invoice_id || data.payment_request_id || data.payment_method_id ||
@@ -564,14 +566,19 @@ export default async function handler(req: any, res: any) {
       data.external_id || data.reference_id || data.qr_code?.external_id || data.qr_code?.reference_id ||
       data.payment_method?.reference_id || data.payment_method?.external_id;
 
+    console.log('[Webhook] Extracted identifiers:', { invoiceId, externalId, event });
+
     // Determine status from field or event name
     const rawStatus: string | undefined = data.status || data.qr_code?.status || data.payment_method?.status ||
       (event.includes('succeeded') ? 'SUCCEEDED' : undefined) ||
       (event.includes('failed') ? 'FAILED' : undefined) ||
       (event.includes('expired') ? 'EXPIRED' : undefined);
 
+    console.log('[Webhook] Status determination:', { rawStatus, event });
+
     if (!externalId && !invoiceId) {
-      console.error('[Webhook] Missing identifiers');
+      console.error('[Webhook] Missing identifiers in payload');
+      console.error('[Webhook] Payload structure:', JSON.stringify({ data, qr_code: data.qr_code }, null, 2));
       return res.status(400).json({ error: 'Invalid payload: missing identifiers' });
     }
 
@@ -650,6 +657,43 @@ export default async function handler(req: any, res: any) {
         }
       } else {
         console.error('[Webhook] Error updating by client_external_id:', e2);
+      }
+    }
+
+    // Additional fallback: Try to find order using partial match on external_id
+    // This handles cases where external_id might have prefixes/suffixes
+    if (updated === 0 && externalId) {
+      console.log('[Webhook] Attempting fuzzy match on client_external_id containing:', externalId);
+      const { data: up3, error: e3 } = await sb
+        .from('orders')
+        .select('id, client_external_id, xendit_invoice_id, status')
+        .or(`client_external_id.ilike.%${externalId}%,xendit_invoice_id.ilike.%${externalId}%`)
+        .limit(1);
+      
+      if (!e3 && up3 && up3.length > 0) {
+        console.log('[Webhook] Found potential match via fuzzy search:', up3[0]);
+        const { data: up3Update, error: e3Update } = await sb
+          .from('orders')
+          .update({
+            status,
+            paid_at: paidAt,
+            payment_channel: paymentChannel,
+            payer_email: payerEmail,
+            xendit_invoice_url: invoiceUrl,
+            xendit_invoice_id: invoiceId,
+            currency,
+            expires_at: expiresAt,
+          })
+          .eq('id', up3[0].id)
+          .select('id, status, xendit_invoice_id, client_external_id');
+        
+        if (!e3Update && up3Update && up3Update.length > 0) {
+          updated = up3Update.length;
+          console.log('[Webhook] Updated', updated, 'orders via fuzzy match');
+          console.log('[Webhook] Updated order details:', up3Update[0]);
+        }
+      } else if (e3) {
+        console.error('[Webhook] Error in fuzzy search:', e3);
       }
     }
 

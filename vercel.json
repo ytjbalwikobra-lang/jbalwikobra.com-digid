@@ -8,6 +8,9 @@
   "functions": {
     "api/xendit/webhook.ts": {
       "maxDuration": 30
+    },
+    "api/xendit/callback.ts": {
+      "maxDuration": 30
     }
   },
   "headers": [

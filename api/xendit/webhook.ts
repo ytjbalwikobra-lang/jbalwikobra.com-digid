@@ -519,6 +519,7 @@ Happy Gaming Bosku! 🔥`;
 }
 
 export default async function handler(req: any, res: any) {
+  console.log('[Webhook] Handler invoked at', new Date().toISOString());
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // Admin test hook: send a WhatsApp group message using DB-configured provider

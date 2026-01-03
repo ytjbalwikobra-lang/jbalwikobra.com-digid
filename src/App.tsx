@@ -39,7 +39,6 @@ const TraditionalAuthPage = React.lazy(() => import('./pages/TraditionalAuthPage
 // Lazy load all other pages
 const ProductsPage = React.lazy(() => import('./pages/ProductsPage'));
 const ProductDetailPage = React.lazy(() => import('./pages/ProductDetailPage'));
-const CheckoutPage = React.lazy(() => import('./pages/CheckoutPage'));
 const FlashSalesPage = React.lazy(() => import('./pages/FlashSalesPage'));
 const FlashSaleProductDetailPage = React.lazy(() => import('./pages/FlashSaleProductDetailPage'));
 const PaymentStatus = React.lazy(() => import('./pages/PaymentStatus'));
@@ -227,7 +226,6 @@ function App() {
                           {/* Lazy loaded pages */}
                           <Route path="/products" element={<ProductsPage />} />
                           <Route path="/products/:id" element={<ProductDetailPage />} />
-                          <Route path="/checkout" element={<CheckoutPage />} />
                           <Route path="/flash-sales" element={<FlashSalesPage />} />
                           <Route path="/flash-sales/:id" element={<FlashSaleProductDetailPage />} />
                           <Route path="/help" element={<HelpPage />} />

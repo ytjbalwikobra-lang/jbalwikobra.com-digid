@@ -192,10 +192,11 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
 }
 
 async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
+  console.log('[WhatsApp] ============ NOTIFICATION START ============');
+  console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
+  console.log('[WhatsApp] Timestamp:', new Date().toISOString());
+  
   try {
-    console.log('[WhatsApp] ============ NOTIFICATION START ============');
-    console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
-    console.log('[WhatsApp] Timestamp:', new Date().toISOString());
     
     // First, try to find the order without status filter to see if it exists
     let checkQuery = sb.from('orders')
@@ -530,7 +531,11 @@ Happy Gaming Bosku! 🔥`;
     }
 
   } catch (error) {
-    console.error('[WhatsApp] Error sending order paid notification:', error);
+    console.error('[WhatsApp] ❌ Failed to send notification. Error:', error);
+    console.error('[WhatsApp] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[WhatsApp] Error details:', JSON.stringify(error, null, 2));
+  } finally {
+    console.log('[WhatsApp] ============ NOTIFICATION END ============');
   }
 }
 

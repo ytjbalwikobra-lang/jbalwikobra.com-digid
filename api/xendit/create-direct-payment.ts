@@ -356,41 +356,131 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Generate payment URL to our own payment page
           const paymentUrl = `https://jbalwikobra.com/payment?id=${xenditData.id}&method=${payment_method_id}`;
           
-          const message = `🔥 *SIAP BOSKU! ORDERAN UDAH DIBUAT*
+          // Determine if it's rental or purchase
+          const isRental = order.order_type === 'rental';
+          const orderType = isRental ? 'RENTAL' : 'PURCHASE';
+          
+          // Get expiry time in hours
+          const expiryHours = xenditData.expiry_date 
+            ? Math.max(0, Math.floor((new Date(xenditData.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60)))
+            : 24;
+          
+          const message = isRental
+            ? `🔥 *ORDER RENTAL BERHASIL DIBUAT!* 🎮
 
-Halo Bosku ${customer.given_names || 'Customer'} 👋
+Halo Bosku *${customer.given_names || 'Customer'}* 👋
 
-Terima kasih ya, pesanan Bosku udah berhasil kami catat di sistem ✅. Tinggal satu langkah lagi nih biar bisa langsung diproses!
+Alhamdulillah, pesanan rental Bosku udah berhasil kami catat! Tinggal bayar aja nih biar bisa langsung diproses 🚀
 
-📋 *DETAIL PESANAN:*
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DETAIL PESANAN RENTAL*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-👤 *Nama:* ${customer.given_names || 'Customer'}
+🎮 Produk: *${productName}*
+⏱️ Durasi: *${order.rental_duration || 'Sesuai paket'}*
+💰 Total Bayar: *Rp ${Number(amount || 0).toLocaleString('id-ID')}*
+🆔 Order ID: *${orderId}*
 
-🎯 *Produk:* ${productName}
+🔗 *Link Produk:*
+${productUrl}
 
-🔗 *Link Produk:* ${productUrl}
+━━━━━━━━━━━━━━━━━━━━━━━
+💳 *CARA BAYAR*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-💰 *Total:* Rp ${Number(amount || 0).toLocaleString('id-ID')}
+Klik link di bawah ini ya Bosku:
 
-⏳ *Batas Waktu:* 24 Jam
+🔗 *BAYAR SEKARANG:*
+${paymentUrl}
 
-💳 *CARA BAYARNYA GAMPANG:*
+Bisa bayar pakai:
+✅ QRIS (Scan & bayar)
+✅ Virtual Account (BCA, BRI, Mandiri, dll)
+✅ E-Wallet (OVO, Dana, LinkAja, Gopay)
+✅ Retail (Alfamart, Indomaret)
 
-Tinggal klik link di bawah ya Bosku, langsung bisa bayar!
+━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ *PENTING - BACA YA BOSKU!*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-🔗 *Link Bayar:* ${paymentUrl}
+⏰ *Batas Waktu:* ${expiryHours} jam dari sekarang
+Kalau lewat ${expiryHours} jam, order otomatis dibatalkan sistem ya Bosku.
 
-⚠️ *CATATAN PENTING:*
+📞 *Setelah Bayar:*
+• Tim kami langsung hubungi untuk video call verification
+• Siapkan KTP/SIM untuk verifikasi
+• Akun rental langsung dikirim setelah verif OK
 
-• Jangan lupa lunasin sebelum 24 jam ya Bosku, biar orderannya nggak hangus otomatis.
+🔒 *Deposit & Aturan:*
+Nanti akan dijelaskan lengkap setelah pembayaran ya Bosku
 
-• Simpan Order ID buat jaga-jaga: *${orderId}*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-💬 *Support:* wa.me/6289653510125
+Jangan lupa simpan Order ID ini ya: *${orderId}*
 
-🌐 *Website:* https://jbalwikobra.com
+Ada pertanyaan? Chat aja:
+💬 wa.me/6289653510125
+🌐 jbalwikobra.com
 
-Terima kasih Bosku! 🎮✨`;
+Ditunggu pembayarannya Bosku! 🔥`
+            : `🔥 *ORDER PURCHASE BERHASIL DIBUAT!* 🎮
+
+Halo Bosku *${customer.given_names || 'Customer'}* 👋
+
+Alhamdulillah, pesanan Bosku udah berhasil kami catat! Tinggal bayar aja nih biar akun langsung diproses 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DETAIL PESANAN PURCHASE*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🎮 Produk: *${productName}*
+💰 Total Bayar: *Rp ${Number(amount || 0).toLocaleString('id-ID')}*
+🆔 Order ID: *${orderId}*
+
+🔗 *Link Produk:*
+${productUrl}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💳 *CARA BAYAR*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Klik link di bawah ini ya Bosku:
+
+🔗 *BAYAR SEKARANG:*
+${paymentUrl}
+
+Bisa bayar pakai:
+✅ QRIS (Scan & bayar)
+✅ Virtual Account (BCA, BRI, Mandiri, dll)
+✅ E-Wallet (OVO, Dana, LinkAja, Gopay)
+✅ Retail (Alfamart, Indomaret)
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ *PENTING - BACA YA BOSKU!*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ *Batas Waktu:* ${expiryHours} jam dari sekarang
+Kalau lewat ${expiryHours} jam, order otomatis dibatalkan sistem ya Bosku.
+
+🎁 *Setelah Bayar - Bosku Dapat:*
+• Login credentials lengkap
+• Panduan ganti email & bind akun
+• Tips keamanan akun
+• Warranty 30 hari
+• Support after-sales
+
+✨ *Full Ownership:*
+Akun 100% jadi milik Bosku! Bebas ganti email, password, dll.
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Jangan lupa simpan Order ID ini ya: *${orderId}*
+
+Ada pertanyaan? Chat aja:
+💬 wa.me/6289653510125
+🌐 jbalwikobra.com
+
+Ditunggu pembayarannya Bosku! 🔥`;
 
           const contextId = `order:${xenditData.external_id}:created`;
           

@@ -108,26 +108,151 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Calculate hours since order creation
       const hoursAgo = Math.floor((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60 * 60));
 
-      const message = `🔔 *PENGINGAT PEMBAYARAN*
+      // Get product info if available
+      let productName = 'Produk Digital';
+      let orderType = 'purchase';
+      let rentalDuration = '';
+      
+      try {
+        const { data: orderDetail } = await supabase
+          .from('orders')
+          .select(`
+            order_type,
+            rental_duration,
+            product_id,
+            products:product_id (
+              name
+            )
+          `)
+          .eq('id', order.id)
+          .single();
+        
+        if (orderDetail) {
+          productName = orderDetail.products?.name || productName;
+          orderType = orderDetail.order_type || 'purchase';
+          rentalDuration = orderDetail.rental_duration || '';
+        }
+      } catch (err) {
+        console.log('[Payment Reminder] Could not fetch product details, using defaults');
+      }
+      
+      const isRental = orderType === 'rental';
+      const expiryHours = payment.expires_at ? Math.max(0, Math.floor((new Date(payment.expires_at).getTime() - Date.now()) / (1000 * 60 * 60))) : 24;
+      
+      const message = isRental
+        ? `⏰ *REMINDER PEMBAYARAN RENTAL!* 🔔
 
-Halo ${order.customer_name}! 
+Halo Bosku *${order.customer_name}*! 👋
 
-Kami ingin mengingatkan bahwa order Anda masih menunggu pembayaran:
+Jangan lupa ya Bosku, pesanan rental masih menunggu pembayaran nih!
 
-📦 Order ID: ${order.external_id}
-💰 Total: Rp ${order.total_amount.toLocaleString('id-ID')}
-💳 Metode: ${order.payment_method}
-⏰ Dibuat: ${hoursAgo} jam yang lalu
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DETAIL PESANAN RENTAL*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-Silakan selesaikan pembayaran melalui link berikut:
+🎮 Produk: *${productName}*
+⏱️ Durasi: *${rentalDuration || 'Sesuai paket'}*
+💰 Total: *Rp ${order.total_amount.toLocaleString('id-ID')}*
+🆔 Order ID: *${order.external_id}*
+📅 Dibuat: *${hoursAgo} jam yang lalu*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ *SEGERA BAYAR YA BOSKU!*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ *Sisa Waktu: ${expiryHours} jam lagi*
+
+Kalau nggak dibayar dalam ${expiryHours} jam, order otomatis dibatalkan sistem ya Bosku. Sayang kan udah order tapi hangus?
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💳 *BAYAR SEKARANG:*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Klik link ini ya Bosku:
 ${payment.payment_url}
 
-Link pembayaran akan expired dalam ${payment.expires_at ? Math.max(0, Math.floor((new Date(payment.expires_at).getTime() - Date.now()) / (1000 * 60 * 60))) : 24} jam.
+Bisa bayar pakai:
+✅ QRIS (paling cepat)
+✅ Virtual Account
+✅ E-Wallet
+✅ Retail store
 
-Jika sudah melakukan pembayaran, mohon abaikan pesan ini.
+━━━━━━━━━━━━━━━━━━━━━━━
+📞 *SETELAH BAYAR:*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-Terima kasih! 🙏
-*JB Alwikobra*`;
+• Tim kami langsung hubungi Bosku
+• Video call verification (wajib)
+• Akun rental langsung dikirim
+• Siapkan KTP/SIM ya Bosku
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+*Kalau udah bayar, abaikan pesan ini ya!*
+
+Ada masalah? Chat aja:
+💬 wa.me/6289653510125
+🌐 jbalwikobra.com
+
+Buruan bayar ya Bosku, jangan sampai hangus! ⚡`
+        : `⏰ *REMINDER PEMBAYARAN!* 🔔
+
+Halo Bosku *${order.customer_name}*! 👋
+
+Jangan lupa ya Bosku, pesanan masih menunggu pembayaran nih!
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DETAIL PESANAN PURCHASE*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🎮 Produk: *${productName}*
+💰 Total: *Rp ${order.total_amount.toLocaleString('id-ID')}*
+🆔 Order ID: *${order.external_id}*
+📅 Dibuat: *${hoursAgo} jam yang lalu*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ *SEGERA BAYAR YA BOSKU!*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+⏰ *Sisa Waktu: ${expiryHours} jam lagi*
+
+Kalau nggak dibayar dalam ${expiryHours} jam, order otomatis dibatalkan sistem ya Bosku. Sayang kan udah order tapi hangus?
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💳 *BAYAR SEKARANG:*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Klik link ini ya Bosku:
+${payment.payment_url}
+
+Bisa bayar pakai:
+✅ QRIS (paling cepat)
+✅ Virtual Account
+✅ E-Wallet
+✅ Retail store
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🎁 *SETELAH BAYAR - BOSKU DAPAT:*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Login credentials lengkap
+✅ Panduan ganti email & bind
+✅ Tips keamanan akun
+✅ Warranty 30 hari
+✅ Support after-sales
+
+✨ *Full Ownership:*
+Akun 100% milik Bosku! Bebas ganti email, password, dll.
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+*Kalau udah bayar, abaikan pesan ini ya!*
+
+Ada masalah? Chat aja:
+💬 wa.me/6289653510125
+🌐 jbalwikobra.com
+
+Buruan bayar ya Bosku, jangan sampai hangus! ⚡`;
 
       try {
         const result = await wa.sendMessage({

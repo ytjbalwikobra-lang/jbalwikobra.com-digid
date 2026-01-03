@@ -83,7 +83,7 @@ const PurchaseNotificationTicker: React.FC = () => {
         setCurrentIndex((prev) => (prev + 1) % purchases.length);
         // Reset animation state immediately for seamless transition
         setIsAnimating(true);
-      }, 700); // Match slide animation duration
+      }, 1000); // Match 1 second transition duration
     }, 5000);
 
     return () => clearTimeout(hideTimer);
@@ -126,10 +126,10 @@ const PurchaseNotificationTicker: React.FC = () => {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-[9999] overflow-hidden`}
+      className={`fixed left-0 right-0 z-[45] overflow-hidden top-0 md:top-[64px]`}
     >
       <div
-        className={`text-white shadow-lg transition-transform duration-700 ease-in-out ${isPremium ? 'animate-shimmer' : ''}`}
+        className={`text-white shadow-lg transition-transform duration-1000 ease-in-out ${isPremium ? 'animate-shimmer' : ''}`}
         style={{ 
           background: backgroundGradient,
           transform: isAnimating ? 'translateY(0)' : 'translateY(-100%)',

@@ -33,21 +33,21 @@ export const CustomerInfoForm = React.memo(({
   setIsPhoneValid,
   errors = {}
 }: CustomerInfoFormProps) => {
-  const inputBaseClass = "w-full px-4 py-3 pl-12 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200 backdrop-blur-sm";
+  const inputBaseClass = "w-full px-3 py-2 pl-10 bg-white/5 border border-white/20 rounded-lg text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200 backdrop-blur-sm";
   const errorInputClass = "border-red-500/50 focus:ring-red-500/40 focus:border-red-500/50";
 
   return (
-    <PNCard className="space-y-5 p-5">
-      <div className="flex items-center space-x-2 mb-4">
-        <User className="text-pink-400" size={20} />
-        <PNHeading level={3} className="!mb-0">Informasi Customer</PNHeading>
+    <PNCard className="space-y-3 p-3">
+      <div className="flex items-center space-x-2 mb-2">
+        <User className="text-pink-400" size={16} />
+        <PNHeading level={3} className="!mb-0 text-sm">Informasi Customer</PNHeading>
       </div>
 
       {/* Name Field */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <User className="text-gray-400" size={18} />
+            <User className="text-gray-400" size={16} />
           </div>
           <input
             type="text"
@@ -59,18 +59,18 @@ export const CustomerInfoForm = React.memo(({
           />
         </div>
         {errors.name && (
-          <div className="flex items-center space-x-1 text-red-400 text-sm">
-            <AlertCircle size={14} />
+          <div className="flex items-center space-x-1 text-red-400 text-xs">
+            <AlertCircle size={12} />
             <span>{errors.name}</span>
           </div>
         )}
       </div>
 
       {/* Email Field */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Mail className="text-gray-400" size={18} />
+            <Mail className="text-gray-400" size={16} />
           </div>
           <input
             type="email"
@@ -82,15 +82,15 @@ export const CustomerInfoForm = React.memo(({
           />
         </div>
         {errors.email && (
-          <div className="flex items-center space-x-1 text-red-400 text-sm">
-            <AlertCircle size={14} />
+          <div className="flex items-center space-x-1 text-red-400 text-xs">
+            <AlertCircle size={12} />
             <span>{errors.email}</span>
           </div>
         )}
       </div>
 
       {/* Phone Field */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <PhoneInput
           value={customer.phone}
           onChange={(value) => setCustomer({ ...customer, phone: value })}

@@ -38,10 +38,10 @@ export const PurchaseActions = React.memo(({
   const canProceed = acceptedTerms && isFormValid && !creatingInvoice;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Terms and Conditions for Both Purchase and Rental */}
-      <div className="space-y-4">
-        <label className="flex items-start space-x-3 cursor-pointer">
+      <div className="space-y-2">
+        <label className="flex items-start space-x-2 cursor-pointer">
           <div className="relative mt-1">
             <input
               type="checkbox"
@@ -83,13 +83,13 @@ export const PurchaseActions = React.memo(({
           </div>
         </label>
         {termsError && (
-          <PNText className="text-red-400 text-sm mt-2">{termsError}</PNText>
+          <PNText className="text-red-400 text-xs mt-1">{termsError}</PNText>
         )}
       </div>
 
       {/* Security & Support Info */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm">
-        <div className="flex items-center space-x-2 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2 bg-white/5 border border-white/10 rounded-lg backdrop-blur-sm">
+        <div className="flex items-center space-x-2 text-xs">
           <Shield className="text-green-400 flex-shrink-0" size={16} />
           <PNText className="text-gray-300">Pembayaran Aman</PNText>
         </div>
@@ -100,12 +100,12 @@ export const PurchaseActions = React.memo(({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex space-x-3">
+      <div className="flex space-x-2\">
         <PNButton
           variant="ghost"
-          size="lg"
+          size="md"
           onClick={onCancel}
-          className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-800"
+          className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-800 py-2 text-sm"
         >
           Batal
         </PNButton>
@@ -113,10 +113,10 @@ export const PurchaseActions = React.memo(({
         {isPurchase ? (
           <PNButton
             variant="primary"
-            size="lg"
+            size="md"
             onClick={onCheckout}
             disabled={!canProceed}
-            className={`flex-1 flex items-center justify-center space-x-2 ${
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 text-sm ${
               canProceed 
                 ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700' 
                 : 'opacity-50 cursor-not-allowed'

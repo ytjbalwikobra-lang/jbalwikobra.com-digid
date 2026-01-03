@@ -35,56 +35,56 @@ export const PurchaseFormHeader = React.memo(({
         variant="ghost"
         size="sm"
         onClick={onClose}
-        className="absolute -top-2 -right-2 text-gray-400 hover:text-white z-10"
+        className="absolute -top-1 -right-1 text-gray-400 hover:text-white z-10"
       >
-        <X size={20} />
+        <X size={18} />
       </PNButton>
 
-      {/* Header Content */}
-      <div className="space-y-4">
+      {/* Header Content - more compact */}
+      <div className="space-y-2.5">
         {/* Transaction Type Badge */}
-        <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg ${
+        <div className="flex items-center space-x-2">
+          <div className={`p-1.5 rounded-lg ${
             isPurchase 
               ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30' 
               : 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30'
           }`}>
             {isPurchase ? (
-              <ShoppingCart className="text-pink-400" size={20} />
+              <ShoppingCart className="text-pink-400" size={16} />
             ) : (
-              <Calendar className="text-green-400" size={20} />
+              <Calendar className="text-green-400" size={16} />
             )}
           </div>
           <div>
-            <PNHeading level={3} className="mb-1">
+            <PNHeading level={3} className="mb-0.5 text-base">
               {isPurchase ? 'Pembelian Akun' : 'Rental Akun'}
             </PNHeading>
-            <PNText className="text-sm text-gray-400">
-              {isPurchase ? 'Akses permanen ke akun' : `Akses sementara ${duration}`}
+            <PNText className="text-xs text-gray-400">
+              {isPurchase ? 'Akses permanen' : `Akses ${duration}`}
             </PNText>
           </div>
         </div>
 
-        {/* Product Summary */}
-        <div className="bg-black/40 border border-white/10 rounded-lg p-4">
+        {/* Product Summary - more compact */}
+        <div className="bg-black/40 border border-white/10 rounded-lg p-2.5">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <Crown className="text-yellow-400" size={16} />
-                <PNText className="font-medium">{productName}</PNText>
+              <div className="flex items-center space-x-1.5 mb-1\">
+                <Crown className="text-yellow-400" size={14} />
+                <PNText className="font-medium text-sm">{productName}</PNText>
               </div>
-              <PNText className="text-sm text-gray-400">
-                {isPurchase ? 'Kepemilikan penuh akun game' : `Akses rental untuk ${duration}`}
+              <PNText className="text-xs text-gray-400\">
+                {isPurchase ? 'Kepemilikan penuh' : `Rental ${duration}`}
               </PNText>
             </div>
             <div className="text-right">
-              <PNText className={`text-2xl font-bold ${
+              <PNText className={`text-lg font-bold ${
                 isPurchase ? 'text-pink-400' : 'text-green-400'
               }`}>
                 {formatCurrency(price)}
               </PNText>
               {!isPurchase && (
-                <PNText className="text-sm text-gray-400">
+                <PNText className="text-[10px] text-gray-400">
                   /{duration}
                 </PNText>
               )}

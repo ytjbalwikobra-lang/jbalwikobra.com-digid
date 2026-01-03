@@ -324,77 +324,147 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
       second: '2-digit'
     });
     
-    // Generate notification message (different for rental vs purchase)
+    const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : paidTimestamp;
+    
+    // Calculate return date for rental (assuming rental_duration is in format like "7 Hari")
+    let returnDate = 'Sesuai durasi rental';
+    if (isRental && order.rental_duration) {
+      const durationMatch = order.rental_duration.match(/(\d+)/);
+      if (durationMatch && order.paid_at) {
+        const days = parseInt(durationMatch[1]);
+        const returnDateObj = new Date(order.paid_at);
+        returnDateObj.setDate(returnDateObj.getDate() + days);
+        returnDate = returnDateObj.toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+    }
+    
+    // Generate notification message for admin (different for rental vs purchase)
     const message = isRental 
-      ? `🔥 *NEW RENTAL ORDER PAID!* 💰
+      ? `🔥 *RENTAL ORDER PAID!* 💰
 
-📊 **RENTAL PESANAN BARU**
+━━━━━━━━━━━━━━━━━━━━━━━
+📊 INFORMASI PESANAN
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-👤 **Customer:** *${order.customer_name || 'Guest'}*
-📱 **WhatsApp:** *${order.customer_phone || 'Tidak tersedia'}*
+🆔 *Order ID:* #${order.id.substring(0, 8).toUpperCase()}
+📅 *Tanggal Order:* ${orderDate}
+⏰ *Tanggal Bayar:* ${paidTimestamp}
+✅ *Status:* LUNAS - MENUNGGU PROSES
 
-🎯 **Produk:** *${productName}*
-🔗 **URL Produk:** ${productUrl}
-💳 **Channel Pembayaran:** ${paymentChannel}
-💰 **Nominal:** *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
-⏰ **Waktu Pembayaran:** ${paidTimestamp}
-✅ **Status:** *PAID*
-⏱️ **Durasi:** *${order.rental_duration || 'Tidak ditentukan'}*
-
-📧 **Email:** ${order.customer_email || 'Tidak tersedia'}
-🆔 **Invoice:** \`${order.id}\`
-
-🚨 **ACTION REQUIRED:**
-• Setup rental access dalam 5-15 menit
-• Contact customer untuk video call verification
-• Prepare login credentials
-• Send rental guidelines dan aturan
-• Pastikan dokumen verifikasi valid
-
-⏱️ **DEADLINE:** 15 menit dari sekarang
-
-📋 **CHECKLIST:**
-□ Siapkan akun rental
-□ Hubungi customer untuk jadwal video call
-□ Kirim panduan rental
-□ Dokumentasikan proses handover
-
-#RentalPaid #ActionRequired #VideoCallRequired`
-      : `🔥 *NEW PURCHASE ORDER PAID!* 💰
-
-📊 **PURCHASE PESANAN BARU**
+━━━━━━━━━━━━━━━━━━━━━━━
+👤 DATA CUSTOMER
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-👤 **Customer:** *${order.customer_name || 'Guest'}*
-📱 **WhatsApp:** *${order.customer_phone || 'Tidak tersedia'}*
+*Nama:* ${order.customer_name || 'Guest'}
+*WhatsApp:* ${order.customer_phone || 'Tidak tersedia'}
+*Email:* ${order.customer_email || 'Tidak tersedia'}
 
-🎯 **Produk:** *${productName}*
-🔗 **URL Produk:** ${productUrl}
-💳 **Channel Pembayaran:** ${paymentChannel}
-💰 **Nominal:** *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
-⏰ **Waktu Pembayaran:** ${paidTimestamp}
-✅ **Status:** *PAID*
+━━━━━━━━━━━━━━━━━━━━━━━
+🎮 DETAIL PRODUK
+━━━━━━━━━━━━━━━━━━━━━━━
 
-📧 **Email:** ${order.customer_email || 'Tidak tersedia'}
-🆔 **Invoice:** \`${order.id}\`
+*Produk:* ${productName}
+*Kategori:* RENTAL
+*Durasi:* ${order.rental_duration || 'Tidak ditentukan'}
+*Harga:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
 
-🚨 **ACTION REQUIRED:**
-• Prepare account delivery dalam 5-30 menit
-• Send login credentials to customer
-• Include setup guide dan warranty info
-• Follow up untuk kepuasan customer
-• Pastikan akun sudah ditest sebelum dikirim
+🔗 *Link Produk:*
+${productUrl}
 
-⏱️ **DEADLINE:** 30 menit dari sekarang
+━━━━━━━━━━━━━━━━━━━━━━━
+💳 PEMBAYARAN
+━━━━━━━━━━━━━━━━━━━━━━━
 
-📋 **CHECKLIST:**
-□ Test akun berfungsi normal
-□ Kirim detail login via WhatsApp
-□ Sertakan panduan lengkap
-□ Follow up dalam 24 jam
+*Channel:* ${paymentChannel}
+*Total Bayar:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+*Invoice:* ${order.id}
 
-#PurchasePaid #ActionRequired #FullOwnership`;
+━━━━━━━━━━━━━━━━━━━━━━━
+🚨 ACTION REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ *TARGET:* 15 menit dari sekarang
+
+✅ *CHECKLIST:*
+☐ Video call verification dgn customer
+☐ Cek identitas customer (KTP/SIM)
+☐ Setup akun rental + password temporary
+☐ Kirim detail login & panduan rental
+☐ Kirim aturan rental & sanksi
+☐ Catat jadwal return (${returnDate})
+☐ Set reminder H-1 sebelum return
+
+📱 *Contact Customer Sekarang:*
+wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8/, '628') || ''}
+
+#RentalPaid #VideoCallRequired #Urgent`
+      : `🔥 *PURCHASE ORDER PAID!* 💰
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📊 INFORMASI PESANAN
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🆔 *Order ID:* #${order.id.substring(0, 8).toUpperCase()}
+📅 *Tanggal Order:* ${orderDate}
+⏰ *Tanggal Bayar:* ${paidTimestamp}
+✅ *Status:* LUNAS - MENUNGGU PROSES
+
+━━━━━━━━━━━━━━━━━━━━━━━
+👤 DATA CUSTOMER
+━━━━━━━━━━━━━━━━━━━━━━━
+
+*Nama:* ${order.customer_name || 'Guest'}
+*WhatsApp:* ${order.customer_phone || 'Tidak tersedia'}
+*Email:* ${order.customer_email || 'Tidak tersedia'}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🎮 DETAIL PRODUK
+━━━━━━━━━━━━━━━━━━━━━━━
+
+*Produk:* ${productName}
+*Kategori:* PURCHASE
+*Harga:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+
+🔗 *Link Produk:*
+${productUrl}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💳 PEMBAYARAN
+━━━━━━━━━━━━━━━━━━━━━━━
+
+*Channel:* ${paymentChannel}
+*Total Bayar:* Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+*Invoice:* ${order.id}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🚨 ACTION REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ *TARGET:* 30 menit dari sekarang
+
+✅ *CHECKLIST:*
+☐ Test akun masih berfungsi normal
+☐ Screenshot detail akun
+☐ Ganti email + password akun
+☐ Kirim login credentials ke customer
+☐ Kirim panduan lengkap + warranty
+☐ Edukasi customer cara aman pakai akun
+☐ Follow up dalam 24 jam
+
+📱 *Contact Customer Sekarang:*
+wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8/, '628') || ''}
+
+#PurchasePaid #FullOwnership #ProcessNow`;
 
     // Use dynamic WhatsApp service for unified logging and idempotency
     const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
@@ -491,23 +561,104 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
           second: '2-digit'
         });
         
-        const customerMessage = `✅ *MANTAP BOSKU! PEMBAYARAN DITERIMA*
+        const customerMessage = isRental 
+          ? `✅ *MANTAP BOSKU! PEMBAYARAN DITERIMA* 💰
 
-Halo Bosku ${order.customer_name || 'Customer'} 👋
+Halo Bosku *${order.customer_name || 'Customer'}* 👋
 
-Uangnya udah masuk dengan aman ya! Status pesanan Bosku sekarang udah LUNAS.
+Alhamdulillah, uangnya udah masuk dengan aman! 
 
-🚀 *STATUS SAAT INI: SEDANG DIPROSES*
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DETAIL PESANAN RENTAL*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-Tim kami lagi siapin ${productName} pesanan Bosku.
+🎮 Produk: *${productName}*
+⏱️ Durasi: *${order.rental_duration || 'Sesuai paket'}*
+💰 Total: *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
+📅 Dibayar: *${paidTimestamp}*
+🆔 Order ID: *${order.id.substring(0, 8).toUpperCase()}*
 
-Mohon ditunggu sebentar ya Bosku, nanti detail akun/kodenya bakal langsung dikirim ke WhatsApp ini begitu selesai. Nggak bakal lama kok! 😎
+━━━━━━━━━━━━━━━━━━━━━━━
+🔥 *LANGKAH SELANJUTNYA*
+━━━━━━━━━━━━━━━━━━━━━━━
 
-Kalau butuh bantuan lain, kabarin aja.
+1️⃣ *VIDEO CALL VERIFICATION*
+   Tim kami akan hubungi Bosku untuk video call verification (wajib untuk rental ya Bosku)
 
-💬 *Support:* wa.me/6289653510125
+2️⃣ *SIAPKAN DOKUMEN*
+   • KTP/SIM (untuk verifikasi identitas)
+   • Pastikan wajah Bosku terlihat jelas
+   
+3️⃣ *AKUN RENTAL*
+   Setelah verifikasi OK, akun langsung dikirim ke WA ini
 
-🌐 *Website:* https://jbalwikobra.com
+⏰ *Estimasi proses: 15-30 menit*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ *PENTING UNTUK RENTAL*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🔒 Akun rental TIDAK BOLEH:
+   • Diganti email/password tanpa izin
+   • Dijual/dipindahtangankan
+   • Dipakai untuk top up sendiri
+   
+📅 Return Date: *${returnDate}*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Ditunggu ya Bosku, sebentar lagi kami hubungi! 📞
+
+Ada pertanyaan? Chat aja:
+💬 wa.me/6289653510125
+
+Happy Gaming! 🔥`
+          : `✅ *MANTAP BOSKU! PEMBAYARAN DITERIMA* 💰
+
+Halo Bosku *${order.customer_name || 'Customer'}* 👋
+
+Alhamdulillah, uangnya udah masuk dengan aman! 
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DETAIL PESANAN PURCHASE*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🎮 Produk: *${productName}*
+💰 Total: *Rp ${Number(order.amount || 0).toLocaleString('id-ID')}*
+📅 Dibayar: *${paidTimestamp}*
+🆔 Order ID: *${order.id.substring(0, 8).toUpperCase()}*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🔥 *LANGKAH SELANJUTNYA*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ *PROSES AKUN*
+   Tim kami lagi siapin akun pesanan Bosku dengan detail lengkap
+
+2️⃣ *PENGIRIMAN*
+   Login credentials + panduan lengkap akan dikirim ke WA ini
+
+3️⃣ *FULL OWNERSHIP*
+   Akun jadi 100% milik Bosku! Bebas ganti email, password, dll
+
+⏰ *Estimasi proses: 15-30 menit*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+✨ *YANG BOSKU DAPAT*
+━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Login credentials (email/username + password)
+✅ Panduan cara ganti email & bind akun
+✅ Tips keamanan akun
+✅ Warranty 30 hari
+✅ Support after-sales
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+Mohon ditunggu ya Bosku, nanti langsung kami kirim detail akunnya! 🚀
+
+Ada pertanyaan? Chat aja:
+💬 wa.me/6289653510125
 
 Happy Gaming Bosku! 🔥`;
 

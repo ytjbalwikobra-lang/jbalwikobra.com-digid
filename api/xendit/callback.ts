@@ -8,10 +8,12 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import handler from './webhook';
 
 // Re-export the webhook handler for the /callback path
 export default async function callbackHandler(req: VercelRequest, res: VercelResponse) {
   console.log('[Callback] Request received, forwarding to webhook handler');
-  return handler(req, res);
+  
+  // Import the webhook handler dynamically to avoid circular dependency
+  const { default: webhookHandler } = await import('./webhook');
+  return webhookHandler(req, res);
 }

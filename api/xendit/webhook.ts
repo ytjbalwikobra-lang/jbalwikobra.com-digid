@@ -195,9 +195,8 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
   try {
     console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
     
-    // Get order details with product information and rental details
-    // Include both 'paid' and 'completed' statuses to handle providers that emit SETTLED/COMPLETED
-    let q = sb.from('orders')
+    // First, try to find the order without status filter to see if it exists
+    let checkQuery = sb.from('orders')
       .select(`
         id,
         customer_name,
@@ -218,41 +217,50 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
           description
         )
       `)
-      .in('status', ['paid', 'completed'])
       .limit(1);
     
     if (invoiceId) {
-      q = q.eq('xendit_invoice_id', invoiceId);
-      console.log('[WhatsApp] Querying by xendit_invoice_id:', invoiceId);
+      checkQuery = checkQuery.eq('xendit_invoice_id', invoiceId);
+      console.log('[WhatsApp] Checking order by xendit_invoice_id:', invoiceId);
     } else if (externalId) {
-      q = q.eq('client_external_id', externalId);
-      console.log('[WhatsApp] Querying by client_external_id:', externalId);
-    }
-    
-    const { data: orders, error: queryError } = await q;
-    
-    if (queryError) {
-      console.error('[WhatsApp] Query error:', queryError);
+      checkQuery = checkQuery.eq('client_external_id', externalId);
+      console.log('[WhatsApp] Checking order by client_external_id:', externalId);
+    } else {
+      console.log('[WhatsApp] No invoice_id or external_id provided, cannot send notification');
       return;
     }
     
-    console.log('[WhatsApp] Query returned', orders?.length || 0, 'orders');
+    const { data: checkOrders, error: checkError } = await checkQuery;
     
-    const order = orders?.[0];
-    
-    if (!order) {
-      console.log('[WhatsApp] No paid order found for notification');
-      console.log('[WhatsApp] Query filters used:', { invoiceId, externalId });
+    if (checkError) {
+      console.error('[WhatsApp] Error checking order:', checkError);
       return;
     }
-
-    console.log('[WhatsApp] Found order for notification:', {
+    
+    if (!checkOrders || checkOrders.length === 0) {
+      console.log('[WhatsApp] ⚠️  Order not found in database:', { invoiceId, externalId });
+      console.log('[WhatsApp] This might be a webhook for a QR code that hasn\'t been linked to an order yet');
+      return;
+    }
+    
+    const order = checkOrders[0];
+    console.log('[WhatsApp] Found order:', {
       id: order.id,
       status: order.status,
       order_type: order.order_type,
-      amount: order.amount
+      amount: order.amount,
+      paid_at: order.paid_at
     });
-
+    
+    // Check if order status is paid or completed
+    if (order.status !== 'paid' && order.status !== 'completed') {
+      console.log('[WhatsApp] ⚠️  Order found but status is not paid/completed:', order.status);
+      console.log('[WhatsApp] Order might not have been updated yet, notification will be skipped');
+      return;
+    }
+    
+    console.log('[WhatsApp] ✅ Order is paid/completed, proceeding with notification');
+    
     const product = order.products;
     let productName = product?.name;
     

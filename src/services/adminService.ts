@@ -375,17 +375,19 @@ class AdminService {
         .from('products')
         .update(updatePayload)
         .eq('id', id)
-        .select('*')
-        .maybeSingle();
+        .select();
+      
       if (error) {
         console.error('[adminService.updateProductFields] Supabase error:', error);
         throw error;
       }
-      if (!data) {
+      
+      if (!data || data.length === 0) {
         console.error('[adminService.updateProductFields] No product found with id:', id);
         return null;
       }
-      return data as Product;
+      
+      return data[0] as Product;
     } catch (e) {
       console.error('[adminService.updateProductFields] error', e);
       return null;

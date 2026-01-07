@@ -375,12 +375,17 @@ class AdminService {
         .from('products')
         .update(updatePayload)
         .eq('id', id)
-        .select('id, name, description, price, original_price, category_id, game_title, account_level, account_details, stock, is_active, created_at, updated_at, image, images, tier, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, archived_at')
-        .single();
-      if (error) throw error;
-      // map legacy shape to new product interface minimally
-      const mapped: Product = { ...data, category_id: (data as any).category_id };
-      return mapped;
+        .select('*')
+        .maybeSingle();
+      if (error) {
+        console.error('[adminService.updateProductFields] Supabase error:', error);
+        throw error;
+      }
+      if (!data) {
+        console.error('[adminService.updateProductFields] No product found with id:', id);
+        return null;
+      }
+      return data as Product;
     } catch (e) {
       console.error('[adminService.updateProductFields] error', e);
       return null;

@@ -370,12 +370,17 @@ class AdminService {
       if (!supabase) {
         throw new Error('Supabase client not available');
       }
+      
+      console.log('[adminService.updateProductFields] Updating product:', id, 'with fields:', fields);
+      
       const updatePayload: any = { ...fields, updated_at: new Date().toISOString() };
       const { data, error } = await supabase
         .from('products')
         .update(updatePayload)
         .eq('id', id)
         .select();
+      
+      console.log('[adminService.updateProductFields] Response:', { data, error });
       
       if (error) {
         console.error('[adminService.updateProductFields] Supabase error:', error);
@@ -387,6 +392,7 @@ class AdminService {
         return null;
       }
       
+      console.log('[adminService.updateProductFields] Success! Updated product:', data[0]);
       return data[0] as Product;
     } catch (e) {
       console.error('[adminService.updateProductFields] error', e);

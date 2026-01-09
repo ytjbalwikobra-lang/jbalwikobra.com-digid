@@ -387,9 +387,27 @@ class AdminService {
         throw error;
       }
       
+      // If RLS blocks SELECT after UPDATE, fetch the product separately
       if (!data || data.length === 0) {
-        console.error('[adminService.updateProductFields] No product found with id:', id);
-        return null;
+        console.warn('[adminService.updateProductFields] RLS may have blocked SELECT after UPDATE, fetching separately');
+        const { data: fetchedProducts, error: fetchError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .limit(1);
+        
+        if (fetchError) {
+          console.error('[adminService.updateProductFields] Fetch error:', fetchError);
+          throw fetchError;
+        }
+        
+        if (!fetchedProducts || fetchedProducts.length === 0) {
+          console.error('[adminService.updateProductFields] No product found with id:', id);
+          return null;
+        }
+        
+        console.log('[adminService.updateProductFields] Success! Fetched product:', fetchedProducts[0]);
+        return fetchedProducts[0] as Product;
       }
       
       console.log('[adminService.updateProductFields] Success! Updated product:', data[0]);

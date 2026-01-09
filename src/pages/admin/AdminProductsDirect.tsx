@@ -8,7 +8,7 @@ import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import '../../styles/admin-design-system-v3.css';
 
 // VERSION MARKER - Change this to verify deployment
-const CODE_VERSION = 'V3-FIX-JAN9';
+const CODE_VERSION = 'V4-INLINE-TEST';
 
 interface Product {
   id: string;
@@ -143,6 +143,7 @@ const AdminProductsDirect: React.FC = () => {
 
   // START EDITING
   const startEditing = (product: Product) => {
+    alert(`INLINE EDIT STARTED - V3\nProduct: ${product.name}\nCurrent Price: ${product.price}\n\nNow you can edit inline!`);
     console.log('✏️ [DIRECT] Start editing:', product.id, product.name, 'tier:', product.tier_name);
     setEditingId(product.id);
     setEditPrice(String(product.price || 0));

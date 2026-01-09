@@ -4,7 +4,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminShell } from './AdminShellWrapper';
 import AdminDashboard from './AdminDashboard';
 import AdminOrdersV2 from './AdminOrdersV2';
-import AdminProductsV2 from './AdminProductsV2';
+// Use direct version that bypasses all caching
+import AdminProductsDirect from './AdminProductsDirect';
 import AdminUsersV2 from './AdminUsersV2';
 import AdminSettings from './AdminSettings';
 import AdminWhatsAppSettingsEnhanced from './AdminWhatsAppSettingsEnhanced';
@@ -19,7 +20,7 @@ const AdminRoutes: React.FC = () => {
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/orders" element={<AdminOrdersV2 />} />
         <Route path="/users" element={<AdminUsersV2 />} />
-        <Route path="/products" element={<AdminProductsV2 />} />
+        <Route path="/products" element={<AdminProductsDirect />} />
         <Route path="/banners" element={<AdminBanners />} />
         <Route path="/flash-sales" element={<AdminFlashSales />} />
         <Route path="/settings" element={<AdminSettings />} />

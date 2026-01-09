@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProductService } from '../../services/productService';
 import { useToast } from '../../components/Toast';
+import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
@@ -22,6 +23,7 @@ const AdminFlashSales: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFlashSale, setSelectedFlashSale] = useState<FlashSale | null>(null);
   const { push } = useToast();
+  const { showConfirm, ConfirmModal } = useAdminConfirm();
 
   useEffect(() => {
     loadFlashSales();
@@ -33,7 +35,7 @@ const AdminFlashSales: React.FC = () => {
       const data = await ProductService.getFlashSales();
       setFlashSales(data || []);
     } catch (error) {
-      push('Failed to load flash sales', 'error');
+      push('Gagal memuat flash sales', 'error');
     } finally {
       setLoading(false);
     }
@@ -49,21 +51,29 @@ const AdminFlashSales: React.FC = () => {
     return 'ongoing';
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus flash sale ini?')) return;
+  const handleDelete = async (sale: FlashSaleWithProduct) => {
+    const confirmed = await showConfirm({
+      title: 'Hapus Flash Sale',
+      message: `Anda akan menghapus flash sale untuk produk "${sale.product?.name || 'Unknown'}".\n\nTindakan ini tidak dapat dibatalkan.\n\nLanjutkan?`,
+      type: 'danger',
+      confirmText: 'Hapus',
+      cancelText: 'Batal'
+    });
+    
+    if (!confirmed) return;
     
     try {
       // Optimistic UI update
       const prev = flashSales;
-      setFlashSales(prev.filter(s => s.id !== id));
-      push('Flash sale deleted successfully', 'success');
+      setFlashSales(prev.filter(s => s.id !== sale.id));
+      push('Flash sale berhasil dihapus', 'success');
       
       // Delete in background
-      await ProductService.deleteFlashSale(id);
+      await ProductService.deleteFlashSale(sale.id);
     } catch (error) {
       // Rollback on failure
       loadFlashSales();
-      push('Failed to delete flash sale', 'error');
+      push('Gagal menghapus flash sale', 'error');
     }
   };
 
@@ -100,10 +110,10 @@ const AdminFlashSales: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            Flash Sales Management
+            Manajemen Flash Sales
           </h1>
           <p className="text-gray-400 mt-1">
-            Manage special limited-time product offers
+            Kelola penawaran produk dengan waktu terbatas
           </p>
         </div>
         <div className="flex gap-3">
@@ -120,7 +130,7 @@ const AdminFlashSales: React.FC = () => {
             icon={<Plus size={18} />}
             onClick={handleCreate}
           >
-            Create Flash Sale
+            Buat Flash Sale
           </AdminButton>
         </div>
       </div>
@@ -145,8 +155,8 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400 mb-1">Active Sales</p>
-                <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-sm text-slate-400 mb-1">Aktif</p>
+                <p className="text-3xl font-bold text-green-400">{stats.active}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Zap className="text-green-600" size={24} />
@@ -159,8 +169,8 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400 mb-1">Ongoing</p>
-                <p className="text-3xl font-bold text-pink-600">{stats.ongoing}</p>
+                <p className="text-sm text-slate-400 mb-1">Sedang Berlangsung</p>
+                <p className="text-3xl font-bold text-pink-400">{stats.ongoing}</p>
               </div>
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
                 <TrendingUp className="text-pink-600" size={24} />
@@ -173,8 +183,8 @@ const AdminFlashSales: React.FC = () => {
           <AdminCardBody>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400 mb-1">Upcoming</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.upcoming}</p>
+                <p className="text-sm text-slate-400 mb-1">Akan Datang</p>
+                <p className="text-3xl font-bold text-orange-400">{stats.upcoming}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <Clock className="text-orange-600" size={24} />
@@ -187,32 +197,32 @@ const AdminFlashSales: React.FC = () => {
       {/* Flash Sales List */}
       <AdminCard>
         <AdminCardHeader
-          title="Flash Sales"
-          subtitle={`${flashSales.length} total sales`}
+          title="Daftar Flash Sales"
+          subtitle={`${flashSales.length} total`}
         />
         <AdminCardBody>
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-              <p className="mt-4 text-slate-400">Loading flash sales...</p>
+              <p className="mt-4 text-slate-400">Memuat flash sales...</p>
             </div>
           ) : flashSales.length === 0 ? (
             <div className="text-center py-12">
               <Zap className="mx-auto text-slate-300" size={48} />
-              <p className="mt-4 text-slate-400">No flash sales found</p>
-              <p className="text-sm text-slate-500 mt-2">Create your first flash sale to get started</p>
+              <p className="mt-4 text-slate-400">Belum ada flash sale</p>
+              <p className="text-sm text-slate-500 mt-2">Buat flash sale pertama Anda untuk memulai</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Time Period</th>
-                    <th>Stock</th>
+                    <th>Produk</th>
+                    <th>Harga</th>
+                    <th>Periode Waktu</th>
+                    <th>Stok</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -249,30 +259,30 @@ const AdminFlashSales: React.FC = () => {
                         </td>
                         <td>
                           <div className="text-sm">
-                            <p className="text-slate-700">
-                              <span className="font-medium">Start:</span>{' '}
-                              {new Date(sale.startTime).toLocaleString()}
+                            <p className="text-slate-300">
+                              <span className="font-medium text-slate-400">Mulai:</span>{' '}
+                              {new Date(sale.startTime).toLocaleString('id-ID')}
                             </p>
-                            <p className="text-slate-700 mt-1">
-                              <span className="font-medium">End:</span>{' '}
-                              {new Date(sale.endTime).toLocaleString()}
+                            <p className="text-slate-300 mt-1">
+                              <span className="font-medium text-slate-400">Selesai:</span>{' '}
+                              {new Date(sale.endTime).toLocaleString('id-ID')}
                             </p>
                           </div>
                         </td>
                         <td>
                           <span className="font-medium text-white">
-                            {sale.stock || 0} units
+                            {sale.stock || 0} unit
                           </span>
                         </td>
                         <td>
                           <div className="space-y-1">
                             <AdminStatusBadge
                               status={sale.isActive ? 'active' : 'inactive'}
-                              label={sale.isActive ? 'Active' : 'Inactive'}
+                              label={sale.isActive ? 'Aktif' : 'Nonaktif'}
                             />
                             <AdminStatusBadge
                               status={timeStatus === 'ongoing' ? 'active' : timeStatus === 'upcoming' ? 'pending' : 'inactive'}
-                              label={timeStatus.charAt(0).toUpperCase() + timeStatus.slice(1)}
+                              label={timeStatus === 'ongoing' ? 'Berlangsung' : timeStatus === 'upcoming' ? 'Akan Datang' : 'Berakhir'}
                             />
                           </div>
                         </td>
@@ -290,7 +300,7 @@ const AdminFlashSales: React.FC = () => {
                             <AdminButton
                               variant="danger"
                               size="sm"
-                              onClick={() => handleDelete(sale.id)}
+                              onClick={() => handleDelete(sale)}
                               icon={<Trash2 size={16} />}
                               aria-label="Hapus flash sale"
                             >
@@ -307,6 +317,9 @@ const AdminFlashSales: React.FC = () => {
           )}
         </AdminCardBody>
       </AdminCard>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal />
 
       {/* Flash Sale Modal */}
       <FlashSaleModal

@@ -8,6 +8,7 @@ import { X, Save, Loader } from 'lucide-react';
 import { ProductService } from '../../../services/productService';
 import { OptimizedProductService } from '../../../services/optimizedProductService';
 import { useToast } from '../../../components/Toast';
+import { useAdminConfirm } from './ui/AdminConfirmModal';
 import { Product } from '../../../types';
 import { AdminButton } from './ui/AdminButton';
 
@@ -47,6 +48,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const { push } = useToast();
+  const { showConfirm, ConfirmModal } = useAdminConfirm();
 
   const [formData, setFormData] = useState<FormData>({
     productId: '',
@@ -96,7 +98,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
       const result = await OptimizedProductService.getProductsPaginated({}, { limit: 500 });
       setProducts(result.data);
     } catch (error) {
-      push('Failed to load products', 'error');
+      push('Gagal memuat produk', 'error');
     } finally {
       setLoadingProducts(false);
     }
@@ -106,28 +108,28 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     const newErrors: Partial<Record<keyof FormData, string>> = {};
 
     if (!formData.productId) {
-      newErrors.productId = 'Please select a product';
+      newErrors.productId = 'Pilih produk terlebih dahulu';
     }
     if (formData.salePrice <= 0) {
-      newErrors.salePrice = 'Sale price must be greater than 0';
+      newErrors.salePrice = 'Harga sale harus lebih dari 0';
     }
     if (formData.originalPrice <= 0) {
-      newErrors.originalPrice = 'Original price must be greater than 0';
+      newErrors.originalPrice = 'Harga asli harus lebih dari 0';
     }
     if (formData.salePrice >= formData.originalPrice) {
-      newErrors.salePrice = 'Sale price must be less than original price';
+      newErrors.salePrice = 'Harga sale harus lebih kecil dari harga asli';
     }
     if (!formData.startTime) {
-      newErrors.startTime = 'Start time is required';
+      newErrors.startTime = 'Waktu mulai harus diisi';
     }
     if (!formData.endTime) {
-      newErrors.endTime = 'End time is required';
+      newErrors.endTime = 'Waktu selesai harus diisi';
     }
     if (formData.startTime && formData.endTime && new Date(formData.startTime) >= new Date(formData.endTime)) {
-      newErrors.endTime = 'End time must be after start time';
+      newErrors.endTime = 'Waktu selesai harus setelah waktu mulai';
     }
     if (formData.stock < 0) {
-      newErrors.stock = 'Stock cannot be negative';
+      newErrors.stock = 'Stok tidak boleh negatif';
     }
 
     setErrors(newErrors);
@@ -138,9 +140,24 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     e.preventDefault();
 
     if (!validateForm()) {
-      push('Please fix the errors in the form', 'error');
+      push('Mohon perbaiki error pada form', 'error');
       return;
     }
+
+    // Get selected product name for confirmation
+    const selectedProduct = products.find(p => p.id === formData.productId);
+    const productName = selectedProduct?.name || 'Unknown';
+    const actionText = flashSale ? 'menyimpan perubahan' : 'membuat';
+
+    const confirmed = await showConfirm({
+      title: flashSale ? 'Konfirmasi Perubahan' : 'Konfirmasi Buat Flash Sale',
+      message: `Anda akan ${actionText} flash sale untuk produk "${productName}".\n\nHarga Sale: Rp ${formData.salePrice.toLocaleString('id-ID')}\nDiskon: ${discount}%\n\nLanjutkan?`,
+      type: 'info',
+      confirmText: flashSale ? 'Simpan' : 'Buat Flash Sale',
+      cancelText: 'Batal'
+    });
+
+    if (!confirmed) return;
 
     try {
       setLoading(true);
@@ -159,17 +176,17 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
       if (flashSale) {
         // Update existing flash sale
         await ProductService.updateFlashSale(flashSale.id, apiData);
-        push('Flash sale updated successfully', 'success');
+        push('Flash sale berhasil diperbarui', 'success');
       } else {
         // Create new flash sale
         await ProductService.createFlashSale(apiData);
-        push('Flash sale created successfully', 'success');
+        push('Flash sale berhasil dibuat', 'success');
       }
 
       onSuccess();
       onClose();
     } catch (error: any) {
-      push(error.message || 'Failed to save flash sale', 'error');
+      push(error.message || 'Gagal menyimpan flash sale', 'error');
     } finally {
       setLoading(false);
     }
@@ -202,15 +219,17 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     : 0;
 
   return (
-    <div className="admin-modal-overlay">
-      <div className="admin-modal-content max-w-2xl">
-        {/* Header */}
-        <div className="admin-modal-header">
-          <h2 className="admin-modal-title">
-            {flashSale ? 'Edit Flash Sale' : 'Create Flash Sale'}
-          </h2>
-          <button
-            onClick={onClose}
+    <>
+      <ConfirmModal />
+      <div className="admin-modal-overlay">
+        <div className="admin-modal-content max-w-2xl">
+          {/* Header */}
+          <div className="admin-modal-header">
+            <h2 className="admin-modal-title">
+              {flashSale ? 'Edit Flash Sale' : 'Buat Flash Sale Baru'}
+            </h2>
+            <button
+              onClick={onClose}
             className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
             aria-label="Close modal"
           >
@@ -223,7 +242,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
           {/* Product Selection */}
           <div>
             <label className="admin-label">
-              Product <span className="text-red-500">*</span>
+              Produk <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.productId}
@@ -231,7 +250,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               className={`admin-select ${errors.productId ? 'border-red-500' : ''}`}
               disabled={loadingProducts || !!flashSale}
             >
-              <option value="">Select a product...</option>
+              <option value="">Pilih produk...</option>
               {products.map(product => (
                 <option key={product.id} value={product.id}>
                   {product.name} - Rp {product.price?.toLocaleString()}
@@ -247,7 +266,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="admin-label">
-                Original Price <span className="text-red-500">*</span>
+                Harga Asli <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -263,7 +282,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
 
             <div>
               <label className="admin-label">
-                Sale Price <span className="text-red-500">*</span>
+                Harga Sale <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -277,7 +296,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               )}
               {discount > 0 && (
                 <p className="text-sm text-green-600 mt-1">
-                  💰 {discount}% discount
+                  💰 Diskon {discount}%
                 </p>
               )}
             </div>
@@ -287,7 +306,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="admin-label">
-                Start Time <span className="text-red-500">*</span>
+                Waktu Mulai <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -302,7 +321,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
 
             <div>
               <label className="admin-label">
-                End Time <span className="text-red-500">*</span>
+                Waktu Selesai <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -318,7 +337,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
 
           {/* Stock */}
           <div>
-            <label className="admin-label">Stock Quantity</label>
+            <label className="admin-label">Jumlah Stok</label>
             <input
               type="number"
               value={formData.stock}
@@ -331,7 +350,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               <p className="text-sm text-red-600 mt-1">{errors.stock}</p>
             )}
             <p className="text-sm text-slate-400 mt-1">
-              Leave as 0 for unlimited stock
+              Biarkan 0 untuk stok tidak terbatas
             </p>
           </div>
 
@@ -345,7 +364,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               className="w-5 h-5 text-pink-600 border-slate-300 rounded focus:ring-pink-500"
             />
             <label htmlFor="isActive" className="text-sm font-medium text-slate-300">
-              Active (Flash sale will be visible to customers)
+              Aktif (Flash sale akan ditampilkan ke pelanggan)
             </label>
           </div>
 
@@ -357,7 +376,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              Batal
             </AdminButton>
             <AdminButton
               type="submit"
@@ -365,12 +384,13 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               disabled={loading || loadingProducts}
               icon={loading ? <Loader className="animate-spin" size={18} /> : <Save size={18} />}
             >
-              {loading ? 'Saving...' : flashSale ? 'Update' : 'Create'}
+              {loading ? 'Menyimpan...' : flashSale ? 'Simpan' : 'Buat'}
             </AdminButton>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

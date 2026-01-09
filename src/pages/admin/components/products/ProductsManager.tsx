@@ -144,6 +144,8 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
   };
 
   const handleQuickUpdate = async (id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>) => {
+    // CRITICAL DEBUG - This should always show
+    alert(`🔧 DEBUG: Updating product ${id} with price: ${fields.price}`);
     console.log('[ProductsManager.handleQuickUpdate] Starting update for product:', id, 'fields:', fields);
     
     // Store original values for rollback
@@ -197,6 +199,7 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
         console.error('[ProductsManager.handleQuickUpdate] ⚠️ WARNING: Price mismatch!');
         console.error('  Requested:', fields.price);
         console.error('  Returned:', updated.price);
+        alert(`⚠️ PRICE MISMATCH! Requested: ${fields.price}, Got back: ${updated.price}`);
       }
       
       // Success - update with actual data from database
@@ -210,6 +213,7 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
       setTimeout(() => {
         const checkProduct = products.find(p => p.id === id);
         console.log('[ProductsManager.handleQuickUpdate] After setState - product in list:', checkProduct?.price);
+        alert(`✅ Final check: Price in state is now ${checkProduct?.price}`);
       }, 100);
       
       push('✅ Product updated successfully', 'success');

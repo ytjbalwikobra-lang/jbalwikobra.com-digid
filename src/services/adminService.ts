@@ -2574,10 +2574,6 @@ export const adminService = {
     is_active?: boolean;
     has_rental?: boolean;
   }): Promise<Product> {
-    if (!supabase) {
-      throw new Error('Supabase client not available');
-    }
-    
     // Ensure image field is updated if images array is provided
     const updateData: any = { ...data };
     if (data.images && data.images.length > 0) {
@@ -2589,6 +2585,44 @@ export const adminService = {
       updated_at: new Date().toISOString()
     };
     
+    console.log('[adminService.updateProduct] Updating product:', id, 'with data:', finalUpdateData);
+    
+    // Try API endpoint first (has service role to bypass RLS)
+    try {
+      const sessionToken = localStorage.getItem('session_token') || '';
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          action: 'updateProduct',
+          id,
+          fields: finalUpdateData
+        })
+      });
+      
+      const result = await response.json();
+      console.log('[adminService.updateProduct] API response:', result);
+      
+      if (response.ok && result.success && result.data) {
+        console.log('[adminService.updateProduct] ✅ Updated via API');
+        adminCache.invalidatePattern('admin:products');
+        return result.data as Product;
+      } else {
+        console.warn('[adminService.updateProduct] API failed:', result.error || 'Unknown error');
+      }
+    } catch (apiError) {
+      console.warn('[adminService.updateProduct] API call failed:', apiError);
+    }
+    
+    // Fallback to direct Supabase (may be blocked by RLS)
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
+    console.log('[adminService.updateProduct] Falling back to direct Supabase');
     const { data: products, error } = await supabase
       .from('products')
       .update(finalUpdateData)

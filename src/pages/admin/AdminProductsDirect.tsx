@@ -7,8 +7,8 @@ import { AdminButton } from './components/ui/AdminButton';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import '../../styles/admin-design-system-v3.css';
 
-// VERSION MARKER - Change this to verify deployment
-const CODE_VERSION = 'V4-INLINE-TEST';
+// VERSION MARKER
+const CODE_VERSION = 'V5-FINAL';
 
 interface Product {
   id: string;
@@ -143,7 +143,6 @@ const AdminProductsDirect: React.FC = () => {
 
   // START EDITING
   const startEditing = (product: Product) => {
-    alert(`INLINE EDIT STARTED - V3\nProduct: ${product.name}\nCurrent Price: ${product.price}\n\nNow you can edit inline!`);
     console.log('✏️ [DIRECT] Start editing:', product.id, product.name, 'tier:', product.tier_name);
     setEditingId(product.id);
     setEditPrice(String(product.price || 0));
@@ -163,10 +162,7 @@ const AdminProductsDirect: React.FC = () => {
     const newPrice = parseFloat(editPrice) || 0;
     const newStock = parseInt(editStock) || 0;
 
-    // FORCE ALERT TO CONFIRM CODE IS RUNNING
-    alert(`SAVE EDIT V2-API\nProduct ID: ${editingId}\nNew Price: ${newPrice}\nNew Stock: ${newStock}\n\nClick OK to continue...`);
-
-    console.error('🚀🚀🚀 SAVE EDIT CALLED - VERSION:', CODE_VERSION);
+    console.log('💾 [DIRECT] SAVE EDIT CALLED - VERSION:', CODE_VERSION);
     console.log('💾 [DIRECT] Saving:', { id: editingId, price: newPrice, stock: newStock });
 
     if (newPrice < 0 || newStock < 0) {
@@ -203,9 +199,6 @@ const AdminProductsDirect: React.FC = () => {
 
       const result = await response.json();
       console.log('📡 [DIRECT] API response:', result);
-      
-      // ALERT API RESULT
-      alert(`API RESPONSE:\nSuccess: ${result.success}\nData: ${JSON.stringify(result.data || result.error, null, 2)}`);
 
       if (!response.ok || !result.success) {
         console.error('❌ [DIRECT] API error:', result);

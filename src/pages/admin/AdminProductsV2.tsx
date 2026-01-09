@@ -465,10 +465,15 @@ const AdminProductsV2: React.FC = () => {
         return;
       }
 
-      // Update with actual DB data
-      console.log('✅ [AdminProductsV2] Updating state with DB data:', updated);
+      // Update with ONLY price and stock from DB - preserve other fields like tier
+      console.log('✅ [AdminProductsV2] Updating state with price/stock only:', { price: updated.price, stock: updated.stock });
       setProducts(prev => prev.map(p => 
-        p.id === productId ? { ...p, ...updated } : p
+        p.id === productId ? { 
+          ...p, 
+          price: updated.price, 
+          stock: updated.stock,
+          updated_at: updated.updated_at 
+        } : p
       ));
       
       // Update cache instead of clearing it to prevent reload from overwriting
@@ -479,7 +484,12 @@ const AdminProductsV2: React.FC = () => {
         const updatedCache = new Map(cachedResults);
         updatedCache.set(cacheKey, {
           ...cachedResult,
-          data: cachedResult.data.map(p => p.id === productId ? { ...p, ...updated } : p),
+          data: cachedResult.data.map(p => p.id === productId ? { 
+            ...p, 
+            price: updated.price, 
+            stock: updated.stock,
+            updated_at: updated.updated_at 
+          } : p),
           timestamp: Date.now() // Refresh timestamp
         });
         setCachedResults(updatedCache);
@@ -514,40 +524,39 @@ const AdminProductsV2: React.FC = () => {
       
       push('✅ Product updated successfully', 'success');
       
-      // Force reload from DB to verify the update persisted
-      console.log('🔄 [AdminProductsV2] Force reloading from database...');
+      // Verify the update persisted in DB (but don't overwrite local state with all fields)
+      console.log('🔄 [AdminProductsV2] Verifying DB update...');
       setTimeout(async () => {
         try {
           if (!supabase) return;
           const { data: freshProduct, error } = await supabase
             .from('products')
-            .select('*')
+            .select('id, price, stock')
             .eq('id', productId)
             .single();
           
           if (error) throw error;
           
-          console.log('🔄 [AdminProductsV2] Fresh DB data:', freshProduct);
+          console.log('🔄 [AdminProductsV2] Fresh DB values:', freshProduct);
           
           if (freshProduct) {
-            // Update state with fresh DB data
-            setProducts(prev => prev.map(p => 
-              p.id === productId ? { ...p, ...freshProduct } : p
-            ));
-            
-            // Verify values match
+            // Verify values match - if they do, just update price/stock without touching other fields
             if (freshProduct.price !== priceNum || freshProduct.stock !== stockNum) {
-              console.error('❌ [AdminProductsV2] MISMATCH after reload!', {
+              console.error('❌ [AdminProductsV2] MISMATCH after save!', {
                 expected: { price: priceNum, stock: stockNum },
                 actual: { price: freshProduct.price, stock: freshProduct.stock }
               });
-              push('⚠️ Database shows different values!', 'error');
+              push('⚠️ Database shows different values! Update may have been blocked.', 'error');
+              // Rollback to original
+              setProducts(prev => prev.map(p => 
+                p.id === productId ? originalProduct : p
+              ));
             } else {
-              console.log('✅ [AdminProductsV2] Values verified in database');
+              console.log('✅ [AdminProductsV2] Values verified in database!');
             }
           }
         } catch (err) {
-          console.error('🔄 [AdminProductsV2] Failed to verify:', err);
+          console.error('🔄 [AdminProductsV2] Verification failed:', err);
         }
       }, 1000);
       

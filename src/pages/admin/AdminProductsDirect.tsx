@@ -8,7 +8,7 @@ import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import '../../styles/admin-design-system-v3.css';
 
 // VERSION MARKER - Change this to verify deployment
-const CODE_VERSION = 'DIRECT-2026-01-09-V1';
+const CODE_VERSION = 'DIRECT-2026-01-09-V2-API';
 
 interface Product {
   id: string;
@@ -162,6 +162,9 @@ const AdminProductsDirect: React.FC = () => {
     const newPrice = parseFloat(editPrice) || 0;
     const newStock = parseInt(editStock) || 0;
 
+    // FORCE ALERT TO CONFIRM CODE IS RUNNING
+    alert(`SAVE EDIT V2-API\nProduct ID: ${editingId}\nNew Price: ${newPrice}\nNew Stock: ${newStock}\n\nClick OK to continue...`);
+
     console.error('🚀🚀🚀 SAVE EDIT CALLED - VERSION:', CODE_VERSION);
     console.log('💾 [DIRECT] Saving:', { id: editingId, price: newPrice, stock: newStock });
 
@@ -199,6 +202,9 @@ const AdminProductsDirect: React.FC = () => {
 
       const result = await response.json();
       console.log('📡 [DIRECT] API response:', result);
+      
+      // ALERT API RESULT
+      alert(`API RESPONSE:\nSuccess: ${result.success}\nData: ${JSON.stringify(result.data || result.error, null, 2)}`);
 
       if (!response.ok || !result.success) {
         console.error('❌ [DIRECT] API error:', result);

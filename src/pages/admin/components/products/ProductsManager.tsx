@@ -7,8 +7,8 @@ import { useToast } from '../../../../components/Toast';
 const cn = (...c: any[]) => c.filter(Boolean).join(' ');
 // Use the newer ProductFilters if needed; legacy ProductsFilters retained but not re-exported
 // import { ProductFilters } from './ProductFilters';
-// Removed card/list/grid UI in favor of unified table view
-import { ProductTable } from './ProductTable';
+// Using ProductsTable (with 's') for inline editing support
+import { ProductsTable } from './ProductsTable';
 import { t } from '../../../../i18n/strings';
 
 interface ProductsManagerProps {
@@ -144,8 +144,6 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
   };
 
   const handleQuickUpdate = async (id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>) => {
-    // CRITICAL DEBUG - This should always show
-    alert(`🔧 DEBUG: Updating product ${id} with price: ${fields.price}`);
     console.log('[ProductsManager.handleQuickUpdate] Starting update for product:', id, 'fields:', fields);
     
     // Store original values for rollback
@@ -155,73 +153,31 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
       return;
     }
     
-    console.log('[ProductsManager.handleQuickUpdate] Original product data:', {
-      id: originalProduct.id,
-      name: originalProduct.name,
-      price: originalProduct.price,
-      stock: originalProduct.stock,
-      is_active: originalProduct.is_active
-    });
+    console.log('[ProductsManager.handleQuickUpdate] Original:', originalProduct.price, '→ New:', fields.price);
     
     // Optimistic update
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...fields } : p));
-    console.log('[ProductsManager.handleQuickUpdate] Applied optimistic update with:', fields);
     
     try {
       const updated = await adminService.updateProductFields(id, fields);
       
-      console.log('[ProductsManager.handleQuickUpdate] API returned:', updated);
-      console.log('[ProductsManager.handleQuickUpdate] Type:', typeof updated, 'Is null?', updated === null);
-      
       if (!updated) {
-        console.error('[ProductsManager.handleQuickUpdate] ❌ Update returned NULL');
-        
-        // Rollback optimistic update
+        console.error('[ProductsManager.handleQuickUpdate] ❌ Update failed');
         setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
         push('❌ Failed to update product. Check console for details.', 'error');
-        
         return;
       }
       
-      // Log what we're about to set
-      console.log('[ProductsManager.handleQuickUpdate] ✅ Setting updated product:', {
-        id: updated.id,
-        name: updated.name,
-        price: updated.price,
-        stock: updated.stock,
-        is_active: updated.is_active
-      });
+      console.log('[ProductsManager.handleQuickUpdate] ✅ Updated successfully. DB price:', updated.price);
       
-      console.log('[ProductsManager.handleQuickUpdate] Requested price:', fields.price, 'Returned price:', updated.price);
-      
-      // Verify the data matches
-      if (fields.price !== undefined && updated.price !== fields.price) {
-        console.error('[ProductsManager.handleQuickUpdate] ⚠️ WARNING: Price mismatch!');
-        console.error('  Requested:', fields.price);
-        console.error('  Returned:', updated.price);
-        alert(`⚠️ PRICE MISMATCH! Requested: ${fields.price}, Got back: ${updated.price}`);
-      }
-      
-      // Success - update with actual data from database
-      setProducts(prev => {
-        const newList = prev.map(p => p.id === id ? { ...p, ...updated } : p);
-        console.log('[ProductsManager.handleQuickUpdate] Updated products list');
-        return newList;
-      });
-      
-      // Verify it was set correctly
-      setTimeout(() => {
-        const checkProduct = products.find(p => p.id === id);
-        console.log('[ProductsManager.handleQuickUpdate] After setState - product in list:', checkProduct?.price);
-        alert(`✅ Final check: Price in state is now ${checkProduct?.price}`);
-      }, 100);
-      
+      // Update with actual data from database
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
       push('✅ Product updated successfully', 'success');
       
     } catch (error: any) {
-      console.error('[ProductsManager.handleQuickUpdate] Update threw error:', error);
+      console.error('[ProductsManager.handleQuickUpdate] Error:', error);
       setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
-      push(`❌ Failed to update product: ${error?.message}`, 'error');
+      push(`❌ Failed: ${error?.message}`, 'error');
     }
   };
 
@@ -347,20 +303,18 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
             </div>
           )}
 
-      {/* Products Table (Design System) */}
-      <ProductTable
+      {/* Products Table with Inline Editing */}
+      <ProductsTable
         products={paginatedProducts}
         loading={loading}
         currentPage={currentPage}
-        totalPages={Math.ceil(filteredProducts.length / itemsPerPage) || 1}
-        itemsPerPage={itemsPerPage}
-        totalProducts={filteredProducts.length}
+        pageSize={itemsPerPage}
+        totalItems={filteredProducts.length}
         onPageChange={(page) => setCurrentPage(page)}
-        onItemsPerPageChange={(n) => { setItemsPerPage(n); setCurrentPage(1); }}
+        onView={handleViewProduct}
         onEdit={handleEditProduct}
-        onArchive={(p)=> handleQuickUpdate(p.id, { is_active: false })}
-        onRestore={(p)=> handleQuickUpdate(p.id, { is_active: true })}
         onDelete={handleDeleteProduct}
+        onQuickUpdate={handleQuickUpdate}
       />
 
   {/* Pagination moved into ProductTable footer */}

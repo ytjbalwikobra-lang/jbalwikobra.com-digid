@@ -7,9 +7,6 @@ import { AdminButton } from './components/ui/AdminButton';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import '../../styles/admin-design-system-v3.css';
 
-// VERSION MARKER
-const CODE_VERSION = 'V5-FINAL';
-
 interface Product {
   id: string;
   name: string;
@@ -66,11 +63,6 @@ const AdminProductsDirect: React.FC = () => {
 
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
-
-  // Log version on mount
-  useEffect(() => {
-    console.error('🚀🚀🚀 AdminProductsDirect LOADED - VERSION:', CODE_VERSION);
-  }, []);
 
   // LOAD PRODUCTS - DIRECT FROM DATABASE
   const loadProducts = useCallback(async () => {
@@ -143,7 +135,6 @@ const AdminProductsDirect: React.FC = () => {
 
   // START EDITING
   const startEditing = (product: Product) => {
-    console.log('✏️ [DIRECT] Start editing:', product.id, product.name, 'tier:', product.tier_name);
     setEditingId(product.id);
     setEditPrice(String(product.price || 0));
     setEditStock(String(product.stock || 0));
@@ -161,23 +152,52 @@ const AdminProductsDirect: React.FC = () => {
 
     const newPrice = parseFloat(editPrice) || 0;
     const newStock = parseInt(editStock) || 0;
+    const originalProduct = products.find(p => p.id === editingId);
 
-    console.log('💾 [DIRECT] SAVE EDIT CALLED - VERSION:', CODE_VERSION);
-    console.log('💾 [DIRECT] Saving:', { id: editingId, price: newPrice, stock: newStock });
+    if (!originalProduct) {
+      push('Product not found', 'error');
+      return;
+    }
 
     if (newPrice < 0 || newStock < 0) {
-      push('Price and stock must be positive', 'error');
+      push('Harga dan stok harus positif', 'error');
+      return;
+    }
+
+    // Check if values actually changed
+    const priceChanged = originalProduct.price !== newPrice;
+    const stockChanged = originalProduct.stock !== newStock;
+
+    if (!priceChanged && !stockChanged) {
+      cancelEditing();
+      return;
+    }
+
+    // Show confirmation dialog
+    const changes: string[] = [];
+    if (priceChanged) {
+      changes.push(`Harga: ${formatPrice(originalProduct.price)} \u2192 ${formatPrice(newPrice)}`);
+    }
+    if (stockChanged) {
+      changes.push(`Stok: ${originalProduct.stock || 0} \u2192 ${newStock}`);
+    }
+
+    const confirmed = await showConfirm({
+      title: 'Konfirmasi Perubahan',
+      message: `Anda akan mengubah "${originalProduct.name}":\n\n${changes.join('\n')}\n\nLanjutkan?`,
+      type: 'info',
+      confirmText: 'Simpan',
+      cancelText: 'Batal'
+    });
+
+    if (!confirmed) {
       return;
     }
 
     setSaving(true);
 
     try {
-      // Get original product for rollback
-      const originalProduct = products.find(p => p.id === editingId);
-      
-      // STEP 1: Use API endpoint which has service role (bypasses RLS)
-      console.log('📡 [DIRECT] Calling API to update...');
+      // Use API endpoint which has service role (bypasses RLS)
       const sessionToken = localStorage.getItem('session_token') || '';
       
       const response = await fetch('/api/admin', {
@@ -198,16 +218,13 @@ const AdminProductsDirect: React.FC = () => {
       });
 
       const result = await response.json();
-      console.log('📡 [DIRECT] API response:', result);
 
       if (!response.ok || !result.success) {
-        console.error('❌ [DIRECT] API error:', result);
-        push(`❌ Update failed: ${result.error || 'Unknown error'}`, 'error');
+        push(`Gagal menyimpan: ${result.error || 'Unknown error'}`, 'error');
         return;
       }
 
-      // STEP 2: Verify by reading back from DB
-      console.log('🔍 [DIRECT] Verifying update...');
+      // Verify by reading back from DB
       if (supabase) {
         const { data: verifyData } = await supabase
           .from('products')
@@ -215,20 +232,13 @@ const AdminProductsDirect: React.FC = () => {
           .eq('id', editingId)
           .single();
 
-        console.log('🔍 [DIRECT] Verification result:', verifyData);
-
         if (verifyData && (verifyData.price !== newPrice || verifyData.stock !== newStock)) {
-          console.error('❌ [DIRECT] MISMATCH after API update!', {
-            expected: { price: newPrice, stock: newStock },
-            actual: { price: verifyData.price, stock: verifyData.stock }
-          });
-          push('⚠️ Database mismatch! Update may have been blocked.', 'error');
+          push('Database tidak cocok! Perubahan mungkin diblokir.', 'error');
           return;
         }
       }
 
-      // STEP 3: Update ONLY price and stock in local state - PRESERVE tier_name!
-      console.log('✅ [DIRECT] Updating local state (preserving tier)...');
+      // Update ONLY price and stock in local state - PRESERVE tier_name!
       setProducts(prev => prev.map(p => 
         p.id === editingId 
           ? { 
@@ -239,12 +249,11 @@ const AdminProductsDirect: React.FC = () => {
           : p
       ));
 
-      push('✅ Updated successfully!', 'success');
+      push('Perubahan berhasil disimpan!', 'success');
       cancelEditing();
 
     } catch (err: any) {
-      console.error('❌ [DIRECT] Save error:', err);
-      push(`Failed: ${err.message}`, 'error');
+      push(`Gagal menyimpan: ${err.message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -255,6 +264,17 @@ const AdminProductsDirect: React.FC = () => {
     if (!supabase) return;
 
     const newStatus = !product.is_active;
+    const action = newStatus ? 'mengaktifkan' : 'menonaktifkan';
+
+    const confirmed = await showConfirm({
+      title: `Konfirmasi ${newStatus ? 'Aktifkan' : 'Nonaktifkan'}`,
+      message: `Anda akan ${action} produk "${product.name}".\n\nLanjutkan?`,
+      type: 'info',
+      confirmText: newStatus ? 'Aktifkan' : 'Nonaktifkan',
+      cancelText: 'Batal'
+    });
+
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -268,20 +288,20 @@ const AdminProductsDirect: React.FC = () => {
         p.id === product.id ? { ...p, is_active: newStatus } : p
       ));
 
-      push(newStatus ? 'Product activated' : 'Product deactivated', 'success');
+      push(newStatus ? 'Produk diaktifkan' : 'Produk dinonaktifkan', 'success');
     } catch (err: any) {
-      push(`Failed: ${err.message}`, 'error');
+      push(`Gagal: ${err.message}`, 'error');
     }
   };
 
   // Archive product
   const archiveProduct = async (product: Product) => {
     const confirmed = await showConfirm({
-      title: 'Archive Product',
-      message: `Archive "${product.name}"?`,
+      title: 'Arsipkan Produk',
+      message: `Anda akan mengarsipkan produk "${product.name}".\n\nProduk yang diarsipkan tidak akan ditampilkan di katalog.\n\nLanjutkan?`,
       type: 'warning',
-      confirmText: 'Archive',
-      cancelText: 'Cancel'
+      confirmText: 'Arsipkan',
+      cancelText: 'Batal'
     });
 
     if (!confirmed || !supabase) return;
@@ -298,9 +318,9 @@ const AdminProductsDirect: React.FC = () => {
       if (error) throw error;
 
       setProducts(prev => prev.filter(p => p.id !== product.id));
-      push('Product archived', 'success');
+      push('Produk berhasil diarsipkan', 'success');
     } catch (err: any) {
-      push(`Failed: ${err.message}`, 'error');
+      push(`Gagal: ${err.message}`, 'error');
     }
   };
 
@@ -320,7 +340,7 @@ const AdminProductsDirect: React.FC = () => {
   const handleModalSuccess = async () => {
     await loadProducts();
     setModalState({ isOpen: false, mode: 'create', product: null });
-    push(modalState.mode === 'create' ? 'Product created!' : 'Product updated!', 'success');
+    push(modalState.mode === 'create' ? 'Produk berhasil dibuat!' : 'Produk berhasil diperbarui!', 'success');
   };
 
   return (
@@ -332,10 +352,10 @@ const AdminProductsDirect: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Package className="w-7 h-7 text-pink-400" />
-            Products Management
+            Manajemen Produk
           </h1>
           <p className="text-gray-400 mt-1">
-            {filteredProducts.length} products • Code: {CODE_VERSION}
+            {filteredProducts.length} produk
           </p>
         </div>
         <div className="flex gap-2">

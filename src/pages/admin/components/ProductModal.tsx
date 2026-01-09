@@ -3,6 +3,7 @@ import { X, Plus, Trash2, Move, Loader, ImageIcon, Save } from 'lucide-react';
 import { adminService, Product } from '../../../services/adminService';
 import { uploadFiles, deletePublicUrls, UploadResult } from '../../../services/storageService';
 import { useToast } from '../../../components/Toast';
+import { useAdminConfirm } from './ui/AdminConfirmModal';
 import { formatNumberID, parseNumberID } from '../../../utils/helpers';
 import { supabase } from '../../../services/supabase';
 
@@ -58,6 +59,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   onSuccess
 }) => {
   const { push } = useToast();
+  const { showConfirm, ConfirmModal } = useAdminConfirm();
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -190,17 +192,29 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
     // Validation
     if (!formData.name.trim()) {
-      push('Product name is required', 'error');
+      push('Nama produk harus diisi', 'error');
       return;
     }
     if (!formData.price || formData.price <= 0) {
-      push('Product price must be greater than 0', 'error');
+      push('Harga produk harus lebih dari 0', 'error');
       return;
     }
     if (imageItems.length === 0 && !formData.image) {
-      push('At least one product image is required', 'error');
+      push('Minimal satu gambar produk diperlukan', 'error');
       return;
     }
+
+    // Show confirmation dialog
+    const actionText = mode === 'create' ? 'membuat' : 'menyimpan perubahan';
+    const confirmed = await showConfirm({
+      title: mode === 'create' ? 'Konfirmasi Buat Produk' : 'Konfirmasi Simpan Perubahan',
+      message: `Anda akan ${actionText} produk "${formData.name}".\n\nHarga: Rp ${formData.price.toLocaleString('id-ID')}\nStok: ${formData.stock}\n\nLanjutkan?`,
+      type: 'info',
+      confirmText: mode === 'create' ? 'Buat Produk' : 'Simpan',
+      cancelText: 'Batal'
+    });
+
+    if (!confirmed) return;
 
     setLoading(true);
     try {
@@ -219,10 +233,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
       let savedProduct: any;
       if (mode === 'create') {
         savedProduct = await adminService.createProduct(submitData);
-        push('Product created successfully!', 'success');
+        push('Produk berhasil dibuat!', 'success');
       } else if (mode === 'edit' && product) {
         savedProduct = await adminService.updateProduct(product.id, submitData);
-        push('Product updated successfully!', 'success');
+        push('Produk berhasil diperbarui!', 'success');
       }
 
       // Save rental options if provided
@@ -403,11 +417,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
   if (!isOpen) return null;
 
   const isReadOnly = mode === 'view';
-  const title = mode === 'create' ? 'Add New Product' : mode === 'edit' ? 'Edit Product' : 'Product Details';
+  const title = mode === 'create' ? 'Tambah Produk Baru' : mode === 'edit' ? 'Edit Produk' : 'Detail Produk';
 
   return (
-    <div className="admin-modal-overlay">
-      <div className="admin-modal-content max-w-2xl">
+    <>
+      <ConfirmModal />
+      <div className="admin-modal-overlay">
+        <div className="admin-modal-content max-w-2xl">
         {/* Header */}
         <div className="admin-modal-header">
           <h2 className="admin-modal-title">
@@ -878,13 +894,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  <span>{mode === 'create' ? 'Create Product' : 'Save Changes'}</span>
+                  <span>{mode === 'create' ? 'Buat Produk' : 'Simpan'}</span>
                 </button>
               </div>
             )}
           </form>
         </div>
       </div>
+    </>
   );
 };
 

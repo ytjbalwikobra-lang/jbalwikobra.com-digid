@@ -390,12 +390,15 @@ class AdminService {
           if (result.success && result.data) {
             console.log('[adminService.updateProductFields] ✅ Updated via API:', result.data);
             return result.data as Product;
+          } else {
+            console.warn('[adminService.updateProductFields] API returned non-success:', result);
           }
         } else {
-          console.warn('[adminService.updateProductFields] API route failed, falling back to direct update');
+          const errorText = await response.text();
+          console.warn('[adminService.updateProductFields] API HTTP error:', response.status, errorText);
         }
       } catch (apiError) {
-        console.warn('[adminService.updateProductFields] API call failed, falling back to direct update:', apiError);
+        console.warn('[adminService.updateProductFields] API call failed:', apiError);
       }
 
       // Fallback to direct Supabase update
@@ -405,7 +408,7 @@ class AdminService {
         throw new Error('Supabase client not available');
       }
       
-      console.log('[adminService.updateProductFields] Using direct Supabase:', supabaseAdmin ? 'admin client' : 'anon client');
+      console.log('[adminService.updateProductFields] Using direct Supabase fallback');
       
       const updatePayload: any = { ...fields, updated_at: new Date().toISOString() };
       const { data, error } = await client
@@ -423,37 +426,29 @@ class AdminService {
       
       if (!data || data.length === 0) {
         console.error('[adminService.updateProductFields] ❌ UPDATE BLOCKED - Empty response');
-        console.error('[adminService.updateProductFields] RLS likely blocked the update');
-        console.error('[adminService.updateProductFields] Check: /DEBUG_ADMIN_AUTH.sql for auth setup');
         return null;
       }
       
       // Verify the update
       const updatedProduct = data[0];
-      let updateVerified = true;
       
       if (fields.price !== undefined && updatedProduct.price !== fields.price) {
         console.error('[adminService.updateProductFields] ❌ Price mismatch! Expected:', fields.price, 'Got:', updatedProduct.price);
-        updateVerified = false;
+        return null;
       }
       if (fields.stock !== undefined && updatedProduct.stock !== fields.stock) {
         console.error('[adminService.updateProductFields] ❌ Stock mismatch! Expected:', fields.stock, 'Got:', updatedProduct.stock);
-        updateVerified = false;
+        return null;
       }
       if (fields.is_active !== undefined && updatedProduct.is_active !== fields.is_active) {
         console.error('[adminService.updateProductFields] ❌ Status mismatch! Expected:', fields.is_active, 'Got:', updatedProduct.is_active);
-        updateVerified = false;
-      }
-      
-      if (!updateVerified) {
-        console.error('[adminService.updateProductFields] ❌ UPDATE FAILED - Data mismatch');
         return null;
       }
       
-      console.log('[adminService.updateProductFields] ✅ Success! Updated product:', updatedProduct);
+      console.log('[adminService.updateProductFields] ✅ Success via fallback:', updatedProduct);
       return updatedProduct as Product;
     } catch (e) {
-      console.error('[adminService.updateProductFields] error', e);
+      console.error('[adminService.updateProductFields] Caught error:', e);
       return null;
     }
   }

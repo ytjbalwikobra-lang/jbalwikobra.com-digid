@@ -155,9 +155,9 @@ const AdminProductsDirect: React.FC = () => {
     setEditStock('');
   };
 
-  // SAVE EDIT - DIRECT TO DATABASE
+  // SAVE EDIT - USE API ENDPOINT (has service role to bypass RLS)
   const saveEdit = async () => {
-    if (!editingId || !supabase) return;
+    if (!editingId) return;
 
     const newPrice = parseFloat(editPrice) || 0;
     const newStock = parseInt(editStock) || 0;
@@ -173,47 +173,58 @@ const AdminProductsDirect: React.FC = () => {
     setSaving(true);
 
     try {
-      // Get original product for tier preservation
+      // Get original product for rollback
       const originalProduct = products.find(p => p.id === editingId);
       
-      // STEP 1: Update ONLY price and stock in database
-      console.log('📡 [DIRECT] Updating database...');
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ 
-          price: newPrice, 
-          stock: newStock,
-          updated_at: new Date().toISOString()
+      // STEP 1: Use API endpoint which has service role (bypasses RLS)
+      console.log('📡 [DIRECT] Calling API to update...');
+      const sessionToken = localStorage.getItem('session_token') || '';
+      
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          action: 'updateProduct',
+          id: editingId,
+          fields: {
+            price: newPrice,
+            stock: newStock,
+            updated_at: new Date().toISOString()
+          }
         })
-        .eq('id', editingId);
+      });
 
-      if (updateError) {
-        console.error('❌ [DIRECT] Update error:', updateError);
-        throw updateError;
-      }
+      const result = await response.json();
+      console.log('📡 [DIRECT] API response:', result);
 
-      // STEP 2: Verify by reading back
-      console.log('🔍 [DIRECT] Verifying update...');
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('products')
-        .select('id, price, stock')
-        .eq('id', editingId)
-        .single();
-
-      if (verifyError) {
-        console.error('❌ [DIRECT] Verify error:', verifyError);
-        throw verifyError;
-      }
-
-      console.log('🔍 [DIRECT] Verification result:', verifyData);
-
-      if (verifyData.price !== newPrice || verifyData.stock !== newStock) {
-        console.error('❌ [DIRECT] MISMATCH!', {
-          expected: { price: newPrice, stock: newStock },
-          actual: { price: verifyData.price, stock: verifyData.stock }
-        });
-        push('⚠️ Update blocked by database! Check RLS policies.', 'error');
+      if (!response.ok || !result.success) {
+        console.error('❌ [DIRECT] API error:', result);
+        push(`❌ Update failed: ${result.error || 'Unknown error'}`, 'error');
         return;
+      }
+
+      // STEP 2: Verify by reading back from DB
+      console.log('🔍 [DIRECT] Verifying update...');
+      if (supabase) {
+        const { data: verifyData } = await supabase
+          .from('products')
+          .select('id, price, stock')
+          .eq('id', editingId)
+          .single();
+
+        console.log('🔍 [DIRECT] Verification result:', verifyData);
+
+        if (verifyData && (verifyData.price !== newPrice || verifyData.stock !== newStock)) {
+          console.error('❌ [DIRECT] MISMATCH after API update!', {
+            expected: { price: newPrice, stock: newStock },
+            actual: { price: verifyData.price, stock: verifyData.stock }
+          });
+          push('⚠️ Database mismatch! Update may have been blocked.', 'error');
+          return;
+        }
       }
 
       // STEP 3: Update ONLY price and stock in local state - PRESERVE tier_name!

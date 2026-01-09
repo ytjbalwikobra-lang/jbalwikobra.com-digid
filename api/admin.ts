@@ -399,6 +399,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'unknown';
     if (!rateLimit(ip + ':' + action)) return respond(res, 429, { error: 'rate_limited' });
 
+    if (req.method === 'POST' && action === 'updateProduct') {
+      if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+      
+      try {
+        const { id, fields } = req.body || {};
+        
+        if (!id || !fields) {
+          return respond(res, 400, { error: 'missing_parameters' });
+        }
+        
+        console.log('[Admin API] Updating product:', id, 'with fields:', fields);
+        
+        // Use service role to bypass RLS
+        const { data, error } = await supabase
+          .from('products')
+          .update(fields)
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('[Admin API] Product update error:', error);
+          return respond(res, 400, { error: 'update_failed', details: error.message });
+        }
+        
+        console.log('[Admin API] ✅ Product updated successfully');
+        return respond(res, 200, { success: true, data });
+      } catch (e: any) {
+        console.error('[Admin API] Exception:', e);
+        return respond(res, 500, { error: 'internal_error', message: e.message });
+      }
+    }
+
     if (req.method === 'POST' && action === 'update-order') {
       const { orderId, status } = req.body || {};
       const ok = await updateOrderStatus(orderId, status);

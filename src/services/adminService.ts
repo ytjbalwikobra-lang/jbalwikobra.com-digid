@@ -2,6 +2,7 @@ import { adminCache } from './adminCache';
 import { ordersService } from './ordersService';
 import { dbRowToDomainProduct } from './mappers/productMapper';
 import { supabase } from './supabase';
+import { supabaseAdmin } from './supabaseAdmin';
 
 // Use the shared authenticated Supabase client
 // This ensures RLS policies work correctly with the user's session
@@ -367,14 +368,47 @@ class AdminService {
   // Product quick updates (inline table actions)
   async updateProductFields(id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>): Promise<Product | null> {
     try {
-      if (!supabase) {
+      console.log('[adminService.updateProductFields] Updating product:', id, 'with fields:', fields);
+      
+      // Try to use the admin API first (has service role access)
+      try {
+        const response = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}`
+          },
+          body: JSON.stringify({
+            action: 'updateProduct',
+            id,
+            fields: { ...fields, updated_at: new Date().toISOString() }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            console.log('[adminService.updateProductFields] ✅ Updated via API:', result.data);
+            return result.data as Product;
+          }
+        } else {
+          console.warn('[adminService.updateProductFields] API route failed, falling back to direct update');
+        }
+      } catch (apiError) {
+        console.warn('[adminService.updateProductFields] API call failed, falling back to direct update:', apiError);
+      }
+
+      // Fallback to direct Supabase update
+      const client = supabaseAdmin || supabase;
+      
+      if (!client) {
         throw new Error('Supabase client not available');
       }
       
-      console.log('[adminService.updateProductFields] Updating product:', id, 'with fields:', fields);
+      console.log('[adminService.updateProductFields] Using direct Supabase:', supabaseAdmin ? 'admin client' : 'anon client');
       
       const updatePayload: any = { ...fields, updated_at: new Date().toISOString() };
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('products')
         .update(updatePayload)
         .eq('id', id)
@@ -387,37 +421,32 @@ class AdminService {
         throw error;
       }
       
-      // If RLS blocks the UPDATE, Supabase returns empty array (no error)
-      // This is the most common case when is_admin() returns false
       if (!data || data.length === 0) {
-        console.error('[adminService.updateProductFields] ❌ UPDATE BLOCKED - Supabase returned empty array');
-        console.error('[adminService.updateProductFields] This means RLS policy denied the update');
-        console.error('[adminService.updateProductFields] Most likely cause: is_admin() function returns false');
-        console.error('[adminService.updateProductFields] Fix: Run migration in /supabase/migrations/20260107_fix_is_admin_function_for_users_table.sql');
-        console.error('[adminService.updateProductFields] Or see: /FIX_PRICE_EDITING_DIAGNOSTIC.md');
+        console.error('[adminService.updateProductFields] ❌ UPDATE BLOCKED - Empty response');
+        console.error('[adminService.updateProductFields] RLS likely blocked the update');
+        console.error('[adminService.updateProductFields] Check: /DEBUG_ADMIN_AUTH.sql for auth setup');
         return null;
       }
       
-      // Verify the update actually happened by checking if the returned data matches what we tried to update
+      // Verify the update
       const updatedProduct = data[0];
       let updateVerified = true;
       
       if (fields.price !== undefined && updatedProduct.price !== fields.price) {
-        console.error('[adminService.updateProductFields] ❌ Price mismatch! Requested:', fields.price, 'Got:', updatedProduct.price);
+        console.error('[adminService.updateProductFields] ❌ Price mismatch! Expected:', fields.price, 'Got:', updatedProduct.price);
         updateVerified = false;
       }
       if (fields.stock !== undefined && updatedProduct.stock !== fields.stock) {
-        console.error('[adminService.updateProductFields] ❌ Stock mismatch! Requested:', fields.stock, 'Got:', updatedProduct.stock);
+        console.error('[adminService.updateProductFields] ❌ Stock mismatch! Expected:', fields.stock, 'Got:', updatedProduct.stock);
         updateVerified = false;
       }
       if (fields.is_active !== undefined && updatedProduct.is_active !== fields.is_active) {
-        console.error('[adminService.updateProductFields] ❌ Active status mismatch! Requested:', fields.is_active, 'Got:', updatedProduct.is_active);
+        console.error('[adminService.updateProductFields] ❌ Status mismatch! Expected:', fields.is_active, 'Got:', updatedProduct.is_active);
         updateVerified = false;
       }
       
       if (!updateVerified) {
-        console.error('[adminService.updateProductFields] ❌ UPDATE FAILED - Returned data does not match requested update');
-        console.error('[adminService.updateProductFields] This should not happen - possible race condition or RLS issue');
+        console.error('[adminService.updateProductFields] ❌ UPDATE FAILED - Data mismatch');
         return null;
       }
       

@@ -421,6 +421,9 @@ const AdminProductsV2: React.FC = () => {
     const stockNum = parseInt(editingStock) || 0;
 
     console.log('💾 [AdminProductsV2] Parsed values:', { priceNum, stockNum });
+    
+    // Force console visibility
+    alert(`DEBUG: Attempting to update product ${productId}\nNew Price: ${priceNum}\nNew Stock: ${stockNum}\n\nCheck console for details!`);
 
     // Find original product for rollback
     const originalProduct = products.find(p => p.id === productId);
@@ -473,6 +476,33 @@ const AdminProductsV2: React.FC = () => {
         });
         setCachedResults(updatedCache);
       }
+      
+      // VERIFY: Query database directly to check actual value
+      console.log('🔍 [AdminProductsV2] Verifying database value...');
+      setTimeout(async () => {
+        try {
+          if (!supabase) {
+            console.warn('🔍 [AdminProductsV2] Supabase not available for verification');
+            return;
+          }
+          const { data: dbProduct } = await supabase
+            .from('products')
+            .select('id, price, stock')
+            .eq('id', productId)
+            .single();
+          console.log('🔍 [AdminProductsV2] Database verification:', {
+            expected: { price: priceNum, stock: stockNum },
+            actual: dbProduct,
+            match: dbProduct?.price === priceNum && dbProduct?.stock === stockNum
+          });
+          if (dbProduct && (dbProduct.price !== priceNum || dbProduct.stock !== stockNum)) {
+            console.error('❌ [AdminProductsV2] DATABASE MISMATCH DETECTED!');
+            push('⚠️ Warning: Database value differs from expected!', 'error');
+          }
+        } catch (err) {
+          console.error('🔍 [AdminProductsV2] Verification failed:', err);
+        }
+      }, 500);
       
       push('✅ Product updated successfully', 'success')
     } catch (error: any) {

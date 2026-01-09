@@ -368,7 +368,7 @@ class AdminService {
   // Product quick updates (inline table actions)
   async updateProductFields(id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>): Promise<Product | null> {
     try {
-      console.log('[adminService.updateProductFields] Updating product:', id, 'with fields:', fields);
+      console.error('🚨 [adminService.updateProductFields] STARTING UPDATE:', { id, fields });
       
       // Try to use the admin API first (has service role access)
       try {
@@ -387,11 +387,12 @@ class AdminService {
 
         if (response.ok) {
           const result = await response.json();
+          console.error('🚨 [adminService.updateProductFields] API RESPONSE:', result);
           if (result.success && result.data) {
-            console.log('[adminService.updateProductFields] ✅ Updated via API:', result.data);
+            console.error('🚨 [adminService.updateProductFields] ✅ UPDATED VIA API:', result.data);
             return result.data as Product;
           } else {
-            console.warn('[adminService.updateProductFields] API returned non-success:', result);
+            console.error('🚨 [adminService.updateProductFields] API returned non-success:', result);
           }
         } else {
           const errorText = await response.text();

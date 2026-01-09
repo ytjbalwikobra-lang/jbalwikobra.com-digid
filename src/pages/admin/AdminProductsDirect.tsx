@@ -8,7 +8,7 @@ import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import '../../styles/admin-design-system-v3.css';
 
 // VERSION MARKER - Change this to verify deployment
-const CODE_VERSION = 'DIRECT-2026-01-09-V2-API';
+const CODE_VERSION = 'V3-FIX-JAN9';
 
 interface Product {
   id: string;

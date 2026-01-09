@@ -429,6 +429,11 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const saveInlineEdit = async (productId: string) => {
+    // VERSION CHECK - Remove this after confirming new code is running
+    const VERSION = 'V2-2026-01-09-FIX';
+    console.error('🚀🚀🚀 SAVE INLINE EDIT CALLED - VERSION:', VERSION);
+    alert(`SAVE CALLED - Version ${VERSION}\nProduct: ${productId}\nPrice: ${editingPrice}\nStock: ${editingStock}`);
+    
     console.log('💾 [AdminProductsV2] saveInlineEdit called:', {
       productId,
       editingPrice,

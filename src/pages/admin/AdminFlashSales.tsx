@@ -228,8 +228,10 @@ const AdminFlashSales: React.FC = () => {
                 <tbody>
                   {flashSales.map((sale) => {
                     const timeStatus = getTimeStatus(sale);
-                    const discount = sale.originalPrice > 0
-                      ? Math.round(((sale.originalPrice - sale.salePrice) / sale.originalPrice) * 100)
+                    const originalPrice = sale.originalPrice || 0;
+                    const salePrice = sale.salePrice || 0;
+                    const discount = originalPrice > 0
+                      ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
                       : 0;
 
                     return (
@@ -246,11 +248,11 @@ const AdminFlashSales: React.FC = () => {
                         </td>
                         <td>
                           <div>
-                            <p className="font-bold text-pink-600">
-                              Rp {sale.salePrice.toLocaleString()}
+                            <p className="font-bold text-pink-400">
+                              Rp {(sale.salePrice || 0).toLocaleString('id-ID')}
                             </p>
                             <p className="text-sm text-slate-500 line-through">
-                              Rp {sale.originalPrice.toLocaleString()}
+                              Rp {(sale.originalPrice || 0).toLocaleString('id-ID')}
                             </p>
                             <span className="inline-block mt-1 px-2 py-0.5 bg-pink-100 text-pink-700 text-xs font-semibold rounded">
                               {discount}% OFF

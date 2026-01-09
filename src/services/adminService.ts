@@ -390,6 +390,8 @@ class AdminService {
           console.error('🚨 [adminService.updateProductFields] API RESPONSE:', result);
           if (result.success && result.data) {
             console.error('🚨 [adminService.updateProductFields] ✅ UPDATED VIA API:', result.data);
+            // CRITICAL: Invalidate admin cache so next loadProducts gets fresh data
+            adminCache.invalidatePattern('admin:products');
             return result.data as Product;
           } else {
             console.error('🚨 [adminService.updateProductFields] API returned non-success:', result);
@@ -447,6 +449,8 @@ class AdminService {
       }
       
       console.log('[adminService.updateProductFields] ✅ Success via fallback:', updatedProduct);
+      // CRITICAL: Invalidate admin cache so next loadProducts gets fresh data
+      adminCache.invalidatePattern('admin:products');
       return updatedProduct as Product;
     } catch (e) {
       console.error('[adminService.updateProductFields] Caught error:', e);

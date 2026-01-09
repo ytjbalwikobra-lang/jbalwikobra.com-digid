@@ -163,6 +163,13 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const loadProducts = async (forceRefresh = false) => {
+    // CRITICAL: Don't reload if we're currently updating
+    if (isUpdating && !forceRefresh) {
+      console.log('🛑 [AdminProductsV2] loadProducts BLOCKED - isUpdating is true');
+      return;
+    }
+    
+    console.log('📦 [AdminProductsV2] loadProducts starting...', { forceRefresh, isUpdating });
     setLoading(true);
     setError('');
     
@@ -173,11 +180,14 @@ const AdminProductsV2: React.FC = () => {
       
       // Use cache if available and not expired (unless forced refresh)
       if (!forceRefresh && cachedResult && (now - cachedResult.timestamp) < CACHE_DURATION) {
+        console.log('📦 [AdminProductsV2] Using cached data, count:', cachedResult.data.length);
         setProducts(cachedResult.data);
         setTotalCount(cachedResult.count);
         setLoading(false);
         return;
       }
+
+      console.log('📦 [AdminProductsV2] Fetching fresh data from server...');
 
       // Build optimized query parameters for server-side filtering
       const queryParams: any = {
@@ -205,6 +215,7 @@ const AdminProductsV2: React.FC = () => {
       });
       setCachedResults(newCachedResults);
 
+      console.log('📦 [AdminProductsV2] Setting products from server, count:', productsResult.data.length);
       setProducts(productsResult.data);
       setTotalCount(productsResult.count);
       setProductStats(statsResult);

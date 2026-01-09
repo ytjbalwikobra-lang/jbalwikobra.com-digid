@@ -47,6 +47,7 @@ const AdminProductsV2: React.FC = () => {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>('');
   const [editingStock, setEditingStock] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -336,12 +337,18 @@ const AdminProductsV2: React.FC = () => {
 
   // Reload when search or major filters change (with caching)
   useEffect(() => {
+    // Don't reload if we're currently updating a product
+    if (isUpdating) {
+      console.log('🛑 [AdminProductsV2] Blocking auto-reload during update');
+      return;
+    }
+    
     const timeoutId = setTimeout(() => {
       loadProducts(); // This will use cache if available
     }, 300); // Debounce to avoid too many requests while typing
 
     return () => clearTimeout(timeoutId);
-  }, [filters.search, filters.status]); // Only reload for search and status changes
+  }, [filters.search, filters.status, isUpdating]); // Only reload for search and status changes
 
   // Reset to first page when filters or items per page change
   useEffect(() => {
@@ -417,18 +424,18 @@ const AdminProductsV2: React.FC = () => {
       editingStock
     });
     
+    setIsUpdating(true); // Block any auto-reloads
+    
     const priceNum = parseFloat(editingPrice.replace(/[^0-9.]/g, '')) || 0;
     const stockNum = parseInt(editingStock) || 0;
 
     console.log('💾 [AdminProductsV2] Parsed values:', { priceNum, stockNum });
-    
-    // Force console visibility
-    alert(`DEBUG: Attempting to update product ${productId}\nNew Price: ${priceNum}\nNew Stock: ${stockNum}\n\nCheck console for details!`);
 
     // Find original product for rollback
     const originalProduct = products.find(p => p.id === productId);
     if (!originalProduct) {
       push('Product not found', 'error');
+      setIsUpdating(false);
       return;
     }
 
@@ -454,6 +461,7 @@ const AdminProductsV2: React.FC = () => {
           p.id === productId ? originalProduct : p
         ));
         push('❌ Failed to update. Database update was blocked.', 'error');
+        setIsUpdating(false);
         return;
       }
 
@@ -504,13 +512,57 @@ const AdminProductsV2: React.FC = () => {
         }
       }, 500);
       
-      push('✅ Product updated successfully', 'success')
+      push('✅ Product updated successfully', 'success');
+      
+      // Force reload from DB to verify the update persisted
+      console.log('🔄 [AdminProductsV2] Force reloading from database...');
+      setTimeout(async () => {
+        try {
+          if (!supabase) return;
+          const { data: freshProduct, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', productId)
+            .single();
+          
+          if (error) throw error;
+          
+          console.log('🔄 [AdminProductsV2] Fresh DB data:', freshProduct);
+          
+          if (freshProduct) {
+            // Update state with fresh DB data
+            setProducts(prev => prev.map(p => 
+              p.id === productId ? { ...p, ...freshProduct } : p
+            ));
+            
+            // Verify values match
+            if (freshProduct.price !== priceNum || freshProduct.stock !== stockNum) {
+              console.error('❌ [AdminProductsV2] MISMATCH after reload!', {
+                expected: { price: priceNum, stock: stockNum },
+                actual: { price: freshProduct.price, stock: freshProduct.stock }
+              });
+              push('⚠️ Database shows different values!', 'error');
+            } else {
+              console.log('✅ [AdminProductsV2] Values verified in database');
+            }
+          }
+        } catch (err) {
+          console.error('🔄 [AdminProductsV2] Failed to verify:', err);
+        }
+      }, 1000);
+      
+      // Keep blocking reloads for 3 seconds after successful update
+      setTimeout(() => {
+        console.log('✅ [AdminProductsV2] Allowing auto-reload again');
+        setIsUpdating(false);
+      }, 3000);
     } catch (error: any) {
       // Rollback on error
       setProducts(prev => prev.map(p => 
         p.id === productId ? originalProduct : p
       ));
       push(`❌ Failed: ${error.message}`, 'error');
+      setIsUpdating(false);
     }
   };
 

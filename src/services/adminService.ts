@@ -2467,7 +2467,7 @@ export const adminService = {
     const images = data.images && data.images.length > 0 ? data.images : [];
     const image = images.length > 0 ? images[0] : (data.image || 'https://via.placeholder.com/400x300?text=No+Image');
     
-    const { data: product, error } = await supabase
+    const { data: products, error } = await supabase
       .from('products')
       .insert({
         ...data,
@@ -2478,15 +2478,18 @@ export const adminService = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .select()
-      .single();
+      .select();
 
     if (error) throw error;
+    
+    if (!products || products.length === 0) {
+      throw new Error('Product creation failed');
+    }
     
     // Clear cache
     adminCache.clear();
     
-    return product as Product;
+    return products[0] as Product;
   },
 
   async updateProduct(id: string, data: {
@@ -2513,21 +2516,24 @@ export const adminService = {
       updateData.image = data.images[0];
     }
     
-    const { data: product, error } = await supabase
+    const { data: products, error } = await supabase
       .from('products')
       .update({
         ...updateData,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
 
     if (error) throw error;
+    
+    if (!products || products.length === 0) {
+      throw new Error('Product not found or update failed');
+    }
     
     // Clear cache
     adminCache.clear();
     
-    return product as Product;
+    return products[0] as Product;
   }
 };

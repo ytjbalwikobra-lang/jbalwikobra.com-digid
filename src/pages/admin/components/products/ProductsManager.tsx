@@ -153,52 +153,71 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
       return;
     }
     
+    console.log('[ProductsManager.handleQuickUpdate] Original product data:', {
+      id: originalProduct.id,
+      name: originalProduct.name,
+      price: originalProduct.price,
+      stock: originalProduct.stock,
+      is_active: originalProduct.is_active
+    });
+    
     // Optimistic update
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...fields } : p));
+    console.log('[ProductsManager.handleQuickUpdate] Applied optimistic update with:', fields);
     
     try {
       const updated = await adminService.updateProductFields(id, fields);
       
+      console.log('[ProductsManager.handleQuickUpdate] API returned:', updated);
+      console.log('[ProductsManager.handleQuickUpdate] Type:', typeof updated, 'Is null?', updated === null);
+      
       if (!updated) {
-        console.error('[ProductsManager.handleQuickUpdate] Update returned null - likely failed due to RLS permissions');
+        console.error('[ProductsManager.handleQuickUpdate] ❌ Update returned NULL');
         
         // Rollback optimistic update
         setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
-        
-        // Show error message
-        push('❌ Failed to update product. Check if you have admin permissions. See console for details.', 'error');
-        
-        // Log additional debug info
-        console.error('[ProductsManager.handleQuickUpdate] TROUBLESHOOTING:');
-        console.error('1. Check if is_admin() function is properly configured in Supabase');
-        console.error('2. Run this query in Supabase SQL Editor: SELECT public.is_admin(auth.uid());');
-        console.error('3. Verify RLS policies on products table allow admin updates');
-        console.error('4. See /FIX_PRICE_EDITING_GUIDE.md for detailed fix instructions');
+        push('❌ Failed to update product. Check console for details.', 'error');
         
         return;
       }
       
+      // Log what we're about to set
+      console.log('[ProductsManager.handleQuickUpdate] ✅ Setting updated product:', {
+        id: updated.id,
+        name: updated.name,
+        price: updated.price,
+        stock: updated.stock,
+        is_active: updated.is_active
+      });
+      
+      console.log('[ProductsManager.handleQuickUpdate] Requested price:', fields.price, 'Returned price:', updated.price);
+      
+      // Verify the data matches
+      if (fields.price !== undefined && updated.price !== fields.price) {
+        console.error('[ProductsManager.handleQuickUpdate] ⚠️ WARNING: Price mismatch!');
+        console.error('  Requested:', fields.price);
+        console.error('  Returned:', updated.price);
+      }
+      
       // Success - update with actual data from database
-      console.log('[ProductsManager.handleQuickUpdate] Update successful:', updated);
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
+      setProducts(prev => {
+        const newList = prev.map(p => p.id === id ? { ...p, ...updated } : p);
+        console.log('[ProductsManager.handleQuickUpdate] Updated products list');
+        return newList;
+      });
+      
+      // Verify it was set correctly
+      setTimeout(() => {
+        const checkProduct = products.find(p => p.id === id);
+        console.log('[ProductsManager.handleQuickUpdate] After setState - product in list:', checkProduct?.price);
+      }, 100);
+      
       push('✅ Product updated successfully', 'success');
       
     } catch (error: any) {
       console.error('[ProductsManager.handleQuickUpdate] Update threw error:', error);
-      
-      // Rollback optimistic update
       setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
-      
-      // Show detailed error message
-      const errorMsg = error?.message || 'Unknown error';
-      push(`❌ Failed to update product: ${errorMsg}`, 'error');
-      
-      console.error('[ProductsManager.handleQuickUpdate] Error details:', {
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      });
+      push(`❌ Failed to update product: ${error?.message}`, 'error');
     }
   };
 

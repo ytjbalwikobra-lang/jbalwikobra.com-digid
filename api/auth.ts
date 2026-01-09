@@ -329,16 +329,16 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Verify Turnstile token if configured
-    const clientIp = getClientIP(req);
-    const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
-    
-    if (turnstileSecretKey && turnstile_token) {
-      const isValidTurnstile = await verifyTurnstileToken(turnstile_token, clientIp);
-      if (!isValidTurnstile) {
-        return res.status(400).json({ error: 'Captcha verification failed. Please try again.' });
-      }
-    }
+    // Turnstile verification DISABLED
+    // const clientIp = getClientIP(req);
+    // const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
+    // 
+    // if (turnstileSecretKey && turnstile_token) {
+    //   const isValidTurnstile = await verifyTurnstileToken(turnstile_token, clientIp);
+    //   if (!isValidTurnstile) {
+    //     return res.status(400).json({ error: 'Captcha verification failed. Please try again.' });
+    //   }
+    // }
 
     // Check if user already exists
     const { data: existingUsers } = await getSupabase()

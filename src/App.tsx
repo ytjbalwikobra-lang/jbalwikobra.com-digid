@@ -264,14 +264,15 @@ function App() {
 
   return (
     <ErrorBoundary>
-      {/* Cloudflare Turnstile verification - enabled when maintenance mode is off */}
-      {!isMaintenanceMode && process.env.REACT_APP_TURNSTILE_SITE_KEY ? (
+      {/* Cloudflare Turnstile verification - DISABLED */}
+      {/* {!isMaintenanceMode && process.env.REACT_APP_TURNSTILE_SITE_KEY ? (
         <FirstVisitVerification>
           <AppContent />
         </FirstVisitVerification>
       ) : (
         <AppContent />
-      )}
+      )} */}
+      <AppContent />
     </ErrorBoundary>
   );
 }

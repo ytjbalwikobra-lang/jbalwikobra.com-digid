@@ -131,7 +131,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .single();
         
         if (orderDetail) {
-          productName = orderDetail.products?.name || productName;
+          // Handle both array and single object response from Supabase
+          const product = Array.isArray(orderDetail.products) 
+            ? orderDetail.products[0] 
+            : orderDetail.products;
+          productName = product?.name || productName;
           orderType = orderDetail.order_type || 'purchase';
           rentalDuration = orderDetail.rental_duration || '';
         }

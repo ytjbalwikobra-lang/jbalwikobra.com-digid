@@ -387,31 +387,42 @@ class AdminService {
         throw error;
       }
       
-      // If RLS blocks SELECT after UPDATE, fetch the product separately
+      // If RLS blocks the UPDATE, Supabase returns empty array (no error)
+      // This is the most common case when is_admin() returns false
       if (!data || data.length === 0) {
-        console.warn('[adminService.updateProductFields] RLS may have blocked SELECT after UPDATE, fetching separately');
-        const { data: fetchedProducts, error: fetchError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', id)
-          .limit(1);
-        
-        if (fetchError) {
-          console.error('[adminService.updateProductFields] Fetch error:', fetchError);
-          throw fetchError;
-        }
-        
-        if (!fetchedProducts || fetchedProducts.length === 0) {
-          console.error('[adminService.updateProductFields] No product found with id:', id);
-          return null;
-        }
-        
-        console.log('[adminService.updateProductFields] Success! Fetched product:', fetchedProducts[0]);
-        return fetchedProducts[0] as Product;
+        console.error('[adminService.updateProductFields] ❌ UPDATE BLOCKED - Supabase returned empty array');
+        console.error('[adminService.updateProductFields] This means RLS policy denied the update');
+        console.error('[adminService.updateProductFields] Most likely cause: is_admin() function returns false');
+        console.error('[adminService.updateProductFields] Fix: Run migration in /supabase/migrations/20260107_fix_is_admin_function_for_users_table.sql');
+        console.error('[adminService.updateProductFields] Or see: /FIX_PRICE_EDITING_DIAGNOSTIC.md');
+        return null;
       }
       
-      console.log('[adminService.updateProductFields] Success! Updated product:', data[0]);
-      return data[0] as Product;
+      // Verify the update actually happened by checking if the returned data matches what we tried to update
+      const updatedProduct = data[0];
+      let updateVerified = true;
+      
+      if (fields.price !== undefined && updatedProduct.price !== fields.price) {
+        console.error('[adminService.updateProductFields] ❌ Price mismatch! Requested:', fields.price, 'Got:', updatedProduct.price);
+        updateVerified = false;
+      }
+      if (fields.stock !== undefined && updatedProduct.stock !== fields.stock) {
+        console.error('[adminService.updateProductFields] ❌ Stock mismatch! Requested:', fields.stock, 'Got:', updatedProduct.stock);
+        updateVerified = false;
+      }
+      if (fields.is_active !== undefined && updatedProduct.is_active !== fields.is_active) {
+        console.error('[adminService.updateProductFields] ❌ Active status mismatch! Requested:', fields.is_active, 'Got:', updatedProduct.is_active);
+        updateVerified = false;
+      }
+      
+      if (!updateVerified) {
+        console.error('[adminService.updateProductFields] ❌ UPDATE FAILED - Returned data does not match requested update');
+        console.error('[adminService.updateProductFields] This should not happen - possible race condition or RLS issue');
+        return null;
+      }
+      
+      console.log('[adminService.updateProductFields] ✅ Success! Updated product:', updatedProduct);
+      return updatedProduct as Product;
     } catch (e) {
       console.error('[adminService.updateProductFields] error', e);
       return null;

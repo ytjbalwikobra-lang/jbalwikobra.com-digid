@@ -43,6 +43,11 @@ const AdminProductsV2: React.FC = () => {
     priceRange: 'all'
   });
 
+  // Inline editing states
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingPrice, setEditingPrice] = useState<string>('');
+  const [editingStock, setEditingStock] = useState<string>('');
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -383,6 +388,99 @@ const AdminProductsV2: React.FC = () => {
       // Rollback on failure
       setProducts(prev);
       push(`Failed to update product status: ${error.message}`, 'error');
+    }
+  };
+
+  // Inline editing handlers
+  const startEditingPrice = (product: Product) => {
+    console.log('🖊️ [AdminProductsV2] Starting edit for product:', {
+      id: product.id,
+      name: product.name,
+      currentPrice: product.price,
+      currentStock: product.stock
+    });
+    setEditingProductId(product.id);
+    setEditingPrice(String(product.price || 0));
+    setEditingStock(String(product.stock || 0));
+  };
+
+  const cancelEditing = () => {
+    setEditingProductId(null);
+    setEditingPrice('');
+    setEditingStock('');
+  };
+
+  const saveInlineEdit = async (productId: string) => {
+    console.log('💾 [AdminProductsV2] saveInlineEdit called:', {
+      productId,
+      editingPrice,
+      editingStock
+    });
+    
+    const priceNum = parseFloat(editingPrice.replace(/[^0-9.]/g, '')) || 0;
+    const stockNum = parseInt(editingStock) || 0;
+
+    console.log('💾 [AdminProductsV2] Parsed values:', { priceNum, stockNum });
+
+    // Find original product for rollback
+    const originalProduct = products.find(p => p.id === productId);
+    if (!originalProduct) {
+      push('Product not found', 'error');
+      return;
+    }
+
+    // Optimistic update
+    console.log('⚡ [AdminProductsV2] Applying optimistic update...');
+    setProducts(prev => prev.map(p => 
+      p.id === productId ? { ...p, price: priceNum, stock: stockNum } : p
+    ));
+    cancelEditing();
+
+    console.log('📡 [AdminProductsV2] Calling adminService.updateProductFields...');
+    try {
+      const updated = await adminService.updateProductFields(productId, {
+        price: priceNum,
+        stock: stockNum
+      });
+
+      console.log('📡 [AdminProductsV2] API response:', updated);
+
+      if (!updated) {
+        // Rollback
+        setProducts(prev => prev.map(p => 
+          p.id === productId ? originalProduct : p
+        ));
+        push('❌ Failed to update. Database update was blocked.', 'error');
+        return;
+      }
+
+      // Update with actual DB data
+      console.log('✅ [AdminProductsV2] Updating state with DB data:', updated);
+      setProducts(prev => prev.map(p => 
+        p.id === productId ? { ...p, ...updated } : p
+      ));
+      
+      // Update cache instead of clearing it to prevent reload from overwriting
+      console.log('💾 [AdminProductsV2] Updating cache...');
+      const cacheKey = getCacheKey(filters);
+      const cachedResult = cachedResults.get(cacheKey);
+      if (cachedResult) {
+        const updatedCache = new Map(cachedResults);
+        updatedCache.set(cacheKey, {
+          ...cachedResult,
+          data: cachedResult.data.map(p => p.id === productId ? { ...p, ...updated } : p),
+          timestamp: Date.now() // Refresh timestamp
+        });
+        setCachedResults(updatedCache);
+      }
+      
+      push('✅ Product updated successfully', 'success')
+    } catch (error: any) {
+      // Rollback on error
+      setProducts(prev => prev.map(p => 
+        p.id === productId ? originalProduct : p
+      ));
+      push(`❌ Failed: ${error.message}`, 'error');
     }
   };
 
@@ -875,16 +973,68 @@ const AdminProductsV2: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 w-36">
-                        <div className="space-y-1">
-                          <div className="text-lg font-bold text-white whitespace-nowrap">
-                            {formatPrice(product.price)}
-                          </div>
-                          {product.original_price && product.original_price > (product.price || 0) && (
-                            <div className="text-sm text-gray-400 line-through whitespace-nowrap">
-                              {formatPrice(product.original_price)}
+                        {editingProductId === product.id ? (
+                          <div className="space-y-2">
+                            <input
+                              type="number"
+                              value={editingPrice}
+                              onChange={(e) => setEditingPrice(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveInlineEdit(product.id);
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              className="w-full px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
+                              placeholder="Price"
+                              autoFocus
+                            />
+                            <input
+                              type="number"
+                              value={editingStock}
+                              onChange={(e) => setEditingStock(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveInlineEdit(product.id);
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              className="w-full px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
+                              placeholder="Stock"
+                            />
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => saveInlineEdit(product.id)}
+                                className="flex-1 px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                className="flex-1 px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
+                              >
+                                Cancel
+                              </button>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        ) : (
+                          <div 
+                            className="space-y-1 cursor-pointer hover:bg-gray-800/50 rounded p-1 transition-colors"
+                            onClick={() => startEditingPrice(product)}
+                            title="Click to edit price and stock"
+                          >
+                            <div className="text-lg font-bold text-white whitespace-nowrap">
+                              {formatPrice(product.price)}
+                            </div>
+                            {product.original_price && product.original_price > (product.price || 0) && (
+                              <div className="text-sm text-gray-400 line-through whitespace-nowrap">
+                                {formatPrice(product.original_price)}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-400">
+                              Stock: {product.stock || 0}
+                            </div>
+                            <div className="text-xs text-pink-400 opacity-0 group-hover:opacity-100">
+                              Click to edit
+                            </div>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">

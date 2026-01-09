@@ -2462,10 +2462,17 @@ export const adminService = {
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
+    
+    // Ensure images array is set and image field uses first image or placeholder
+    const images = data.images && data.images.length > 0 ? data.images : [];
+    const image = images.length > 0 ? images[0] : (data.image || 'https://via.placeholder.com/400x300?text=No+Image');
+    
     const { data: product, error } = await supabase
       .from('products')
       .insert({
         ...data,
+        image,
+        images,
         stock: data.stock || 1,
         is_active: data.is_active !== undefined ? data.is_active : true,
         created_at: new Date().toISOString(),
@@ -2499,10 +2506,17 @@ export const adminService = {
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
+    
+    // Ensure image field is updated if images array is provided
+    const updateData: any = { ...data };
+    if (data.images && data.images.length > 0) {
+      updateData.image = data.images[0];
+    }
+    
     const { data: product, error } = await supabase
       .from('products')
       .update({
-        ...data,
+        ...updateData,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

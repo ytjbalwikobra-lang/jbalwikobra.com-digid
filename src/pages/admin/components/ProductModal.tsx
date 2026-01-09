@@ -188,13 +188,28 @@ const ProductModal: React.FC<ProductModalProps> = ({
     e.preventDefault();
     if (mode === 'view') return;
 
+    // Validation
+    if (!formData.name.trim()) {
+      push('Product name is required', 'error');
+      return;
+    }
+    if (!formData.price || formData.price <= 0) {
+      push('Product price must be greater than 0', 'error');
+      return;
+    }
+    if (imageItems.length === 0 && !formData.image) {
+      push('At least one product image is required', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
       // Prepare data with current images
+      const images = imageItems.map(item => item.url);
       const submitData = {
         ...formData,
-        images: imageItems.map(item => item.url),
-        image: imageItems.length > 0 ? imageItems[0].url : formData.image,
+        images,
+        image: images.length > 0 ? images[0] : (formData.image || undefined),
       };
 
       // Remove the rentalOptions field to avoid database schema errors

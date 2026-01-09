@@ -90,7 +90,6 @@ const AdminProductsDirect: React.FC = () => {
           image, images, tier_id, category_id, game_title_id,
           created_at, updated_at, archived_at, has_rental,
           tiers(id, name),
-          categories(id, name),
           game_titles(id, name)
         `)
         .is('archived_at', null)
@@ -98,10 +97,25 @@ const AdminProductsDirect: React.FC = () => {
 
       if (error) throw error;
 
+      // Fetch categories separately to avoid ambiguous relationship
+      const categoryIds = [...new Set((data || []).filter(p => p.category_id).map(p => p.category_id))];
+      let categoriesMap = new Map();
+      
+      if (categoryIds.length > 0) {
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('id, name')
+          .in('id', categoryIds);
+        
+        if (categories) {
+          categories.forEach((cat: any) => categoriesMap.set(cat.id, cat.name));
+        }
+      }
+
       const mapped = (data || []).map((row: any) => ({
         ...row,
         tier_name: row.tiers?.name || null,
-        category_name: row.categories?.name || null,
+        category_name: categoriesMap.get(row.category_id) || null,
         game_title_name: row.game_titles?.name || null,
       }));
 

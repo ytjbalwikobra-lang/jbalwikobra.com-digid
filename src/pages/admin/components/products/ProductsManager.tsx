@@ -3,6 +3,7 @@ import { adminService, Product } from '../../../../services/adminService';
 import { ProductService } from '../../../../services/productService';
 import { useCategories } from '../../../../hooks/useCategories';
 import { Search, Filter, Plus, Package, AlertCircle, Loader2 } from 'lucide-react';
+import { useToast } from '../../../../components/Toast';
 const cn = (...c: any[]) => c.filter(Boolean).join(' ');
 // Use the newer ProductFilters if needed; legacy ProductsFilters retained but not re-exported
 // import { ProductFilters } from './ProductFilters';
@@ -21,6 +22,7 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
   const [filteredProductsState, setFilteredProductsState] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { push } = useToast();
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,13 +144,61 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
   };
 
   const handleQuickUpdate = async (id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...fields } : p)); // optimistic
-    const updated = await adminService.updateProductFields(id, fields);
-    if (!updated) {
-      // revert on failure
-      await loadProducts();
-    } else {
+    console.log('[ProductsManager.handleQuickUpdate] Starting update for product:', id, 'fields:', fields);
+    
+    // Store original values for rollback
+    const originalProduct = products.find(p => p.id === id);
+    if (!originalProduct) {
+      push('Product not found', 'error');
+      return;
+    }
+    
+    // Optimistic update
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...fields } : p));
+    
+    try {
+      const updated = await adminService.updateProductFields(id, fields);
+      
+      if (!updated) {
+        console.error('[ProductsManager.handleQuickUpdate] Update returned null - likely failed due to RLS permissions');
+        
+        // Rollback optimistic update
+        setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
+        
+        // Show error message
+        push('❌ Failed to update product. Check if you have admin permissions. See console for details.', 'error');
+        
+        // Log additional debug info
+        console.error('[ProductsManager.handleQuickUpdate] TROUBLESHOOTING:');
+        console.error('1. Check if is_admin() function is properly configured in Supabase');
+        console.error('2. Run this query in Supabase SQL Editor: SELECT public.is_admin(auth.uid());');
+        console.error('3. Verify RLS policies on products table allow admin updates');
+        console.error('4. See /FIX_PRICE_EDITING_GUIDE.md for detailed fix instructions');
+        
+        return;
+      }
+      
+      // Success - update with actual data from database
+      console.log('[ProductsManager.handleQuickUpdate] Update successful:', updated);
       setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
+      push('✅ Product updated successfully', 'success');
+      
+    } catch (error: any) {
+      console.error('[ProductsManager.handleQuickUpdate] Update threw error:', error);
+      
+      // Rollback optimistic update
+      setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
+      
+      // Show detailed error message
+      const errorMsg = error?.message || 'Unknown error';
+      push(`❌ Failed to update product: ${errorMsg}`, 'error');
+      
+      console.error('[ProductsManager.handleQuickUpdate] Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
     }
   };
 

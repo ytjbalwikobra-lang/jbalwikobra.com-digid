@@ -66,15 +66,16 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     if (isOpen) {
       loadProducts();
       if (flashSale) {
-        // Edit mode - populate form
+        // Edit mode - populate form (handle both camelCase and snake_case)
+        const sale = flashSale as any;
         setFormData({
-          productId: flashSale.productId,
-          salePrice: flashSale.salePrice,
-          originalPrice: flashSale.originalPrice,
-          startTime: flashSale.startTime,
-          endTime: flashSale.endTime,
-          stock: flashSale.stock,
-          isActive: flashSale.isActive
+          productId: sale.productId ?? sale.product_id ?? '',
+          salePrice: sale.salePrice ?? sale.sale_price ?? 0,
+          originalPrice: sale.originalPrice ?? sale.original_price ?? 0,
+          startTime: sale.startTime ?? sale.start_time ?? '',
+          endTime: sale.endTime ?? sale.end_time ?? '',
+          stock: sale.stock ?? 0,
+          isActive: sale.isActive ?? sale.is_active ?? true
         });
       } else {
         // Create mode - reset form
@@ -244,19 +245,29 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
             <label className="admin-label">
               Produk <span className="text-red-500">*</span>
             </label>
-            <select
-              value={formData.productId}
-              onChange={(e) => handleChange('productId', e.target.value)}
-              className={`admin-select ${errors.productId ? 'border-red-500' : ''}`}
-              disabled={loadingProducts || !!flashSale}
-            >
-              <option value="">Pilih produk...</option>
-              {products.map(product => (
-                <option key={product.id} value={product.id}>
-                  {product.name} - Rp {product.price?.toLocaleString()}
-                </option>
-              ))}
-            </select>
+            {flashSale ? (
+              // Edit mode - show selected product as read-only
+              <div className="admin-input bg-slate-700/50 cursor-not-allowed">
+                {(flashSale as any).product?.name || 
+                 products.find(p => p.id === formData.productId)?.name || 
+                 `Product ID: ${formData.productId.slice(0, 8)}...`}
+              </div>
+            ) : (
+              // Create mode - show dropdown
+              <select
+                value={formData.productId}
+                onChange={(e) => handleChange('productId', e.target.value)}
+                className={`admin-select ${errors.productId ? 'border-red-500' : ''}`}
+                disabled={loadingProducts}
+              >
+                <option value="">Pilih produk...</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} - Rp {product.price?.toLocaleString('id-ID')}
+                  </option>
+                ))}
+              </select>
+            )}
             {errors.productId && (
               <p className="text-sm text-red-600 mt-1">{errors.productId}</p>
             )}

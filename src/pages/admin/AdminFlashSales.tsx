@@ -41,10 +41,15 @@ const AdminFlashSales: React.FC = () => {
     }
   };
 
-  const getTimeStatus = (sale: FlashSaleWithProduct): 'ongoing' | 'upcoming' | 'expired' => {
+  const getTimeStatus = (sale: any): 'ongoing' | 'upcoming' | 'expired' => {
     const now = new Date();
-    const start = new Date(sale.startTime);
-    const end = new Date(sale.endTime);
+    const startTime = sale.startTime ?? sale.start_time;
+    const endTime = sale.endTime ?? sale.end_time;
+    
+    if (!startTime || !endTime) return 'expired';
+    
+    const start = new Date(startTime);
+    const end = new Date(endTime);
     
     if (now < start) return 'upcoming';
     if (now > end) return 'expired';
@@ -226,13 +231,29 @@ const AdminFlashSales: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {flashSales.map((sale) => {
+                  {flashSales.map((sale: any) => {
                     const timeStatus = getTimeStatus(sale);
-                    const originalPrice = sale.originalPrice || 0;
-                    const salePrice = sale.salePrice || 0;
+                    // Handle both camelCase and snake_case from database
+                    const originalPrice = sale.originalPrice ?? sale.original_price ?? 0;
+                    const salePrice = sale.salePrice ?? sale.sale_price ?? 0;
+                    const productId = sale.productId ?? sale.product_id ?? '';
+                    const isActive = sale.isActive ?? sale.is_active ?? false;
+                    const startTime = sale.startTime ?? sale.start_time ?? '';
+                    const endTime = sale.endTime ?? sale.end_time ?? '';
+                    const stock = sale.stock ?? 0;
+                    
                     const discount = originalPrice > 0
                       ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
                       : 0;
+                    
+                    // Determine combined status for simpler display
+                    const getDisplayStatus = () => {
+                      if (!isActive) return { status: 'inactive' as const, label: 'Nonaktif', color: 'text-gray-400' };
+                      if (timeStatus === 'expired') return { status: 'inactive' as const, label: 'Berakhir', color: 'text-gray-400' };
+                      if (timeStatus === 'upcoming') return { status: 'pending' as const, label: 'Terjadwal', color: 'text-yellow-400' };
+                      return { status: 'active' as const, label: 'Berlangsung', color: 'text-green-400' };
+                    };
+                    const displayStatus = getDisplayStatus();
 
                     return (
                       <tr key={sale.id}>
@@ -242,51 +263,47 @@ const AdminFlashSales: React.FC = () => {
                               {sale.product?.name || 'Unknown Product'}
                             </p>
                             <p className="text-sm text-slate-500">
-                              ID: {sale.productId}
+                              ID: {productId.slice(0, 8)}...
                             </p>
                           </div>
                         </td>
                         <td>
                           <div>
                             <p className="font-bold text-pink-400">
-                              Rp {(sale.salePrice || 0).toLocaleString('id-ID')}
+                              Rp {salePrice.toLocaleString('id-ID')}
                             </p>
-                            <p className="text-sm text-slate-500 line-through">
-                              Rp {(sale.originalPrice || 0).toLocaleString('id-ID')}
+                            <p className="text-sm text-slate-400 line-through">
+                              Rp {originalPrice.toLocaleString('id-ID')}
                             </p>
-                            <span className="inline-block mt-1 px-2 py-0.5 bg-pink-100 text-pink-700 text-xs font-semibold rounded">
-                              {discount}% OFF
-                            </span>
+                            {discount > 0 && (
+                              <span className="inline-block mt-1 px-2 py-0.5 bg-pink-500/20 text-pink-400 text-xs font-semibold rounded">
+                                -{discount}%
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td>
                           <div className="text-sm">
                             <p className="text-slate-300">
                               <span className="font-medium text-slate-400">Mulai:</span>{' '}
-                              {new Date(sale.startTime).toLocaleString('id-ID')}
+                              {startTime ? new Date(startTime).toLocaleString('id-ID') : '-'}
                             </p>
                             <p className="text-slate-300 mt-1">
                               <span className="font-medium text-slate-400">Selesai:</span>{' '}
-                              {new Date(sale.endTime).toLocaleString('id-ID')}
+                              {endTime ? new Date(endTime).toLocaleString('id-ID') : '-'}
                             </p>
                           </div>
                         </td>
                         <td>
                           <span className="font-medium text-white">
-                            {sale.stock || 0} unit
+                            {stock} unit
                           </span>
                         </td>
                         <td>
-                          <div className="space-y-1">
-                            <AdminStatusBadge
-                              status={sale.isActive ? 'active' : 'inactive'}
-                              label={sale.isActive ? 'Aktif' : 'Nonaktif'}
-                            />
-                            <AdminStatusBadge
-                              status={timeStatus === 'ongoing' ? 'active' : timeStatus === 'upcoming' ? 'pending' : 'inactive'}
-                              label={timeStatus === 'ongoing' ? 'Berlangsung' : timeStatus === 'upcoming' ? 'Akan Datang' : 'Berakhir'}
-                            />
-                          </div>
+                          <AdminStatusBadge
+                            status={displayStatus.status}
+                            label={displayStatus.label}
+                          />
                         </td>
                         <td>
                           <div className="flex gap-2">

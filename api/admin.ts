@@ -399,6 +399,62 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'unknown';
     if (!rateLimit(ip + ':' + action)) return respond(res, 429, { error: 'rate_limited' });
 
+    // Create Product - Uses service role to bypass RLS
+    if (req.method === 'POST' && action === 'createProduct') {
+      if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+      
+      try {
+        const productData = req.body?.productData || req.body;
+        
+        if (!productData || !productData.name || !productData.price) {
+          return respond(res, 400, { error: 'missing_parameters', message: 'name and price are required' });
+        }
+        
+        // Ensure images array is set and image field uses first image or placeholder
+        const images = productData.images && productData.images.length > 0 ? productData.images : [];
+        const image = images.length > 0 ? images[0] : (productData.image || 'https://via.placeholder.com/400x300?text=No+Image');
+        
+        const insertData = {
+          name: productData.name,
+          description: productData.description || '',
+          price: productData.price,
+          original_price: productData.original_price || productData.price,
+          category_id: productData.category_id || null,
+          game_title_id: productData.game_title_id || null,
+          tier_id: productData.tier_id || null,
+          image,
+          images,
+          stock: productData.stock || 1,
+          is_active: productData.is_active !== undefined ? productData.is_active : true,
+          has_rental: productData.has_rental || false,
+          is_flash_sale: false,
+          flash_sale_end_time: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        console.log('[Admin API] Creating product with data:', insertData);
+        
+        // Use service role to bypass RLS
+        const { data, error } = await supabase
+          .from('products')
+          .insert(insertData)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('[Admin API] Product create error:', error);
+          return respond(res, 400, { error: 'create_failed', details: error.message });
+        }
+        
+        console.log('[Admin API] ✅ Product created successfully:', data?.id);
+        return respond(res, 200, { success: true, data });
+      } catch (e: any) {
+        console.error('[Admin API] Exception:', e);
+        return respond(res, 500, { error: 'internal_error', message: e.message });
+      }
+    }
+
     if (req.method === 'POST' && action === 'updateProduct') {
       if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
       

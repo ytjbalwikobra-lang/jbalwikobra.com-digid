@@ -2517,47 +2517,50 @@ export const adminService = {
     is_active?: boolean;
     has_rental?: boolean;
   }): Promise<Product> {
-    if (!supabase) {
-      throw new Error('Supabase client not available');
-    }
-    
     // Ensure images array is set and image field uses first image or placeholder
     const images = data.images && data.images.length > 0 ? data.images : [];
     const image = images.length > 0 ? images[0] : (data.image || 'https://via.placeholder.com/400x300?text=No+Image');
     
-    const insertData = {
+    const productData = {
       ...data,
       image,
       images,
       stock: data.stock || 1,
       is_active: data.is_active !== undefined ? data.is_active : true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
     };
     
-    const { data: products, error } = await supabase
-      .from('products')
-      .insert(insertData)
-      .select();
-
-    if (error) throw error;
-    
-    // Clear cache
-    adminCache.clear();
-    
-    // If RLS blocks SELECT after INSERT, return constructed product object
-    if (!products || products.length === 0) {
-      console.warn('RLS may have blocked SELECT after INSERT, returning constructed object');
-      return {
-        ...insertData,
-        id: 'temp-' + Date.now(), // Temporary ID
-        archived_at: null,
-        flash_sale_end_time: undefined,
-        is_flash_sale: false
-      } as unknown as Product;
+    // Use API endpoint with service role to bypass RLS
+    try {
+      const sessionToken = localStorage.getItem('session_token') || '';
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          action: 'createProduct',
+          ...productData
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        console.error('[adminService.createProduct] API error:', result);
+        throw new Error(result.details || result.message || result.error || 'Failed to create product');
+      }
+      
+      console.log('[adminService.createProduct] ✅ Product created via API:', result.data?.id);
+      
+      // Clear cache
+      adminCache.clear();
+      
+      return result.data as Product;
+    } catch (error: any) {
+      console.error('[adminService.createProduct] Exception:', error);
+      throw error;
     }
-    
-    return products[0] as Product;
   },
 
   async updateProduct(id: string, data: {

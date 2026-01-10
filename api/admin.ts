@@ -432,6 +432,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // Delete Flash Sale
+    if (req.method === 'POST' && action === 'deleteFlashSale') {
+      if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+      
+      try {
+        const { id } = req.body || {};
+        
+        if (!id) {
+          return respond(res, 400, { error: 'missing_flash_sale_id' });
+        }
+        
+        console.log('[Admin API] Deleting flash sale:', id);
+        
+        // Use service role to bypass RLS
+        const { error } = await supabase
+          .from('flash_sales')
+          .delete()
+          .eq('id', id);
+        
+        if (error) {
+          console.error('[Admin API] Flash sale delete error:', error);
+          return respond(res, 400, { error: 'delete_failed', details: error.message });
+        }
+        
+        console.log('[Admin API] ✅ Flash sale deleted successfully');
+        return respond(res, 200, { success: true });
+      } catch (e: any) {
+        console.error('[Admin API] Exception:', e);
+        return respond(res, 500, { error: 'internal_error', message: e.message });
+      }
+    }
+
     if (req.method === 'POST' && action === 'update-order') {
       const { orderId, status } = req.body || {};
       const ok = await updateOrderStatus(orderId, status);

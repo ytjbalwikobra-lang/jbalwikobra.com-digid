@@ -873,12 +873,40 @@ export class ProductService {
 
   static async deleteFlashSale(id: string): Promise<boolean> {
     try {
+      // Try API endpoint first (uses service role, bypasses RLS)
+      const sessionToken = localStorage.getItem('session_token') || '';
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          action: 'deleteFlashSale',
+          id
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Clear cache
+        g._productServiceCache.delete('flash_sales');
+        return true;
+      }
+      
+      console.error('API delete failed:', result);
+      
+      // Fallback to direct Supabase (may be blocked by RLS)
       if (!supabase) return false;
       const { error } = await (supabase as any)
         .from('flash_sales')
         .delete()
         .eq('id', id);
       if (error) throw error;
+      
+      // Clear cache
+      g._productServiceCache.delete('flash_sales');
       return true;
     } catch (e) {
       console.error('Error deleting flash sale:', e);

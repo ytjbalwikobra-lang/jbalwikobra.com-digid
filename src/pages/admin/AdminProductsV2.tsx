@@ -90,22 +90,13 @@ const AdminProductsV2: React.FC = () => {
   // Use actual stats from database instead of calculated from visible data
   const stats = productStats;
 
-  // Client-side filtering for all products
+  // Client-side filtering for additional filters not handled by server
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      // Search filter
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesName = product.name?.toLowerCase().includes(searchLower);
-        const matchesDescription = product.description?.toLowerCase().includes(searchLower);
-        if (!matchesName && !matchesDescription) return false;
-      }
-
-      // Status filter
-      // Default behavior: 'all' shows only non-archived products, 'active' shows active non-archived, 'archived' shows archived only
-      if (filters.status === 'all' && product.archived_at) return false; // Hide archived from 'all' view
+      // Status filter (applied client-side for now)
+      if (filters.status === 'all' && product.archived_at) return false;
       if (filters.status === 'active' && (!product.is_active || product.archived_at)) return false;
-      if (filters.status === 'archived' && !product.archived_at) return false; // Only show archived in 'archived' view
+      if (filters.status === 'archived' && !product.archived_at) return false;
 
       // Category filter
       if (filters.category !== 'all') {
@@ -134,14 +125,12 @@ const AdminProductsV2: React.FC = () => {
     });
   }, [products, filters]);
 
-  // Client-side pagination calculations
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const currentPageProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Server-side pagination - totalCount comes from API
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  // Products already paginated from server, just use filtered results
+  const currentPageProducts = filteredProducts;
 
-  // Reset to first page when non-search filters or items per page change
+  // Reset to first page when filters change (not pagination-related)
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -149,17 +138,16 @@ const AdminProductsV2: React.FC = () => {
     filters.category,
     filters.gameTitle,
     filters.tier,
-    filters.priceRange,
-    itemsPerPage
+    filters.priceRange
   ]);
 
-  // Add cache for filtered results to avoid repeated server calls
+  // Add cache for paginated results to avoid repeated server calls
   const [cachedResults, setCachedResults] = useState<Map<string, { data: Product[], count: number, timestamp: number }>>(new Map());
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes cache for pagination
 
-  // Generate cache key from current filters
-  const getCacheKey = (filters: ProductFilters) => {
-    return `${filters.status}-${filters.category}-${filters.gameTitle}-${filters.tier}-${filters.priceRange}-${filters.search}`;
+  // Generate cache key from current filters and pagination
+  const getCacheKey = (filters: ProductFilters, page: number, limit: number) => {
+    return `${page}-${limit}-${filters.search}-${filters.status}`;
   };
 
   const loadProducts = async (forceRefresh = false) => {
@@ -169,12 +157,12 @@ const AdminProductsV2: React.FC = () => {
       return;
     }
     
-    console.log('📦 [AdminProductsV2] loadProducts starting...', { forceRefresh, isUpdating });
+    console.log('📦 [AdminProductsV2] loadProducts starting...', { forceRefresh, isUpdating, currentPage, itemsPerPage });
     setLoading(true);
     setError('');
     
     try {
-      const cacheKey = getCacheKey(filters);
+      const cacheKey = getCacheKey(filters, currentPage, itemsPerPage);
       const cachedResult = cachedResults.get(cacheKey);
       const now = Date.now();
       
@@ -187,22 +175,14 @@ const AdminProductsV2: React.FC = () => {
         return;
       }
 
-      console.log('📦 [AdminProductsV2] Fetching fresh data from server...');
+      console.log('📦 [AdminProductsV2] Fetching fresh data from server...', { currentPage, itemsPerPage });
 
-      // Build optimized query parameters for server-side filtering
-      const queryParams: any = {
-        page: 1,
-        limit: 500, // Reasonable limit to avoid huge payloads
-      };
+      // Build optimized query parameters for server-side pagination
+      const searchTerm = filters.search.trim() || undefined;
 
-      // Add search term if present
-      if (filters.search.trim()) {
-        queryParams.search = filters.search.trim();
-      }
-
-      // For now, load with search only - we'll extend the API later for other filters
+      // Use server-side pagination with current page and items per page
       const [productsResult, statsResult] = await Promise.all([
-        adminService.getProducts(queryParams.page, queryParams.limit, queryParams.search),
+        adminService.getProducts(currentPage, itemsPerPage, searchTerm),
         adminService.getProductStats()
       ]);
 
@@ -346,7 +326,7 @@ const AdminProductsV2: React.FC = () => {
     return () => clearInterval(intervalId);
   }, []); // Load products only once on component mount
 
-  // Reload when search or major filters change (with caching)
+  // Reload when search, page, or items per page change (with caching)
   useEffect(() => {
     // Don't reload if we're currently updating a product
     if (isUpdating) {
@@ -359,7 +339,7 @@ const AdminProductsV2: React.FC = () => {
     }, 300); // Debounce to avoid too many requests while typing
 
     return () => clearTimeout(timeoutId);
-  }, [filters.search, filters.status, isUpdating]); // Only reload for search and status changes
+  }, [filters.search, currentPage, itemsPerPage, isUpdating]); // Reload for search and pagination changes
 
   // Reset to first page when filters or items per page change
   useEffect(() => {
@@ -494,7 +474,7 @@ const AdminProductsV2: React.FC = () => {
       
       // Update cache instead of clearing it to prevent reload from overwriting
       console.log('💾 [AdminProductsV2] Updating cache...');
-      const cacheKey = getCacheKey(filters);
+      const cacheKey = getCacheKey(filters, currentPage, itemsPerPage);
       const cachedResult = cachedResults.get(cacheKey);
       if (cachedResult) {
         const updatedCache = new Map(cachedResults);
@@ -764,7 +744,7 @@ const AdminProductsV2: React.FC = () => {
 
         {/* Cache Status Indicator */}
         {(() => {
-          const cacheKey = getCacheKey(filters);
+          const cacheKey = getCacheKey(filters, currentPage, itemsPerPage);
           const cachedResult = cachedResults.get(cacheKey);
           const isUsingCache = cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_DURATION;
           
@@ -1221,14 +1201,17 @@ const AdminProductsV2: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        {filteredProducts.length > 0 && (
+        {totalCount > 0 && (
           <AdminPagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={filteredProducts.length}
+            totalItems={totalCount}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
+            onItemsPerPageChange={(newLimit) => {
+              setItemsPerPage(newLimit);
+              setCurrentPage(1); // Reset to first page when changing items per page
+            }}
             loading={loading}
           />
         )}

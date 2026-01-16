@@ -124,14 +124,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // NotifAPI uses GET with query parameters for /get_group_id endpoint
     const baseUrl = provider.settings?.base_url || 'https://notifapi.com';
     const endpoint = provider.settings?.list_groups_endpoint || '/get_group_id';
-    const authField = provider.settings?.list_groups_auth_mode || 'token';
+    // NotifAPI expects 'token' as the query parameter name
+    const keyField = 'token'; // Hardcoded for NotifAPI - database may have incorrect value
     const responseField = provider.settings?.groups_array_field || 'results';
     
     const url = `${baseUrl}${endpoint}`;
     
     console.log('[admin-whatsapp-groups] Fetching groups from external API:', {
       url,
-      authField,
+      keyField,
+      providerKeyField: provider.key_field_name,
       provider: provider.name
     });
     
@@ -139,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       // NotifAPI /get_group_id uses GET with query parameters
       const params = {
-        [authField]: apiKeyData.api_key
+        [keyField]: apiKeyData.api_key
       };
       
       response = await axios.get(url, { 

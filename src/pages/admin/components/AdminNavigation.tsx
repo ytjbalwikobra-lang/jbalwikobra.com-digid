@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Star,
+  MessageCircle,
 } from 'lucide-react';
 import { AdminColors } from '../design-tokens';
 
@@ -32,6 +33,7 @@ const navigationItems: NavItem[] = [
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/flash-sales', label: 'Flash Sales', icon: Zap },
   { path: '/admin/banners', label: 'Banners', icon: Image },
+  { path: '/admin/whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

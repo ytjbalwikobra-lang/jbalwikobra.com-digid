@@ -121,29 +121,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Use the correct Woo-WA API configuration
-    // NotifAPI requires POST for /get_group_id endpoint
+    // NotifAPI uses GET with query parameters for /get_group_id endpoint
     const baseUrl = provider.settings?.base_url || 'https://notifapi.com';
     const endpoint = provider.settings?.list_groups_endpoint || '/get_group_id';
-    const keyField = provider.key_field_name || 'key';
+    const authField = provider.settings?.list_groups_auth_mode || 'token';
     const responseField = provider.settings?.groups_array_field || 'results';
     
     const url = `${baseUrl}${endpoint}`;
     
     console.log('[admin-whatsapp-groups] Fetching groups from external API:', {
       url,
-      keyField,
+      authField,
       provider: provider.name
     });
     
     let response;
     try {
-      // NotifAPI /get_group_id uses POST with key in body
-      response = await axios.post(url, {
-        [keyField]: apiKeyData.api_key
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
+      // NotifAPI /get_group_id uses GET with query parameters
+      const params = {
+        [authField]: apiKeyData.api_key
+      };
+      
+      response = await axios.get(url, { 
+        params,
         timeout: 10000 // 10 second timeout
       });
     } catch (apiError: any) {

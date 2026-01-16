@@ -412,286 +412,220 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
             </div>
           )}
 
-          {/* Current Configuration Status */}
+          {/* Step 1: Current Active API Key */}
           <div className="dashboard-section-header">
             <div>
-              <h2 className="text-lg font-semibold text-ds-text">Current Configuration</h2>
-              <p className="text-sm text-ds-text-secondary">Active settings for WhatsApp notifications</p>
+              <h2 className="text-lg font-semibold text-ds-text">1. Active API Key</h2>
+              <p className="text-sm text-ds-text-secondary">Your current WooWA API key</p>
             </div>
           </div>
 
-          <div className="dashboard-data-panel padded rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20">
-            <div className="space-y-4">
-              {/* Provider Info */}
-              <div className="flex items-center justify-between pb-4 border-b border-token">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <Globe className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-ds-text-secondary">Provider</p>
-                    <p className="text-base font-semibold text-ds-text">{provider?.display_name || 'Not configured'}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-ds-text-secondary">Base URL</p>
-                  <p className="text-sm font-mono text-ds-text">{provider?.base_url || '-'}</p>
-                </div>
-              </div>
-
-              {/* API Key Info */}
-              <div className="flex items-center justify-between pb-4 border-b border-token">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/20">
-                    <Key className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-ds-text-secondary">API Key</p>
-                    <p className="text-base font-mono text-ds-text">
-                      {apiKey ? maskApiKey(apiKey.api_key) : 'Not configured'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-ds-text-secondary">Status</p>
-                  <p className={`text-sm font-semibold ${apiKey?.is_active ? 'text-green-400' : 'text-red-400'}`}>
-                    {apiKey?.is_active ? '● Active' : '● Inactive'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Default Group */}
-              <div className="flex items-center justify-between pb-4 border-b border-token">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/20">
-                    <Users className="w-5 h-5 text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-ds-text-secondary">Default Group</p>
-                    <p className="text-base font-semibold text-ds-text">
-                      {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Not set'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-ds-text-secondary">Group ID</p>
-                  <p className="text-xs font-mono text-ds-text-tertiary">{defaultGroupId || '-'}</p>
-                </div>
-              </div>
-
-              {/* Routing Configuration */}
-              <div>
-                <p className="text-sm text-ds-text-secondary mb-3">Notification Routing</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                    <p className="text-xs text-ds-text-tertiary mb-1">Purchase Orders</p>
-                    <p className="text-sm font-medium text-ds-text">
-                      {groups.find(g => g.id === groupConfigurations.purchase_orders)?.name || groupConfigurations.purchase_orders || 'Using default'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                    <p className="text-xs text-ds-text-tertiary mb-1">Rental Orders</p>
-                    <p className="text-sm font-medium text-ds-text">
-                      {groups.find(g => g.id === groupConfigurations.rental_orders)?.name || groupConfigurations.rental_orders || 'Using default'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                    <p className="text-xs text-ds-text-tertiary mb-1">Flash Sales</p>
-                    <p className="text-sm font-medium text-ds-text">
-                      {groups.find(g => g.id === groupConfigurations.flash_sales)?.name || groupConfigurations.flash_sales || 'Using default'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                    <p className="text-xs text-ds-text-tertiary mb-1">General Notifications</p>
-                    <p className="text-sm font-medium text-ds-text">
-                      {groups.find(g => g.id === groupConfigurations.general_notifications)?.name || groupConfigurations.general_notifications || 'Using default'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Usage Stats */}
-              <div className="pt-4 border-t border-token">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Activity className="w-5 h-5 text-ds-pink" />
-                    <div>
-                      <p className="text-sm text-ds-text-secondary">Total Messages Sent</p>
-                      <p className="text-2xl font-bold text-ds-text">{apiKey?.usage_count?.toLocaleString() || '0'}</p>
-                    </div>
-                  </div>
-                  {apiKey?.last_used_at && (
-                    <div className="text-right">
-                      <p className="text-sm text-ds-text-secondary">Last Activity</p>
-                      <p className="text-sm text-ds-text">{new Date(apiKey.last_used_at).toLocaleString('id-ID')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions - API Key & Group Change */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">Quick Configuration</h2>
-              <p className="text-sm text-ds-text-secondary">Easily change API key and default group</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Change API Key - Prominent */}
-            <div className="dashboard-data-panel padded rounded-xl border-2 border-ds-pink/30">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-ds-pink/20">
-                  <Key className="w-6 h-6 text-ds-pink" />
+          <div className="dashboard-data-panel padded rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-purple-500/20">
+                  <Key className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-ds-text text-lg">Change API Key</h3>
-                  <p className="text-sm text-ds-text-tertiary">Update WooWA authentication</p>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Current Key Display */}
-                <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-ds-text">Current Key</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="p-1.5 rounded hover:bg-white/10 transition-colors"
-                      >
-                        {showApiKey ? <EyeOff className="w-4 h-4 text-ds-text-secondary" /> : <Eye className="w-4 h-4 text-ds-text-secondary" />}
-                      </button>
-                      {apiKey && (
+                  <p className="text-sm text-ds-text-secondary mb-1">API Key</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-mono text-ds-text">
+                      {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Not configured'}
+                    </p>
+                    {apiKey && (
+                      <>
+                        <button
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                        >
+                          {showApiKey ? <EyeOff className="w-4 h-4 text-ds-text-secondary" /> : <Eye className="w-4 h-4 text-ds-text-secondary" />}
+                        </button>
                         <button
                           onClick={() => copyToClipboard(apiKey.api_key)}
                           className="p-1.5 rounded hover:bg-white/10 transition-colors"
                         >
                           {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-ds-text-secondary" />}
                         </button>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
-                  <p className="text-sm font-mono text-ds-text break-all">
-                    {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Not configured'}
-                  </p>
-                  {apiKey && (
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
-                      <span className="text-xs text-ds-text-tertiary">Usage: {apiKey.usage_count.toLocaleString()}</span>
-                      <span className={`text-xs font-semibold ${apiKey.is_active ? 'text-green-400' : 'text-red-400'}`}>
-                        {apiKey.is_active ? '● Active' : '● Inactive'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* New Key Input */}
-                <div>
-                  <label className="block text-sm font-medium text-ds-text mb-2">
-                    New API Key <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors font-mono text-sm"
-                    value={newApiKey}
-                    onChange={(e) => setNewApiKey(e.target.value)}
-                    placeholder="Paste new API key here"
-                  />
-                  <p className="text-xs text-ds-text-tertiary mt-1.5">
-                    Get your API key from <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer" className="text-ds-pink hover:underline">notifapi.com</a>
+                  <p className="text-xs text-ds-text-tertiary mt-1">
+                    Usage: {apiKey?.usage_count?.toLocaleString() || '0'} messages
                   </p>
                 </div>
+              </div>
+              <div className="text-right">
+                <p className={`text-sm font-semibold px-3 py-1 rounded-full ${apiKey?.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                  {apiKey?.is_active ? '● Active' : '● Inactive'}
+                </p>
+              </div>
+            </div>
+          </div>
 
-                <button
-                  onClick={updateApiKey}
-                  disabled={updatingKey || !newApiKey.trim()}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ds-pink text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-ds-pink/20"
-                >
-                  {updatingKey ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Save className="w-5 h-5" />
-                  )}
-                  {updatingKey ? 'Updating API Key...' : 'Update API Key'}
-                </button>
+          {/* Step 2: Update API Key */}
+          <div className="dashboard-section-header">
+            <div>
+              <h2 className="text-lg font-semibold text-ds-text">2. Update API Key</h2>
+              <p className="text-sm text-ds-text-secondary">Enter a new API key to connect to WooWA</p>
+            </div>
+          </div>
 
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    <p className="text-xs text-amber-300">
-                      Changing API key affects all notifications immediately
-                    </p>
-                  </div>
+          <div className="dashboard-data-panel padded rounded-xl border-2 border-ds-pink/30">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-ds-text mb-2">
+                  New API Key <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors font-mono text-sm"
+                  value={newApiKey}
+                  onChange={(e) => setNewApiKey(e.target.value)}
+                  placeholder="Paste new API key here"
+                />
+                <p className="text-xs text-ds-text-tertiary mt-1.5">
+                  Get your API key from <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer" className="text-ds-pink hover:underline">notifapi.com</a>
+                </p>
+              </div>
+
+              <button
+                onClick={updateApiKey}
+                disabled={updatingKey || !newApiKey.trim()}
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ds-pink text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-ds-pink/20"
+              >
+                {updatingKey ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                {updatingKey ? 'Updating...' : 'Update API Key'}
+              </button>
+
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <p className="text-xs text-amber-300">
+                    After updating the API key, you can discover and configure groups below
+                  </p>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Change Default Group - Prominent */}
-            <div className="dashboard-data-panel padded rounded-xl border-2 border-green-500/30">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-green-500/20">
-                  <Users className="w-6 h-6 text-green-400" />
-                </div>
+          {/* Step 3: Group Configuration (Only show if API key is active) */}
+          {apiKey?.is_active && (
+            <>
+              <div className="dashboard-section-header">
                 <div>
-                  <h3 className="font-semibold text-ds-text text-lg">Change Default Group</h3>
-                  <p className="text-sm text-ds-text-tertiary">Update fallback notification group</p>
+                  <h2 className="text-lg font-semibold text-ds-text">3. Current Group Configuration</h2>
+                  <p className="text-sm text-ds-text-secondary">Active notification routing settings</p>
                 </div>
               </div>
-              
-              <div className="space-y-4">
-                {/* Current Group Display */}
-                <div className="p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                  <span className="text-sm font-medium text-ds-text block mb-2">Current Default Group</span>
-                  <p className="text-base font-semibold text-green-400">
-                    {groups.find(g => g.id === defaultGroupId)?.name || 'Not set'}
-                  </p>
-                  {defaultGroupId && (
-                    <p className="text-xs font-mono text-ds-text-tertiary mt-2 break-all">
-                      {defaultGroupId}
-                    </p>
-                  )}
-                </div>
 
-                {/* Group Selection */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-ds-text">
-                      Select New Default Group
-                    </label>
-                    <button
-                      onClick={loadGroups}
-                      disabled={loadingGroups}
-                      className="text-xs text-ds-pink hover:underline flex items-center gap-1"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${loadingGroups ? 'animate-spin' : ''}`} />
-                      Reload
-                    </button>
+              <div className="dashboard-data-panel padded rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                <div className="space-y-4">
+                  {/* Default Group */}
+                  <div className="flex items-center justify-between pb-4 border-b border-token">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-green-500/20">
+                        <Users className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-ds-text-secondary">Default Group</p>
+                        <p className="text-base font-semibold text-ds-text">
+                          {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Not set'}
+                        </p>
+                      </div>
+                    </div>
+                    {defaultGroupId && (
+                      <p className="text-xs font-mono text-ds-text-tertiary">{defaultGroupId}</p>
+                    )}
                   </div>
-                  <select
-                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-base"
-                    value={defaultGroupId}
-                    onChange={(e) => setDefaultGroupId(e.target.value)}
-                  >
-                    <option value="">-- Select default group --</option>
-                    {groups.map(g => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-ds-text-tertiary mt-1.5">
-                    {groups.length} groups available
-                  </p>
-                </div>
 
-                {/* Apply to All Notifications Button */}
-                {defaultGroupId && (
-                  <button
-                    onClick={() => {
-                      setGroupConfigurations({
-                        purchase_orders: defaultGroupId,
-                        rental_orders: defaultGroupId,
-                        flash_sales: defaultGroupId,
+                  {/* Notification Types */}
+                  <div>
+                    <p className="text-sm text-ds-text-secondary mb-3">Notification Routing</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                        <p className="text-xs text-ds-text-tertiary mb-1">Purchase Orders</p>
+                        <p className="text-sm font-medium text-ds-text">
+                          {groups.find(g => g.id === groupConfigurations.purchase_orders)?.name || 'Using default'}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                        <p className="text-xs text-ds-text-tertiary mb-1">Rental Orders</p>
+                        <p className="text-sm font-medium text-ds-text">
+                          {groups.find(g => g.id === groupConfigurations.rental_orders)?.name || 'Using default'}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                        <p className="text-xs text-ds-text-tertiary mb-1">Flash Sales</p>
+                        <p className="text-sm font-medium text-ds-text">
+                          {groups.find(g => g.id === groupConfigurations.flash_sales)?.name || 'Using default'}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
+                        <p className="text-xs text-ds-text-tertiary mb-1">General Notifications</p>
+                        <p className="text-sm font-medium text-ds-text">
+                          {groups.find(g => g.id === groupConfigurations.general_notifications)?.name || 'Using default'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4: Select New Groups */}
+              <div className="dashboard-section-header">
+                <div>
+                  <h2 className="text-lg font-semibold text-ds-text">4. Select Groups</h2>
+                  <p className="text-sm text-ds-text-secondary">Choose WhatsApp groups for notifications</p>
+                </div>
+                <button
+                  onClick={loadGroups}
+                  disabled={loadingGroups}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text hover:opacity-90 disabled:opacity-50 transition-colors"
+                >
+                  {loadingGroups ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  {loadingGroups ? 'Loading...' : 'Discover Groups'}
+                </button>
+              </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Group Dropdown List */}
+              <div className="dashboard-data-panel padded rounded-xl">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-ds-text mb-2">
+                      Select Default Group
+                    </label>
+                    <select
+                      className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-base"
+                      value={defaultGroupId}
+                      onChange={(e) => setDefaultGroupId(e.target.value)}
+                    >
+                      <option value="">-- Select a group --</option>
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-ds-text-tertiary mt-1.5">
+                      {groups.length > 0 ? `${groups.length} groups available` : 'Click "Discover Groups" to load'}
+                    </p>
+                  </div>
+
+                  {/* Apply to All Button */}
+                  {defaultGroupId && (
+                    <button
+                      onClick={() => {
+                        setGroupConfigurations({
+                          purchase_orders: defaultGroupId,
+                          rental_orders: defaultGroupId,
+                          flash_sales: defaultGroupId,
                         general_notifications: defaultGroupId
                       });
                       setMessage(`Applied "${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId}" to all notifications`);
@@ -742,282 +676,14 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
               </div>
             </div>
           </div>
+          </>
+          )}
 
-          {/* Provider Configuration Section */}
+          {/* Test Message Section */}
           <div className="dashboard-section-header">
             <div>
-              <h2 className="text-lg font-semibold text-ds-text">Group Configuration</h2>
-              <p className="text-sm text-ds-text-secondary">Manage WhatsApp groups and notification routing</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Group Discovery */}
-            <div className="dashboard-data-panel padded rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Users className="w-5 h-5 text-ds-pink" />
-                <h3 className="font-semibold text-ds-text">Available Groups</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-ds-text">Discovered Groups</p>
-                    <p className="text-xs text-ds-text-tertiary">{groups.length} groups found</p>
-                  </div>
-                  <button
-                    onClick={loadGroups}
-                    disabled={loadingGroups}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text hover:opacity-90 disabled:opacity-50 transition-colors"
-                  >
-                    {loadingGroups ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                    {loadingGroups ? 'Loading...' : 'Reload Groups'}
-                  </button>
-                </div>
-
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {groups.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-ds-text-tertiary">
-                      No groups found. Click "Reload Groups" to fetch.
-                    </div>
-                  ) : (
-                    groups.map(g => (
-                      <div
-                        key={g.id}
-                        className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token hover:border-ds-pink/50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-ds-text truncate">{g.name}</p>
-                            <p className="text-xs text-ds-text-tertiary font-mono mt-1 break-all">{g.id}</p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setDefaultGroupId(g.id);
-                              setGroupConfigurations({
-                                purchase_orders: g.id,
-                                rental_orders: g.id,
-                                flash_sales: g.id,
-                                general_notifications: g.id
-                              });
-                              setMessage(`Applied "${g.name}" to all notifications`);
-                              setTimeout(() => setMessage(''), 3000);
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-ds-pink text-white text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap"
-                          >
-                            Apply to All
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    <p className="text-xs text-amber-300">
-                      "Apply to All" will replace ALL notification groups with the selected one
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Default Group */}
-            <div className="dashboard-data-panel padded rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Settings className="w-5 h-5 text-ds-pink" />
-                <h3 className="font-semibold text-ds-text">Default Fallback Group</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                    Group ID
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors font-mono text-sm"
-                    value={defaultGroupId}
-                    onChange={(e) => setDefaultGroupId(e.target.value)}
-                    placeholder="120363405729592501@g.us"
-                  />
-                  <p className="text-xs text-ds-text-tertiary mt-1">
-                    Used when specific group configurations are not set
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                    Or Select from Groups
-                  </label>
-                  <select
-                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors"
-                    value={defaultGroupId}
-                    onChange={(e) => setDefaultGroupId(e.target.value)}
-                  >
-                    <option value="">-- Select default group --</option>
-                    {groups.map(g => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {defaultGroupId && (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <p className="text-sm text-green-400">
-                      ✓ Default: {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Group Configuration Section */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">Notification Routing</h2>
-              <p className="text-sm text-ds-text-secondary">Configure specific groups for different notification types</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Purchase Orders */}
-            <div className="dashboard-data-panel padded rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity className="w-5 h-5 text-green-400" />
-                <h3 className="font-semibold text-ds-text">Purchase Orders</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <select
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors"
-                  value={groupConfigurations.purchase_orders}
-                  onChange={(e) => setGroupConfigurations(prev => ({ ...prev, purchase_orders: e.target.value }))}
-                >
-                  <option value="">-- Use default group --</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-ds-text-tertiary">
-                  Notifications when customers complete game account purchases
-                </p>
-                {groupConfigurations.purchase_orders && (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <p className="text-sm text-green-400">
-                      ✓ {groups.find(g => g.id === groupConfigurations.purchase_orders)?.name || 'Custom Group'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Rental Orders */}
-            <div className="dashboard-data-panel padded rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Clock className="w-5 h-5 text-blue-400" />
-                <h3 className="font-semibold text-ds-text">Rental Orders</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <select
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors"
-                  value={groupConfigurations.rental_orders}
-                  onChange={(e) => setGroupConfigurations(prev => ({ ...prev, rental_orders: e.target.value }))}
-                >
-                  <option value="">-- Use default group --</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-ds-text-tertiary">
-                  Notifications when customers complete account rental payments
-                </p>
-                {groupConfigurations.rental_orders && (
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-sm text-blue-400">
-                      ✓ {groups.find(g => g.id === groupConfigurations.rental_orders)?.name || 'Custom Group'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Flash Sales */}
-            <div className="dashboard-data-panel padded rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity className="w-5 h-5 text-orange-400" />
-                <h3 className="font-semibold text-ds-text">Flash Sales</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <select
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors"
-                  value={groupConfigurations.flash_sales}
-                  onChange={(e) => setGroupConfigurations(prev => ({ ...prev, flash_sales: e.target.value }))}
-                >
-                  <option value="">-- Use default group --</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-ds-text-tertiary">
-                  Notifications when customers purchase flash sale items
-                </p>
-                {groupConfigurations.flash_sales && (
-                  <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                    <p className="text-sm text-orange-400">
-                      ✓ {groups.find(g => g.id === groupConfigurations.flash_sales)?.name || 'Custom Group'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* General Notifications */}
-            <div className="dashboard-data-panel padded rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <MessageCircle className="w-5 h-5 text-purple-400" />
-                <h3 className="font-semibold text-ds-text">General Notifications</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <select
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors"
-                  value={groupConfigurations.general_notifications}
-                  onChange={(e) => setGroupConfigurations(prev => ({ ...prev, general_notifications: e.target.value }))}
-                >
-                  <option value="">-- Use default group --</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-ds-text-tertiary">
-                  System alerts and general announcements
-                </p>
-                {groupConfigurations.general_notifications && (
-                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <p className="text-sm text-purple-400">
-                      ✓ {groups.find(g => g.id === groupConfigurations.general_notifications)?.name || 'Custom Group'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Testing Section */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">Connection Testing</h2>
-              <p className="text-sm text-ds-text-secondary">Send test messages to verify WhatsApp configuration</p>
+              <h2 className="text-lg font-semibold text-ds-text">Test Messaging</h2>
+              <p className="text-sm text-ds-text-secondary">Send a test message to verify configuration</p>
             </div>
           </div>
 

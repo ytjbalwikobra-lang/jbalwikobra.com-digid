@@ -684,6 +684,26 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                   </p>
                 </div>
 
+                {/* Apply to All Notifications Button */}
+                {defaultGroupId && (
+                  <button
+                    onClick={() => {
+                      setGroupConfigurations({
+                        purchase_orders: defaultGroupId,
+                        rental_orders: defaultGroupId,
+                        flash_sales: defaultGroupId,
+                        general_notifications: defaultGroupId
+                      });
+                      setMessage(`Applied "${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId}" to all notifications`);
+                      setTimeout(() => setMessage(''), 3000);
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors font-semibold text-sm shadow-lg shadow-purple-600/20"
+                  >
+                    <Users className="w-5 h-5" />
+                    Apply to All Notifications
+                  </button>
+                )}
+
                 {/* Or Manual Entry */}
                 <div>
                   <label className="block text-sm font-medium text-ds-text-secondary mb-2">
@@ -768,28 +788,42 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     groups.map(g => (
                       <div
                         key={g.id}
-                        className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token hover:border-ds-pink/50 transition-colors cursor-pointer"
-                        onClick={() => {
-                          setDefaultGroupId(g.id);
-                          setGroupConfigurations(prev => ({
-                            purchase_orders: prev.purchase_orders || g.id,
-                            rental_orders: prev.rental_orders || g.id,
-                            flash_sales: prev.flash_sales || g.id,
-                            general_notifications: prev.general_notifications || g.id
-                          }));
-                        }}
+                        className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token hover:border-ds-pink/50 transition-colors"
                       >
-                        <p className="text-sm font-medium text-ds-text">{g.name}</p>
-                        <p className="text-xs text-ds-text-tertiary font-mono mt-1">{g.id}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-ds-text truncate">{g.name}</p>
+                            <p className="text-xs text-ds-text-tertiary font-mono mt-1 break-all">{g.id}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setDefaultGroupId(g.id);
+                              setGroupConfigurations({
+                                purchase_orders: g.id,
+                                rental_orders: g.id,
+                                flash_sales: g.id,
+                                general_notifications: g.id
+                              });
+                              setMessage(`Applied "${g.name}" to all notifications`);
+                              setTimeout(() => setMessage(''), 3000);
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-ds-pink text-white text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap"
+                          >
+                            Apply to All
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
                 </div>
 
-                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                  <p className="text-xs text-blue-300">
-                    Click on a group to apply it as default for all configurations
-                  </p>
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <p className="text-xs text-amber-300">
+                      "Apply to All" will replace ALL notification groups with the selected one
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

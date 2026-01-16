@@ -14,6 +14,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).send(JSON.stringify({ error: 'method_not_allowed' }));
   }
 
+  console.log('[admin-whatsapp-groups] Request received at', new Date().toISOString());
+
   try {
     // ✅ SECURITY: Validate admin authentication
     const auth = await validateAdminAuth(req);

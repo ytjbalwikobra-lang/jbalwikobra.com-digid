@@ -121,9 +121,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Use the correct Woo-WA API configuration
-    // NotifAPI uses GET with query parameters for /get_group_id endpoint
+    // NotifAPI uses GET with query parameters for group listing
     const baseUrl = provider.settings?.base_url || 'https://notifapi.com';
-    const endpoint = provider.settings?.list_groups_endpoint || '/get_group_id';
+    // NotifAPI requires /api/ prefix for endpoints
+    const endpoint = provider.settings?.list_groups_endpoint || '/api/get_group_id';
     // NotifAPI expects 'token' as the query parameter name
     const keyField = 'token'; // Hardcoded for NotifAPI - database may have incorrect value
     const responseField = provider.settings?.groups_array_field || 'results';

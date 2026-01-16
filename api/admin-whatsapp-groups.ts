@@ -120,11 +120,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Use the correct Woo-WA API configuration with GET and body auth
+    // Use the correct Woo-WA API configuration
+    // NotifAPI requires POST for /get_group_id endpoint
     const baseUrl = provider.settings?.base_url || 'https://notifapi.com';
     const endpoint = provider.settings?.list_groups_endpoint || '/get_group_id';
-    const method = provider.settings?.list_groups_method || 'GET';
-    const authMode = provider.settings?.list_groups_auth_mode || 'body';
     const keyField = provider.key_field_name || 'key';
     const responseField = provider.settings?.groups_array_field || 'results';
     
@@ -132,40 +131,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     console.log('[admin-whatsapp-groups] Fetching groups from external API:', {
       url,
-      method,
-      authMode,
+      keyField,
       provider: provider.name
     });
     
     let response;
     try {
-      if (method.toUpperCase() === 'GET' && authMode === 'body') {
-        // GET request with key in body (Woo-WA specific behavior)
-        response = await axios({
-          method: 'GET',
-          url: url,
-          data: {
-            [keyField]: apiKeyData.api_key
-          },
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      } else if (method.toUpperCase() === 'POST' && authMode === 'body') {
-        // POST request with key in body
-        response = await axios.post(url, {
-          [keyField]: apiKeyData.api_key
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      } else {
-        // Fallback to query parameters
-        response = await axios.get(url, { 
-          params: { [keyField]: apiKeyData.api_key }
-        });
-      }
+      // NotifAPI /get_group_id uses POST with key in body
+      response = await axios.post(url, {
+        [keyField]: apiKeyData.api_key
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000 // 10 second timeout
+      });
     } catch (apiError: any) {
       console.error('[admin-whatsapp-groups] External API call failed:', {
         status: apiError.response?.status,

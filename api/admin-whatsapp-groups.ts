@@ -78,10 +78,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .limit(1)
       .maybeSingle();
     
-    if (providerError || !provider) {
-      return res.status(400).json({ 
-        error: 'No active WhatsApp provider found',
-        details: providerError?.message 
+    if (providerError) {
+      console.error('[admin-whatsapp-groups] Provider query error:', providerError);
+      return res.status(500).json({ 
+        error: 'Database error when fetching provider',
+        details: providerError.message 
+      });
+    }
+    
+    if (!provider) {
+      console.warn('[admin-whatsapp-groups] No active provider found');
+      return res.status(404).json({ 
+        error: 'No active WhatsApp provider configured',
+        message: 'Please configure a WhatsApp provider in the admin panel first'
       });
     }
 
@@ -95,10 +104,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .limit(1)
       .maybeSingle();
     
-    if (keyError || !apiKeyData) {
-      return res.status(400).json({ 
+    if (keyError) {
+      console.error('[admin-whatsapp-groups] API key query error:', keyError);
+      return res.status(500).json({ 
+        error: 'Database error when fetching API key',
+        details: keyError.message 
+      });
+    }
+    
+    if (!apiKeyData) {
+      console.warn('[admin-whatsapp-groups] No active API key found for provider:', provider.name);
+      return res.status(404).json({ 
         error: 'No active API key found',
-        details: keyError?.message 
+        message: 'Please add and activate an API key first'
       });
     }
 

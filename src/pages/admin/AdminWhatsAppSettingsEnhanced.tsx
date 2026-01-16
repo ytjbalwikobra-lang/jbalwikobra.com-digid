@@ -181,9 +181,15 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
   };
 
   useEffect(() => { 
-    load(); 
-    loadGroups();
+    load();
   }, []);
+
+  // Load groups only when we have an active API key
+  useEffect(() => {
+    if (apiKey?.is_active) {
+      loadGroups();
+    }
+  }, [apiKey?.is_active]);
 
   const updateApiKey = async () => {
     if (!newApiKey.trim()) {

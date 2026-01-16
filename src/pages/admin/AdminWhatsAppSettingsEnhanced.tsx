@@ -147,6 +147,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
 
   const loadGroups = async () => {
     setLoadingGroups(true);
+    setError(''); // Clear previous errors
     try {
       const sessionToken = localStorage.getItem('session_token');
       const headers: Record<string, string> = {};
@@ -154,9 +155,22 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         headers['Authorization'] = `Bearer ${sessionToken}`;
       }
       
+      console.log('[WhatsApp Settings] Loading groups from API...');
       const res = await fetch('/api/admin-whatsapp-groups', { headers });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load groups');
+      
+      console.log('[WhatsApp Settings] Groups API response:', {
+        status: res.status,
+        ok: res.ok,
+        data
+      });
+      
+      if (!res.ok) {
+        const errorMsg = data.message || data.error || 'Failed to load groups';
+        console.error('[WhatsApp Settings] Groups API error:', errorMsg, data);
+        throw new Error(errorMsg);
+      }
+      
       setGroups(data.groups || []);
       
       setProviderStatus(prev => ({
@@ -168,8 +182,9 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       setMessage('Groups loaded successfully');
       setTimeout(() => setMessage(''), 3000);
     } catch (e: any) {
-      console.warn('Failed to load groups:', e?.message || e);
-      setError('Failed to load groups: ' + (e?.message || 'Unknown error'));
+      console.error('[WhatsApp Settings] Failed to load groups:', e);
+      const errorMessage = e?.message || 'Unknown error';
+      setError('Failed to load groups: ' + errorMessage);
       setProviderStatus(prev => ({
         ...prev,
         activeGroups: 0,

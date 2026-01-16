@@ -130,34 +130,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const url = `${baseUrl}${endpoint}`;
     
+    console.log('[admin-whatsapp-groups] Fetching groups from external API:', {
+      url,
+      method,
+      authMode,
+      provider: provider.name
+    });
+    
     let response;
-    if (method.toUpperCase() === 'GET' && authMode === 'body') {
-      // GET request with key in body (Woo-WA specific behavior)
-      response = await axios({
-        method: 'GET',
-        url: url,
-        data: {
+    try {
+      if (method.toUpperCase() === 'GET' && authMode === 'body') {
+        // GET request with key in body (Woo-WA specific behavior)
+        response = await axios({
+          method: 'GET',
+          url: url,
+          data: {
+            [keyField]: apiKeyData.api_key
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } else if (method.toUpperCase() === 'POST' && authMode === 'body') {
+        // POST request with key in body
+        response = await axios.post(url, {
           [keyField]: apiKeyData.api_key
-        },
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } else {
+        // Fallback to query parameters
+        response = await axios.get(url, { 
+          params: { [keyField]: apiKeyData.api_key }
+        });
+      }
+    } catch (apiError: any) {
+      console.error('[admin-whatsapp-groups] External API call failed:', {
+        status: apiError.response?.status,
+        statusText: apiError.response?.statusText,
+        data: apiError.response?.data,
+        message: apiError.message
       });
-    } else if (method.toUpperCase() === 'POST' && authMode === 'body') {
-      // POST request with key in body
-      response = await axios.post(url, {
-        [keyField]: apiKeyData.api_key
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-    } else {
-      // Fallback to query parameters
-      response = await axios.get(url, { 
-        params: { [keyField]: apiKeyData.api_key }
+      
+      return res.status(502).json({ 
+        error: 'Failed to fetch groups from WhatsApp provider',
+        message: apiError.response?.data?.message || apiError.message || 'External API error',
+        providerResponse: apiError.response?.data,
+        statusCode: apiError.response?.status
       });
     }
+    
+    console.log('[admin-whatsapp-groups] External API response received:', {
+      status: response.status,
+      hasData: !!response.data,
+      hasResults: !!(response.data && response.data[responseField])
+    });
     
     if (response.data && response.data[responseField]) {
       // Format the groups data properly for the frontend
@@ -167,11 +196,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         value: group.id // For the dropdown value
       }));
       
+      console.log('[admin-whatsapp-groups] Successfully formatted groups:', formattedGroups.length);
+      
       return res.status(200).json({ 
         groups: formattedGroups,
         message: 'Groups loaded successfully'
       });
     }
+    
+    console.log('[admin-whatsapp-groups] No groups found in response');
     
     return res.status(200).json({ 
       groups: [],
@@ -179,7 +212,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
   } catch (e: any) {
-    console.error('[admin-whatsapp-groups] error', e);
+    console.error('[admin-whatsapp-groups] Unexpected error:', {
+      message: e?.message,
+      stack: e?.stack,
+      response: e?.response?.data
+    });
     return res.status(500).json({ 
       error: e?.message || 'internal_error',
       details: e?.response?.data || 'No additional details'

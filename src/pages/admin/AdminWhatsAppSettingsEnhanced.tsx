@@ -156,7 +156,14 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       }
       
       console.log('[WhatsApp Settings] Loading groups from API...');
+      console.log('[WhatsApp Settings] Request URL:', window.location.origin + '/api/admin-whatsapp-groups');
+      console.log('[WhatsApp Settings] Has session token:', !!sessionToken);
+      
       const res = await fetch('/api/admin-whatsapp-groups', { headers });
+      
+      console.log('[WhatsApp Settings] Response status:', res.status);
+      console.log('[WhatsApp Settings] Response headers:', Object.fromEntries(res.headers.entries()));
+      
       const data = await res.json();
       
       console.log('[WhatsApp Settings] Groups API response:', {
@@ -166,8 +173,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       });
       
       if (!res.ok) {
-        const errorMsg = data.message || data.error || 'Failed to load groups';
-        console.error('[WhatsApp Settings] Groups API error:', errorMsg, data);
+        const errorMsg = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
+        console.error('[WhatsApp Settings] Groups API error:', {
+          status: res.status,
+          statusText: res.statusText,
+          errorMsg,
+          data
+        });
         throw new Error(errorMsg);
       }
       
@@ -617,7 +629,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
               </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Group Dropdown List */}
+              {/* Left Column: Default Group */}
               <div className="dashboard-data-panel padded rounded-xl">
                 <div className="space-y-4">
                   <div>
@@ -673,19 +685,6 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                   />
                 </div>
 
-                <button
-                  onClick={save}
-                  disabled={saving}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-green-600/20"
-                >
-                  {saving ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Save className="w-5 h-5" />
-                  )}
-                  {saving ? 'Saving...' : 'Save Default Group'}
-                </button>
-
                 <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <div className="flex items-center gap-2">
                     <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />
@@ -695,6 +694,112 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Right Column: Specific Configurations */}
+              <div className="dashboard-data-panel padded rounded-xl">
+                <div className="space-y-4">
+                  <div className="mb-4">
+                    <h3 className="text-base font-semibold text-ds-text">Notification Routing</h3>
+                    <p className="text-xs text-ds-text-secondary">Configure groups for each notification type</p>
+                  </div>
+
+                  {/* Purchase Orders */}
+                  <div>
+                    <label className="block text-sm font-medium text-ds-text mb-2">
+                      Purchase Orders
+                    </label>
+                    <select
+                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
+                      value={groupConfigurations.purchase_orders}
+                      onChange={(e) => setGroupConfigurations({
+                        ...groupConfigurations,
+                        purchase_orders: e.target.value
+                      })}
+                    >
+                      <option value="">-- Use default group --</option>
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Rental Orders */}
+                  <div>
+                    <label className="block text-sm font-medium text-ds-text mb-2">
+                      Rental Orders
+                    </label>
+                    <select
+                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
+                      value={groupConfigurations.rental_orders}
+                      onChange={(e) => setGroupConfigurations({
+                        ...groupConfigurations,
+                        rental_orders: e.target.value
+                      })}
+                    >
+                      <option value="">-- Use default group --</option>
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Flash Sales */}
+                  <div>
+                    <label className="block text-sm font-medium text-ds-text mb-2">
+                      Flash Sales
+                    </label>
+                    <select
+                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
+                      value={groupConfigurations.flash_sales}
+                      onChange={(e) => setGroupConfigurations({
+                        ...groupConfigurations,
+                        flash_sales: e.target.value
+                      })}
+                    >
+                      <option value="">-- Use default group --</option>
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* General Notifications */}
+                  <div>
+                    <label className="block text-sm font-medium text-ds-text mb-2">
+                      General Notifications
+                    </label>
+                    <select
+                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
+                      value={groupConfigurations.general_notifications}
+                      onChange={(e) => setGroupConfigurations({
+                        ...groupConfigurations,
+                        general_notifications: e.target.value
+                      })}
+                    >
+                      <option value="">-- Use default group --</option>
+                      {groups.map(g => (
+                        <option key={g.id} value={g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button - Full Width */}
+            <div className="mt-6">
+              <button
+                onClick={save}
+                disabled={saving}
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-green-600/20"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                {saving ? 'Saving Configuration...' : 'Save All Settings'}
+              </button>
             </div>
           </div>
           </>

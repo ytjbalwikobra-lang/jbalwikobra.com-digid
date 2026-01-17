@@ -6,7 +6,13 @@ import { validateAdminAuth } from './_middleware/authMiddleware.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
-  setCorsHeaders(req, res);
+  try {
+    setCorsHeaders(req, res);
+  } catch (corsError) {
+    console.error('[admin-whatsapp-groups] CORS error:', corsError);
+    // Continue anyway, CORS shouldn't block the request
+  }
+  
   if (handleCorsPreFlight(req, res)) return;
 
   if (req.method !== 'GET') {
@@ -15,6 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   console.log('[admin-whatsapp-groups] Request received at', new Date().toISOString());
+  console.log('[admin-whatsapp-groups] Request method:', req.method);
+  console.log('[admin-whatsapp-groups] Request headers:', JSON.stringify(req.headers, null, 2));
 
   try {
     // ✅ SECURITY: Validate admin authentication

@@ -12,6 +12,15 @@
   "functions": {
     "api/xendit/webhook.ts": {
       "maxDuration": 30
+    },
+    "api/admin-whatsapp-groups.ts": {
+      "maxDuration": 30
+    },
+    "api/admin-whatsapp.ts": {
+      "maxDuration": 30
+    },
+    "api/test-groups-simple.ts": {
+      "maxDuration": 10
     }
   },
   "headers": [

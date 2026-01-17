@@ -2,7 +2,7 @@
  * Admin WhatsApp Settings - Design System V3
  * WCAG 2.1 AA Compliant
  * 
- * @description WhatsApp configuration page following Admin Design System V3
+ * @description WhatsApp configuration page matching AdminProductsV2 styling
  */
 
 import React, { useEffect, useState } from 'react';
@@ -25,14 +25,13 @@ import {
   Check
 } from 'lucide-react';
 import { 
-  AdminPageHeaderV2, 
-  AdminStatCard, 
   AdminCard, 
   AdminCardHeader, 
   AdminCardBody, 
   AdminCardFooter,
   AdminButton 
 } from './components/ui';
+import '../../styles/admin-design-system-v3.css';
 
 // ========================================
 // TYPES
@@ -357,122 +356,143 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
   // ========================================
 
   return (
-    <div className="admin-container">
-      {/* Page Header */}
-      <AdminPageHeaderV2
-        title="WhatsApp Configuration"
-        subtitle="Manage WhatsApp provider, API keys, and notification routing"
-        icon={MessageCircle}
-        breadcrumb={[
-          { label: 'Admin', href: '/admin' },
-          { label: 'Settings' },
-          { label: 'WhatsApp' }
-        ]}
-        actions={[
-          {
-            key: 'refresh',
-            label: 'Refresh',
-            icon: RefreshCw,
-            onClick: () => { load(); loadGroups(); },
-            variant: 'secondary'
-          },
-          {
-            key: 'save',
-            label: 'Save Changes',
-            icon: Save,
-            onClick: save,
-            variant: 'primary',
-            disabled: saving,
-            loading: saving
-          }
-        ]}
-      />
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
+            WhatsApp Configuration
+          </h1>
+          <p className="text-gray-400 mt-1">Manage WhatsApp provider, API keys, and notification routing</p>
+        </div>
+        <div className="flex gap-3">
+          <AdminButton
+            variant="secondary"
+            onClick={() => { load(); loadGroups(); }}
+            disabled={loading}
+            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
+          >
+            Refresh
+          </AdminButton>
+          <AdminButton
+            variant="primary"
+            onClick={save}
+            disabled={saving}
+            icon={<Save size={18} />}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </AdminButton>
+        </div>
+      </div>
 
-      <main className="admin-main">
-        {/* Loading State */}
-        {loading ? (
-          <section className="admin-section">
-            <AdminCard>
-              <div className="flex items-center justify-center min-h-64">
-                <Loader2 className="w-6 h-6 animate-spin mr-3" style={{ color: 'var(--admin-accent)' }} />
-                <span style={{ color: 'var(--admin-text-secondary)' }}>Loading configuration...</span>
-              </div>
-            </AdminCard>
-          </section>
-        ) : (
+      {/* Loading State */}
+      {loading ? (
+        <AdminCard>
+          <AdminCardBody>
+            <div className="flex items-center justify-center min-h-64">
+              <Loader2 className="w-6 h-6 animate-spin mr-3 text-pink-500" />
+              <span className="text-gray-400">Loading configuration...</span>
+            </div>
+          </AdminCardBody>
+        </AdminCard>
+      ) : (
           <>
-            {/* Status Overview */}
-            <section className="admin-section">
-              <h2 className="admin-card-title mb-4" style={{ color: 'var(--admin-text-primary)' }}>
-                Provider Status
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <AdminStatCard
-                  title="Connection"
-                  value={providerStatus.isConnected ? 'Connected' : 'Disconnected'}
-                  subtitle={providerStatus.lastChecked}
-                  icon={providerStatus.isConnected ? CheckCircle : AlertCircle}
-                  iconColor={providerStatus.isConnected ? 'text-green-400' : 'text-red-400'}
-                  iconBgColor={providerStatus.isConnected ? 'bg-green-500/10' : 'bg-red-500/10'}
-                />
-                <AdminStatCard
-                  title="Active Groups"
-                  value={providerStatus.activeGroups}
-                  subtitle={`${groups.length} available`}
-                  icon={Users}
-                  iconColor="text-blue-400"
-                  iconBgColor="bg-blue-500/10"
-                />
-                <AdminStatCard
-                  title="Provider"
-                  value={provider?.display_name || provider?.name || 'Unknown'}
-                  subtitle={provider?.base_url || 'No provider'}
-                  icon={Smartphone}
-                  iconColor="text-purple-400"
-                  iconBgColor="bg-purple-500/10"
-                />
-                <AdminStatCard
-                  title="API Usage"
-                  value={apiKey?.usage_count || 0}
-                  subtitle={providerStatus.lastActivity}
-                  icon={Activity}
-                  iconColor="text-pink-400"
-                  iconBgColor="bg-pink-500/10"
-                />
-              </div>
-            </section>
+            {/* Statistics Cards - matching AdminProductsV2 style */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <AdminCard hover>
+                <AdminCardBody>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">Connection</p>
+                      <p className={`text-2xl font-bold ${providerStatus.isConnected ? 'text-green-400' : 'text-red-400'}`}>
+                        {providerStatus.isConnected ? 'Connected' : 'Disconnected'}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">{providerStatus.lastChecked}</p>
+                    </div>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${providerStatus.isConnected ? 'bg-green-100' : 'bg-red-100'}`}>
+                      {providerStatus.isConnected ? (
+                        <CheckCircle className="text-green-600" size={24} />
+                      ) : (
+                        <AlertCircle className="text-red-600" size={24} />
+                      )}
+                    </div>
+                  </div>
+                </AdminCardBody>
+              </AdminCard>
+
+              <AdminCard hover>
+                <AdminCardBody>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">Active Groups</p>
+                      <p className="text-3xl font-bold text-blue-400">{providerStatus.activeGroups}</p>
+                      <p className="text-xs text-slate-500 mt-1">{groups.length} available</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Users className="text-blue-600" size={24} />
+                    </div>
+                  </div>
+                </AdminCardBody>
+              </AdminCard>
+
+              <AdminCard hover>
+                <AdminCardBody>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">Provider</p>
+                      <p className="text-xl font-bold text-purple-400">{provider?.display_name || provider?.name || 'Unknown'}</p>
+                      <p className="text-xs text-slate-500 mt-1 truncate max-w-[150px]">{provider?.base_url || 'No provider'}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Smartphone className="text-purple-600" size={24} />
+                    </div>
+                  </div>
+                </AdminCardBody>
+              </AdminCard>
+
+              <AdminCard hover>
+                <AdminCardBody>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">API Usage</p>
+                      <p className="text-3xl font-bold text-pink-400">{apiKey?.usage_count || 0}</p>
+                      <p className="text-xs text-slate-500 mt-1">{providerStatus.lastActivity}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                      <Activity className="text-pink-600" size={24} />
+                    </div>
+                  </div>
+                </AdminCardBody>
+              </AdminCard>
+            </div>
 
             {/* Alert Messages */}
-            {(error || message) && (
-              <section className="admin-section" style={{ paddingTop: 0 }}>
-                {error && (
-                  <AdminCard className="border-red-500/30 bg-red-500/10">
-                    <div className="flex items-center gap-3">
-                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-red-400">Error</p>
-                        <p className="text-sm mt-1 text-red-300">{error}</p>
-                      </div>
-                    </div>
-                  </AdminCard>
-                )}
-                {message && (
-                  <AdminCard className="border-green-500/30 bg-green-500/10">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-green-400">Success</p>
-                        <p className="text-sm mt-1 text-green-300">{message}</p>
-                      </div>
-                    </div>
-                  </AdminCard>
-                )}
-              </section>
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 text-red-300">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Error</p>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {message && (
+              <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 text-green-300">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Success</p>
+                    <p className="text-sm mt-1">{message}</p>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Step 1: Current API Key */}
-            <section className="admin-section">
-              <AdminCard className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20">
+            <AdminCard className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20">
                 <AdminCardHeader
                   title="1. Active API Key"
                   subtitle="Your current WooWA API key"
@@ -485,9 +505,9 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                         <Key className="w-6 h-6 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-sm" style={{ color: 'var(--admin-text-tertiary)' }}>API Key</p>
+                        <p className="text-sm text-slate-400">API Key</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <p className="font-mono" style={{ color: 'var(--admin-text-primary)' }}>
+                          <p className="font-mono text-white">
                             {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Not configured'}
                           </p>
                           {apiKey && (
@@ -509,7 +529,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                             </>
                           )}
                         </div>
-                        <p className="text-xs mt-1" style={{ color: 'var(--admin-text-tertiary)' }}>
+                        <p className="text-xs mt-1 text-slate-500">
                           Usage: {apiKey?.usage_count?.toLocaleString() || '0'} messages
                         </p>
                       </div>
@@ -521,12 +541,10 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     </div>
                   </div>
                 </AdminCardBody>
-              </AdminCard>
-            </section>
+            </AdminCard>
 
             {/* Step 2: Update API Key */}
-            <section className="admin-section">
-              <AdminCard className="border-2 border-pink-500/30">
+            <AdminCard className="border-2 border-pink-500/30">
                 <AdminCardHeader
                   title="2. Update API Key"
                   subtitle="Enter a new API key to connect to WooWA"
@@ -537,33 +555,26 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     <div>
                       <label 
                         htmlFor="new-api-key"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: 'var(--admin-text-primary)' }}
+                        className="block text-sm font-medium mb-2 text-white"
                       >
                         New API Key <span className="text-red-400">*</span>
                       </label>
                       <input
                         id="new-api-key"
                         type="text"
-                        className="admin-input w-full px-4 py-3 rounded-lg font-mono text-sm"
-                        style={{
-                          backgroundColor: 'var(--admin-surface)',
-                          border: '2px solid var(--admin-border)',
-                          color: 'var(--admin-text-primary)'
-                        }}
+                        className="w-full px-4 py-3 rounded-lg font-mono text-sm bg-slate-800/50 border-2 border-slate-700 text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
                         value={newApiKey}
                         onChange={(e) => setNewApiKey(e.target.value)}
                         placeholder="Paste new API key here"
                         aria-describedby="api-key-hint"
                       />
-                      <p id="api-key-hint" className="text-xs mt-1.5" style={{ color: 'var(--admin-text-tertiary)' }}>
+                      <p id="api-key-hint" className="text-xs mt-1.5 text-slate-500">
                         Get your API key from{' '}
                         <a 
                           href="https://notifapi.com" 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="hover:underline"
-                          style={{ color: 'var(--admin-accent)' }}
+                          className="text-pink-400 hover:underline"
                         >
                           notifapi.com
                         </a>
@@ -591,15 +602,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     </div>
                   </div>
                 </AdminCardBody>
-              </AdminCard>
-            </section>
+            </AdminCard>
 
             {/* Step 3 & 4: Group Configuration (Only show if API key is active) */}
             {apiKey?.is_active && (
               <>
                 {/* Current Group Configuration */}
-                <section className="admin-section">
-                  <AdminCard className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+                <AdminCard className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
                     <AdminCardHeader
                       title="3. Current Group Configuration"
                       subtitle="Active notification routing settings"
@@ -607,26 +616,26 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     />
                     <AdminCardBody>
                       {/* Default Group */}
-                      <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: 'var(--admin-border)' }}>
+                      <div className="flex items-center justify-between pb-4 border-b border-slate-700">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-green-500/20">
                             <Users className="w-5 h-5 text-green-400" />
                           </div>
                           <div>
-                            <p className="text-sm" style={{ color: 'var(--admin-text-tertiary)' }}>Default Group</p>
-                            <p className="text-base font-semibold" style={{ color: 'var(--admin-text-primary)' }}>
+                            <p className="text-sm text-slate-400">Default Group</p>
+                            <p className="text-base font-semibold text-white">
                               {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Not set'}
                             </p>
                           </div>
                         </div>
                         {defaultGroupId && (
-                          <p className="text-xs font-mono" style={{ color: 'var(--admin-text-tertiary)' }}>{defaultGroupId}</p>
+                          <p className="text-xs font-mono text-slate-500">{defaultGroupId}</p>
                         )}
                       </div>
 
                       {/* Notification Types Grid */}
                       <div className="mt-4">
-                        <p className="text-sm mb-3" style={{ color: 'var(--admin-text-tertiary)' }}>Notification Routing</p>
+                        <p className="text-sm mb-3 text-slate-400">Notification Routing</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {[
                             { key: 'purchase_orders', label: 'Purchase Orders' },
@@ -636,14 +645,10 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                           ].map(item => (
                             <div 
                               key={item.key}
-                              className="p-3 rounded-lg"
-                              style={{ 
-                                backgroundColor: 'var(--admin-surface)',
-                                border: '1px solid var(--admin-border)'
-                              }}
+                              className="p-3 rounded-lg bg-slate-800/50 border border-slate-700"
                             >
-                              <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>{item.label}</p>
-                              <p className="text-sm font-medium mt-1" style={{ color: 'var(--admin-text-primary)' }}>
+                              <p className="text-xs text-slate-500">{item.label}</p>
+                              <p className="text-sm font-medium mt-1 text-white">
                                 {groups.find(g => g.id === groupConfigurations[item.key as keyof GroupConfiguration])?.name || 'Using default'}
                               </p>
                             </div>
@@ -651,17 +656,16 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                         </div>
                       </div>
                     </AdminCardBody>
-                  </AdminCard>
-                </section>
+                </AdminCard>
 
                 {/* Select Groups */}
-                <section className="admin-section">
+                <div>
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="admin-card-title" style={{ color: 'var(--admin-text-primary)' }}>
+                      <h2 className="text-xl font-semibold text-white">
                         4. Select Groups
                       </h2>
-                      <p className="text-sm mt-1" style={{ color: 'var(--admin-text-tertiary)' }}>
+                      <p className="text-sm mt-1 text-slate-400">
                         Choose WhatsApp groups for notifications
                       </p>
                     </div>
@@ -690,19 +694,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                           <div>
                             <label 
                               htmlFor="default-group"
-                              className="block text-sm font-medium mb-2"
-                              style={{ color: 'var(--admin-text-primary)' }}
+                              className="block text-sm font-medium mb-2 text-white"
                             >
                               Select Default Group
                             </label>
                             <select
                               id="default-group"
-                              className="admin-select w-full px-4 py-3 rounded-lg"
-                              style={{
-                                backgroundColor: 'var(--admin-surface)',
-                                border: '2px solid var(--admin-border)',
-                                color: 'var(--admin-text-primary)'
-                              }}
+                              className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border-2 border-slate-700 text-white focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
                               value={defaultGroupId}
                               onChange={(e) => setDefaultGroupId(e.target.value)}
                             >
@@ -711,7 +709,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                                 <option key={g.id} value={g.id}>{g.name}</option>
                               ))}
                             </select>
-                            <p className="text-xs mt-1.5" style={{ color: 'var(--admin-text-tertiary)' }}>
+                            <p className="text-xs mt-1.5 text-slate-500">
                               {groups.length > 0 ? `${groups.length} groups available` : 'Click "Discover Groups" to load'}
                             </p>
                           </div>
@@ -730,20 +728,14 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                           <div>
                             <label 
                               htmlFor="manual-group-id"
-                              className="block text-sm font-medium mb-2"
-                              style={{ color: 'var(--admin-text-tertiary)' }}
+                              className="block text-sm font-medium mb-2 text-slate-400"
                             >
                               Or Enter Group ID Manually
                             </label>
                             <input
                               id="manual-group-id"
                               type="text"
-                              className="admin-input w-full px-4 py-3 rounded-lg font-mono text-sm"
-                              style={{
-                                backgroundColor: 'var(--admin-surface)',
-                                border: '1px solid var(--admin-border)',
-                                color: 'var(--admin-text-primary)'
-                              }}
+                              className="w-full px-4 py-3 rounded-lg font-mono text-sm bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
                               value={defaultGroupId}
                               onChange={(e) => setDefaultGroupId(e.target.value)}
                               placeholder="120363405729592501@g.us"
@@ -767,7 +759,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                       <AdminCardHeader
                         title="Notification Routing"
                         subtitle="Configure groups for each notification type"
-                        icon={<MessageCircle className="w-5 h-5" style={{ color: 'var(--admin-accent)' }} />}
+                        icon={<MessageCircle className="w-5 h-5 text-pink-400" />}
                       />
                       <AdminCardBody>
                         <div className="space-y-4">
@@ -780,19 +772,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                             <div key={item.key}>
                               <label 
                                 htmlFor={`routing-${item.key}`}
-                                className="block text-sm font-medium mb-2"
-                                style={{ color: 'var(--admin-text-primary)' }}
+                                className="block text-sm font-medium mb-2 text-white"
                               >
                                 {item.label}
                               </label>
                               <select
                                 id={`routing-${item.key}`}
-                                className="admin-select w-full px-4 py-2.5 rounded-lg text-sm"
-                                style={{
-                                  backgroundColor: 'var(--admin-surface)',
-                                  border: '1px solid var(--admin-border)',
-                                  color: 'var(--admin-text-primary)'
-                                }}
+                                className="w-full px-4 py-2.5 rounded-lg text-sm bg-slate-800/50 border border-slate-700 text-white focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
                                 value={groupConfigurations[item.key as keyof GroupConfiguration]}
                                 onChange={(e) => setGroupConfigurations({
                                   ...groupConfigurations,
@@ -822,36 +808,29 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                       </AdminCardFooter>
                     </AdminCard>
                   </div>
-                </section>
+                </div>
               </>
             )}
 
             {/* Test Messaging Section */}
-            <section className="admin-section">
-              <AdminCard>
+            <AdminCard>
                 <AdminCardHeader
                   title="Test Messaging"
                   subtitle="Send a test message to verify configuration"
-                  icon={<Send className="w-5 h-5" style={{ color: 'var(--admin-accent)' }} />}
+                  icon={<Send className="w-5 h-5 text-pink-400" />}
                 />
                 <AdminCardBody>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                       <label 
                         htmlFor="test-group"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: 'var(--admin-text-tertiary)' }}
+                        className="block text-sm font-medium mb-2 text-slate-400"
                       >
                         Target Group (Optional)
                       </label>
                       <select
                         id="test-group"
-                        className="admin-select w-full px-4 py-3 rounded-lg"
-                        style={{
-                          backgroundColor: 'var(--admin-surface)',
-                          border: '1px solid var(--admin-border)',
-                          color: 'var(--admin-text-primary)'
-                        }}
+                        className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700 text-white focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
                         value={customGroupId}
                         onChange={(e) => setCustomGroupId(e.target.value)}
                       >
@@ -860,7 +839,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                           <option key={g.id} value={g.id}>{g.name}</option>
                         ))}
                       </select>
-                      <p className="text-xs mt-1" style={{ color: 'var(--admin-text-tertiary)' }}>
+                      <p className="text-xs mt-1 text-slate-500">
                         Override default group for this test
                       </p>
                     </div>
@@ -868,19 +847,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     <div>
                       <label 
                         htmlFor="test-message"
-                        className="block text-sm font-medium mb-2"
-                        style={{ color: 'var(--admin-text-tertiary)' }}
+                        className="block text-sm font-medium mb-2 text-slate-400"
                       >
                         Test Message
                       </label>
                       <textarea
                         id="test-message"
-                        className="admin-input w-full px-4 py-3 h-24 rounded-lg resize-none"
-                        style={{
-                          backgroundColor: 'var(--admin-surface)',
-                          border: '1px solid var(--admin-border)',
-                          color: 'var(--admin-text-primary)'
-                        }}
+                        className="w-full px-4 py-3 h-24 rounded-lg resize-none bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
                         value={testMessage}
                         onChange={(e) => setTestMessage(e.target.value)}
                         placeholder="Test message from Admin Panel"
@@ -891,7 +864,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                 <AdminCardFooter>
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
-                      <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>
+                      <p className="text-xs text-slate-500">
                         {customGroupId 
                           ? `Will send to: ${groups.find(g => g.id === customGroupId)?.name || 'Custom Group'}` 
                           : `Will send to default group: ${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'None selected'}`
@@ -909,11 +882,9 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     </AdminButton>
                   </div>
                 </AdminCardFooter>
-              </AdminCard>
-            </section>
+            </AdminCard>
           </>
         )}
-      </main>
     </div>
   );
 };

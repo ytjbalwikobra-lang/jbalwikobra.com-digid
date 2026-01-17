@@ -168,7 +168,7 @@ module.exports = function (app) {
       });
     });
 
-    // Minimal mock for webhook test send used by AdminWhatsAppSettings
+    // Minimal mock for webhook test send used by AdminWhatsAppSettingsEnhanced
     app.post('/api/xendit/webhook', (req, res) => {
       if (req.url.includes('testGroupSend')) {
         let buf = '';

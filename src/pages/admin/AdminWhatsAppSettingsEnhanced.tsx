@@ -158,13 +158,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
           : hasValidConfig ? 'Ready to use' : 'Not configured'
       });
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Failed to load';
+      const errorMessage = parseErrorMessage(e);
       setError(errorMessage);
       setProviderStatus({
         isConnected: false,
         lastChecked: new Date().toLocaleString(),
         activeGroups: 0,
-        lastActivity: 'Connection failed'
+        lastActivity: navigator.onLine ? 'Connection failed' : 'Device offline'
       });
     } finally {
       setLoading(false);
@@ -185,6 +185,10 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       const data = await res.json();
       
       if (!res.ok) {
+        // Check for SERVICE_OFF state
+        if (data.state === 'SERVICE_OFF' || data.message?.includes('SERVICE_OFF') || data.message?.includes('scan qr')) {
+          throw new Error('SERVICE_OFF: Device not connected. Please scan QR code.');
+        }
         const errorMsg = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
         throw new Error(errorMsg);
       }
@@ -192,19 +196,23 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       setGroups(data.groups || []);
       setProviderStatus(prev => ({
         ...prev,
+        isConnected: true,
         activeGroups: data.groups?.length || 0,
-        lastActivity: 'Groups loaded successfully'
+        lastActivity: 'Groups loaded successfully',
+        lastChecked: new Date().toLocaleString()
       }));
       
       setMessage('Groups loaded successfully');
       setTimeout(() => setMessage(''), 3000);
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      setError('Failed to load groups: ' + errorMessage);
+      const errorMessage = parseErrorMessage(e);
+      setError(errorMessage);
       setProviderStatus(prev => ({
         ...prev,
+        isConnected: false,
         activeGroups: 0,
-        lastActivity: 'Failed to load groups'
+        lastActivity: 'Connection failed',
+        lastChecked: new Date().toLocaleString()
       }));
     } finally {
       setLoadingGroups(false);
@@ -253,7 +261,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       
       setTimeout(() => load(), 1000);
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Failed to update API key';
+      const errorMessage = parseErrorMessage(e);
       setError(errorMessage);
     } finally {
       setUpdatingKey(false);
@@ -289,7 +297,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         lastActivity: 'Configuration updated'
       }));
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Failed to save';
+      const errorMessage = parseErrorMessage(e);
       setError(errorMessage);
     } finally {
       setSaving(false);
@@ -318,7 +326,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         lastActivity: 'Test message sent'
       }));
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Failed to send test';
+      const errorMessage = parseErrorMessage(e);
       setError(errorMessage);
     } finally {
       setTesting(false);
@@ -338,6 +346,42 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
   const maskApiKey = (key: string) => {
     if (!key || key.length < 8) return key;
     return key.substring(0, 8) + '•'.repeat(Math.min(key.length - 8, 24));
+  };
+
+  const parseErrorMessage = (error: unknown): string => {
+    if (!navigator.onLine) {
+      return 'Device offline. Please check your internet connection.';
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Check for SERVICE_OFF (device not connected/QR not scanned)
+    if (errorMessage.includes('SERVICE_OFF') || 
+        errorMessage.toLowerCase().includes('service off') ||
+        errorMessage.toLowerCase().includes('service_off') ||
+        errorMessage.toLowerCase().includes('scan qr')) {
+      return 'Device offline. Your WhatsApp device is not connected. Please scan the QR code on your WooWA dashboard. Visit https://woo-wa.com for more details.';
+    }
+    
+    // Check for API key errors
+    if (errorMessage.toLowerCase().includes('unauthorized') || 
+        errorMessage.toLowerCase().includes('invalid api') ||
+        errorMessage.toLowerCase().includes('authentication') ||
+        errorMessage.toLowerCase().includes('forbidden') ||
+        errorMessage.toLowerCase().includes('api key') ||
+        errorMessage.includes('401') ||
+        errorMessage.includes('403')) {
+      return 'Incorrect API key. Please check your credentials and try again. Visit https://woo-wa.com for documentation.';
+    }
+    
+    // Check for network errors
+    if (errorMessage.toLowerCase().includes('network') || 
+        errorMessage.toLowerCase().includes('fetch') ||
+        errorMessage.toLowerCase().includes('connection')) {
+      return 'Network error. Device may be offline or server is unreachable. Please check your connection.';
+    }
+    
+    return errorMessage;
   };
 
   const applyToAllNotifications = () => {
@@ -466,6 +510,57 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
               </AdminCard>
             </div>
 
+            {/* Quick Help Section */}
+            <AdminCard className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
+              <AdminCardBody>
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-blue-500/20 flex-shrink-0">
+                    <Info className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-white mb-2">Need Help?</h3>
+                    <p className="text-sm text-slate-400 mb-3">
+                      Experiencing connection issues? Common errors and solutions:
+                    </p>
+                    <ul className="space-y-2 text-sm text-slate-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400 font-bold mt-0.5">•</span>
+                        <span><strong className="text-white">Device offline:</strong> Your WhatsApp device is not connected. Scan the QR code on your WooWA dashboard.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-400 font-bold mt-0.5">•</span>
+                        <span><strong className="text-white">Incorrect API key:</strong> Verify your API key is correct and active in your NotifAPI account.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 font-bold mt-0.5">•</span>
+                        <span><strong className="text-white">Connection failed:</strong> Check your internet connection and firewall settings.</span>
+                      </li>
+                    </ul>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <a
+                        href="https://woo-wa.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white text-sm font-medium transition-all"
+                      >
+                        <Info className="w-4 h-4" />
+                        WooWA Documentation
+                      </a>
+                      <a
+                        href="https://notifapi.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition-all"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        NotifAPI Dashboard
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </AdminCardBody>
+            </AdminCard>
+
             {/* Alert Messages */}
             {error && (
               <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 text-red-300">
@@ -571,12 +666,21 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                       <p id="api-key-hint" className="text-xs mt-1.5 text-slate-500">
                         Get your API key from{' '}
                         <a 
+                          href="https://woo-wa.com" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-pink-400 hover:underline"
+                        >
+                          WooWA Documentation
+                        </a>
+                        {' '} | {' '}
+                        <a 
                           href="https://notifapi.com" 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="text-pink-400 hover:underline"
                         >
-                          notifapi.com
+                          NotifAPI Dashboard
                         </a>
                       </p>
                     </div>

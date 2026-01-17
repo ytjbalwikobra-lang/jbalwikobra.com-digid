@@ -1,3 +1,10 @@
+/**
+ * Admin WhatsApp Settings - Design System V3
+ * WCAG 2.1 AA Compliant
+ * 
+ * @description WhatsApp configuration page following Admin Design System V3
+ */
+
 import React, { useEffect, useState } from 'react';
 import { 
   Loader2, 
@@ -5,23 +12,31 @@ import {
   Send, 
   Users, 
   RefreshCw, 
-  Settings, 
   MessageCircle,
   CheckCircle,
   AlertCircle,
-  Clock,
   Activity,
   Smartphone,
-  Shield,
   Info,
   Key,
   Eye,
   EyeOff,
   Copy,
-  Check,
-  Globe
+  Check
 } from 'lucide-react';
-import { AdminPageHeaderV2, AdminStatCard } from './components/ui';
+import { 
+  AdminPageHeaderV2, 
+  AdminStatCard, 
+  AdminCard, 
+  AdminCardHeader, 
+  AdminCardBody, 
+  AdminCardFooter,
+  AdminButton 
+} from './components/ui';
+
+// ========================================
+// TYPES
+// ========================================
 
 interface ProviderSettingsResp {
   id: string;
@@ -63,7 +78,17 @@ interface GroupConfiguration {
   general_notifications: string;
 }
 
+interface WhatsAppGroup {
+  id: string;
+  name: string;
+}
+
+// ========================================
+// COMPONENT
+// ========================================
+
 const AdminWhatsAppSettingsEnhanced: React.FC = () => {
+  // State Management
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -83,7 +108,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
   const [testMessage, setTestMessage] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
+  const [groups, setGroups] = useState<WhatsAppGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [copied, setCopied] = useState(false);
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
@@ -92,6 +117,10 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
     activeGroups: 0,
     lastActivity: 'No recent activity'
   });
+
+  // ========================================
+  // API FUNCTIONS
+  // ========================================
 
   const load = async () => {
     setLoading(true);
@@ -119,9 +148,6 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         general_notifications: configs.general_notifications || ''
       });
       
-      setMessage('');
-      
-      // Set connected status based on provider and API key existence
       const hasValidConfig = !!(data.provider || data) && !!data.api_key;
       
       setProviderStatus({
@@ -132,8 +158,9 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
           ? `Last used: ${new Date(data.api_key.last_used_at).toLocaleString()}` 
           : hasValidConfig ? 'Ready to use' : 'Not configured'
       });
-    } catch (e: any) {
-      setError(e.message || 'Failed to load');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to load';
+      setError(errorMessage);
       setProviderStatus({
         isConnected: false,
         lastChecked: new Date().toLocaleString(),
@@ -147,7 +174,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
 
   const loadGroups = async () => {
     setLoadingGroups(true);
-    setError(''); // Clear previous errors
+    setError('');
     try {
       const sessionToken = localStorage.getItem('session_token');
       const headers: Record<string, string> = {};
@@ -155,36 +182,15 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         headers['Authorization'] = `Bearer ${sessionToken}`;
       }
       
-      console.log('[WhatsApp Settings] Loading groups from API...');
-      console.log('[WhatsApp Settings] Request URL:', window.location.origin + '/api/admin-whatsapp-groups');
-      console.log('[WhatsApp Settings] Has session token:', !!sessionToken);
-      
       const res = await fetch('/api/admin-whatsapp-groups', { headers });
-      
-      console.log('[WhatsApp Settings] Response status:', res.status);
-      console.log('[WhatsApp Settings] Response headers:', Object.fromEntries(res.headers.entries()));
-      
       const data = await res.json();
-      
-      console.log('[WhatsApp Settings] Groups API response:', {
-        status: res.status,
-        ok: res.ok,
-        data
-      });
       
       if (!res.ok) {
         const errorMsg = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
-        console.error('[WhatsApp Settings] Groups API error:', {
-          status: res.status,
-          statusText: res.statusText,
-          errorMsg,
-          data
-        });
         throw new Error(errorMsg);
       }
       
       setGroups(data.groups || []);
-      
       setProviderStatus(prev => ({
         ...prev,
         activeGroups: data.groups?.length || 0,
@@ -193,9 +199,8 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       
       setMessage('Groups loaded successfully');
       setTimeout(() => setMessage(''), 3000);
-    } catch (e: any) {
-      console.error('[WhatsApp Settings] Failed to load groups:', e);
-      const errorMessage = e?.message || 'Unknown error';
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       setError('Failed to load groups: ' + errorMessage);
       setProviderStatus(prev => ({
         ...prev,
@@ -211,7 +216,6 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
     load();
   }, []);
 
-  // Load groups only when we have an active API key
   useEffect(() => {
     if (apiKey?.is_active) {
       loadGroups();
@@ -238,9 +242,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       const res = await fetch('/api/admin-whatsapp', {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ 
-          api_key: newApiKey.trim()
-        })
+        body: JSON.stringify({ api_key: newApiKey.trim() })
       });
       
       const data = await res.json();
@@ -250,10 +252,10 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       setNewApiKey('');
       setApiKey(data.api_key);
       
-      // Reload to get fresh data
       setTimeout(() => load(), 1000);
-    } catch (e: any) {
-      setError(e.message || 'Failed to update API key');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to update API key';
+      setError(errorMessage);
     } finally {
       setUpdatingKey(false);
     }
@@ -287,8 +289,9 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         ...prev,
         lastActivity: 'Configuration updated'
       }));
-    } catch (e: any) {
-      setError(e.message || 'Failed to save');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to save';
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -315,12 +318,17 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         ...prev,
         lastActivity: 'Test message sent'
       }));
-    } catch (e: any) {
-      setError(e.message || 'Failed to send test');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to send test';
+      setError(errorMessage);
     } finally {
       setTesting(false);
     }
   };
+
+  // ========================================
+  // UTILITY FUNCTIONS
+  // ========================================
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -333,8 +341,24 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
     return key.substring(0, 8) + '•'.repeat(Math.min(key.length - 8, 24));
   };
 
+  const applyToAllNotifications = () => {
+    setGroupConfigurations({
+      purchase_orders: defaultGroupId,
+      rental_orders: defaultGroupId,
+      flash_sales: defaultGroupId,
+      general_notifications: defaultGroupId
+    });
+    setMessage(`Applied "${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId}" to all notifications`);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  // ========================================
+  // RENDER
+  // ========================================
+
   return (
-    <div className="dashboard-container">
+    <div className="admin-container">
+      {/* Page Header */}
       <AdminPageHeaderV2
         title="WhatsApp Configuration"
         subtitle="Manage WhatsApp provider, API keys, and notification routing"
@@ -364,518 +388,532 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         ]}
       />
 
-      {loading ? (
-        <div className="dashboard-section">
-          <div className="dashboard-data-panel padded rounded-xl p-stack-lg">
-            <div className="flex items-center justify-center min-h-64 text-ds-text">
-              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading configuration...
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="dashboard-section">
-          {/* Status Overview Cards */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">Provider Status</h2>
-              <p className="text-sm text-ds-text-secondary">Current WhatsApp provider connection and activity</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <AdminStatCard
-              title="Connection"
-              value={providerStatus.isConnected ? 'Connected' : 'Disconnected'}
-              subtitle={providerStatus.lastChecked}
-              icon={providerStatus.isConnected ? CheckCircle : AlertCircle}
-              iconColor={providerStatus.isConnected ? 'text-green-400' : 'text-red-400'}
-              iconBgColor={providerStatus.isConnected ? 'bg-green-500/10' : 'bg-red-500/10'}
-            />
-            
-            <AdminStatCard
-              title="Active Groups"
-              value={providerStatus.activeGroups}
-              subtitle={`${groups.length} available`}
-              icon={Users}
-              iconColor="text-blue-400"
-              iconBgColor="bg-blue-500/10"
-            />
-            
-            <AdminStatCard
-              title="Provider"
-              value={provider?.display_name || provider?.name || 'Unknown'}
-              subtitle={provider?.base_url || 'No provider'}
-              icon={Smartphone}
-              iconColor="text-purple-400"
-              iconBgColor="bg-purple-500/10"
-            />
-            
-            <AdminStatCard
-              title="API Usage"
-              value={apiKey?.usage_count || 0}
-              subtitle={providerStatus.lastActivity}
-              icon={Activity}
-              iconColor="text-ds-pink"
-              iconBgColor="bg-ds-pink/10"
-            />
-          </div>
-
-          {/* Alert Messages */}
-          {error && (
-            <div className="dashboard-data-panel padded rounded-xl border-red-500/20 bg-red-500/10">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                <div>
-                  <p className="text-red-400 font-medium">Error</p>
-                  <p className="text-red-300 text-sm mt-1">{error}</p>
-                </div>
+      <main className="admin-main">
+        {/* Loading State */}
+        {loading ? (
+          <section className="admin-section">
+            <AdminCard>
+              <div className="flex items-center justify-center min-h-64">
+                <Loader2 className="w-6 h-6 animate-spin mr-3" style={{ color: 'var(--admin-accent)' }} />
+                <span style={{ color: 'var(--admin-text-secondary)' }}>Loading configuration...</span>
               </div>
-            </div>
-          )}
-          
-          {message && (
-            <div className="dashboard-data-panel padded rounded-xl border-green-500/20 bg-green-500/10">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <div>
-                  <p className="text-green-400 font-medium">Success</p>
-                  <p className="text-green-300 text-sm mt-1">{message}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 1: Current Active API Key */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">1. Active API Key</h2>
-              <p className="text-sm text-ds-text-secondary">Your current WooWA API key</p>
-            </div>
-          </div>
-
-          <div className="dashboard-data-panel padded rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-purple-500/20">
-                  <Key className="w-6 h-6 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-ds-text-secondary mb-1">API Key</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-base font-mono text-ds-text">
-                      {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Not configured'}
-                    </p>
-                    {apiKey && (
-                      <>
-                        <button
-                          onClick={() => setShowApiKey(!showApiKey)}
-                          className="p-1.5 rounded hover:bg-white/10 transition-colors"
-                        >
-                          {showApiKey ? <EyeOff className="w-4 h-4 text-ds-text-secondary" /> : <Eye className="w-4 h-4 text-ds-text-secondary" />}
-                        </button>
-                        <button
-                          onClick={() => copyToClipboard(apiKey.api_key)}
-                          className="p-1.5 rounded hover:bg-white/10 transition-colors"
-                        >
-                          {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-ds-text-secondary" />}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-xs text-ds-text-tertiary mt-1">
-                    Usage: {apiKey?.usage_count?.toLocaleString() || '0'} messages
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className={`text-sm font-semibold px-3 py-1 rounded-full ${apiKey?.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                  {apiKey?.is_active ? '● Active' : '● Inactive'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 2: Update API Key */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">2. Update API Key</h2>
-              <p className="text-sm text-ds-text-secondary">Enter a new API key to connect to WooWA</p>
-            </div>
-          </div>
-
-          <div className="dashboard-data-panel padded rounded-xl border-2 border-ds-pink/30">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-ds-text mb-2">
-                  New API Key <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors font-mono text-sm"
-                  value={newApiKey}
-                  onChange={(e) => setNewApiKey(e.target.value)}
-                  placeholder="Paste new API key here"
+            </AdminCard>
+          </section>
+        ) : (
+          <>
+            {/* Status Overview */}
+            <section className="admin-section">
+              <h2 className="admin-card-title mb-4" style={{ color: 'var(--admin-text-primary)' }}>
+                Provider Status
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <AdminStatCard
+                  title="Connection"
+                  value={providerStatus.isConnected ? 'Connected' : 'Disconnected'}
+                  subtitle={providerStatus.lastChecked}
+                  icon={providerStatus.isConnected ? CheckCircle : AlertCircle}
+                  iconColor={providerStatus.isConnected ? 'text-green-400' : 'text-red-400'}
+                  iconBgColor={providerStatus.isConnected ? 'bg-green-500/10' : 'bg-red-500/10'}
                 />
-                <p className="text-xs text-ds-text-tertiary mt-1.5">
-                  Get your API key from <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer" className="text-ds-pink hover:underline">notifapi.com</a>
-                </p>
+                <AdminStatCard
+                  title="Active Groups"
+                  value={providerStatus.activeGroups}
+                  subtitle={`${groups.length} available`}
+                  icon={Users}
+                  iconColor="text-blue-400"
+                  iconBgColor="bg-blue-500/10"
+                />
+                <AdminStatCard
+                  title="Provider"
+                  value={provider?.display_name || provider?.name || 'Unknown'}
+                  subtitle={provider?.base_url || 'No provider'}
+                  icon={Smartphone}
+                  iconColor="text-purple-400"
+                  iconBgColor="bg-purple-500/10"
+                />
+                <AdminStatCard
+                  title="API Usage"
+                  value={apiKey?.usage_count || 0}
+                  subtitle={providerStatus.lastActivity}
+                  icon={Activity}
+                  iconColor="text-pink-400"
+                  iconBgColor="bg-pink-500/10"
+                />
               </div>
+            </section>
 
-              <button
-                onClick={updateApiKey}
-                disabled={updatingKey || !newApiKey.trim()}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ds-pink text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-ds-pink/20"
-              >
-                {updatingKey ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Save className="w-5 h-5" />
-                )}
-                {updatingKey ? 'Updating...' : 'Update API Key'}
-              </button>
-
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <div className="flex items-center gap-2">
-                  <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                  <p className="text-xs text-amber-300">
-                    After updating the API key, you can discover and configure groups below
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3: Group Configuration (Only show if API key is active) */}
-          {apiKey?.is_active && (
-            <>
-              <div className="dashboard-section-header">
-                <div>
-                  <h2 className="text-lg font-semibold text-ds-text">3. Current Group Configuration</h2>
-                  <p className="text-sm text-ds-text-secondary">Active notification routing settings</p>
-                </div>
-              </div>
-
-              <div className="dashboard-data-panel padded rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                <div className="space-y-4">
-                  {/* Default Group */}
-                  <div className="flex items-center justify-between pb-4 border-b border-token">
+            {/* Alert Messages */}
+            {(error || message) && (
+              <section className="admin-section" style={{ paddingTop: 0 }}>
+                {error && (
+                  <AdminCard className="border-red-500/30 bg-red-500/10">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-green-500/20">
-                        <Users className="w-5 h-5 text-green-400" />
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-red-400">Error</p>
+                        <p className="text-sm mt-1 text-red-300">{error}</p>
+                      </div>
+                    </div>
+                  </AdminCard>
+                )}
+                {message && (
+                  <AdminCard className="border-green-500/30 bg-green-500/10">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-green-400">Success</p>
+                        <p className="text-sm mt-1 text-green-300">{message}</p>
+                      </div>
+                    </div>
+                  </AdminCard>
+                )}
+              </section>
+            )}
+
+            {/* Step 1: Current API Key */}
+            <section className="admin-section">
+              <AdminCard className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20">
+                <AdminCardHeader
+                  title="1. Active API Key"
+                  subtitle="Your current WooWA API key"
+                  icon={<Key className="w-5 h-5 text-purple-400" />}
+                />
+                <AdminCardBody>
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-lg bg-purple-500/20">
+                        <Key className="w-6 h-6 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-sm text-ds-text-secondary">Default Group</p>
-                        <p className="text-base font-semibold text-ds-text">
-                          {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Not set'}
+                        <p className="text-sm" style={{ color: 'var(--admin-text-tertiary)' }}>API Key</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="font-mono" style={{ color: 'var(--admin-text-primary)' }}>
+                            {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Not configured'}
+                          </p>
+                          {apiKey && (
+                            <>
+                              <button
+                                onClick={() => setShowApiKey(!showApiKey)}
+                                className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                                aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+                              >
+                                {showApiKey ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
+                              </button>
+                              <button
+                                onClick={() => copyToClipboard(apiKey.api_key)}
+                                className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                                aria-label="Copy API key"
+                              >
+                                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: 'var(--admin-text-tertiary)' }}>
+                          Usage: {apiKey?.usage_count?.toLocaleString() || '0'} messages
                         </p>
                       </div>
                     </div>
-                    {defaultGroupId && (
-                      <p className="text-xs font-mono text-ds-text-tertiary">{defaultGroupId}</p>
-                    )}
-                  </div>
-
-                  {/* Notification Types */}
-                  <div>
-                    <p className="text-sm text-ds-text-secondary mb-3">Notification Routing</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                        <p className="text-xs text-ds-text-tertiary mb-1">Purchase Orders</p>
-                        <p className="text-sm font-medium text-ds-text">
-                          {groups.find(g => g.id === groupConfigurations.purchase_orders)?.name || 'Using default'}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                        <p className="text-xs text-ds-text-tertiary mb-1">Rental Orders</p>
-                        <p className="text-sm font-medium text-ds-text">
-                          {groups.find(g => g.id === groupConfigurations.rental_orders)?.name || 'Using default'}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                        <p className="text-xs text-ds-text-tertiary mb-1">Flash Sales</p>
-                        <p className="text-sm font-medium text-ds-text">
-                          {groups.find(g => g.id === groupConfigurations.flash_sales)?.name || 'Using default'}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-token">
-                        <p className="text-xs text-ds-text-tertiary mb-1">General Notifications</p>
-                        <p className="text-sm font-medium text-ds-text">
-                          {groups.find(g => g.id === groupConfigurations.general_notifications)?.name || 'Using default'}
-                        </p>
-                      </div>
+                    <div>
+                      <span className={`text-sm font-semibold px-3 py-1.5 rounded-full ${apiKey?.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {apiKey?.is_active ? '● Active' : '● Inactive'}
+                      </span>
                     </div>
                   </div>
-                </div>
-              </div>
+                </AdminCardBody>
+              </AdminCard>
+            </section>
 
-              {/* Step 4: Select New Groups */}
-              <div className="dashboard-section-header">
-                <div>
-                  <h2 className="text-lg font-semibold text-ds-text">4. Select Groups</h2>
-                  <p className="text-sm text-ds-text-secondary">Choose WhatsApp groups for notifications</p>
-                </div>
-                <button
-                  onClick={loadGroups}
-                  disabled={loadingGroups}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text hover:opacity-90 disabled:opacity-50 transition-colors"
-                >
-                  {loadingGroups ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                  {loadingGroups ? 'Loading...' : 'Discover Groups'}
-                </button>
-              </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column: Default Group */}
-              <div className="dashboard-data-panel padded rounded-xl">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-ds-text mb-2">
-                      Select Default Group
-                    </label>
-                    <select
-                      className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border-2 border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-base"
-                      value={defaultGroupId}
-                      onChange={(e) => setDefaultGroupId(e.target.value)}
-                    >
-                      <option value="">-- Select a group --</option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-ds-text-tertiary mt-1.5">
-                      {groups.length > 0 ? `${groups.length} groups available` : 'Click "Discover Groups" to load'}
-                    </p>
-                  </div>
-
-                  {/* Apply to All Button */}
-                  {defaultGroupId && (
-                    <button
-                      onClick={() => {
-                        setGroupConfigurations({
-                          purchase_orders: defaultGroupId,
-                          rental_orders: defaultGroupId,
-                          flash_sales: defaultGroupId,
-                        general_notifications: defaultGroupId
-                      });
-                      setMessage(`Applied "${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId}" to all notifications`);
-                      setTimeout(() => setMessage(''), 3000);
-                    }}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors font-semibold text-sm shadow-lg shadow-purple-600/20"
-                  >
-                    <Users className="w-5 h-5" />
-                    Apply to All Notifications
-                  </button>
-                )}
-
-                {/* Or Manual Entry */}
-                <div>
-                  <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                    Or Enter Group ID Manually
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors font-mono text-sm"
-                    value={defaultGroupId}
-                    onChange={(e) => setDefaultGroupId(e.target.value)}
-                    placeholder="120363405729592501@g.us"
-                  />
-                </div>
-
-                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                  <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                    <p className="text-xs text-blue-300">
-                      Used when specific routing is not configured
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Specific Configurations */}
-              <div className="dashboard-data-panel padded rounded-xl">
-                <div className="space-y-4">
-                  <div className="mb-4">
-                    <h3 className="text-base font-semibold text-ds-text">Notification Routing</h3>
-                    <p className="text-xs text-ds-text-secondary">Configure groups for each notification type</p>
-                  </div>
-
-                  {/* Purchase Orders */}
-                  <div>
-                    <label className="block text-sm font-medium text-ds-text mb-2">
-                      Purchase Orders
-                    </label>
-                    <select
-                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
-                      value={groupConfigurations.purchase_orders}
-                      onChange={(e) => setGroupConfigurations({
-                        ...groupConfigurations,
-                        purchase_orders: e.target.value
-                      })}
-                    >
-                      <option value="">-- Use default group --</option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Rental Orders */}
-                  <div>
-                    <label className="block text-sm font-medium text-ds-text mb-2">
-                      Rental Orders
-                    </label>
-                    <select
-                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
-                      value={groupConfigurations.rental_orders}
-                      onChange={(e) => setGroupConfigurations({
-                        ...groupConfigurations,
-                        rental_orders: e.target.value
-                      })}
-                    >
-                      <option value="">-- Use default group --</option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Flash Sales */}
-                  <div>
-                    <label className="block text-sm font-medium text-ds-text mb-2">
-                      Flash Sales
-                    </label>
-                    <select
-                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
-                      value={groupConfigurations.flash_sales}
-                      onChange={(e) => setGroupConfigurations({
-                        ...groupConfigurations,
-                        flash_sales: e.target.value
-                      })}
-                    >
-                      <option value="">-- Use default group --</option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* General Notifications */}
-                  <div>
-                    <label className="block text-sm font-medium text-ds-text mb-2">
-                      General Notifications
-                    </label>
-                    <select
-                      className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm"
-                      value={groupConfigurations.general_notifications}
-                      onChange={(e) => setGroupConfigurations({
-                        ...groupConfigurations,
-                        general_notifications: e.target.value
-                      })}
-                    >
-                      <option value="">-- Use default group --</option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Save Button - Full Width */}
-            <div className="mt-6">
-              <button
-                onClick={save}
-                disabled={saving}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-base shadow-lg shadow-green-600/20"
-              >
-                {saving ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Save className="w-5 h-5" />
-                )}
-                {saving ? 'Saving Configuration...' : 'Save All Settings'}
-              </button>
-            </div>
-          </div>
-          </>
-          )}
-
-          {/* Test Message Section */}
-          <div className="dashboard-section-header">
-            <div>
-              <h2 className="text-lg font-semibold text-ds-text">Test Messaging</h2>
-              <p className="text-sm text-ds-text-secondary">Send a test message to verify configuration</p>
-            </div>
-          </div>
-
-          <div className="dashboard-data-panel padded rounded-xl">
-            <div className="flex items-center gap-3 mb-6">
-              <Send className="w-5 h-5 text-ds-pink" />
-              <h3 className="font-semibold text-ds-text">Send Test Message</h3>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  Target Group (Optional)
-                </label>
-                <select
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors"
-                  value={customGroupId}
-                  onChange={(e) => setCustomGroupId(e.target.value)}
-                >
-                  <option value="">-- Use default group --</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-ds-text-tertiary mt-1">
-                  Override default group for this test
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-ds-text-secondary mb-2">
-                  Test Message
-                </label>
-                <textarea
-                  className="w-full px-4 py-3 h-24 rounded-lg bg-[var(--bg-secondary)] border border-token text-ds-text placeholder-ds-text-tertiary focus:ring-2 focus:ring-ds-pink/20 focus:border-ds-pink transition-colors resize-none"
-                  value={testMessage}
-                  onChange={(e) => setTestMessage(e.target.value)}
-                  placeholder="Test message from Admin Panel"
+            {/* Step 2: Update API Key */}
+            <section className="admin-section">
+              <AdminCard className="border-2 border-pink-500/30">
+                <AdminCardHeader
+                  title="2. Update API Key"
+                  subtitle="Enter a new API key to connect to WooWA"
+                  icon={<Key className="w-5 h-5 text-pink-400" />}
                 />
-              </div>
-            </div>
+                <AdminCardBody>
+                  <div className="space-y-4">
+                    <div>
+                      <label 
+                        htmlFor="new-api-key"
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: 'var(--admin-text-primary)' }}
+                      >
+                        New API Key <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        id="new-api-key"
+                        type="text"
+                        className="admin-input w-full px-4 py-3 rounded-lg font-mono text-sm"
+                        style={{
+                          backgroundColor: 'var(--admin-surface)',
+                          border: '2px solid var(--admin-border)',
+                          color: 'var(--admin-text-primary)'
+                        }}
+                        value={newApiKey}
+                        onChange={(e) => setNewApiKey(e.target.value)}
+                        placeholder="Paste new API key here"
+                        aria-describedby="api-key-hint"
+                      />
+                      <p id="api-key-hint" className="text-xs mt-1.5" style={{ color: 'var(--admin-text-tertiary)' }}>
+                        Get your API key from{' '}
+                        <a 
+                          href="https://notifapi.com" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="hover:underline"
+                          style={{ color: 'var(--admin-accent)' }}
+                        >
+                          notifapi.com
+                        </a>
+                      </p>
+                    </div>
 
-            <div className="mt-6 pt-6 border-t border-token">
-              <button
-                onClick={testSend}
-                disabled={testing}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-              >
-                {testing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                {testing ? 'Sending...' : 'Send Test Message'}
-              </button>
-              
-              <p className="text-xs text-ds-text-tertiary mt-2">
-                {customGroupId 
-                  ? `Will send to: ${groups.find(g => g.id === customGroupId)?.name || 'Custom Group'}` 
-                  : `Will send to default group: ${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'None selected'}`
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+                    <AdminButton
+                      variant="primary"
+                      onClick={updateApiKey}
+                      disabled={updatingKey || !newApiKey.trim()}
+                      loading={updatingKey}
+                      icon={<Save className="w-4 h-4" />}
+                      fullWidth
+                    >
+                      {updatingKey ? 'Updating...' : 'Update API Key'}
+                    </AdminButton>
+
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="flex items-center gap-2">
+                        <Info className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <p className="text-xs text-amber-300">
+                          After updating the API key, you can discover and configure groups below
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </AdminCardBody>
+              </AdminCard>
+            </section>
+
+            {/* Step 3 & 4: Group Configuration (Only show if API key is active) */}
+            {apiKey?.is_active && (
+              <>
+                {/* Current Group Configuration */}
+                <section className="admin-section">
+                  <AdminCard className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+                    <AdminCardHeader
+                      title="3. Current Group Configuration"
+                      subtitle="Active notification routing settings"
+                      icon={<Users className="w-5 h-5 text-green-400" />}
+                    />
+                    <AdminCardBody>
+                      {/* Default Group */}
+                      <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: 'var(--admin-border)' }}>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-green-500/20">
+                            <Users className="w-5 h-5 text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm" style={{ color: 'var(--admin-text-tertiary)' }}>Default Group</p>
+                            <p className="text-base font-semibold" style={{ color: 'var(--admin-text-primary)' }}>
+                              {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Not set'}
+                            </p>
+                          </div>
+                        </div>
+                        {defaultGroupId && (
+                          <p className="text-xs font-mono" style={{ color: 'var(--admin-text-tertiary)' }}>{defaultGroupId}</p>
+                        )}
+                      </div>
+
+                      {/* Notification Types Grid */}
+                      <div className="mt-4">
+                        <p className="text-sm mb-3" style={{ color: 'var(--admin-text-tertiary)' }}>Notification Routing</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {[
+                            { key: 'purchase_orders', label: 'Purchase Orders' },
+                            { key: 'rental_orders', label: 'Rental Orders' },
+                            { key: 'flash_sales', label: 'Flash Sales' },
+                            { key: 'general_notifications', label: 'General Notifications' }
+                          ].map(item => (
+                            <div 
+                              key={item.key}
+                              className="p-3 rounded-lg"
+                              style={{ 
+                                backgroundColor: 'var(--admin-surface)',
+                                border: '1px solid var(--admin-border)'
+                              }}
+                            >
+                              <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>{item.label}</p>
+                              <p className="text-sm font-medium mt-1" style={{ color: 'var(--admin-text-primary)' }}>
+                                {groups.find(g => g.id === groupConfigurations[item.key as keyof GroupConfiguration])?.name || 'Using default'}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </AdminCardBody>
+                  </AdminCard>
+                </section>
+
+                {/* Select Groups */}
+                <section className="admin-section">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="admin-card-title" style={{ color: 'var(--admin-text-primary)' }}>
+                        4. Select Groups
+                      </h2>
+                      <p className="text-sm mt-1" style={{ color: 'var(--admin-text-tertiary)' }}>
+                        Choose WhatsApp groups for notifications
+                      </p>
+                    </div>
+                    <AdminButton
+                      variant="secondary"
+                      onClick={loadGroups}
+                      disabled={loadingGroups}
+                      loading={loadingGroups}
+                      icon={<RefreshCw className="w-4 h-4" />}
+                      size="sm"
+                    >
+                      {loadingGroups ? 'Loading...' : 'Discover Groups'}
+                    </AdminButton>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left Column: Default Group */}
+                    <AdminCard>
+                      <AdminCardHeader
+                        title="Default Group"
+                        subtitle="Primary notification destination"
+                        icon={<Users className="w-5 h-5 text-green-400" />}
+                      />
+                      <AdminCardBody>
+                        <div className="space-y-4">
+                          <div>
+                            <label 
+                              htmlFor="default-group"
+                              className="block text-sm font-medium mb-2"
+                              style={{ color: 'var(--admin-text-primary)' }}
+                            >
+                              Select Default Group
+                            </label>
+                            <select
+                              id="default-group"
+                              className="admin-select w-full px-4 py-3 rounded-lg"
+                              style={{
+                                backgroundColor: 'var(--admin-surface)',
+                                border: '2px solid var(--admin-border)',
+                                color: 'var(--admin-text-primary)'
+                              }}
+                              value={defaultGroupId}
+                              onChange={(e) => setDefaultGroupId(e.target.value)}
+                            >
+                              <option value="">-- Select a group --</option>
+                              {groups.map(g => (
+                                <option key={g.id} value={g.id}>{g.name}</option>
+                              ))}
+                            </select>
+                            <p className="text-xs mt-1.5" style={{ color: 'var(--admin-text-tertiary)' }}>
+                              {groups.length > 0 ? `${groups.length} groups available` : 'Click "Discover Groups" to load'}
+                            </p>
+                          </div>
+
+                          {defaultGroupId && (
+                            <AdminButton
+                              variant="secondary"
+                              onClick={applyToAllNotifications}
+                              icon={<Users className="w-4 h-4" />}
+                              fullWidth
+                            >
+                              Apply to All Notifications
+                            </AdminButton>
+                          )}
+
+                          <div>
+                            <label 
+                              htmlFor="manual-group-id"
+                              className="block text-sm font-medium mb-2"
+                              style={{ color: 'var(--admin-text-tertiary)' }}
+                            >
+                              Or Enter Group ID Manually
+                            </label>
+                            <input
+                              id="manual-group-id"
+                              type="text"
+                              className="admin-input w-full px-4 py-3 rounded-lg font-mono text-sm"
+                              style={{
+                                backgroundColor: 'var(--admin-surface)',
+                                border: '1px solid var(--admin-border)',
+                                color: 'var(--admin-text-primary)'
+                              }}
+                              value={defaultGroupId}
+                              onChange={(e) => setDefaultGroupId(e.target.value)}
+                              placeholder="120363405729592501@g.us"
+                            />
+                          </div>
+
+                          <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                            <div className="flex items-center gap-2">
+                              <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                              <p className="text-xs text-blue-300">
+                                Used when specific routing is not configured
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </AdminCardBody>
+                    </AdminCard>
+
+                    {/* Right Column: Notification Routing */}
+                    <AdminCard>
+                      <AdminCardHeader
+                        title="Notification Routing"
+                        subtitle="Configure groups for each notification type"
+                        icon={<MessageCircle className="w-5 h-5" style={{ color: 'var(--admin-accent)' }} />}
+                      />
+                      <AdminCardBody>
+                        <div className="space-y-4">
+                          {[
+                            { key: 'purchase_orders', label: 'Purchase Orders' },
+                            { key: 'rental_orders', label: 'Rental Orders' },
+                            { key: 'flash_sales', label: 'Flash Sales' },
+                            { key: 'general_notifications', label: 'General Notifications' }
+                          ].map(item => (
+                            <div key={item.key}>
+                              <label 
+                                htmlFor={`routing-${item.key}`}
+                                className="block text-sm font-medium mb-2"
+                                style={{ color: 'var(--admin-text-primary)' }}
+                              >
+                                {item.label}
+                              </label>
+                              <select
+                                id={`routing-${item.key}`}
+                                className="admin-select w-full px-4 py-2.5 rounded-lg text-sm"
+                                style={{
+                                  backgroundColor: 'var(--admin-surface)',
+                                  border: '1px solid var(--admin-border)',
+                                  color: 'var(--admin-text-primary)'
+                                }}
+                                value={groupConfigurations[item.key as keyof GroupConfiguration]}
+                                onChange={(e) => setGroupConfigurations({
+                                  ...groupConfigurations,
+                                  [item.key]: e.target.value
+                                })}
+                              >
+                                <option value="">-- Use default group --</option>
+                                {groups.map(g => (
+                                  <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                      </AdminCardBody>
+                      <AdminCardFooter>
+                        <AdminButton
+                          variant="success"
+                          onClick={save}
+                          disabled={saving}
+                          loading={saving}
+                          icon={<Save className="w-4 h-4" />}
+                          fullWidth
+                        >
+                          {saving ? 'Saving Configuration...' : 'Save All Settings'}
+                        </AdminButton>
+                      </AdminCardFooter>
+                    </AdminCard>
+                  </div>
+                </section>
+              </>
+            )}
+
+            {/* Test Messaging Section */}
+            <section className="admin-section">
+              <AdminCard>
+                <AdminCardHeader
+                  title="Test Messaging"
+                  subtitle="Send a test message to verify configuration"
+                  icon={<Send className="w-5 h-5" style={{ color: 'var(--admin-accent)' }} />}
+                />
+                <AdminCardBody>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <label 
+                        htmlFor="test-group"
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: 'var(--admin-text-tertiary)' }}
+                      >
+                        Target Group (Optional)
+                      </label>
+                      <select
+                        id="test-group"
+                        className="admin-select w-full px-4 py-3 rounded-lg"
+                        style={{
+                          backgroundColor: 'var(--admin-surface)',
+                          border: '1px solid var(--admin-border)',
+                          color: 'var(--admin-text-primary)'
+                        }}
+                        value={customGroupId}
+                        onChange={(e) => setCustomGroupId(e.target.value)}
+                      >
+                        <option value="">-- Use default group --</option>
+                        {groups.map(g => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs mt-1" style={{ color: 'var(--admin-text-tertiary)' }}>
+                        Override default group for this test
+                      </p>
+                    </div>
+
+                    <div>
+                      <label 
+                        htmlFor="test-message"
+                        className="block text-sm font-medium mb-2"
+                        style={{ color: 'var(--admin-text-tertiary)' }}
+                      >
+                        Test Message
+                      </label>
+                      <textarea
+                        id="test-message"
+                        className="admin-input w-full px-4 py-3 h-24 rounded-lg resize-none"
+                        style={{
+                          backgroundColor: 'var(--admin-surface)',
+                          border: '1px solid var(--admin-border)',
+                          color: 'var(--admin-text-primary)'
+                        }}
+                        value={testMessage}
+                        onChange={(e) => setTestMessage(e.target.value)}
+                        placeholder="Test message from Admin Panel"
+                      />
+                    </div>
+                  </div>
+                </AdminCardBody>
+                <AdminCardFooter>
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>
+                        {customGroupId 
+                          ? `Will send to: ${groups.find(g => g.id === customGroupId)?.name || 'Custom Group'}` 
+                          : `Will send to default group: ${groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'None selected'}`
+                        }
+                      </p>
+                    </div>
+                    <AdminButton
+                      variant="success"
+                      onClick={testSend}
+                      disabled={testing}
+                      loading={testing}
+                      icon={<Send className="w-4 h-4" />}
+                    >
+                      {testing ? 'Sending...' : 'Send Test Message'}
+                    </AdminButton>
+                  </div>
+                </AdminCardFooter>
+              </AdminCard>
+            </section>
+          </>
+        )}
+      </main>
     </div>
   );
 };

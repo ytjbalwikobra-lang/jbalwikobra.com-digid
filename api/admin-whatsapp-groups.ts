@@ -167,10 +167,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         message: apiError.message
       });
       
+      // Check for common NotifAPI errors
+      const providerData = apiError.response?.data;
+      const providerState = providerData?.results?.state || providerData?.state;
+      const providerMessage = providerData?.results?.message || providerData?.message;
+      
+      // Handle WhatsApp service not connected
+      if (providerState === 'SERVICE_OFF' || providerMessage?.includes('scan qr')) {
+        return res.status(503).json({ 
+          error: 'WhatsApp service not connected',
+          message: 'WhatsApp service is offline. Please log in to NotifAPI and scan the QR code to connect your WhatsApp.',
+          action_required: 'Connect WhatsApp on NotifAPI dashboard',
+          providerState: providerState,
+          providerMessage: providerMessage
+        });
+      }
+      
       return res.status(502).json({ 
         error: 'Failed to fetch groups from WhatsApp provider',
-        message: apiError.response?.data?.message || apiError.message || 'External API error',
-        providerResponse: apiError.response?.data,
+        message: providerMessage || apiError.message || 'External API error',
+        providerResponse: providerData,
         statusCode: apiError.response?.status
       });
     }

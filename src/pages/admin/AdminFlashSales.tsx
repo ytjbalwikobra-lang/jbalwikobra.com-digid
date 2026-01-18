@@ -225,7 +225,6 @@ const AdminFlashSales: React.FC = () => {
                     <th>Produk</th>
                     <th>Harga</th>
                     <th>Periode Waktu</th>
-                    <th>Stok</th>
                     <th>Status</th>
                     <th>Aksi</th>
                   </tr>
@@ -240,7 +239,6 @@ const AdminFlashSales: React.FC = () => {
                     const isActive = sale.isActive ?? sale.is_active ?? false;
                     const startTime = sale.startTime ?? sale.start_time ?? '';
                     const endTime = sale.endTime ?? sale.end_time ?? '';
-                    const stock = sale.stock ?? 0;
                     
                     const discount = originalPrice > 0
                       ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
@@ -293,11 +291,6 @@ const AdminFlashSales: React.FC = () => {
                               {endTime ? new Date(endTime).toLocaleString('id-ID') : '-'}
                             </p>
                           </div>
-                        </td>
-                        <td>
-                          <span className="font-medium text-white">
-                            {stock} unit
-                          </span>
                         </td>
                         <td>
                           <AdminStatusBadge

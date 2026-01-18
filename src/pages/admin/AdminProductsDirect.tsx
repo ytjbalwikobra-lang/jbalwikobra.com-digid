@@ -48,7 +48,6 @@ const AdminProductsDirect: React.FC = () => {
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
-  const [editStock, setEditStock] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Modal state
@@ -138,13 +137,11 @@ const AdminProductsDirect: React.FC = () => {
   const startEditing = (product: Product) => {
     setEditingId(product.id);
     setEditPrice(product.price ? formatNumberID(product.price) : '0');
-    setEditStock(String(product.stock || 0));
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditPrice('');
-    setEditStock('');
   };
 
   // Handle price input with thousand separator
@@ -159,7 +156,6 @@ const AdminProductsDirect: React.FC = () => {
     if (!editingId) return;
 
     const newPrice = parseNumberID(editPrice) || 0;
-    const newStock = parseInt(editStock) || 0;
     const originalProduct = products.find(p => p.id === editingId);
 
     if (!originalProduct) {
@@ -167,32 +163,23 @@ const AdminProductsDirect: React.FC = () => {
       return;
     }
 
-    if (newPrice < 0 || newStock < 0) {
-      push('Harga dan stok harus positif', 'error');
+    if (newPrice < 0) {
+      push('Harga harus positif', 'error');
       return;
     }
 
     // Check if values actually changed
     const priceChanged = originalProduct.price !== newPrice;
-    const stockChanged = originalProduct.stock !== newStock;
 
-    if (!priceChanged && !stockChanged) {
+    if (!priceChanged) {
       cancelEditing();
       return;
     }
 
     // Show confirmation dialog
-    const changes: string[] = [];
-    if (priceChanged) {
-      changes.push(`Harga: ${formatPrice(originalProduct.price)} \u2192 ${formatPrice(newPrice)}`);
-    }
-    if (stockChanged) {
-      changes.push(`Stok: ${originalProduct.stock || 0} \u2192 ${newStock}`);
-    }
-
     const confirmed = await showConfirm({
       title: 'Konfirmasi Perubahan',
-      message: `Anda akan mengubah "${originalProduct.name}":\n\n${changes.join('\n')}\n\nLanjutkan?`,
+      message: `Anda akan mengubah "${originalProduct.name}":\n\nHarga: ${formatPrice(originalProduct.price)} → ${formatPrice(newPrice)}\n\nLanjutkan?`,
       type: 'info',
       confirmText: 'Simpan',
       cancelText: 'Batal'
@@ -219,7 +206,6 @@ const AdminProductsDirect: React.FC = () => {
           id: editingId,
           fields: {
             price: newPrice,
-            stock: newStock,
             updated_at: new Date().toISOString()
           }
         })
@@ -236,23 +222,22 @@ const AdminProductsDirect: React.FC = () => {
       if (supabase) {
         const { data: verifyData } = await supabase
           .from('products')
-          .select('id, price, stock')
+          .select('id, price')
           .eq('id', editingId)
           .single();
 
-        if (verifyData && (verifyData.price !== newPrice || verifyData.stock !== newStock)) {
+        if (verifyData && verifyData.price !== newPrice) {
           push('Database tidak cocok! Perubahan mungkin diblokir.', 'error');
           return;
         }
       }
 
-      // Update ONLY price and stock in local state - PRESERVE tier_name!
+      // Update price in local state - PRESERVE tier_name!
       setProducts(prev => prev.map(p => 
         p.id === editingId 
           ? { 
               ...p, // Keep ALL existing fields including tier_name
-              price: newPrice, 
-              stock: newStock 
+              price: newPrice
             }
           : p
       ));
@@ -395,7 +380,7 @@ const AdminProductsDirect: React.FC = () => {
               <tr className="bg-gray-800/50 border-b border-gray-700">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Product</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tier</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Price / Stock</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Price</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Actions</th>
               </tr>
@@ -443,7 +428,7 @@ const AdminProductsDirect: React.FC = () => {
                       </span>
                     </td>
 
-                    {/* Price / Stock - INLINE EDITABLE */}
+                    {/* Price - INLINE EDITABLE */}
                     <td className="px-4 py-3">
                       {editingId === product.id ? (
                         <div className="space-y-2">
@@ -459,18 +444,6 @@ const AdminProductsDirect: React.FC = () => {
                             className="w-32 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
                             placeholder="Rp 0"
                             autoFocus
-                            disabled={saving}
-                          />
-                          <input
-                            type="number"
-                            value={editStock}
-                            onChange={(e) => setEditStock(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
-                              if (e.key === 'Escape') cancelEditing();
-                            }}
-                            className="w-32 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
-                            placeholder="Stock"
                             disabled={saving}
                           />
                           <div className="flex gap-1">
@@ -494,13 +467,10 @@ const AdminProductsDirect: React.FC = () => {
                         <div 
                           className="cursor-pointer hover:bg-gray-700/50 rounded p-1 transition-colors"
                           onClick={() => startEditing(product)}
-                          title="Click to edit price and stock"
+                          title="Click to edit price"
                         >
                           <div className="font-bold text-white">
                             {formatPrice(product.price)}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            Stock: {product.stock || 0}
                           </div>
                         </div>
                       )}

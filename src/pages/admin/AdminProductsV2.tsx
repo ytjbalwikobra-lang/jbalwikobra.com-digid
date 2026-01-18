@@ -47,7 +47,6 @@ const AdminProductsV2: React.FC = () => {
   // Inline editing states
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>('');
-  const [editingStock, setEditingStock] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Pagination states
@@ -395,18 +394,15 @@ const AdminProductsV2: React.FC = () => {
     console.log('🖊️ [AdminProductsV2] Starting edit for product:', {
       id: product.id,
       name: product.name,
-      currentPrice: product.price,
-      currentStock: product.stock
+      currentPrice: product.price
     });
     setEditingProductId(product.id);
     setEditingPrice(product.price ? formatNumberID(product.price) : '0');
-    setEditingStock(String(product.stock || 0));
   };
 
   const cancelEditing = () => {
     setEditingProductId(null);
     setEditingPrice('');
-    setEditingStock('');
   };
 
   // Handle price input with thousand separator
@@ -419,20 +415,18 @@ const AdminProductsV2: React.FC = () => {
     // VERSION CHECK - Remove this after confirming new code is running
     const VERSION = 'V2-2026-01-09-FIX';
     console.error('🚀🚀🚀 SAVE INLINE EDIT CALLED - VERSION:', VERSION);
-    alert(`SAVE CALLED - Version ${VERSION}\nProduct: ${productId}\nPrice: ${editingPrice}\nStock: ${editingStock}`);
+    alert(`SAVE CALLED - Version ${VERSION}\nProduct: ${productId}\nPrice: ${editingPrice}`);
     
     console.log('💾 [AdminProductsV2] saveInlineEdit called:', {
       productId,
-      editingPrice,
-      editingStock
+      editingPrice
     });
     
     setIsUpdating(true); // Block any auto-reloads
     
     const priceNum = parseNumberID(editingPrice) || 0;
-    const stockNum = parseInt(editingStock) || 0;
 
-    console.log('💾 [AdminProductsV2] Parsed values:', { priceNum, stockNum });
+    console.log('💾 [AdminProductsV2] Parsed values:', { priceNum });
 
     // Find original product for rollback
     const originalProduct = products.find(p => p.id === productId);
@@ -445,15 +439,14 @@ const AdminProductsV2: React.FC = () => {
     // Optimistic update
     console.log('⚡ [AdminProductsV2] Applying optimistic update...');
     setProducts(prev => prev.map(p => 
-      p.id === productId ? { ...p, price: priceNum, stock: stockNum } : p
+      p.id === productId ? { ...p, price: priceNum } : p
     ));
     cancelEditing();
 
     console.log('📡 [AdminProductsV2] Calling adminService.updateProductFields...');
     try {
       const updated = await adminService.updateProductFields(productId, {
-        price: priceNum,
-        stock: stockNum
+        price: priceNum
       });
 
       console.log('📡 [AdminProductsV2] API response:', updated);
@@ -468,13 +461,12 @@ const AdminProductsV2: React.FC = () => {
         return;
       }
 
-      // Update with ONLY price and stock from DB - preserve other fields like tier
-      console.log('✅ [AdminProductsV2] Updating state with price/stock only:', { price: updated.price, stock: updated.stock });
+      // Update with price from DB - preserve other fields like tier
+      console.log('✅ [AdminProductsV2] Updating state with price:', { price: updated.price });
       setProducts(prev => prev.map(p => 
         p.id === productId ? { 
           ...p, 
-          price: updated.price, 
-          stock: updated.stock,
+          price: updated.price,
           updated_at: updated.updated_at 
         } : p
       ));
@@ -489,8 +481,7 @@ const AdminProductsV2: React.FC = () => {
           ...cachedResult,
           data: cachedResult.data.map(p => p.id === productId ? { 
             ...p, 
-            price: updated.price, 
-            stock: updated.stock,
+            price: updated.price,
             updated_at: updated.updated_at 
           } : p),
           timestamp: Date.now() // Refresh timestamp
@@ -508,15 +499,15 @@ const AdminProductsV2: React.FC = () => {
           }
           const { data: dbProduct } = await supabase
             .from('products')
-            .select('id, price, stock')
+            .select('id, price')
             .eq('id', productId)
             .single();
           console.log('🔍 [AdminProductsV2] Database verification:', {
-            expected: { price: priceNum, stock: stockNum },
+            expected: { price: priceNum },
             actual: dbProduct,
-            match: dbProduct?.price === priceNum && dbProduct?.stock === stockNum
+            match: dbProduct?.price === priceNum
           });
-          if (dbProduct && (dbProduct.price !== priceNum || dbProduct.stock !== stockNum)) {
+          if (dbProduct && dbProduct.price !== priceNum) {
             console.error('❌ [AdminProductsV2] DATABASE MISMATCH DETECTED!');
             push('⚠️ Warning: Database value differs from expected!', 'error');
           }
@@ -534,7 +525,7 @@ const AdminProductsV2: React.FC = () => {
           if (!supabase) return;
           const { data: freshProduct, error } = await supabase
             .from('products')
-            .select('id, price, stock')
+            .select('id, price')
             .eq('id', productId)
             .single();
           
@@ -543,11 +534,11 @@ const AdminProductsV2: React.FC = () => {
           console.log('🔄 [AdminProductsV2] Fresh DB values:', freshProduct);
           
           if (freshProduct) {
-            // Verify values match - if they do, just update price/stock without touching other fields
-            if (freshProduct.price !== priceNum || freshProduct.stock !== stockNum) {
+            // Verify values match - if they do, just update price without touching other fields
+            if (freshProduct.price !== priceNum) {
               console.error('❌ [AdminProductsV2] MISMATCH after save!', {
-                expected: { price: priceNum, stock: stockNum },
-                actual: { price: freshProduct.price, stock: freshProduct.stock }
+                expected: { price: priceNum },
+                actual: { price: freshProduct.price }
               });
               push('⚠️ Database shows different values! Update may have been blocked.', 'error');
               // Rollback to original
@@ -1082,17 +1073,6 @@ const AdminProductsV2: React.FC = () => {
                               placeholder="Rp 0"
                               autoFocus
                             />
-                            <input
-                              type="number"
-                              value={editingStock}
-                              onChange={(e) => setEditingStock(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') saveInlineEdit(product.id);
-                                if (e.key === 'Escape') cancelEditing();
-                              }}
-                              className="w-full px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
-                              placeholder="Stock"
-                            />
                             <div className="flex gap-1">
                               <button
                                 onClick={() => saveInlineEdit(product.id)}
@@ -1112,7 +1092,7 @@ const AdminProductsV2: React.FC = () => {
                           <div 
                             className="space-y-1 cursor-pointer hover:bg-gray-800/50 rounded p-1 transition-colors"
                             onClick={() => startEditingPrice(product)}
-                            title="Click to edit price and stock"
+                            title="Click to edit price"
                           >
                             <div className="text-lg font-bold text-white whitespace-nowrap">
                               {formatPrice(product.price)}
@@ -1122,9 +1102,6 @@ const AdminProductsV2: React.FC = () => {
                                 {formatPrice(product.original_price)}
                               </div>
                             )}
-                            <div className="text-xs text-gray-400">
-                              Stock: {product.stock || 0}
-                            </div>
                             <div className="text-xs text-pink-400 opacity-0 group-hover:opacity-100">
                               Click to edit
                             </div>

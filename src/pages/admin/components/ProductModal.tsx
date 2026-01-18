@@ -208,7 +208,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
     const actionText = mode === 'create' ? 'membuat' : 'menyimpan perubahan';
     const confirmed = await showConfirm({
       title: mode === 'create' ? 'Konfirmasi Buat Produk' : 'Konfirmasi Simpan Perubahan',
-      message: `Anda akan ${actionText} produk "${formData.name}".\n\nHarga: Rp ${formData.price.toLocaleString('id-ID')}\nStok: ${formData.stock}\n\nLanjutkan?`,
+      message: `Anda akan ${actionText} produk "${formData.name}".\n\nHarga: Rp ${formData.price.toLocaleString('id-ID')}\n\nLanjutkan?`,
       type: 'info',
       confirmText: mode === 'create' ? 'Buat Produk' : 'Simpan',
       cancelText: 'Batal'
@@ -563,22 +563,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     <option key={tier.id} value={tier.id}>{tier.name}</option>
                   ))}
                 </select>
-              </div>
-
-              {/* Stock */}
-              <div>
-                <label className="admin-label">
-                  Stock
-                </label>
-                <input
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock: Number(e.target.value) }))}
-                  className="admin-input"
-                  placeholder="1"
-                  min="0"
-                  disabled={isReadOnly}
-                />
               </div>
 
               {/* Rental Options */}

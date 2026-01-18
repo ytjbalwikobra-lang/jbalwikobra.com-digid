@@ -361,25 +361,6 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
             </div>
           </div>
 
-          {/* Stock */}
-          <div>
-            <label className="admin-label">Jumlah Stok</label>
-            <input
-              type="number"
-              value={formData.stock}
-              onChange={(e) => handleChange('stock', parseInt(e.target.value) || 0)}
-              className={`admin-input ${errors.stock ? 'border-red-500' : ''}`}
-              placeholder="100"
-              min="0"
-            />
-            {errors.stock && (
-              <p className="text-sm text-red-600 mt-1">{errors.stock}</p>
-            )}
-            <p className="text-sm text-slate-400 mt-1">
-              Biarkan 0 untuk stok tidak terbatas
-            </p>
-          </div>
-
           {/* Active Status */}
           <div className="flex items-center gap-3">
             <input

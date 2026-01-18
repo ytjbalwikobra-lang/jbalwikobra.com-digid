@@ -219,6 +219,123 @@ export function useAnnouncement() {
   }, []);
 }
 
+/**
+ * Keyboard shortcut definition
+ */
+export interface KeyboardShortcut {
+  key: string;
+  ctrlKey?: boolean;
+  shiftKey?: boolean;
+  altKey?: boolean;
+  metaKey?: boolean;
+  description: string;
+  action: () => void;
+  /** Only active when this returns true (e.g., when a panel is open) */
+  condition?: () => boolean;
+}
+
+/**
+ * React hook for registering keyboard shortcuts
+ * Supports modifier keys (Ctrl, Shift, Alt, Meta)
+ */
+export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[], enabled: boolean = true) {
+  React.useEffect(() => {
+    if (!enabled) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input, textarea, or contenteditable
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      for (const shortcut of shortcuts) {
+        const keyMatches = e.key.toLowerCase() === shortcut.key.toLowerCase();
+        const ctrlMatches = !!shortcut.ctrlKey === e.ctrlKey;
+        const shiftMatches = !!shortcut.shiftKey === e.shiftKey;
+        const altMatches = !!shortcut.altKey === e.altKey;
+        const metaMatches = !!shortcut.metaKey === e.metaKey;
+        const conditionMet = !shortcut.condition || shortcut.condition();
+
+        if (keyMatches && ctrlMatches && shiftMatches && altMatches && metaMatches && conditionMet) {
+          e.preventDefault();
+          shortcut.action();
+          announceToScreenReader(shortcut.description, 'polite');
+          return;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shortcuts, enabled]);
+}
+
+/**
+ * React hook for navigating a list with arrow keys
+ * Returns current focused index and handlers
+ */
+export function useArrowNavigation(
+  itemCount: number,
+  onSelect?: (index: number) => void,
+  options: { loop?: boolean; initialIndex?: number } = {}
+) {
+  const { loop = true, initialIndex = -1 } = options;
+  const [focusedIndex, setFocusedIndex] = React.useState(initialIndex);
+
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (itemCount === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        e.preventDefault();
+        setFocusedIndex(prev => {
+          const next = prev + 1;
+          if (next >= itemCount) {
+            return loop ? 0 : prev;
+          }
+          return next;
+        });
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        e.preventDefault();
+        setFocusedIndex(prev => {
+          const next = prev - 1;
+          if (next < 0) {
+            return loop ? itemCount - 1 : 0;
+          }
+          return next;
+        });
+        break;
+      case 'Home':
+        e.preventDefault();
+        setFocusedIndex(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        setFocusedIndex(itemCount - 1);
+        break;
+      case 'Enter':
+      case ' ':
+        if (focusedIndex >= 0 && onSelect) {
+          e.preventDefault();
+          onSelect(focusedIndex);
+        }
+        break;
+    }
+  }, [itemCount, loop, focusedIndex, onSelect]);
+
+  const reset = React.useCallback(() => setFocusedIndex(initialIndex), [initialIndex]);
+
+  return { focusedIndex, setFocusedIndex, handleKeyDown, reset };
+}
+
 export default {
   announceToScreenReader,
   trapFocus,
@@ -230,4 +347,6 @@ export default {
   FocusManager,
   createSkipLink,
   prefersReducedMotion,
+  useKeyboardShortcuts,
+  useArrowNavigation,
 };

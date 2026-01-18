@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   BarChart3, 
   Package, 
@@ -25,6 +25,7 @@ import { supabase } from '../../../services/supabase';
 import { adminNotificationService } from '../../../services/adminNotificationService';
 import { WebsiteSettings } from '../../../types';
 import { AdminTab } from './structure/adminTypes';
+import { useKeyboardShortcuts, KeyboardShortcut, announceToScreenReader } from '../utils/accessibility';
 
 interface NavigationItem {
   id: AdminTab;
@@ -196,6 +197,37 @@ export const AdminHeaderV2: React.FC<AdminHeaderV2Props> = ({
       loadNotifications();
     }
   };
+
+  // Notification keyboard shortcuts
+  const notificationShortcuts: KeyboardShortcut[] = useMemo(() => [
+    {
+      key: 'n',
+      ctrlKey: true,
+      shiftKey: true,
+      description: showNotifications ? 'Menutup panel notifikasi' : 'Membuka panel notifikasi',
+      action: () => {
+        setShowNotifications(prev => !prev);
+      },
+    },
+    {
+      key: 'r',
+      description: 'Memuat ulang notifikasi',
+      condition: () => showNotifications,
+      action: () => {
+        loadNotifications();
+      },
+    },
+    {
+      key: 'm',
+      description: 'Menandai semua notifikasi sudah dibaca',
+      condition: () => showNotifications && unreadCount > 0,
+      action: () => {
+        markAllNotificationsAsRead();
+      },
+    },
+  ], [showNotifications, unreadCount]);
+
+  useKeyboardShortcuts(notificationShortcuts);
 
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {

@@ -4,10 +4,15 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, X, Check, CheckCheck, Trash2, ShoppingBag, CreditCard, User, XCircle, AlertCircle, Info } from 'lucide-react';
+import { Bell, X, Check, CheckCheck, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
 import { adminNotificationService, AdminNotification } from '../../../services/adminNotificationService';
 import { supabase } from '../../../services/supabase';
 import { AdminColors } from '../design-tokens';
+import { trapFocus, announceToScreenReader, useArrowNavigation } from '../utils/accessibility';
+import { NotificationSkeleton } from './NotificationSkeleton';
+import { useToast } from '../../../components/Toast';
+import { getNotificationIcon, formatNotificationTime } from '../utils/notificationUtils';
+import { useRetry } from '../utils/useRetry';
 
 interface AdminNotificationPanelProps {
   isOpen: boolean;
@@ -24,25 +29,49 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
 }) => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const panelRef = useRef<HTMLDivElement>(null);
+  const notificationRefs = useRef<(HTMLLIElement | null)[]>([]);
+  
+  // Toast notifications for feedback
+  const toast = useToast();
+  
+  // Retry hook for failed operations
+  const { executeWithRetry } = useRetry({
+    maxRetries: 3,
+    initialDelay: 1000,
+    onRetry: (attempt, error) => {
+      announceToScreenReader(`Mencoba ulang... percobaan ${attempt}`, 'polite');
+    },
+    onMaxRetriesReached: (error) => {
+      toast.showToast('Gagal memuat notifikasi setelah beberapa percobaan', 'error');
+    }
+  });
 
-  // Load notifications
+  // Load notifications with retry
   const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await adminNotificationService.getAdminNotifications(50);
+      setLoadError(null);
+      
+      const data = await executeWithRetry(
+        async () => adminNotificationService.getAdminNotifications(50),
+        'Load Notifications'
+      );
+      
       setNotifications(data || []);
       
       // Update unread count
-      const unreadCount = data.filter(n => !n.is_read).length;
+      const unreadCount = (data || []).filter(n => !n.is_read).length;
       onNotificationCountChange?.(unreadCount);
     } catch (error) {
       console.error('Failed to load notifications:', error);
+      setLoadError('Gagal memuat notifikasi. Klik untuk mencoba lagi.');
     } finally {
       setLoading(false);
     }
-  }, [onNotificationCountChange]);
+  }, [onNotificationCountChange, executeWithRetry]);
 
   // Initial load
   useEffect(() => {
@@ -99,33 +128,74 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
     };
   }, [isOpen, onClose]);
 
+  // Focus trap and keyboard navigation
+  useEffect(() => {
+    if (!isOpen || !panelRef.current) return;
+
+    // Trap focus within panel
+    const cleanup = trapFocus(panelRef.current);
+
+    // Handle Escape key
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      cleanup();
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   // Mark as read
   const handleMarkAsRead = async (id: string) => {
     try {
-      await adminNotificationService.markAsRead(id);
+      // Optimistic update
       setNotifications(prev =>
         prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       );
       
+      await adminNotificationService.markAsRead(id);
+      
       // Update unread count
       const unreadCount = notifications.filter(n => !n.is_read && n.id !== id).length;
       onNotificationCountChange?.(unreadCount);
+      
+      toast.showToast('Ditandai sudah dibaca', 'success');
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      // Rollback on error
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, is_read: false } : n)
+      );
+      toast.showToast('Gagal menandai notifikasi', 'error');
     }
   };
 
   // Mark all as read
   const handleMarkAllAsRead = async () => {
+    const unreadNotifs = notifications.filter(n => !n.is_read);
+    const previousState = [...notifications];
+    
     try {
-      const unreadNotifs = notifications.filter(n => !n.is_read);
+      // Optimistic update
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      
       await Promise.all(
         unreadNotifs.map(n => adminNotificationService.markAsRead(n.id))
       );
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       onNotificationCountChange?.(0);
+      
+      toast.showToast(`${unreadNotifs.length} notifikasi ditandai sudah dibaca`, 'success');
     } catch (error) {
       console.error('Failed to mark all as read:', error);
+      // Rollback on error
+      setNotifications(previousState);
+      toast.showToast('Gagal menandai semua notifikasi', 'error');
     }
   };
 
@@ -146,24 +216,6 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
     }
   };
 
-  // Get icon for notification type
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'paid_order':
-      case 'paid_rent':
-        return <CreditCard className="w-5 h-5 text-green-400" />;
-      case 'new_order':
-      case 'new_rent':
-        return <ShoppingBag className="w-5 h-5 text-blue-400" />;
-      case 'order_cancelled':
-        return <XCircle className="w-5 h-5 text-red-400" />;
-      case 'new_user':
-        return <User className="w-5 h-5 text-purple-400" />;
-      default:
-        return <Info className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
   // Filter notifications
   const filteredNotifications = filter === 'unread' 
     ? notifications.filter(n => !n.is_read)
@@ -171,37 +223,49 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+  // Arrow navigation for notification list
+  const handleNotificationSelect = useCallback((index: number) => {
+    const notification = filteredNotifications[index];
+    if (notification && !notification.is_read) {
+      handleMarkAsRead(notification.id);
+    }
+  }, [filteredNotifications]);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
-  };
+  const { focusedIndex, handleKeyDown: handleArrowNav, reset: resetNavigation } = useArrowNavigation(
+    filteredNotifications.length,
+    handleNotificationSelect,
+    { loop: true, initialIndex: -1 }
+  );
+
+  // Focus the notification when focusedIndex changes
+  useEffect(() => {
+    if (focusedIndex >= 0 && notificationRefs.current[focusedIndex]) {
+      notificationRefs.current[focusedIndex]?.focus();
+    }
+  }, [focusedIndex]);
+
+  // Reset navigation when filter changes
+  useEffect(() => {
+    resetNavigation();
+  }, [filter, resetNavigation]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 lg:relative lg:inset-auto">
+    <div className="fixed inset-0 z-50 lg:relative lg:inset-auto" role="presentation">
       {/* Backdrop for mobile */}
-      <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={onClose} />
+      <div 
+        className="fixed inset-0 bg-black/50 lg:hidden" 
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Panel */}
       <div
         ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Panel notifikasi. ${unreadCount} notifikasi belum dibaca`}
         className="fixed right-0 top-0 bottom-0 w-full max-w-md lg:absolute lg:right-0 lg:top-full lg:bottom-auto lg:mt-2 lg:rounded-2xl overflow-hidden shadow-2xl"
         style={{
           backgroundColor: AdminColors.primary.light,
@@ -215,10 +279,10 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           style={{ borderColor: AdminColors.border.DEFAULT }}
         >
           <div className="flex items-center gap-3">
-            <Bell size={20} style={{ color: AdminColors.text.primary }} />
-            <h3 className="text-lg font-semibold" style={{ color: AdminColors.text.primary }}>
+            <Bell size={20} style={{ color: AdminColors.text.primary }} aria-hidden="true" />
+            <h2 id="notification-panel-title" className="text-lg font-semibold" style={{ color: AdminColors.text.primary }}>
               Notifications
-            </h3>
+            </h2>
             {unreadCount > 0 && (
               <span
                 className="px-2 py-0.5 rounded-full text-xs font-medium"
@@ -226,6 +290,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                   backgroundColor: AdminColors.error.DEFAULT,
                   color: 'white'
                 }}
+                aria-label={`${unreadCount} belum dibaca`}
               >
                 {unreadCount}
               </span>
@@ -233,10 +298,10 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-700 transition-colors"
-            aria-label="Close"
+            className="p-1 rounded-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+            aria-label="Tutup panel notifikasi"
           >
-            <X size={20} style={{ color: AdminColors.text.secondary }} />
+            <X size={20} style={{ color: AdminColors.text.secondary }} aria-hidden="true" />
           </button>
         </div>
 
@@ -244,11 +309,16 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
         <div
           className="flex border-b"
           style={{ borderColor: AdminColors.border.DEFAULT }}
+          role="tablist"
+          aria-label="Filter notifikasi"
         >
           <button
             onClick={() => setFilter('all')}
+            role="tab"
+            aria-selected={filter === 'all'}
+            aria-controls="notification-list"
             className={cn(
-              'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+              'flex-1 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white/50',
               filter === 'all'
                 ? 'border-b-2'
                 : ''
@@ -262,8 +332,11 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           </button>
           <button
             onClick={() => setFilter('unread')}
+            role="tab"
+            aria-selected={filter === 'unread'}
+            aria-controls="notification-list"
             className={cn(
-              'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+              'flex-1 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white/50',
               filter === 'unread'
                 ? 'border-b-2'
                 : ''
@@ -285,41 +358,73 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           >
             <button
               onClick={handleMarkAllAsRead}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition-colors"
+              aria-label={`Tandai semua ${unreadCount} notifikasi sebagai sudah dibaca`}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
               style={{ color: AdminColors.primary.DEFAULT }}
             >
-              <CheckCheck size={16} />
+              <CheckCheck size={16} aria-hidden="true" />
               Mark all as read
             </button>
           </div>
         )}
 
         {/* Notifications List */}
-        <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
+        <div 
+          id="notification-list"
+          role="tabpanel"
+          aria-label={`Daftar notifikasi ${filter === 'unread' ? 'belum dibaca' : 'semua'}`}
+          className="overflow-y-auto" 
+          style={{ maxHeight: '60vh' }}
+          onKeyDown={handleArrowNav}
+        >
           {loading && notifications.length === 0 ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: AdminColors.primary.DEFAULT }} />
+            <NotificationSkeleton count={4} variant="panel" />
+          ) : loadError ? (
+            /* Error State with Retry */
+            <div className="text-center p-8" role="alert">
+              <AlertCircle size={48} className="mx-auto mb-3 text-red-400" aria-hidden="true" />
+              <p className="text-red-300 mb-4">{loadError}</p>
+              <button
+                onClick={loadNotifications}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500"
+                aria-label="Coba muat ulang notifikasi"
+              >
+                <RefreshCw size={16} aria-hidden="true" />
+                Coba Lagi
+              </button>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="text-center p-8">
-              <Bell size={48} style={{ color: AdminColors.text.secondary }} className="mx-auto mb-3 opacity-50" />
+            <div className="text-center p-8" role="status">
+              <Bell size={48} style={{ color: AdminColors.text.secondary }} className="mx-auto mb-3 opacity-50" aria-hidden="true" />
               <p style={{ color: AdminColors.text.secondary }}>
                 {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
               </p>
             </div>
           ) : (
-            <div>
-              {filteredNotifications.map(notification => (
-                <div
+            <ul role="list" aria-label="Daftar notifikasi. Gunakan panah atas/bawah untuk navigasi, Enter untuk menandai sudah dibaca">
+              {filteredNotifications.map((notification, index) => (
+                <li
                   key={notification.id}
+                  ref={(el) => { notificationRefs.current[index] = el; }}
+                  tabIndex={0}
                   className={cn(
-                    'p-4 border-b transition-colors hover:bg-gray-800/50',
-                    !notification.is_read && 'bg-gray-800/30'
+                    'p-4 border-b transition-colors hover:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:ring-inset',
+                    !notification.is_read && 'bg-gray-800/30',
+                    focusedIndex === index && 'ring-2 ring-pink-500/50 ring-inset'
                   )}
                   style={{ borderColor: AdminColors.border.DEFAULT }}
+                  aria-label={`${notification.title}. ${notification.is_read ? 'Sudah dibaca' : 'Belum dibaca'}. ${index + 1} dari ${filteredNotifications.length}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!notification.is_read) {
+                        handleMarkAsRead(notification.id);
+                      }
+                    }
+                  }}
                 >
                   <div className="flex gap-3">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="flex-shrink-0 mt-1" aria-hidden="true">
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -334,6 +439,8 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                           <div
                             className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
                             style={{ backgroundColor: AdminColors.primary.DEFAULT }}
+                            aria-label="Belum dibaca"
+                            role="status"
                           />
                         )}
                       </div>
@@ -353,32 +460,32 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                           className="text-xs"
                           style={{ color: AdminColors.text.secondary }}
                         >
-                          {formatDate(notification.created_at)}
+                          {formatNotificationTime(notification.created_at)}
                         </span>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2" role="group" aria-label="Aksi notifikasi">
                           {!notification.is_read && (
                             <button
                               onClick={() => handleMarkAsRead(notification.id)}
-                              className="p-1.5 rounded hover:bg-gray-700 transition-colors"
-                              title="Mark as read"
+                              className="p-1.5 rounded hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+                              aria-label={`Tandai ${notification.title} sebagai sudah dibaca`}
                             >
-                              <Check size={14} style={{ color: AdminColors.text.secondary }} />
+                              <Check size={14} style={{ color: AdminColors.text.secondary }} aria-hidden="true" />
                             </button>
                           )}
                           <button
                             onClick={() => handleDelete(notification.id)}
-                            className="p-1.5 rounded hover:bg-red-500/20 transition-colors"
-                            title="Delete"
+                            className="p-1.5 rounded hover:bg-red-500/20 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                            aria-label={`Hapus notifikasi ${notification.title}`}
                           >
-                            <Trash2 size={14} style={{ color: AdminColors.error.DEFAULT }} />
+                            <Trash2 size={14} style={{ color: AdminColors.error.DEFAULT }} aria-hidden="true" />
                           </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </div>

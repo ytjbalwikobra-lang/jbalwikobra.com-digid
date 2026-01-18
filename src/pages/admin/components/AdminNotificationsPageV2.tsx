@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Bell, 
-  Settings, 
   RefreshCw, 
   Check, 
   CheckCheck,
   Search,
   Clock,
-  Star,
-  Package,
-  User,
-  CreditCard,
-  ShoppingBag,
-  XCircle
+  AlertCircle
 } from 'lucide-react';
 import { adminNotificationService, AdminNotification } from '../../../services/adminNotificationService';
+import { NotificationSkeleton } from './NotificationSkeleton';
+import { 
+  getNotificationIcon, 
+  getNotificationStyle, 
+  getNotificationTypeLabel, 
+  formatNotificationTime 
+} from '../utils/notificationUtils';
+import { useRetry } from '../utils/useRetry';
 
 const cn = (...c: any[]) => c.filter(Boolean).join(' ');
 
@@ -25,25 +27,40 @@ interface NotificationItem extends AdminNotification {
 export const AdminNotificationsPageV2: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Retry hook for failed operations
+  const { executeWithRetry } = useRetry({
+    maxRetries: 3,
+    initialDelay: 1000,
+    onMaxRetriesReached: () => {
+      setLoadError('Gagal memuat notifikasi setelah beberapa percobaan');
+    }
+  });
 
-  // Load notifications
+  // Load notifications with retry
   const loadNotifications = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const data = await adminNotificationService.getAdminNotifications(100);
+      const data = await executeWithRetry(
+        async () => adminNotificationService.getAdminNotifications(100),
+        'Load Notifications'
+      );
       if (data) {
         setNotifications(data.map(n => ({ ...n, _localRead: n.is_read })));
       }
     } catch (error) {
       console.error('Failed to load notifications:', error);
+      setLoadError('Gagal memuat notifikasi. Klik untuk mencoba lagi.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [executeWithRetry]);
 
   useEffect(() => {
     loadNotifications();
@@ -95,99 +112,6 @@ export const AdminNotificationsPageV2: React.FC = () => {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
-    const icons = {
-      new_order: ShoppingBag,
-      paid_order: CreditCard,
-      new_user: User,
-      order_cancelled: XCircle,
-      new_review: Star,
-      new_rent: Package,
-      paid_rent: CreditCard,
-      system: Settings,
-    };
-    const Icon = icons[type as keyof typeof icons] || Bell;
-    return <Icon className="w-5 h-5" />;
-  };
-
-  const getNotificationStyle = (type: string) => {
-    const styles = {
-      new_order: {
-        gradient: 'from-blue-500/10 to-cyan-500/10',
-        border: 'border-blue-500/30',
-        icon: 'bg-gradient-to-br from-blue-500 to-cyan-600',
-        badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-      },
-      paid_order: {
-        gradient: 'from-emerald-500/10 to-green-500/10',
-        border: 'border-emerald-500/30',
-        icon: 'bg-gradient-to-br from-emerald-500 to-green-600',
-        badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-      },
-      new_user: {
-        gradient: 'from-purple-500/10 to-violet-500/10',
-        border: 'border-purple-500/30',
-        icon: 'bg-gradient-to-br from-purple-500 to-violet-600',
-        badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      },
-      order_cancelled: {
-        gradient: 'from-red-500/10 to-rose-500/10',
-        border: 'border-red-500/30',
-        icon: 'bg-gradient-to-br from-red-500 to-rose-600',
-        badge: 'bg-red-500/20 text-red-300 border-red-500/30',
-      },
-      new_review: {
-        gradient: 'from-amber-500/10 to-orange-500/10',
-        border: 'border-amber-500/30',
-        icon: 'bg-gradient-to-br from-amber-500 to-orange-600',
-        badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-      },
-      system: {
-        gradient: 'from-pink-500/10 to-fuchsia-500/10',
-        border: 'border-pink-500/30',
-        icon: 'bg-gradient-to-br from-pink-500 to-fuchsia-600',
-        badge: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
-      },
-    };
-    return styles[type as keyof typeof styles] || styles.system;
-  };
-
-  const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const time = new Date(timestamp);
-    const diffMs = now.getTime() - time.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Baru saja';
-    if (diffMins < 60) return `${diffMins} menit lalu`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} jam lalu`;
-    
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays} hari lalu`;
-    
-    return time.toLocaleDateString('id-ID', { 
-      day: 'numeric', 
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const getTypeLabel = (type: string) => {
-    const labels = {
-      new_order: 'Pesanan Baru',
-      paid_order: 'Pembayaran',
-      new_user: 'Pengguna Baru',
-      order_cancelled: 'Dibatalkan',
-      new_review: 'Review',
-      new_rent: 'Sewa Baru',
-      paid_rent: 'Pembayaran Sewa',
-      system: 'System',
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
-
   // Filter notifications
   const filteredNotifications = notifications.filter(notif => {
     const matchesFilter = 
@@ -223,12 +147,12 @@ export const AdminNotificationsPageV2: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg" aria-hidden="true">
               <Bell className="w-8 h-8 text-white" />
             </div>
             Admin Notifications
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-400 mt-2" aria-live="polite">
             {unreadCount > 0 
               ? `Kamu punya ${unreadCount} notifikasi yang belum dibaca` 
               : 'Semua notifikasi sudah dibaca! 🎉'}
@@ -236,10 +160,10 @@ export const AdminNotificationsPageV2: React.FC = () => {
         </div>
         
         {/* Quick Stats */}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4" role="group" aria-label="Statistik notifikasi">
           <div className="px-6 py-3 rounded-2xl bg-black/40 border border-gray-700/50 backdrop-blur-sm">
             <div className="text-xs text-gray-400 mb-1">Total</div>
-            <div className="text-2xl font-bold text-white">{stats.total}</div>
+            <div className="text-2xl font-bold text-white" aria-label={`Total ${stats.total} notifikasi`}>{stats.total}</div>
           </div>
           <div className="px-6 py-3 rounded-2xl bg-gradient-to-br from-pink-500/10 to-fuchsia-500/10 border border-pink-500/30 backdrop-blur-sm">
             <div className="text-xs text-pink-300 mb-1">Belum Dibaca</div>
@@ -258,12 +182,13 @@ export const AdminNotificationsPageV2: React.FC = () => {
           {/* Search */}
           <div className="lg:col-span-4">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true" />
               <input
                 type="text"
                 placeholder="Cari notifikasi..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Cari notifikasi"
                 className="w-full pl-12 pr-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all"
               />
             </div>
@@ -274,6 +199,7 @@ export const AdminNotificationsPageV2: React.FC = () => {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as any)}
+              aria-label="Filter berdasarkan status"
               className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all"
             >
               <option value="all">Semua Status</option>
@@ -287,6 +213,7 @@ export const AdminNotificationsPageV2: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
+              aria-label="Filter berdasarkan tipe notifikasi"
               className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all"
             >
               <option value="all">Semua Tipe</option>
@@ -303,18 +230,20 @@ export const AdminNotificationsPageV2: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex-1 px-4 py-3 rounded-xl bg-black/50 border border-gray-700 text-white hover:bg-gray-800/50 hover:border-gray-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              aria-label={refreshing ? 'Sedang memuat ulang notifikasi' : 'Muat ulang notifikasi'}
+              className="flex-1 px-4 py-3 rounded-xl bg-black/50 border border-gray-700 text-white hover:bg-gray-800/50 hover:border-gray-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
             >
-              <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
+              <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} aria-hidden="true" />
               Refresh
             </button>
             
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-medium hover:from-pink-600 hover:to-fuchsia-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-500/30"
+                aria-label={`Tandai semua ${unreadCount} notifikasi sebagai sudah dibaca`}
+                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-medium hover:from-pink-600 hover:to-fuchsia-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-500/30 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:ring-offset-2 focus:ring-offset-gray-900"
               >
-                <CheckCheck className="w-4 h-4" />
+                <CheckCheck className="w-4 h-4" aria-hidden="true" />
                 Tandai Semua
               </button>
             )}
@@ -323,15 +252,27 @@ export const AdminNotificationsPageV2: React.FC = () => {
       </div>
 
       {/* Notifications List */}
-      <div className="space-y-3">
+      <div className="space-y-3" role="region" aria-label="Daftar notifikasi" aria-live="polite">
         {loading ? (
-          <div className="text-center py-12">
-            <RefreshCw className="w-8 h-8 mx-auto text-gray-400 animate-spin mb-4" />
-            <p className="text-gray-400">Memuat notifikasi...</p>
+          <NotificationSkeleton count={5} variant="page" />
+        ) : loadError ? (
+          /* Error State with Retry */
+          <div className="text-center py-16 bg-red-500/10 border border-red-500/30 rounded-2xl" role="alert">
+            <AlertCircle className="w-16 h-16 mx-auto text-red-400 mb-4" aria-hidden="true" />
+            <h3 className="text-xl font-bold text-white mb-2">Gagal Memuat Notifikasi</h3>
+            <p className="text-red-300 mb-6">{loadError}</p>
+            <button
+              onClick={loadNotifications}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pink-500 text-white font-semibold hover:bg-pink-600 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              aria-label="Coba muat ulang notifikasi"
+            >
+              <RefreshCw className="w-5 h-5" aria-hidden="true" />
+              Coba Lagi
+            </button>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="text-center py-16 bg-black/20 border border-gray-800 rounded-2xl">
-            <Bell className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+            <Bell className="w-16 h-16 mx-auto text-gray-600 mb-4" aria-hidden="true" />
             <h3 className="text-xl font-bold text-white mb-2">Tidak Ada Notifikasi</h3>
             <p className="text-gray-400">
               {searchTerm || filter !== 'all' || typeFilter !== 'all'
@@ -345,8 +286,10 @@ export const AdminNotificationsPageV2: React.FC = () => {
             const isUnread = !notification._localRead;
             
             return (
-              <div
+              <article
                 key={notification.id}
+                role="article"
+                aria-label={`${isUnread ? 'Belum dibaca: ' : ''}${notification.title} - ${getNotificationTypeLabel(notification.type)}`}
                 className={cn(
                   'group relative overflow-hidden rounded-2xl border backdrop-blur-sm transition-all duration-300',
                   'hover:scale-[1.01] hover:shadow-2xl',
@@ -361,7 +304,7 @@ export const AdminNotificationsPageV2: React.FC = () => {
                     <div className={cn(
                       'flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110',
                       style.icon
-                    )}>
+                    )} aria-hidden="true">
                       {getNotificationIcon(notification.type)}
                     </div>
 
@@ -380,12 +323,12 @@ export const AdminNotificationsPageV2: React.FC = () => {
                               'px-2 py-0.5 rounded-lg text-xs font-medium border',
                               style.badge
                             )}>
-                              {getTypeLabel(notification.type)}
+                              {getNotificationTypeLabel(notification.type)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            {formatTimeAgo(notification.created_at)}
+                            <Clock className="w-4 h-4" aria-hidden="true" />
+                            <time dateTime={notification.created_at}>{formatNotificationTime(notification.created_at)}</time>
                           </div>
                         </div>
                         
@@ -431,16 +374,17 @@ export const AdminNotificationsPageV2: React.FC = () => {
                       {isUnread && (
                         <button
                           onClick={() => markAsRead(notification.id)}
-                          className="px-4 py-2 rounded-xl bg-white/5 border border-white/20 text-white hover:bg-white/10 hover:border-white/30 transition-all flex items-center gap-2 text-sm font-medium"
+                          aria-label={`Tandai notifikasi ${notification.title} sebagai sudah dibaca`}
+                          className="px-4 py-2 rounded-xl bg-white/5 border border-white/20 text-white hover:bg-white/10 hover:border-white/30 transition-all flex items-center gap-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                         >
-                          <Check className="w-4 h-4" />
+                          <Check className="w-4 h-4" aria-hidden="true" />
                           Tandai Sudah Dibaca
                         </button>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </article>
             );
           })
         )}

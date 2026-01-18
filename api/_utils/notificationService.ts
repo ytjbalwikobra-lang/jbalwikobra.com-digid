@@ -59,21 +59,28 @@ export async function createOrderNotification(
     const isRental = orderType === 'rental';
     const typeLabel = isRental ? 'RENTAL' : 'PURCHASE';
     
+    // Map types to rental-specific types when orderType is rental
+    let finalType = type;
+    if (isRental) {
+      if (type === 'new_order') finalType = 'new_rent';
+      else if (type === 'paid_order') finalType = 'paid_rent';
+    }
+    
     const titles: Record<string, string> = {
-      new_order: isRental 
-        ? 'Bang! ada yang ORDER RENTAL nih!' 
-        : 'Bang! ada yang ORDER PURCHASE nih!',
-      paid_order: isRental 
-        ? 'Bang! ALHAMDULILLAH RENTAL udah di bayar nih' 
-        : 'Bang! ALHAMDULILLAH PURCHASE udah di bayar nih',
+      new_order: 'Bang! ada yang ORDER PURCHASE nih!',
+      paid_order: 'Bang! ALHAMDULILLAH PURCHASE udah di bayar nih',
+      new_rent: 'Bang! ada yang ORDER RENTAL nih!',
+      paid_rent: 'Bang! ALHAMDULILLAH RENTAL udah di bayar nih',
       order_cancelled: isRental 
         ? 'Bang! ada yang CANCEL RENTAL order nih!' 
         : 'Bang! ada yang CANCEL PURCHASE order nih!'
     };
 
     const messages: Record<string, string> = {
-      new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, ${isRental ? 'order RENTAL' : 'order PURCHASE'}, belum di bayar sih, tapi moga aja di bayar amin.`,
-      paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, ${isRental ? 'RENTAL udah di bayar' : 'PURCHASE udah di bayar'} Alhamdulillah.`,
+      new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order PURCHASE, belum di bayar sih, tapi moga aja di bayar amin.`,
+      paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, PURCHASE udah di bayar Alhamdulillah.`,
+      new_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order RENTAL, belum di bayar sih, tapi moga aja di bayar amin.`,
+      paid_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, RENTAL udah di bayar Alhamdulillah.`,
       order_cancelled: `namanya ${customerName}, ${isRental ? 'RENTAL' : 'PURCHASE'} produktnya ${productName} di cancel nih.`
     };
 
@@ -85,18 +92,21 @@ export async function createOrderNotification(
       console.warn('[NotificationService] Invalid UUID format for orderId:', orderId, 'Using null instead');
     }
 
+    // Determine if this is a payment notification
+    const isPaidNotification = finalType === 'paid_order' || finalType === 'paid_rent';
+
     const notification = {
-      type,
-      title: titles[type] || 'Order Notification',
-      message: messages[type] || `${customerName} placed an order for ${productName}`,
+      type: finalType,
+      title: titles[finalType] || 'Order Notification',
+      message: messages[finalType] || `${customerName} placed an order for ${productName}`,
       order_id: validOrderId,
       customer_name: customerName,
       product_name: productName,
       amount: Math.round(Number(amount)), // Ensure it's an integer for BIGINT
       is_read: false,
       metadata: {
-        priority: type === 'paid_order' ? 'high' : 'normal',
-        category: type === 'paid_order' ? 'payment' : 'order',
+        priority: isPaidNotification ? 'high' : 'normal',
+        category: isPaidNotification ? 'payment' : 'order',
         order_type: orderType || 'purchase',
         customer_phone: customerPhone,
         original_order_id: orderId
@@ -104,7 +114,7 @@ export async function createOrderNotification(
       created_at: new Date().toISOString()
     };
 
-    console.log('[NotificationService] Creating notification:', { type, orderId: validOrderId, orderType });
+    console.log('[NotificationService] Creating notification:', { type: finalType, orderId: validOrderId, orderType });
 
     const { data, error } = await sb
       .from('admin_notifications')

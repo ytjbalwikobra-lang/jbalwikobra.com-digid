@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { adminNotificationService, AdminNotification } from '../../services/adminNotificationService';
 import { supabase } from '../../services/supabase';
+import { announceToScreenReader } from './utils/accessibility';
 
 const cn = (...c: any[]) => c.filter(Boolean).join(' ');
 
@@ -25,6 +26,40 @@ interface NotificationItem extends AdminNotification {
 const MAX_VISIBLE = 3; // Show max 3 floating notifications at once
 const AUTO_DISMISS_TIME = 8000; // 8 seconds
 const REAPPEAR_TIME = 30000; // 30 seconds
+
+// Sound notification helper
+const playNotificationSound = (type: string) => {
+  try {
+    // Create an oscillator for a notification sound
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Different sounds for different notification types
+    if (type === 'paid_order' || type === 'paid_rent') {
+      // Success/money sound - pleasant ascending tone
+      oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+      oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+      oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.4);
+    } else {
+      // Generic notification sound - simple beep
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    }
+  } catch (error) {
+    console.log('Audio notification not available:', error);
+  }
+};
 
 export const AdminFloatingNotificationsV2: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -89,6 +124,17 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
             if (!newNotif.type.includes('test') && !newNotif.type.includes('debug')) {
               setNotifications(prev => [{ ...newNotif, dismissed: false }, ...prev].slice(0, 20));
               lastSeenRef.current = newNotif.id;
+              
+              // Play sound for paid notifications (purchase and rental)
+              if (newNotif.type === 'paid_order' || newNotif.type === 'paid_rent') {
+                playNotificationSound(newNotif.type);
+              }
+              
+              // Announce to screen readers
+              announceToScreenReader(
+                `Notifikasi baru: ${newNotif.title}. ${newNotif.message}`,
+                newNotif.type.includes('paid') ? 'assertive' : 'polite'
+              );
             }
           }
         )
@@ -217,6 +263,22 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
         bg: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
         pulse: 'bg-amber-500',
       },
+      // Rental notifications - distinctive orange/yellow for new rental
+      new_rent: {
+        gradient: 'from-orange-500 to-yellow-600',
+        glow: 'shadow-orange-500/50',
+        border: 'border-orange-500/50',
+        bg: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
+        pulse: 'bg-orange-500',
+      },
+      // Paid rental - golden/emerald for successful payment
+      paid_rent: {
+        gradient: 'from-yellow-500 to-emerald-600',
+        glow: 'shadow-yellow-500/50',
+        border: 'border-yellow-500/50',
+        bg: 'bg-gradient-to-br from-yellow-500/20 to-emerald-500/20',
+        pulse: 'bg-yellow-500',
+      },
       system: {
         gradient: 'from-pink-500 to-fuchsia-600',
         glow: 'shadow-pink-500/50',
@@ -248,18 +310,59 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
     .filter(n => !n.dismissed && !n.is_read)
     .slice(0, MAX_VISIBLE);
 
+  // Keyboard handler for notification cards
+  const handleKeyDown = (e: React.KeyboardEvent, notificationId: string) => {
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        handleMarkAsRead(notificationId);
+        break;
+      case 'Escape':
+        e.preventDefault();
+        handleDismiss(notificationId, true);
+        break;
+    }
+  };
+
+  // Get type label for screen readers
+  const getTypeLabel = (type: string): string => {
+    const labels: Record<string, string> = {
+      new_order: 'Pesanan baru',
+      paid_order: 'Pembayaran diterima',
+      new_user: 'Pengguna baru',
+      order_cancelled: 'Pesanan dibatalkan',
+      new_review: 'Ulasan baru',
+      new_rent: 'Sewa baru',
+      paid_rent: 'Pembayaran sewa diterima',
+      system: 'Sistem',
+    };
+    return labels[type] || 'Notifikasi';
+  };
+
   if (visibleNotifications.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-6 z-[100] space-y-3 max-w-md w-full pointer-events-none">
+    <div 
+      className="fixed top-20 right-6 z-[100] space-y-3 max-w-md w-full pointer-events-none"
+      role="region"
+      aria-label={`${visibleNotifications.length} notifikasi belum dibaca`}
+      aria-live="polite"
+      aria-atomic="false"
+    >
       {visibleNotifications.map((notification, index) => {
         const style = getNotificationStyle(notification.type);
         const Icon = getNotificationIcon(notification.type);
         const isReappearing = notification.reappearAt && Date.now() - notification.reappearAt < 3000;
+        const typeLabel = getTypeLabel(notification.type);
 
         return (
           <div
             key={notification.id}
+            role="alert"
+            aria-label={`${typeLabel}: ${notification.title}`}
+            tabIndex={0}
+            onKeyDown={(e) => handleKeyDown(e, notification.id)}
             className={cn(
               'pointer-events-auto relative overflow-hidden rounded-2xl backdrop-blur-xl',
               'transform transition-all duration-500 ease-out',
@@ -270,27 +373,34 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
               style.border,
               'shadow-2xl',
               style.glow,
-              isReappearing && 'ring-4 ring-pink-500/50 animate-pulse'
+              isReappearing && 'ring-4 ring-pink-500/50 animate-pulse',
+              'focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent'
             )}
             style={{
               animationDelay: `${index * 100}ms`,
             }}
           >
             {/* Glow effect */}
-            <div className={cn(
-              'absolute inset-0 bg-gradient-to-r opacity-30 blur-xl',
-              style.gradient
-            )} />
+            <div 
+              className={cn(
+                'absolute inset-0 bg-gradient-to-r opacity-30 blur-xl',
+                style.gradient
+              )} 
+              aria-hidden="true"
+            />
 
             {/* Content */}
             <div className="relative p-5">
               <div className="flex items-start gap-4">
                 {/* Icon */}
-                <div className={cn(
-                  'flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg',
-                  style.gradient,
-                  'relative'
-                )}>
+                <div 
+                  className={cn(
+                    'flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg',
+                    style.gradient,
+                    'relative'
+                  )}
+                  aria-hidden="true"
+                >
                   <Icon className="w-6 h-6 text-white" />
                   
                   {/* Pulse indicator */}
@@ -343,20 +453,22 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
                   )}
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" role="group" aria-label="Aksi notifikasi">
                     <button
                       onClick={() => handleMarkAsRead(notification.id)}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+                      aria-label={`Tandai notifikasi ${notification.title} sebagai sudah dibaca`}
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white text-xs font-medium transition-all flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white/50"
                     >
-                      <Check className="w-3 h-3" />
+                      <Check className="w-3 h-3" aria-hidden="true" />
                       Tandai Dibaca
                     </button>
                     
                     <button
                       onClick={() => handleDismiss(notification.id, true)}
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white transition-all"
+                      aria-label={`Tutup sementara notifikasi ${notification.title}`}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white transition-all focus:outline-none focus:ring-2 focus:ring-white/50"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4" aria-hidden="true" />
                     </button>
                   </div>
 

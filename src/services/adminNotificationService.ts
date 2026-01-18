@@ -71,14 +71,28 @@ class AdminNotificationService {
     customerName: string, 
     productName: string, 
     amount: number,
-    type: 'new_order' | 'paid_order' | 'order_cancelled' = 'new_order',
-    customerPhone?: string
+    type: 'new_order' | 'paid_order' | 'order_cancelled' | 'new_rent' | 'paid_rent' = 'new_order',
+    customerPhone?: string,
+    orderType?: 'purchase' | 'rental'
   ): Promise<void> {
     try {
-      const titles = {
-        new_order: 'Bang! ada yang ORDER nih!',
-        paid_order: 'Bang! ALHAMDULILLAH udah di bayar nih',
-        order_cancelled: 'Bang! ada yang CANCEL order nih!'
+      const isRental = orderType === 'rental';
+      
+      // Map types to rental-specific types when orderType is rental
+      let finalType = type;
+      if (isRental) {
+        if (type === 'new_order') finalType = 'new_rent';
+        else if (type === 'paid_order') finalType = 'paid_rent';
+      }
+      
+      const titles: Record<string, string> = {
+        new_order: 'Bang! ada yang ORDER PURCHASE nih!',
+        paid_order: 'Bang! ALHAMDULILLAH PURCHASE udah di bayar nih',
+        new_rent: 'Bang! ada yang ORDER RENTAL nih!',
+        paid_rent: 'Bang! ALHAMDULILLAH RENTAL udah di bayar nih',
+        order_cancelled: isRental 
+          ? 'Bang! ada yang CANCEL RENTAL order nih!' 
+          : 'Bang! ada yang CANCEL order nih!'
       };
 
       const formatAmount = (amount: number) => {
@@ -90,9 +104,11 @@ class AdminNotificationService {
         }).format(amount);
       };
 
-      const messages = {
-        new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, belum di bayar sih, tapi moga aja di bayar amin.`,
-        paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, udah di bayar Alhamdulillah.`,
+      const messages: Record<string, string> = {
+        new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order PURCHASE, belum di bayar sih, tapi moga aja di bayar amin.`,
+        paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, PURCHASE udah di bayar Alhamdulillah.`,
+        new_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order RENTAL, belum di bayar sih, tapi moga aja di bayar amin.`,
+        paid_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, RENTAL udah di bayar Alhamdulillah.`,
         order_cancelled: `namanya ${customerName}, produktnya ${productName} di cancel nih.`
       };
 
@@ -101,20 +117,24 @@ class AdminNotificationService {
         return;
       }
 
+      // Determine if this is a payment notification
+      const isPaidNotification = finalType === 'paid_order' || finalType === 'paid_rent';
+
       const { error } = await supabase
         .from('admin_notifications')
         .insert({
-          type,
-          title: titles[type],
-          message: messages[type],
+          type: finalType,
+          title: titles[finalType],
+          message: messages[finalType],
           order_id: orderId,
           customer_name: customerName,
           product_name: productName,
           amount,
           is_read: false,
           metadata: {
-            priority: type === 'paid_order' ? 'high' : 'normal',
-            category: 'order'
+            priority: isPaidNotification ? 'high' : 'normal',
+            category: isPaidNotification ? 'payment' : 'order',
+            order_type: orderType || 'purchase'
           }
         });
 

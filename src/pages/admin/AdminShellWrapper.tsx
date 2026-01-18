@@ -3,13 +3,15 @@
  * Provides navigation and consistent layout for all admin pages
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AdminNavigation } from './components/AdminNavigation';
 import { Menu, Bell, User, LogOut } from 'lucide-react';
 import { AdminColors } from './design-tokens';
 import { useNavigate } from 'react-router-dom';
 import { AdminToastProvider } from './components/ui/AdminToast';
 import AdminNotificationPanel from './components/AdminNotificationPanel';
+import { adminNotificationService } from '../../services/adminNotificationService';
+import { supabase } from '../../services/supabase';
 import '../../styles/admin-design-system-v3.css';
 
 interface AdminShellProps {
@@ -21,6 +23,48 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+
+  // Fetch initial unread count on mount
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const data = await adminNotificationService.getAdminNotifications(50);
+      if (data) {
+        const count = data.filter(n => !n.is_read).length;
+        setUnreadCount(count);
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error);
+    }
+  }, []);
+
+  // Load unread count on mount and set up realtime subscription
+  useEffect(() => {
+    fetchUnreadCount();
+
+    // Subscribe to new notifications for badge update
+    let channel: any = null;
+    if (supabase) {
+      channel = supabase
+        .channel('admin-notifications-badge')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'admin_notifications'
+          },
+          () => {
+            // Increment count for new notification
+            setUnreadCount(prev => prev + 1);
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (channel) channel.unsubscribe();
+    };
+  }, [fetchUnreadCount]);
 
   const handleLogout = () => {
     // Clear auth and redirect

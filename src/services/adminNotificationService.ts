@@ -360,7 +360,7 @@ class AdminNotificationService {
       }
       const { count, error } = await supabase
         .from('admin_notifications')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_read', false);
 
       if (error) throw error;

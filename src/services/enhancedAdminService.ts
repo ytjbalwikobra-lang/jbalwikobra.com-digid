@@ -297,15 +297,15 @@ class EnhancedAdminService {
         todayOrdersWithAmounts,
         reviewsData
       ] = await Promise.all([
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'paid'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).gte('created_at', today),
-  supabase.from('orders').select('amount, status').in('status', ['paid', 'completed']),
-  supabase.from('orders').select('amount').gte('created_at', today),
+        supabase.from('users').select('id', { count: 'exact', head: true }),
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('orders').select('id', { count: 'exact', head: true }),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).gte('created_at', today),
+        supabase.from('orders').select('amount, status').in('status', ['paid', 'completed']),
+        supabase.from('orders').select('amount').gte('created_at', today),
         supabase.from('reviews').select('rating')
       ]);
 

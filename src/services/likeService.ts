@@ -50,7 +50,7 @@ class LikeService {
       // Get total likes count
       const { count: totalLikes, error: countError } = await supabase
         .from('product_likes')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('product_id', productId);
 
       if (countError) {

@@ -194,7 +194,7 @@ async function listOrders(page: number, limit: number, status?: string) {
   
   // FIRST: Test raw count without any filters
   console.log('[listOrders] Testing raw table access...');
-  const rawTest = await supabase.from('orders').select('*', { count: 'exact', head: true });
+  const rawTest = await supabase.from('orders').select('id', { count: 'exact', head: true });
   console.log('[listOrders] Raw table count test:', { count: rawTest.count, error: rawTest.error });
   
   const from = (page - 1) * limit; const to = from + limit - 1;
@@ -305,7 +305,7 @@ async function listUsers(page: number, limit: number, search?: string) {
   
   // FIRST: Test raw count without any filters
   console.log('[listUsers] Testing raw table access...');
-  const rawTest = await supabase.from('users').select('*', { count: 'exact', head: true });
+  const rawTest = await supabase.from('users').select('id', { count: 'exact', head: true });
   console.log('[listUsers] Raw table count test:', { count: rawTest.count, error: rawTest.error });
   
   const from = (page - 1) * limit; 
@@ -536,7 +536,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Get current settings first
         const { data: current } = await supabase
           .from('website_settings')
-          .select('*') // Select all columns for update operations
+          .select('id')
           .single();
           
         if (current) {
@@ -619,7 +619,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           const { data, error } = await supabase
             .from('website_settings')
-            .select('*') // Select all columns to ensure frontend gets everything it needs
+            .select('id, site_name, logo_url, favicon_url, contact_email, support_email, contact_phone, whatsapp_number, address, business_hours, company_description, facebook_url, instagram_url, tiktok_url, youtube_url, twitter_url, hero_title, hero_subtitle, footer_copyright_text, newsletter_enabled, social_media_enabled, topup_game_url, whatsapp_channel_url, hero_button_url, jual_akun_whatsapp_url, updated_at')
             .single();
             
           if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned

@@ -102,7 +102,7 @@ const ProfilePage: React.FC = () => {
         // Fetch order count
         const { count, error: countError } = await supabase
           .from('orders')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id);
           
         if (!countError && count !== null) {

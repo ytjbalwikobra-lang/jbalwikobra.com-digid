@@ -58,7 +58,7 @@ export const ordersService = {
       // Get total count for pagination
       const { count: totalCount, error: countError } = await supabase
         .from('orders')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       if (countError) {
         throw countError;

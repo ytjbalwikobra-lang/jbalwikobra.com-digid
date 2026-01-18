@@ -47,7 +47,7 @@ export class SettingsService {
   }
 
   static async get(): Promise<WebsiteSettings> {
-    // Use globalCache.getOrSet for automatic cache management
+    // Use globalCache.getOrSet for automatic cache management and tag-based invalidation
     return globalCache.getOrSet<WebsiteSettings>(
       SETTINGS_CACHE_KEY,
       async () => {

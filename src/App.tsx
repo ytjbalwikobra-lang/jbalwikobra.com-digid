@@ -26,8 +26,6 @@ import { onIdle, warmImport } from './utils/prefetch';
 import { enhancedProductService } from './services/enhancedProductService';
 import UserFloatingNotifications from './components/UserFloatingNotifications';
 import PurchaseNotificationTicker from './components/PurchaseNotificationTicker';
-// Cloudflare Turnstile verification - enabled when maintenance mode is off
-import FirstVisitVerification from './components/FirstVisitVerification';
 
 // CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
 // This reduces initial JS bundle by 70%+
@@ -153,7 +151,6 @@ function App() {
     }
   }, []);
 
-  // Wrap content conditionally with Turnstile verification
   const AppContent = () => (
     <ThemeProvider>
       <AuthProvider>
@@ -264,14 +261,6 @@ function App() {
 
   return (
     <ErrorBoundary>
-      {/* Cloudflare Turnstile verification - DISABLED */}
-      {/* {!isMaintenanceMode && process.env.REACT_APP_TURNSTILE_SITE_KEY ? (
-        <FirstVisitVerification>
-          <AppContent />
-        </FirstVisitVerification>
-      ) : (
-        <AppContent />
-      )} */}
       <AppContent />
     </ErrorBoundary>
   );

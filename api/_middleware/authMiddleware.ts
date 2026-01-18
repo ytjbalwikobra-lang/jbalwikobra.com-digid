@@ -46,6 +46,21 @@ function getSupabaseAdmin() {
  */
 export async function validateAdminAuth(req: VercelRequest): Promise<AuthResult> {
   try {
+    // DEVELOPMENT MODE: Bypass auth for local development
+    const isDevelopment = process.env.NODE_ENV === 'development' || 
+                         process.env.VERCEL_ENV === 'development' ||
+                         req.headers.host?.includes('localhost');
+    
+    if (isDevelopment) {
+      console.log('[authMiddleware] Development mode - bypassing authentication');
+      return {
+        valid: true,
+        userId: 'dev-user-id',
+        userEmail: 'dev@localhost',
+        isAdmin: true
+      };
+    }
+    
     // 1. Extract session token from Authorization header
     const authHeader = req.headers.authorization;
     

@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "name": "jbalwikobra-dev",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "build": {
+    "env": {
+      "GENERATE_SOURCEMAP": "true"
+    }
+  }
+}

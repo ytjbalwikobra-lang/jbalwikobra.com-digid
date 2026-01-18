@@ -30,8 +30,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  login: (identifier: string, password: string, turnstileToken?: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; profileCompleted?: boolean}>;
-  signup: (phone: string, password: string, name?: string, turnstileToken?: string) => Promise<{error?: any; success?: boolean; userId?: string; message?: string}>;
+  login: (identifier: string, password: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; profileCompleted?: boolean}>;
+  signup: (phone: string, password: string, name?: string) => Promise<{error?: any; success?: boolean; userId?: string; message?: string}>;
   verifyPhone: (userId: string, code: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; nextStep?: string}>;
   completeProfile: (email: string, name: string) => Promise<{error?: any; success?: boolean; user?: User}>;
   logout: (logoutAll?: boolean) => Promise<void>;
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (identifier: string, password: string, turnstileToken?: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
       // Use comprehensive phone normalization
       const normalizedIdentifier = normalizeLoginIdentifier(identifier);
@@ -100,8 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         body: JSON.stringify({ 
           identifier: normalizedIdentifier, 
-          password,
-          turnstile_token: turnstileToken 
+          password
         }),
       });
       // Some hosts return HTML on 500; guard JSON parsing
@@ -152,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (phone: string, password: string, name?: string, turnstileToken?: string) => {
+  const signup = async (phone: string, password: string, name?: string) => {
     try {
       // Use comprehensive phone normalization
       const normalizedPhone = normalizeLoginIdentifier(phone);
@@ -165,8 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ 
           phone: normalizedPhone, 
           password, 
-          name,
-          turnstile_token: turnstileToken 
+          name
         }),
       });
 

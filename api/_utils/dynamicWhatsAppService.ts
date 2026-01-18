@@ -285,7 +285,13 @@ export class DynamicWhatsAppService {
 
       // Resolve group send endpoint & field names from settings or sensible defaults
       const settings = (provider.settings || {}) as any;
-      const endpoint = settings.group_send_endpoint || '/send_message_group_id';
+      const isWooWa = provider.name === 'woo-wa' || /woo|notifapi/i.test(provider.name || '') || /notifapi/i.test(provider.base_url || '');
+      let endpoint = settings.group_send_endpoint || '/send_message_group_id';
+      // NotifAPI does NOT use /api prefix - endpoints are at root level
+      // Remove /api prefix if present since NotifAPI endpoints don't have it
+      if (isWooWa && endpoint.startsWith('/api')) {
+        endpoint = endpoint.replace(/^\/api/, '');
+      }
       const groupField = settings.group_id_field_name || 'group_id';
       const keyField = provider.key_field_name || 'key';
       const messageField = provider.message_field_name || 'message';
@@ -361,15 +367,23 @@ export class DynamicWhatsAppService {
       const { api_key, provider_config } = apiConfig;
       const provider = provider_config;
       const settings = (provider.settings || {}) as any;
-  // Sensible defaults for Woo-WA/NotifAPI
-  const isWooWa = provider.name === 'woo-wa' || /woo|notifapi/i.test(provider.name || '');
-  const endpoint = settings.list_groups_endpoint || (isWooWa ? '/get_group_id' : '/list_groups');
-  const method = (settings.list_groups_method || (isWooWa ? 'POST' : 'POST')).toUpperCase();
+      // Sensible defaults for Woo-WA/NotifAPI
+      const isWooWa = provider.name === 'woo-wa' || /woo|notifapi/i.test(provider.name || '') || /notifapi/i.test(provider.base_url || '');
+      // NotifAPI does NOT use /api prefix - endpoints are at root level
+      let endpoint = settings.list_groups_endpoint || (isWooWa ? '/get_group_id' : '/list_groups');
+      // Remove /api prefix if present since NotifAPI endpoints don't have it
+      if (isWooWa && endpoint.startsWith('/api')) {
+        endpoint = endpoint.replace(/^\/api/, '');
+      }
+      // NotifAPI uses GET method for fetching groups
+      const method = (settings.list_groups_method || (isWooWa ? 'GET' : 'POST')).toUpperCase();
       const keyField = provider.key_field_name || 'key';
-      const nameField = settings.group_name_field || 'name';
-      const idField = settings.group_id_field_name || 'group_id';
-  const arrayField = settings.groups_array_field || (isWooWa ? 'results' : 'groups');
-      const authMode = settings.list_groups_auth_mode || 'body'; // 'body' | 'header' | 'query'
+      const nameField = settings.group_name_field || 'subject'; // NotifAPI uses 'subject' for group name
+      const idField = settings.group_id_field_name || 'id';
+      const arrayField = settings.groups_array_field || (isWooWa ? 'results' : 'groups');
+      // For GET methods, default to 'query' auth mode; NotifAPI uses 'token' which means query param
+      // Also force 'query' for NotifAPI regardless of what's in the DB
+      const authMode = isWooWa ? 'query' : (settings.list_groups_auth_mode || (method === 'GET' ? 'query' : 'body'));
       const headerName = settings.list_groups_auth_header || 'Authorization';
       const headerTemplate = settings.list_groups_auth_header_template || 'Bearer {api_key}';
 
@@ -379,7 +393,8 @@ export class DynamicWhatsAppService {
 
       if (authMode === 'header') {
         headers[headerName] = headerTemplate.replace('{api_key}', api_key);
-      } else if (authMode === 'query') {
+      } else if (authMode === 'query' || authMode === 'token') {
+        // 'token' auth mode also means query parameter (used by NotifAPI)
         const sep = url.includes('?') ? '&' : '?';
         url = `${url}${sep}${encodeURIComponent(keyField)}=${encodeURIComponent(api_key)}`;
       } else {

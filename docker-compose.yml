@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database (mimics Supabase locally)
+  postgres:
+    image: postgres:15-alpine
+    container_name: jbalwikobra-dev-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jbalwikobra_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: jbalwikobra-dev-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Supabase Studio (optional - for database management)
+  supabase-studio:
+    image: supabase/studio:latest
+    container_name: jbalwikobra-dev-studio
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: ${REACT_APP_SUPABASE_ANON_KEY}
+      STUDIO_PG_META_URL: postgresql://postgres:postgres@postgres:5432/jbalwikobra_dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # pgAdmin (optional - for database administration)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: jbalwikobra-dev-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@jbalwikobra.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Mailhog (for testing emails locally)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: jbalwikobra-dev-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    logging:
+      driver: none
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  default:
+    name: jbalwikobra-dev-network

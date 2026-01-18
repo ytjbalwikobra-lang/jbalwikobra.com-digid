@@ -72,17 +72,31 @@ module.exports = function (app) {
       res.status(400).send(JSON.stringify({ error: 'unsupported_action', action }));
     });
 
-    // In-memory mock provider
+    // In-memory mock provider and API key
     const provider = {
       id: 'dev-mock',
       name: 'dev-mock',
       display_name: 'Dev Mock Provider',
+      base_url: 'https://notifapi.com',
       settings: { default_group_id: 'DEV-GROUP-ID' },
+    };
+    
+    let mockApiKey = {
+      id: 'mock-key-id',
+      key_name: 'Development Key',
+      api_key: 'dev-mock-api-key-placeholder',
+      is_active: true,
+      is_primary: true,
+      usage_count: 0,
+      last_used_at: null
     };
 
     app.get('/api/admin-whatsapp', (req, res) => {
       res.setHeader('Content-Type', 'application/json');
-      res.status(200).send(JSON.stringify(provider));
+      res.status(200).send(JSON.stringify({
+        provider,
+        api_key: mockApiKey
+      }));
     });
 
     const handleWrite = (req, res) => {
@@ -92,15 +106,37 @@ module.exports = function (app) {
         try {
           const body = buf ? JSON.parse(buf) : {};
           if (body && typeof body === 'object') {
-            const { default_group_id, settings } = body;
+            const { default_group_id, settings, api_key, group_configurations } = body;
+            
+            // Handle API key update
+            if (api_key && typeof api_key === 'string' && api_key.trim()) {
+              mockApiKey.api_key = api_key.trim();
+              console.log('🔧 Mock API: API key updated to:', api_key.substring(0, 8) + '...');
+              res.setHeader('Content-Type', 'application/json');
+              res.status(200).send(JSON.stringify({ 
+                success: true, 
+                message: 'API key updated successfully',
+                api_key: mockApiKey,
+                provider,
+                dev: true 
+              }));
+              return;
+            }
+            
+            // Handle settings update
             if (default_group_id !== undefined) {
               provider.settings.default_group_id = default_group_id || null;
+            }
+            if (group_configurations !== undefined) {
+              provider.settings.group_configurations = group_configurations || {};
             }
             if (settings && typeof settings === 'object') {
               Object.assign(provider.settings, settings);
             }
           }
-        } catch {}
+        } catch (e) {
+          console.error('🔧 Mock API: Parse error', e);
+        }
         res.setHeader('Content-Type', 'application/json');
         res.status(200).send(JSON.stringify({ success: true, provider, dev: true }));
       });
@@ -176,8 +212,17 @@ module.exports = function (app) {
         req.on('end', () => {
           let body = {};
           try { body = buf ? JSON.parse(buf) : {}; } catch {}
+          console.log('🔧 Mock API: Test WhatsApp group message received:', body);
           res.setHeader('Content-Type', 'application/json');
-          res.status(200).send(JSON.stringify({ success: true, dev: true, echo: body }));
+          res.status(200).send(JSON.stringify({ 
+            success: true, 
+            dev: true, 
+            messageId: `mock-msg-${Date.now()}`,
+            provider: 'Mock Provider (Dev)',
+            responseTime: Math.floor(Math.random() * 500) + 100,
+            message: body.message || 'Test message',
+            groupId: body.groupId || 'default-group'
+          }));
         });
       } else {
         res.status(204).end();

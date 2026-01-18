@@ -132,11 +132,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Use the correct Woo-WA API configuration
     // NotifAPI uses GET with query parameters for group listing
-    const baseUrl = provider.settings?.base_url || 'https://notifapi.com';
-    // NotifAPI requires /api/ prefix for endpoints
-    const endpoint = provider.settings?.list_groups_endpoint || '/api/get_group_id';
-    // NotifAPI expects 'token' as the query parameter name
-    const keyField = 'token'; // Hardcoded for NotifAPI - database may have incorrect value
+    const baseUrl = provider.base_url || provider.settings?.base_url || 'https://notifapi.com';
+    // NotifAPI does NOT use /api prefix - endpoints are at root
+    let endpoint = provider.settings?.list_groups_endpoint || '/get_group_id';
+    // Remove /api prefix if present for NotifAPI (they don't use it)
+    if (baseUrl.includes('notifapi') || provider.name?.toLowerCase().includes('woo')) {
+      endpoint = endpoint.replace(/^\/api/, '');
+    }
+    // Use provider's key_field_name - NotifAPI expects 'key' as the query parameter name
+    const keyField = provider.key_field_name || 'key';
     const responseField = provider.settings?.groups_array_field || 'results';
     
     const url = `${baseUrl}${endpoint}`;
@@ -150,14 +154,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     let response;
     try {
-      // NotifAPI /get_group_id uses GET with query parameters
-      const params = {
+      // NotifAPI /get_group_id requires GET with JSON body (non-standard HTTP)
+      // We use axios with method: 'GET' and data property to send body
+      const requestBody = {
         [keyField]: apiKeyData.api_key
       };
       
-      response = await axios.get(url, { 
-        params,
-        timeout: 10000 // 10 second timeout
+      response = await axios({
+        method: 'GET',
+        url,
+        data: requestBody,
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 15000 // 15 second timeout for group listing
       });
     } catch (apiError: any) {
       console.error('[admin-whatsapp-groups] External API call failed:', {
@@ -180,6 +188,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           action_required: 'Connect WhatsApp on NotifAPI dashboard',
           providerState: providerState,
           providerMessage: providerMessage
+        });
+      }
+      
+      // If the endpoint doesn't exist (404), return configured groups from provider settings
+      if (apiError.response?.status === 404) {
+        console.log('[admin-whatsapp-groups] Groups API not available, returning configured groups');
+        
+        const configuredGroups: Array<{ id: string; name: string; value: string }> = [];
+        const groupConfigs = provider.settings?.group_configurations || {};
+        
+        if (groupConfigs.purchase_orders) {
+          configuredGroups.push({ 
+            id: groupConfigs.purchase_orders, 
+            name: 'Purchase Orders Group',
+            value: groupConfigs.purchase_orders 
+          });
+        }
+        if (groupConfigs.rental_orders && groupConfigs.rental_orders !== groupConfigs.purchase_orders) {
+          configuredGroups.push({ 
+            id: groupConfigs.rental_orders, 
+            name: 'Rental Orders Group',
+            value: groupConfigs.rental_orders 
+          });
+        }
+        if (groupConfigs.flash_sales && !configuredGroups.find(g => g.id === groupConfigs.flash_sales)) {
+          configuredGroups.push({ 
+            id: groupConfigs.flash_sales, 
+            name: 'Flash Sales Group',
+            value: groupConfigs.flash_sales 
+          });
+        }
+        if (groupConfigs.general_notifications && !configuredGroups.find(g => g.id === groupConfigs.general_notifications)) {
+          configuredGroups.push({ 
+            id: groupConfigs.general_notifications, 
+            name: 'General Notifications Group',
+            value: groupConfigs.general_notifications 
+          });
+        }
+        if (provider.settings?.default_group_id && !configuredGroups.find(g => g.id === provider.settings.default_group_id)) {
+          configuredGroups.push({ 
+            id: provider.settings.default_group_id, 
+            name: 'Default Group',
+            value: provider.settings.default_group_id 
+          });
+        }
+        
+        return res.status(200).json({ 
+          groups: configuredGroups,
+          message: configuredGroups.length > 0 
+            ? `Loaded ${configuredGroups.length} configured groups (group discovery not available)`
+            : 'Group discovery not available and no groups configured',
+          note: 'NotifAPI does not support group listing. Groups are loaded from your saved configuration.'
         });
       }
       

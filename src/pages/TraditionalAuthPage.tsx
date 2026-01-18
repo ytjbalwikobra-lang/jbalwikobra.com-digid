@@ -6,7 +6,6 @@ import PhoneInput from '../components/PhoneInput';
 import PasswordInput from '../components/PasswordInput';
 import { IOSButton, IOSCard } from '../components/ios/IOSDesignSystem';
 import { useTracking } from '../hooks/useTracking';
-import TurnstileWidget from '../components/TurnstileWidget';
 
 // Mobile-first constants
 const MIN_TOUCH_TARGET = 44;
@@ -63,18 +62,8 @@ const AuthPage: React.FC = () => {
     confirmPassword: ''
   });
 
-  // Turnstile token state
-  const [turnstileToken, setTurnstileToken] = useState<string>('');
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Turnstile verification DISABLED
-    // const turnstileSiteKey = process.env.REACT_APP_TURNSTILE_SITE_KEY;
-    // if (turnstileSiteKey && !turnstileToken) {
-    //   showToast('Mohon selesaikan verifikasi captcha', 'error');
-    //   return;
-    // }
 
     setLoading(true);
 
@@ -83,7 +72,7 @@ const AuthPage: React.FC = () => {
       const identifier = loginTab === 'email' ? emailLoginData.email : phoneLoginData.phone;
       const password = loginTab === 'email' ? emailLoginData.password : phoneLoginData.password;
       
-      const result = await login(identifier, password, ''); // Turnstile disabled
+      const result = await login(identifier, password);
       
       if (result.error) {
         showToast(result.error, 'error');
@@ -138,17 +127,10 @@ const AuthPage: React.FC = () => {
       return;
     }
 
-    // Turnstile verification DISABLED
-    // const turnstileSiteKey = process.env.REACT_APP_TURNSTILE_SITE_KEY;
-    // if (turnstileSiteKey && !turnstileToken) {
-    //   showToast('Mohon selesaikan verifikasi captcha', 'error');
-    //   return;
-    // }
-
     setLoading(true);
 
     try {
-      const result = await signup(signupData.phone, signupData.password, signupData.name, ''); // Turnstile disabled
+      const result = await signup(signupData.phone, signupData.password, signupData.name);
       
       if (result.error) {
         showToast(result.error, 'error');
@@ -336,14 +318,6 @@ const AuthPage: React.FC = () => {
                   </>
                 )}
 
-                {/* Turnstile Captcha - DISABLED */}
-                {/* <TurnstileWidget
-                  onSuccess={(token) => setTurnstileToken(token)}
-                  onError={() => setTurnstileToken('')}
-                  onExpire={() => setTurnstileToken('')}
-                  className="flex justify-center"
-                /> */}
-
                 <button type="submit" disabled={loading} className="w-full bg-pink-600 text-white py-3 min-h-[44px] rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                   {loading ? 'Masuk...' : `Masuk dengan ${loginTab === 'email' ? 'Email' : 'Nomor HP'}`}
                 </button>
@@ -414,14 +388,6 @@ const AuthPage: React.FC = () => {
                 label="Konfirmasi Password"
                 required
               />
-
-              {/* Turnstile Captcha - DISABLED */}
-              {/* <TurnstileWidget
-                onSuccess={(token) => setTurnstileToken(token)}
-                onError={() => setTurnstileToken('')}
-                onExpire={() => setTurnstileToken('')}
-                className="flex justify-center"
-              /> */}
 
               <button type="submit" disabled={loading} className="w-full bg-pink-600 text-white py-3 min-h-[44px] rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                 {loading ? 'Mendaftar...' : 'Daftar'}

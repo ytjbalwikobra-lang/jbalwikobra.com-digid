@@ -3,10 +3,6 @@
     {
       "source": "/api/xendit/callback",
       "destination": "/api/xendit/webhook"
-    },
-    {
-      "source": "/:path((?!api/).*)",
-      "destination": "/index.html"
     }
   ],
   "functions": {
@@ -18,9 +14,6 @@
     },
     "api/admin-whatsapp.ts": {
       "maxDuration": 30
-    },
-    "api/test-groups-simple.ts": {
-      "maxDuration": 10
     }
   },
   "headers": [

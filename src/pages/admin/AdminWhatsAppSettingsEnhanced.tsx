@@ -22,8 +22,12 @@ import {
   Eye,
   EyeOff,
   Copy,
-  Check
+  Check,
+  X,
+  Clock,
+  Zap
 } from 'lucide-react';
+import { useToast } from '../../components/Toast';
 import { 
   AdminCard, 
   AdminCardHeader, 
@@ -105,7 +109,36 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
   });
   const [customGroupId, setCustomGroupId] = useState<string>('');
   const [testMessage, setTestMessage] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [message, setMessage] = useState<string>('');
+  
+  // Result modal state
+  const [resultModal, setResultModal] = useState<{
+    isOpen: boolean;
+    success: boolean;
+    title: string;
+    message: string;
+    details?: {
+      messageId?: string;
+      provider?: string;
+      responseTime?: number;
+      groupId?: string;
+      sentMessage?: string;
+    };
+  }>({ isOpen: false, success: false, title: '', message: '' });
+  
+  // Toast hook
+  const { push: showToast } = useToast();
+
+  // Message templates for quick testing
+  const messageTemplates = [
+    { id: '', label: '-- Select Template --', text: '' },
+    { id: 'order_confirm', label: '🛒 Order Confirmation', text: '✅ *ORDER CONFIRMED*\n\nOrder ID: #TEST-{timestamp}\nProduct: Premium Account\nAmount: Rp 150.000\n\nThank you for your order!' },
+    { id: 'payment_success', label: '💰 Payment Success', text: '💳 *PAYMENT RECEIVED*\n\nOrder ID: #TEST-{timestamp}\nStatus: PAID\nAmount: Rp 150.000\n\nYour order is being processed!' },
+    { id: 'delivery_ready', label: '📦 Delivery Ready', text: '📦 *DELIVERY READY*\n\nOrder ID: #TEST-{timestamp}\nYour account details have been sent to your WhatsApp.\n\nThank you for shopping with us!' },
+    { id: 'flash_sale', label: '⚡ Flash Sale Alert', text: '⚡ *FLASH SALE ALERT*\n\n🔥 Limited time offer!\n50% OFF on all premium accounts\n\nHurry, stock is limited!' },
+    { id: 'custom', label: '✏️ Custom Message', text: '' }
+  ];
   const [error, setError] = useState<string>('');
   const [groups, setGroups] = useState<WhatsAppGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
@@ -187,7 +220,41 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       if (!res.ok) {
         // Check for SERVICE_OFF state
         if (data.state === 'SERVICE_OFF' || data.message?.includes('SERVICE_OFF') || data.message?.includes('scan qr')) {
-          throw new Error('SERVICE_OFF: Device not connected. Please scan QR code.');
+          throw new Error('WhatsApp service is offline. Please scan QR code in NotifAPI dashboard.');
+        }
+        // Check for 404 - endpoint doesn't exist, use configured groups
+        if (res.status === 502 || res.status === 404 || data.statusCode === 404) {
+          console.log('[loadGroups] Groups API not available, using configured groups');
+          // Fallback to configured groups from provider settings
+          const configuredGroups: Array<{ id: string; name: string }> = [];
+          if (groupConfigurations.purchase_orders) {
+            configuredGroups.push({ id: groupConfigurations.purchase_orders, name: 'Purchase Orders Group' });
+          }
+          if (groupConfigurations.rental_orders && groupConfigurations.rental_orders !== groupConfigurations.purchase_orders) {
+            configuredGroups.push({ id: groupConfigurations.rental_orders, name: 'Rental Orders Group' });
+          }
+          if (groupConfigurations.flash_sales && !configuredGroups.find(g => g.id === groupConfigurations.flash_sales)) {
+            configuredGroups.push({ id: groupConfigurations.flash_sales, name: 'Flash Sales Group' });
+          }
+          if (groupConfigurations.general_notifications && !configuredGroups.find(g => g.id === groupConfigurations.general_notifications)) {
+            configuredGroups.push({ id: groupConfigurations.general_notifications, name: 'General Notifications Group' });
+          }
+          if (defaultGroupId && !configuredGroups.find(g => g.id === defaultGroupId)) {
+            configuredGroups.push({ id: defaultGroupId, name: 'Default Group' });
+          }
+          
+          if (configuredGroups.length > 0) {
+            setGroups(configuredGroups);
+            setProviderStatus(prev => ({
+              ...prev,
+              activeGroups: configuredGroups.length,
+              lastActivity: 'Using configured groups (API discovery not available)',
+              lastChecked: new Date().toLocaleString()
+            }));
+            setMessage(`Loaded ${configuredGroups.length} configured groups`);
+            setTimeout(() => setMessage(''), 3000);
+            return;
+          }
         }
         const errorMsg = data.message || data.error || `HTTP ${res.status}: ${res.statusText}`;
         throw new Error(errorMsg);
@@ -207,11 +274,12 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
     } catch (e: unknown) {
       const errorMessage = parseErrorMessage(e);
       setError(errorMessage);
+      // Don't set isConnected to false - provider may still be connected
+      // just the groups endpoint failed (e.g., subscription doesn't include it)
       setProviderStatus(prev => ({
         ...prev,
-        isConnected: false,
         activeGroups: 0,
-        lastActivity: 'Connection failed',
+        lastActivity: 'Groups fetch failed: ' + errorMessage,
         lastChecked: new Date().toLocaleString()
       }));
     } finally {
@@ -253,15 +321,23 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
       });
       
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update API key');
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to update API key');
       
+      showToast('API key updated successfully!', 'success');
       setMessage('API key updated successfully');
       setNewApiKey('');
       setApiKey(data.api_key);
       
-      setTimeout(() => load(), 1000);
+      // Update provider status
+      setProviderStatus({
+        isConnected: true,
+        lastChecked: new Date().toLocaleString(),
+        activeGroups: groups.length,
+        lastActivity: 'Ready to use'
+      });
     } catch (e: unknown) {
       const errorMessage = parseErrorMessage(e);
+      showToast('Failed to update API key: ' + errorMessage, 'error');
       setError(errorMessage);
     } finally {
       setUpdatingKey(false);
@@ -305,32 +381,78 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
   };
 
   const testSend = async () => {
+    if (!testMessage.trim()) {
+      showToast('Please enter a message or select a template', 'error');
+      return;
+    }
+    
     setTesting(true);
     setError('');
     setMessage('');
+    
+    const sentMessageContent = testMessage || 'Test WhatsApp group message from Admin at ' + new Date().toLocaleTimeString();
+    const targetGroup = customGroupId || defaultGroupId;
+    
     try {
       const res = await fetch('/api/xendit/webhook?testGroupSend=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: testMessage || 'Test WhatsApp group message from Admin at ' + new Date().toLocaleTimeString(), 
-          groupId: customGroupId || undefined 
+          message: sentMessageContent, 
+          groupId: targetGroup || undefined 
         })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Failed to send test');
       
-      setMessage('Test message sent successfully! Check your WhatsApp group.');
+      if (!res.ok) {
+        throw new Error(data.error || data.message || 'Failed to send test message');
+      }
+      
+      // Show success modal with details
+      setResultModal({
+        isOpen: true,
+        success: true,
+        title: 'Message Sent Successfully!',
+        message: 'Your test message has been delivered to the WhatsApp group.',
+        details: {
+          messageId: data.messageId || data.message_id || 'N/A',
+          provider: data.provider || provider?.display_name || 'WhatsApp Provider',
+          responseTime: data.responseTime || 0,
+          groupId: targetGroup || 'Default Group',
+          sentMessage: sentMessageContent.substring(0, 100) + (sentMessageContent.length > 100 ? '...' : '')
+        }
+      });
+      
+      showToast('Test message sent successfully!', 'success');
       setProviderStatus(prev => ({
         ...prev,
-        lastActivity: 'Test message sent'
+        lastActivity: 'Test message sent at ' + new Date().toLocaleTimeString()
       }));
+      
     } catch (e: unknown) {
       const errorMessage = parseErrorMessage(e);
+      
+      // Show error modal with details
+      setResultModal({
+        isOpen: true,
+        success: false,
+        title: 'Message Failed',
+        message: errorMessage,
+        details: {
+          groupId: targetGroup || 'Default Group',
+          sentMessage: sentMessageContent.substring(0, 100) + (sentMessageContent.length > 100 ? '...' : '')
+        }
+      });
+      
+      showToast('Failed to send test message', 'error');
       setError(errorMessage);
     } finally {
       setTesting(false);
     }
+  };
+
+  const closeResultModal = () => {
+    setResultModal(prev => ({ ...prev, isOpen: false }));
   };
 
   // ========================================
@@ -950,6 +1072,29 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
 
                     <div>
                       <label 
+                        htmlFor="message-template"
+                        className="block text-sm font-medium mb-2 text-slate-400"
+                      >
+                        Message Template
+                      </label>
+                      <select
+                        id="message-template"
+                        className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700 text-white focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors mb-3"
+                        value={selectedTemplate}
+                        onChange={(e) => {
+                          const template = messageTemplates.find(t => t.id === e.target.value);
+                          setSelectedTemplate(e.target.value);
+                          if (template && template.text) {
+                            const timestamp = Date.now().toString().slice(-6);
+                            setTestMessage(template.text.replace(/{timestamp}/g, timestamp).replace(/\\n/g, '\n'));
+                          }
+                        }}
+                      >
+                        {messageTemplates.map(t => (
+                          <option key={t.id} value={t.id}>{t.label}</option>
+                        ))}
+                      </select>
+                      <label 
                         htmlFor="test-message"
                         className="block text-sm font-medium mb-2 text-slate-400"
                       >
@@ -957,11 +1102,14 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                       </label>
                       <textarea
                         id="test-message"
-                        className="w-full px-4 py-3 h-24 rounded-lg resize-none bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors"
+                        className="w-full px-4 py-3 h-32 rounded-lg resize-none bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-colors font-mono text-sm"
                         value={testMessage}
                         onChange={(e) => setTestMessage(e.target.value)}
-                        placeholder="Test message from Admin Panel"
+                        placeholder="Enter your test message here or select a template above..."
                       />
+                      <p className="text-xs mt-1 text-slate-500">
+                        Use *text* for bold, _text_ for italic in WhatsApp
+                      </p>
                     </div>
                   </div>
                 </AdminCardBody>
@@ -978,7 +1126,7 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                     <AdminButton
                       variant="success"
                       onClick={testSend}
-                      disabled={testing}
+                      disabled={testing || !testMessage.trim()}
                       loading={testing}
                       icon={<Send className="w-4 h-4" />}
                     >
@@ -988,6 +1136,129 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
                 </AdminCardFooter>
             </AdminCard>
           </>
+        )}
+        
+        {/* Result Modal */}
+        {resultModal.isOpen && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={(e) => e.target === e.currentTarget && closeResultModal()}
+          >
+            <div className={`
+              relative w-full max-w-md bg-slate-900 rounded-2xl border shadow-2xl
+              ${resultModal.success ? 'border-emerald-500/30' : 'border-red-500/30'}
+            `}>
+              {/* Close button */}
+              <button
+                onClick={closeResultModal}
+                className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              {/* Icon */}
+              <div className="pt-8 pb-4 flex justify-center">
+                <div className={`
+                  w-16 h-16 rounded-full flex items-center justify-center
+                  ${resultModal.success 
+                    ? 'bg-emerald-500/20 text-emerald-400' 
+                    : 'bg-red-500/20 text-red-400'
+                  }
+                `}>
+                  {resultModal.success 
+                    ? <CheckCircle className="w-8 h-8" /> 
+                    : <AlertCircle className="w-8 h-8" />
+                  }
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="px-6 pb-4 text-center">
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {resultModal.title}
+                </h3>
+                <p className="text-slate-400 text-sm">
+                  {resultModal.message}
+                </p>
+              </div>
+              
+              {/* Details */}
+              {resultModal.details && (
+                <div className="px-6 pb-6">
+                  <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
+                    {resultModal.details.messageId && resultModal.details.messageId !== 'N/A' && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4" />
+                          Message ID
+                        </span>
+                        <span className="text-white font-mono text-xs bg-slate-700 px-2 py-1 rounded">
+                          {resultModal.details.messageId}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {resultModal.details.provider && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Provider
+                        </span>
+                        <span className="text-white">
+                          {resultModal.details.provider}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {resultModal.details.responseTime !== undefined && resultModal.details.responseTime > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Response Time
+                        </span>
+                        <span className="text-emerald-400">
+                          {resultModal.details.responseTime}ms
+                        </span>
+                      </div>
+                    )}
+                    
+                    {resultModal.details.groupId && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          Target Group
+                        </span>
+                        <span className="text-white text-xs">
+                          {groups.find(g => g.id === resultModal.details?.groupId)?.name || resultModal.details.groupId}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {resultModal.details.sentMessage && (
+                      <div className="pt-2 border-t border-slate-700">
+                        <p className="text-slate-400 text-xs mb-2">Message Preview:</p>
+                        <p className="text-slate-300 text-xs font-mono bg-slate-900/50 p-2 rounded whitespace-pre-wrap">
+                          {resultModal.details.sentMessage}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Action */}
+              <div className="px-6 pb-6">
+                <AdminButton
+                  variant={resultModal.success ? 'success' : 'danger'}
+                  className="w-full"
+                  onClick={closeResultModal}
+                >
+                  {resultModal.success ? 'Done' : 'Close'}
+                </AdminButton>
+              </div>
+            </div>
+          </div>
         )}
     </div>
   );

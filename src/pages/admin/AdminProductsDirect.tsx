@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Package, Search, RefreshCw, Plus, Edit, Archive, Check, X, Eye } from 'lucide-react';
+import { Package, Search, RefreshCw, Plus, Edit, Archive, Eye } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
-import { formatNumberID, parseNumberID } from '../../utils/helpers';
+import { formatNumberID, parseNumberID, formatCurrency } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
 interface Product {
@@ -30,14 +30,9 @@ interface Product {
   game_title_name?: string;
 }
 
+// Use formatCurrency from utils/helpers (aliased as formatPrice for backward compatibility)
 const formatPrice = (price: number | null | undefined): string => {
-  if (price == null) return 'Rp 0';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
+  return formatCurrency(price ?? 0);
 };
 
 const AdminProductsDirect: React.FC = () => {

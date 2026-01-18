@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, DollarSign, Package, ShoppingCart, TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { formatCurrency } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 import { AdminColors } from './design-tokens';
 
@@ -76,14 +77,6 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
   };
 
   if (loading) {

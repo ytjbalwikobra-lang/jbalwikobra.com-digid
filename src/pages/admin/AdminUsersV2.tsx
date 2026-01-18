@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Users, UserCheck, Shield, Clock, Search, Filter, RefreshCw, Plus, Edit, Trash2, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { Users, UserCheck, Shield, Clock, Plus, Edit, Trash2, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { adminService, User } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminFilter } from './components/AdminFilter';
+import { formatDate as formatDateHelper } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
 interface UserStats {
@@ -159,22 +160,9 @@ const AdminUsersV2: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const formatLastLogin = (lastLogin?: string) => {
-    if (!lastLogin) return 'Never';
-    return new Date(lastLogin).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
+  // Use shared formatter from utils/helpers
+  const formatDate = (dateString: string) => formatDateHelper(dateString);
+  const formatLastLogin = (lastLogin?: string) => lastLogin ? formatDateHelper(lastLogin) : 'Never';
 
   return (
     <div className="admin-page space-y-8">

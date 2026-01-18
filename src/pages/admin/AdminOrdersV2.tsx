@@ -2,22 +2,13 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ShoppingCart, 
-  Filter, 
-  Download, 
-  Search, 
-  MoreVertical, 
   Eye,
   Package,
-  CreditCard,
   Clock,
-  CheckCircle,
   XCircle,
-  TrendingUp,
-  Users,
   RefreshCw,
   Calendar,
-  DollarSign,
-  Plus
+  DollarSign
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { adminService, type Order as AdminOrder } from '../../services/adminService';
@@ -26,6 +17,7 @@ import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/Admin
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
+import { formatCurrency, formatDate } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
 type OrderStatus = 'pending' | 'paid' | 'completed' | 'cancelled';
@@ -233,26 +225,6 @@ const AdminOrdersV2: React.FC = () => {
 
   // Use real stats from API instead of calculating from paginated array
   const stats: OrderStats = realStats;
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   if (error) {
     return (

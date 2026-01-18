@@ -5,6 +5,9 @@ import { useToast } from '../../components/Toast';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminLoadingState } from './components/ui/AdminLoadingState';
+import { AdminEmptyState } from './components/ui/AdminEmptyState';
+import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminFilter } from './components/AdminFilter';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
@@ -186,9 +189,10 @@ const AdminUsersV2: React.FC = () => {
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 text-red-300 text-center">
-            {error}
-          </div>
+          <AdminErrorState 
+            variant="banner"
+            message={error}
+          />
         )}
 
         {/* Modern Metrics Grid */}
@@ -370,15 +374,14 @@ const AdminUsersV2: React.FC = () => {
 
         {/* Users Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
-            <p className="text-gray-400 mt-4">Loading users...</p>
-          </div>
+          <AdminLoadingState variant="skeleton-cards" cards={6} message="Loading users..." />
         ) : filteredUsers.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No users found</p>
-          </div>
+          <AdminEmptyState 
+            icon={<Users className="w-16 h-16" />}
+            title="No Users Found"
+            hasFilters={!!(filters.search || filters.role !== 'all' || filters.status !== 'all')}
+            variant="centered"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredUsers.map((user) => (

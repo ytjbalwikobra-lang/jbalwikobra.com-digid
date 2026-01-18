@@ -88,8 +88,8 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="admin-container">
-        <div className="flex items-center justify-center min-h-screen">
+      <div className="admin-page">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center" role="status" aria-live="polite">
             <div 
               className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
@@ -105,8 +105,7 @@ const AdminDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="admin-container">
-        <div className="admin-main">
+      <div className="admin-page">
           <div 
             className="admin-section" 
             style={{ 
@@ -130,23 +129,23 @@ const AdminDashboard: React.FC = () => {
               Coba Lagi
             </button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-container">
-      <main className="admin-main">
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{ color: AdminColors.text.primary }}>
+    <div className="admin-page space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
             Dashboard Admin
           </h1>
-          <p style={{ color: AdminColors.text.secondary }}>
+          <p className="text-gray-400 mt-1">
             Ringkasan statistik dan aktivitas terkini
           </p>
-        </header>
+        </div>
+      </div>
 
         {/* Stats Grid */}
         <section aria-label="Statistik Dashboard">
@@ -278,7 +277,6 @@ const AdminDashboard: React.FC = () => {
             </div>
           </nav>
         </section>
-      </main>
     </div>
   );
 };

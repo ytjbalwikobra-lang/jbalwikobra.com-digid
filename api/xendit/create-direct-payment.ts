@@ -270,7 +270,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     }
 
-    // Save payment to database
+    // Save payment to database and link order to Xendit invoice
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
         const { createClient } = await import('@supabase/supabase-js');
@@ -279,7 +279,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Create payment record
         const paymentRecord = {
           xendit_id: xenditData.id,
-          external_id: xenditData.external_id,
+          external_id: xenditData.external_id || external_id,
           payment_method: payment_method_id,
           amount: xenditData.amount,
           currency: xenditData.currency || 'IDR',
@@ -304,12 +304,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('[Payment] ✅ Payment saved to database');
         }
 
-        // Update order with Xendit payment ID
-        if (createdOrder) {
-          await supabase
+        // CRITICAL FIX: Always link order to Xendit invoice ID
+        // This ensures the webhook can find the order later
+        const orderUpdateData = {
+          xendit_invoice_id: xenditData.id,
+          xendit_invoice_url: paymentSpecificData.invoice_url || paymentSpecificData.payment_url || null
+        };
+
+        if (createdOrder?.id) {
+          // Update by order ID if we have it
+          const { error: orderUpdateError } = await supabase
             .from('orders')
-            .update({ xendit_invoice_id: xenditData.id })
+            .update(orderUpdateData)
             .eq('id', createdOrder.id);
+          
+          if (orderUpdateError) {
+            console.error('[Payment] Failed to update order by ID:', orderUpdateError);
+          } else {
+            console.log('[Payment] ✅ Order linked to xendit_invoice_id by order ID:', createdOrder.id);
+          }
+        } else if (external_id) {
+          // FALLBACK: Update by client_external_id if createdOrder is null
+          // This handles race conditions where order creation might have issues
+          console.log('[Payment] createdOrder is null, attempting update by client_external_id:', external_id);
+          const { data: orderUpdate, error: orderUpdateError } = await supabase
+            .from('orders')
+            .update(orderUpdateData)
+            .eq('client_external_id', external_id)
+            .select('id');
+          
+          if (orderUpdateError) {
+            console.error('[Payment] Failed to update order by client_external_id:', orderUpdateError);
+          } else if (orderUpdate && orderUpdate.length > 0) {
+            console.log('[Payment] ✅ Order linked to xendit_invoice_id via client_external_id fallback:', orderUpdate[0].id);
+          } else {
+            console.warn('[Payment] ⚠️ No order found to link for client_external_id:', external_id);
+          }
+        } else {
+          console.warn('[Payment] ⚠️ Cannot link order: no createdOrder and no external_id');
         }
       } catch (err) {
         console.error('[Payment] Database error:', err);

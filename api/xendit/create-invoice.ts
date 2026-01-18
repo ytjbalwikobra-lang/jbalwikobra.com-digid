@@ -24,90 +24,8 @@ const ACTIVATED_PAYMENT_METHODS = [
   // Add more e-wallets if you activate them: OVO, DANA, SHOPEEPAY, GOPAY, etc.
 ];
 
-// Simple admin notification function for serverless environment
-async function createOrderNotification(sb: any, orderId: string, customerName: string, productName: string, amount: number, type: string = 'new_order', customerPhone?: string, orderType?: string) {
-  try {
-    const isRental = orderType === 'rental';
-    const typeLabel = isRental ? 'RENTAL' : 'PURCHASE';
-    
-    const titles = {
-      new_order: `Bang! ada yang ORDER ${typeLabel} nih!`,
-      paid_order: `Bang! ALHAMDULILLAH ${typeLabel} udah di bayar nih`,
-      order_cancelled: `Bang! ada yang CANCEL ${typeLabel} order nih!`
-    };
-
-    const formatAmount = (amount: number) => {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(amount);
-    };
-
-    const messages = {
-      new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, ${isRental ? 'order RENTAL' : 'order PURCHASE'}, belum di bayar sih, tapi moga aja di bayar amin.`,
-      paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, ${isRental ? 'RENTAL udah di bayar' : 'PURCHASE udah di bayar'} Alhamdulillah.`,
-      order_cancelled: `namanya ${customerName}, ${isRental ? 'RENTAL' : 'PURCHASE'} produktnya ${productName} di cancel nih.`
-    };
-
-    // Ensure orderId is a valid UUID or null
-    let validOrderId: string | null = null;
-    if (orderId && typeof orderId === 'string') {
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId);
-      if (isValidUUID) {
-        validOrderId = orderId;
-      } else {
-        console.warn('[Admin] Invalid UUID format for orderId:', orderId, 'Using null instead');
-      }
-    }
-
-    const notification = {
-      type,
-      title: titles[type] || 'New Order Received',
-      message: messages[type] || `${customerName} placed an order for ${productName}`,
-      order_id: validOrderId, // Use validated UUID or null
-      customer_name: customerName,
-      product_name: productName,
-      amount: Math.round(Number(amount)), // Ensure it's an integer for BIGINT
-      is_read: false,
-      metadata: {
-        priority: type === 'paid_order' ? 'high' : 'normal',
-        category: 'order',
-        order_type: orderType || 'purchase',
-        customer_phone: customerPhone,
-        original_order_id: orderId // Keep original for debugging
-      },
-      created_at: new Date().toISOString()
-    };
-
-    console.log('[Admin] Creating notification with payload:', notification);
-
-    const { data, error } = await sb
-      .from('admin_notifications')
-      .insert(notification)
-      .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read')
-      .single();
-
-    if (error) {
-      console.error('[Admin] Notification insert error:', error);
-      console.error('[Admin] Error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      throw error;
-    } else {
-      console.log('[Admin] Notification created successfully with ID:', data?.id);
-      return data;
-    }
-  } catch (error) {
-    console.error('[Admin] Notification creation failed:', error);
-    throw error; // Re-throw to handle it in the calling function
-  }
-}
-
+// Import shared notification service for DRY code
+import { createOrderNotification, getProductName } from '../_utils/notificationService.js';
 async function createOrderIfProvided(order: any, clientExternalId?: string) {
   try {
     if (!order) {
@@ -213,20 +131,10 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       }
       console.log('[createOrderIfProvided] Upserted order successfully:', data?.id);
       
-      // Create admin notification for new order (upsert path - CRITICAL FIX)
+      // Create admin notification for new order (upsert path)
       try {
-        // Get product name if product_id exists
-        let productName = 'Unknown Product';
-        if (data?.product_id) {
-          const productRes = await sb
-            .from('products')
-            .select('name')
-            .eq('id', data.product_id)
-            .single();
-          if (productRes.data) {
-            productName = productRes.data.name;
-          }
-        }
+        // Get product name using shared utility
+        const productName = await getProductName(sb, data?.product_id, data?.order_type);
 
         await createOrderNotification(
           sb,
@@ -253,20 +161,9 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       }
       console.log('[createOrderIfProvided] Inserted order successfully:', data?.id);
       
-      // Create admin notification for new order
+      // Create admin notification for new order using shared utility
       try {
-        // Get product name if product_id exists
-        let productName = 'Unknown Product';
-        if (data?.product_id) {
-          const productRes = await sb
-            .from('products')
-            .select('name')
-            .eq('id', data.product_id)
-            .single();
-          if (productRes.data) {
-            productName = productRes.data.name;
-          }
-        }
+        const productName = await getProductName(sb, data?.product_id, data?.order_type);
 
         await createOrderNotification(
           sb,
@@ -390,18 +287,48 @@ export default async function handler(req: any, res: any) {
     }
     console.log('[create-invoice] Xendit invoice created successfully:', data?.id);
     
-    // Performance optimization: Non-blocking metadata attachment
+    // CRITICAL FIX: Always await metadata attachment to prevent race condition with webhook
+    // The webhook might arrive before the order is linked to the Xendit invoice ID
     if (createdOrder?.id) {
-      console.log('[create-invoice] Scheduling metadata attachment for order:', createdOrder.id);
-      // Don't await this - let it run in background for better performance
-      attachInvoiceToOrder(createdOrder.id, data).catch(err => 
-        console.error('[create-invoice] Background metadata attachment failed:', err)
-      );
+      console.log('[create-invoice] Attaching metadata to order:', createdOrder.id);
+      try {
+        await attachInvoiceToOrder(createdOrder.id, data);
+        console.log('[create-invoice] ✅ Metadata attached successfully');
+      } catch (err) {
+        console.error('[create-invoice] Failed to attach metadata:', err);
+      }
+    } else if (finalExternalId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      // FALLBACK: Try to attach metadata by client_external_id if createdOrder is null
+      console.log('[create-invoice] No createdOrder, attempting fallback attach by client_external_id:', finalExternalId);
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: updateResult, error: updateError } = await sb
+          .from('orders')
+          .update({
+            xendit_invoice_id: data?.id || null,
+            xendit_invoice_url: data?.invoice_url || null,
+            currency: data?.currency || 'IDR',
+            expires_at: data?.expiry_date ? new Date(data.expiry_date).toISOString() : null,
+          })
+          .eq('client_external_id', finalExternalId)
+          .select('id');
+        
+        if (updateError) {
+          console.error('[create-invoice] Fallback update failed:', updateError);
+        } else if (updateResult && updateResult.length > 0) {
+          console.log('[create-invoice] ✅ Metadata attached via fallback for order:', updateResult[0].id);
+        } else {
+          console.warn('[create-invoice] ⚠️ No order found for client_external_id:', finalExternalId);
+        }
+      } catch (fallbackErr) {
+        console.error('[create-invoice] Fallback attachment error:', fallbackErr);
+      }
     } else {
       console.log('[create-invoice] No order created, skipping metadata attachment');
     }
     
-    // Return immediately to user for better perceived performance
+    // Return to user
     return res.status(200).json(data);
   } catch (err: any) {
     console.error('[Xendit] Handler error', err);

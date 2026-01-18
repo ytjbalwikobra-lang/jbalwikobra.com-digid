@@ -344,27 +344,24 @@ const AdminProductsDirect: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="admin-page space-y-8">
       <ConfirmModal />
       
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Package className="w-7 h-7 text-pink-400" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
             Manajemen Produk
           </h1>
           <p className="text-gray-400 mt-1">
-            {filteredProducts.length} produk
+            {filteredProducts.length} produk tersedia
           </p>
         </div>
-        <div className="flex gap-2">
-          <AdminButton variant="secondary" onClick={loadProducts} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        <div className="flex gap-3">
+          <AdminButton variant="secondary" onClick={loadProducts} disabled={loading} icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}>
             Refresh
           </AdminButton>
-          <AdminButton variant="primary" onClick={handleCreateProduct}>
-            <Plus className="w-4 h-4" />
+          <AdminButton variant="primary" onClick={handleCreateProduct} icon={<Plus size={18} />}>
             Add Product
           </AdminButton>
         </div>

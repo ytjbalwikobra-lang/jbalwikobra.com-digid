@@ -114,10 +114,17 @@
    BASE LAYOUT COMPONENTS
 ======================================== */
 
-/* Admin Container */
+/* Admin Container - Used for full-page shells */
 .admin-container {
   min-height: 100vh;
   background: linear-gradient(135deg, var(--admin-primary) 0%, #1e1b4b 50%, var(--admin-primary) 100%);
+  color: var(--admin-text-primary);
+}
+
+/* Admin Page - Used for page content inside AdminShell */
+.admin-page {
+  max-width: 1400px;
+  margin: 0 auto;
   color: var(--admin-text-primary);
 }
 

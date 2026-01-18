@@ -1,96 +1,19 @@
 // Xendit webhook to update order status in Supabase (robust)
 // Configure Xendit to call /api/xendit/webhook with a shared XENDIT_CALLBACK_TOKEN
+// Refactored: Uses shared notificationService for DRY code
 
+import { createOrderNotification, getProductName } from '../_utils/notificationService.js';
+
+/**
+ * Map Xendit webhook status to internal order status
+ * Handles various status formats from different Xendit event types
+ */
 function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancelled' {
   const s = (x || '').toUpperCase();
   if (s === 'PAID' || s === 'SUCCEEDED' || s === 'SUCCESS' || s === 'COMPLETED') return 'paid';
   if (s === 'SETTLED') return 'completed';
   if (s === 'EXPIRED' || s === 'CANCELLED') return 'cancelled';
   return 'pending';
-}
-
-// Admin notification function for database notifications
-async function createOrderNotification(sb: any, orderId: string, customerName: string, productName: string, amount: number, type: string = 'paid_order', customerPhone?: string, orderType?: string) {
-  try {
-    const isRental = orderType === 'rental';
-    const typeLabel = isRental ? 'RENTAL' : 'PURCHASE';
-    
-    const titles = {
-      new_order: isRental ? 'Notifikasi Sewa Baru' : 'Notifikasi Pesanan Baru',
-      paid_order: isRental ? 'Notifikasi Sewa Dibayar' : 'Notifikasi Pesanan Dibayar',
-      order_cancelled: isRental ? 'Notifikasi Sewa Dibatalkan' : 'Notifikasi Pesanan Dibatalkan'
-    };
-
-    const formatAmount = (amount: number) => {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(amount);
-    };
-
-    const messages = {
-      new_order: isRental 
-        ? `Sewa baru dari ${customerName}, produk ${productName} senilai ${formatAmount(amount)}, sewa belum dibayar, mohon tunggu pembayaran.`
-        : `Pesanan baru dari ${customerName}, produk ${productName} senilai ${formatAmount(amount)}, pesanan belum dibayar, mohon tunggu pembayaran.`,
-      paid_order: isRental
-        ? `Sewa telah dibayar oleh ${customerName}, produk ${productName} senilai ${formatAmount(amount)}, sewa sudah lunas.`
-        : `Pesanan telah dibayar oleh ${customerName}, produk ${productName} senilai ${formatAmount(amount)}, pesanan sudah lunas.`,
-      order_cancelled: isRental
-        ? `Sewa dibatalkan oleh ${customerName}, produk ${productName} senilai ${formatAmount(amount)}.`
-        : `Pesanan dibatalkan oleh ${customerName}, produk ${productName} senilai ${formatAmount(amount)}.`
-    };
-
-    // Ensure orderId is a valid UUID or null
-    let validOrderId: string | null = null;
-    if (orderId && typeof orderId === 'string') {
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId);
-      if (isValidUUID) {
-        validOrderId = orderId;
-      } else {
-        console.warn('[Admin] Invalid UUID format for orderId:', orderId, 'Using null instead');
-      }
-    }
-
-    const notification = {
-      type,
-      title: titles[type] || 'Payment Received',
-      message: messages[type] || `${customerName} paid for ${productName}`,
-      order_id: validOrderId,
-      customer_name: customerName,
-      product_name: productName,
-      amount: Math.round(Number(amount)),
-      is_read: false,
-      metadata: {
-        priority: type === 'paid_order' ? 'high' : 'normal',
-        category: 'payment',
-        order_type: orderType || 'purchase',
-        customer_phone: customerPhone,
-        original_order_id: orderId
-      },
-      created_at: new Date().toISOString()
-    };
-
-    console.log('[Admin] Creating paid order notification:', notification);
-
-    const { data, error } = await sb
-      .from('admin_notifications')
-      .insert(notification)
-      .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read, metadata')
-      .single();
-
-    if (error) {
-      console.error('[Admin] Paid notification insert error:', error);
-      throw error;
-    } else {
-      console.log('[Admin] Paid order notification created successfully with ID:', data?.id);
-      return data;
-    }
-  } catch (error) {
-    console.error('[Admin] Failed to create paid order notification:', error);
-    throw error;
-  }
 }
 
 // Separate function specifically for creating admin database notifications when payment is completed
@@ -143,36 +66,11 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
       order_type: order.order_type
     });
 
-    // Get product name with enhanced fallback logic
-    const product = order.products;
-    let productName = product?.name;
-    
-    // If product name is still not found, try to fetch it directly
-    if (!productName && order.product_id) {
-      console.log('[Admin] Product name not found in relationship, fetching directly...');
-      try {
-        const { data: productData } = await sb
-          .from('products')
-          .select('name')
-          .eq('id', order.product_id)
-          .single();
-        productName = productData?.name;
-        console.log('[Admin] Direct product fetch result:', productName);
-      } catch (fetchError) {
-        console.error('[Admin] Failed to fetch product directly:', fetchError);
-      }
-    }
-    
-    // Final fallback with better description
-    if (!productName) {
-      // Try to infer from order type
-      const isRental = order.order_type === 'rental';
-      productName = isRental ? 'Akun Game Rental' : 'Akun Game Premium';
-      console.log('[Admin] Using fallback product name based on order type:', productName);
-    }
+    // Get product name using shared utility with enhanced fallback logic
+    const productName = await getProductName(sb, order.product_id, order.order_type);
     console.log('[Admin] Final product name for notification:', productName);
 
-    // Create the admin notification
+    // Create the admin notification using shared service
     await createOrderNotification(
       sb,
       order.id,
@@ -788,6 +686,8 @@ export default async function handler(req: any, res: any) {
 
     // Try update by invoice id first
     let updated = 0;
+    let foundOrderId: string | null = null;
+    
     if (invoiceId) {
       console.log('[Webhook] Attempting update by xendit_invoice_id:', invoiceId);
       const { data: up, error } = await sb
@@ -803,20 +703,21 @@ export default async function handler(req: any, res: any) {
           expires_at: expiresAt,
         })
         .eq('xendit_invoice_id', invoiceId)
-        .select('id, status, xendit_invoice_id, client_external_id');
+        .select('id, status, xendit_invoice_id, client_external_id, order_type');
       if (!error) {
         updated = (up || []).length;
         console.log('[Webhook] Updated', updated, 'orders by xendit_invoice_id');
         if (up && up.length > 0) {
           console.log('[Webhook] Updated order details:', up[0]);
+          foundOrderId = up[0].id;
         }
       } else {
         console.error('[Webhook] Error updating by xendit_invoice_id:', error);
       }
     }
 
-  // Fallback: update by client_external_id (we set external_id === client_external_id when creating invoice)
-  if (updated === 0 && externalId) {
+    // Fallback: update by client_external_id (we set external_id === client_external_id when creating invoice)
+    if (updated === 0 && externalId) {
       console.log('[Webhook] Attempting update by client_external_id:', externalId);
       const { data: up2, error: e2 } = await sb
         .from('orders')
@@ -826,17 +727,24 @@ export default async function handler(req: any, res: any) {
           payment_channel: paymentChannel,
           payer_email: payerEmail,
           xendit_invoice_url: invoiceUrl,
-          xendit_invoice_id: invoiceId,
+          xendit_invoice_id: invoiceId, // CRITICAL: Also set xendit_invoice_id here for future webhook correlation
           currency,
           expires_at: expiresAt,
         })
-    .eq('client_external_id', externalId)
-        .select('id, status, xendit_invoice_id, client_external_id');
+        .eq('client_external_id', externalId)
+        .select('id, status, xendit_invoice_id, client_external_id, order_type');
       if (!e2) {
         updated = (up2 || []).length;
         console.log('[Webhook] Updated', updated, 'orders by client_external_id');
         if (up2 && up2.length > 0) {
           console.log('[Webhook] Updated order details:', up2[0]);
+          foundOrderId = up2[0].id;
+          
+          // CRITICAL FIX: If we found the order by client_external_id but it didn't have xendit_invoice_id,
+          // this means the invoice was created but the order wasn't linked. Now it's linked.
+          if (!up2[0].xendit_invoice_id && invoiceId) {
+            console.log('[Webhook] ✅ FIXED: Linked xendit_invoice_id to order that was missing it');
+          }
         }
       } else {
         console.error('[Webhook] Error updating by client_external_id:', e2);
@@ -849,7 +757,7 @@ export default async function handler(req: any, res: any) {
       console.log('[Webhook] Attempting fuzzy match on client_external_id containing:', externalId);
       const { data: up3, error: e3 } = await sb
         .from('orders')
-        .select('id, client_external_id, xendit_invoice_id, status')
+        .select('id, client_external_id, xendit_invoice_id, status, order_type')
         .or(`client_external_id.ilike.%${externalId}%,xendit_invoice_id.ilike.%${externalId}%`)
         .limit(1);
       
@@ -868,16 +776,25 @@ export default async function handler(req: any, res: any) {
             expires_at: expiresAt,
           })
           .eq('id', up3[0].id)
-          .select('id, status, xendit_invoice_id, client_external_id');
+          .select('id, status, xendit_invoice_id, client_external_id, order_type');
         
         if (!e3Update && up3Update && up3Update.length > 0) {
           updated = up3Update.length;
           console.log('[Webhook] Updated', updated, 'orders via fuzzy match');
           console.log('[Webhook] Updated order details:', up3Update[0]);
+          foundOrderId = up3Update[0].id;
         }
       } else if (e3) {
         console.error('[Webhook] Error in fuzzy search:', e3);
       }
+    }
+
+    // CRITICAL: Log warning if no order was updated by any method
+    if (updated === 0) {
+      console.error('[Webhook] ⚠️ CRITICAL: Could not update any order!');
+      console.error('[Webhook] Looked for xendit_invoice_id:', invoiceId);
+      console.error('[Webhook] Looked for client_external_id:', externalId);
+      console.error('[Webhook] This order will remain in pending status unless metadata fallback works!');
     }
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling

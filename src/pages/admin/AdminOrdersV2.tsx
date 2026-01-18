@@ -244,8 +244,7 @@ const AdminOrdersV2: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="admin-page">
           <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
             <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-red-400 mb-2">Error Loading Orders</h2>
@@ -257,13 +256,12 @@ const AdminOrdersV2: React.FC = () => {
               Try Again
             </button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
+    <div className="admin-page space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

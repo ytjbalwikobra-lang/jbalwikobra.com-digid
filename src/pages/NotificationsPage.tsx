@@ -3,7 +3,7 @@ import { Bell, Check, Clock, X, Settings } from 'lucide-react';
 import { IOSCard, IOSButton } from '../components/ios/IOSDesignSystem';
 import { PageWrapper, ConsistentLayout } from '../components/layout/ConsistentLayout';
 import { notificationService, AppNotification } from '../services/notificationService';
-import { enhancedAuthService } from '../services/enhancedAuthService';
+import { getAuthUserId } from '../services/authService';
 
 type NotificationType = 'order' | 'payment' | 'system' | 'promo' | 'product' | 'feed_post';
 interface NotificationUI {
@@ -38,7 +38,7 @@ const NotificationsPage: React.FC = () => {
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      const uid = await enhancedAuthService.getCurrentUserId();
+      const uid = await getAuthUserId();
       console.log('🔄 NotificationsPage: Loading notifications for user:', uid);
       const latest = await notificationService.getLatest(20, uid);
       console.log('🔄 NotificationsPage: Raw notifications from service:', latest.map(n => ({ id: n.id, title: n.title, is_read: n.is_read, user_id: n.user_id })));
@@ -55,7 +55,7 @@ const NotificationsPage: React.FC = () => {
   const markAsRead = async (id: string) => {
     try {
       console.log('🔄 NotificationsPage: Marking notification as read:', id);
-      const uid = await enhancedAuthService.getCurrentUserId();
+      const uid = await getAuthUserId();
       await notificationService.markAsRead(id, uid);
       console.log('✅ NotificationsPage: markAsRead service call completed for:', id);
       await loadNotifications();
@@ -70,7 +70,7 @@ const NotificationsPage: React.FC = () => {
   const markAllAsRead = async () => {
     try {
       console.log('🔄 NotificationsPage: Starting markAllAsRead...');
-      const uid = await enhancedAuthService.getCurrentUserId();
+      const uid = await getAuthUserId();
       console.log('🔄 NotificationsPage: User ID:', uid);
       console.log('🔄 NotificationsPage: Current notifications before mark as read:', notifications.map(n => ({ id: n.id, title: n.title, isRead: n.isRead })));
       

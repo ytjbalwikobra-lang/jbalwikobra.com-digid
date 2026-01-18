@@ -6,7 +6,7 @@ import { SettingsService } from '../../../services/settingsService';
 import type { WebsiteSettings } from '../../../types';
 import { PNContainer } from '../../ui/PinkNeonDesignSystem';
 import { notificationService } from '../../../services/notificationService';
-import { enhancedAuthService } from '../../../services/enhancedAuthService';
+import { getAuthUserId } from '../../../services/authService';
 
 const cx = (...c: Array<string | false | null | undefined>) => c.filter(Boolean).join(' ');
 
@@ -52,7 +52,7 @@ const PNHeader: React.FC = () => {
     let timer: any;
     const load = async () => {
       try {
-        const uid = await enhancedAuthService.getCurrentUserId();
+        const uid = await getAuthUserId();
         const count = await notificationService.getUnreadCount(uid);
         if (active) setUnread(count);
       } catch {}

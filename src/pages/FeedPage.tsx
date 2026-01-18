@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { MessageCircle, Users, Star } from 'lucide-react';
-import { enhancedFeedService, type FeedPost } from '../services/enhancedFeedService';
+import { FeedService, type FeedPost } from '../services/feedService';
 import { reviewService, type UserReview } from '../services/reviewService';
 import { PNSection, PNContainer } from '../components/ui/PinkNeonDesignSystem';
 import { FeedCard } from '../components/FeedCard';
@@ -95,21 +95,21 @@ export default function FeedPage() {
       if (activeFilter === 'semua') {
         // Load both posts and reviews
         const [postsResult, reviewsResult] = await Promise.all([
-          enhancedFeedService.list({ limit: ITEMS_PER_PAGE }),
+          FeedService.list({ limit: ITEMS_PER_PAGE }),
           reviewService.getReviewsForFeed(currentPage, ITEMS_PER_PAGE)
         ]);
         setFeedPosts(postsResult.posts);
         setUserReviews(reviewsResult.reviews);
         
         // Calculate total pages for combined data
-        const totalItems = postsResult.total + reviewsResult.total;
+        const totalItems = postsResult.posts.length + reviewsResult.total;
         setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE));
       } else if (activeFilter === 'pengumuman') {
         // Load only posts
-        const postsResult = await enhancedFeedService.list({ limit: ITEMS_PER_PAGE });
+        const postsResult = await FeedService.list({ limit: ITEMS_PER_PAGE });
         setFeedPosts(postsResult.posts);
         setUserReviews([]);
-        setTotalPages(Math.ceil(postsResult.total / ITEMS_PER_PAGE));
+        setTotalPages(Math.ceil(postsResult.posts.length / ITEMS_PER_PAGE));
       } else if (activeFilter === 'review') {
         // Load only reviews
         const reviewsResult = await reviewService.getReviewsForFeed(currentPage, ITEMS_PER_PAGE);
@@ -120,13 +120,13 @@ export default function FeedPage() {
       
       // Update total counts for tabs
       const [allPosts, allReviews] = await Promise.all([
-        enhancedFeedService.list({ limit: 1 }),
+        FeedService.list({ limit: 1 }),
         reviewService.getReviewsForFeed(1, 1)
       ]);
       
       setTotalCounts({
-        semua: allPosts.total + allReviews.total,
-        pengumuman: allPosts.total,
+        semua: allPosts.posts.length + allReviews.total,
+        pengumuman: allPosts.posts.length,
         review: allReviews.total
       });
       
@@ -171,7 +171,7 @@ export default function FeedPage() {
           : p
       ));
       
-      await enhancedFeedService.toggleLike(postId, true);
+      await FeedService.toggleLike(postId, true);
     } catch (err: any) {
       console.error('Failed to like post:', err);
       // Revert optimistic update on error
@@ -193,7 +193,7 @@ export default function FeedPage() {
     if (!content?.trim()) return;
     
     try {
-      const result = await enhancedFeedService.addComment(postId, content);
+      const result = await FeedService.addComment(postId, content);
       if (result.success) {
         setFeedPosts(prev => prev.map(p => 
           p.id === postId 
@@ -305,14 +305,14 @@ export default function FeedPage() {
                   key={post.id}
                   post={{
                     id: post.id,
-                    title: post.title || 'Pengumuman',
+                    title: 'Pengumuman',
                     content: post.content || '',
-                    author: post.authorName || 'Admin',
+                    author: 'Admin',
                     created_at: post.created_at,
                     type: 'announcement',
                     media: post.media?.map(m => m.url) || [],
                     counts: post.counts,
-                    isLiked: (post as any).isLiked || false
+                    isLiked: post.reacted || false
                   }}
                   onLike={toggleLike}
                   onComment={addComment}
@@ -411,5 +411,6 @@ export default function FeedPage() {
     </>
   );
 }
+
 
 

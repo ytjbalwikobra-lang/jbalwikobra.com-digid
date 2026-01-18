@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { enhancedBannerService, type Banner } from '../services/enhancedBannerService';
+import { BannerService } from '../services/bannerService';
+import type { Banner } from '../types';
 
 interface Slide {
   id: string;
@@ -65,11 +66,12 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
         setLoading(true);
         setError(null);
         
-        const banners = await enhancedBannerService.getActiveBanners();
+        const banners = await BannerService.list();
+        const activeBanners = banners.filter(b => b.is_active);
         
         if (mounted) {
           // Convert banners to slides using the converter function
-          const convertedSlides = banners.map(bannerToSlide);
+          const convertedSlides = activeBanners.map(bannerToSlide);
           
           setDbSlides(convertedSlides.length > 0 ? convertedSlides : []);
         }

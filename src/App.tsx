@@ -23,7 +23,7 @@ import { FaviconService } from './services/faviconService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { productionMonitor } from './utils/productionMonitor';
 import { onIdle, warmImport } from './utils/prefetch';
-import { enhancedProductService } from './services/enhancedProductService';
+import { ProductService } from './services/productService';
 import UserFloatingNotifications from './components/UserFloatingNotifications';
 import PurchaseNotificationTicker from './components/PurchaseNotificationTicker';
 
@@ -138,7 +138,7 @@ function App() {
       warmImport(() => import('./pages/FlashSalesPage'));
       warmImport(() => import('./pages/ProfilePage'));
       // Warm product data to minimize egress on navigation
-      enhancedProductService.getAllProducts().catch(() => {});
+      ProductService.getAllProducts().catch(() => {});
     }, 1000);
   }, []);
 

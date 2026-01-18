@@ -27,7 +27,7 @@ import { useConfirmation } from '../components/ConfirmationModal';
 import { useToast } from '../components/Toast';
 import { supabase } from '../services/supabase';
 import { PNSection, PNContainer, PNCard, PNHeading, PNText, PNButton } from '../components/ui/PinkNeonDesignSystem';
-import { enhancedAuthService } from '../services/enhancedAuthService';
+import { getCurrentUserProfile } from '../services/authService';
 
 interface UserProfile {
   name: string;
@@ -134,7 +134,7 @@ const ProfilePage: React.FC = () => {
   const loadProfile = async () => {
     try {
       // Prefer unified auth service profile (reads from user_data/user_profile consistently)
-      const current = await enhancedAuthService.getCurrentUserProfile();
+      const current = await getCurrentUserProfile();
       const name = current?.name ?? user?.name ?? '';
       const email = current?.email ?? user?.email ?? '';
       const phone = current?.phone ?? user?.phone ?? '';

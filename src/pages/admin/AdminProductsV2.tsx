@@ -412,17 +412,14 @@ const AdminProductsV2: React.FC = () => {
   };
 
   const saveInlineEdit = async (productId: string) => {
-    // VERSION CHECK - Remove this after confirming new code is running
-    const VERSION = 'V2-2026-01-09-FIX';
-    console.error('🚀🚀🚀 SAVE INLINE EDIT CALLED - VERSION:', VERSION);
-    alert(`SAVE CALLED - Version ${VERSION}\nProduct: ${productId}\nPrice: ${editingPrice}`);
+    if (isUpdating) return; // Prevent double submission
     
     console.log('💾 [AdminProductsV2] saveInlineEdit called:', {
       productId,
       editingPrice
     });
     
-    setIsUpdating(true); // Block any auto-reloads
+    setIsUpdating(true); // Block any auto-reloads and blur cancel
     
     const priceNum = parseNumberID(editingPrice) || 0;
 
@@ -436,12 +433,19 @@ const AdminProductsV2: React.FC = () => {
       return;
     }
 
+    // Check if price actually changed
+    if (originalProduct.price === priceNum) {
+      cancelEditing();
+      setIsUpdating(false);
+      return;
+    }
+
     // Optimistic update
     console.log('⚡ [AdminProductsV2] Applying optimistic update...');
     setProducts(prev => prev.map(p => 
       p.id === productId ? { ...p, price: priceNum } : p
     ));
-    cancelEditing();
+    // Don't cancel editing yet - keep UI state until save completes
 
     console.log('📡 [AdminProductsV2] Calling adminService.updateProductFields...');
     try {
@@ -517,6 +521,9 @@ const AdminProductsV2: React.FC = () => {
       }, 500);
       
       push('✅ Product updated successfully', 'success');
+      
+      // Clear editing state after successful save
+      cancelEditing();
       
       // Verify the update persisted in DB (but don't overwrite local state with all fields)
       console.log('🔄 [AdminProductsV2] Verifying DB update...');
@@ -975,7 +982,14 @@ const AdminProductsV2: React.FC = () => {
                   </tr>
                 ) : (
                   currentPageProducts.map((product) => (
-                    <tr key={product.id} className={`transition-all duration-200 border-l-4 ${getTierRowColor(product)}`}>
+                    <tr 
+                      key={product.id} 
+                      className={`transition-all duration-300 border-l-4 ${getTierRowColor(product)} ${
+                        isUpdating && editingProductId === product.id 
+                          ? 'bg-pink-500/10 animate-pulse' 
+                          : ''
+                      }`}
+                    >
                       <td className="px-6 py-4 w-96">
                         <div className="flex items-center space-x-3">
                           <div className="relative flex-shrink-0">
@@ -1059,34 +1073,38 @@ const AdminProductsV2: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 w-36">
                         {editingProductId === product.id ? (
-                          <div className="space-y-2">
+                          <div className="relative">
                             <input
                               type="text"
                               inputMode="numeric"
                               value={editingPrice ? `Rp ${editingPrice}` : ''}
                               onChange={(e) => handleEditingPriceChange(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') saveInlineEdit(product.id);
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  saveInlineEdit(product.id);
+                                }
                                 if (e.key === 'Escape') cancelEditing();
                               }}
-                              className="w-full px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
+                              onBlur={() => {
+                                // Small delay to allow Enter key to process first
+                                if (!isUpdating) {
+                                  setTimeout(() => cancelEditing(), 100);
+                                }
+                              }}
+                              className={`w-full px-2 py-1 bg-gray-700 border rounded text-white text-sm transition-all ${
+                                isUpdating 
+                                  ? 'border-pink-400 opacity-50 cursor-not-allowed' 
+                                  : 'border-pink-500 focus:border-pink-400 focus:ring-1 focus:ring-pink-400'
+                              }`}
                               placeholder="Rp 0"
                               autoFocus
+                              disabled={isUpdating}
                             />
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => saveInlineEdit(product.id)}
-                                className="flex-1 px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={cancelEditing}
-                                className="flex-1 px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
-                              >
-                                Cancel
-                              </button>
-                            </div>
+                            {isUpdating && (
+                              <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400 animate-spin" />
+                            )}
+                            <div className="text-xs text-gray-500 mt-1">Enter to save</div>
                           </div>
                         ) : (
                           <div 

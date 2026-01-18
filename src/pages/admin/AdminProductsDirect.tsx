@@ -153,7 +153,7 @@ const AdminProductsDirect: React.FC = () => {
 
   // SAVE EDIT - USE API ENDPOINT (has service role to bypass RLS)
   const saveEdit = async () => {
-    if (!editingId) return;
+    if (!editingId || saving) return;
 
     const newPrice = parseNumberID(editPrice) || 0;
     const originalProduct = products.find(p => p.id === editingId);
@@ -176,19 +176,7 @@ const AdminProductsDirect: React.FC = () => {
       return;
     }
 
-    // Show confirmation dialog
-    const confirmed = await showConfirm({
-      title: 'Konfirmasi Perubahan',
-      message: `Anda akan mengubah "${originalProduct.name}":\n\nHarga: ${formatPrice(originalProduct.price)} → ${formatPrice(newPrice)}\n\nLanjutkan?`,
-      type: 'info',
-      confirmText: 'Simpan',
-      cancelText: 'Batal'
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
+    // Set saving first to prevent blur from canceling
     setSaving(true);
 
     try {
@@ -401,7 +389,14 @@ const AdminProductsDirect: React.FC = () => {
                 </tr>
               ) : (
                 filteredProducts.map(product => (
-                  <tr key={product.id} className="hover:bg-gray-800/30">
+                  <tr 
+                    key={product.id} 
+                    className={`hover:bg-gray-800/30 transition-all duration-300 ${
+                      saving && editingId === product.id 
+                        ? 'bg-pink-500/10 animate-pulse' 
+                        : ''
+                    }`}
+                  >
                     {/* Product Info */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -431,37 +426,38 @@ const AdminProductsDirect: React.FC = () => {
                     {/* Price - INLINE EDITABLE */}
                     <td className="px-4 py-3">
                       {editingId === product.id ? (
-                        <div className="space-y-2">
+                        <div className="relative">
                           <input
                             type="text"
                             inputMode="numeric"
                             value={editPrice ? `Rp ${editPrice}` : ''}
                             onChange={(e) => handleEditPriceChange(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                saveEdit();
+                              }
                               if (e.key === 'Escape') cancelEditing();
                             }}
-                            className="w-32 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
+                            onBlur={() => {
+                              // Small delay to allow Enter key to process first
+                              if (!saving) {
+                                setTimeout(() => cancelEditing(), 100);
+                              }
+                            }}
+                            className={`w-32 px-2 py-1 bg-gray-700 border rounded text-white text-sm transition-all ${
+                              saving 
+                                ? 'border-pink-400 opacity-50 cursor-not-allowed' 
+                                : 'border-pink-500 focus:border-pink-400 focus:ring-1 focus:ring-pink-400'
+                            }`}
                             placeholder="Rp 0"
                             autoFocus
                             disabled={saving}
                           />
-                          <div className="flex gap-1">
-                            <button
-                              onClick={saveEdit}
-                              disabled={saving}
-                              className="p-1 bg-green-600 hover:bg-green-700 rounded text-white disabled:opacity-50"
-                            >
-                              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              disabled={saving}
-                              className="p-1 bg-gray-600 hover:bg-gray-700 rounded text-white disabled:opacity-50"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
+                          {saving && (
+                            <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400 animate-spin" />
+                          )}
+                          <div className="text-xs text-gray-500 mt-1">Enter to save, Esc to cancel</div>
                         </div>
                       ) : (
                         <div 

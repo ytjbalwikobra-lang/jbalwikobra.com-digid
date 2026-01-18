@@ -11,6 +11,7 @@ import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { formatNumberID, parseNumberID } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
 interface ProductStats {
@@ -398,7 +399,7 @@ const AdminProductsV2: React.FC = () => {
       currentStock: product.stock
     });
     setEditingProductId(product.id);
-    setEditingPrice(String(product.price || 0));
+    setEditingPrice(product.price ? formatNumberID(product.price) : '0');
     setEditingStock(String(product.stock || 0));
   };
 
@@ -406,6 +407,12 @@ const AdminProductsV2: React.FC = () => {
     setEditingProductId(null);
     setEditingPrice('');
     setEditingStock('');
+  };
+
+  // Handle price input with thousand separator
+  const handleEditingPriceChange = (value: string) => {
+    const numericValue = parseNumberID(value);
+    setEditingPrice(numericValue > 0 ? formatNumberID(numericValue) : '');
   };
 
   const saveInlineEdit = async (productId: string) => {
@@ -422,7 +429,7 @@ const AdminProductsV2: React.FC = () => {
     
     setIsUpdating(true); // Block any auto-reloads
     
-    const priceNum = parseFloat(editingPrice.replace(/[^0-9.]/g, '')) || 0;
+    const priceNum = parseNumberID(editingPrice) || 0;
     const stockNum = parseInt(editingStock) || 0;
 
     console.log('💾 [AdminProductsV2] Parsed values:', { priceNum, stockNum });
@@ -1063,15 +1070,16 @@ const AdminProductsV2: React.FC = () => {
                         {editingProductId === product.id ? (
                           <div className="space-y-2">
                             <input
-                              type="number"
-                              value={editingPrice}
-                              onChange={(e) => setEditingPrice(e.target.value)}
+                              type="text"
+                              inputMode="numeric"
+                              value={editingPrice ? `Rp ${editingPrice}` : ''}
+                              onChange={(e) => handleEditingPriceChange(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') saveInlineEdit(product.id);
                                 if (e.key === 'Escape') cancelEditing();
                               }}
                               className="w-full px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
-                              placeholder="Price"
+                              placeholder="Rp 0"
                               autoFocus
                             />
                             <input

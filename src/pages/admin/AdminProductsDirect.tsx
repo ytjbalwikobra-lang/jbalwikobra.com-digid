@@ -5,6 +5,7 @@ import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { formatNumberID, parseNumberID } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
 interface Product {
@@ -133,10 +134,10 @@ const AdminProductsDirect: React.FC = () => {
            p.description?.toLowerCase().includes(term);
   });
 
-  // START EDITING
+  // START EDITING - store raw numeric value but will display formatted
   const startEditing = (product: Product) => {
     setEditingId(product.id);
-    setEditPrice(String(product.price || 0));
+    setEditPrice(product.price ? formatNumberID(product.price) : '0');
     setEditStock(String(product.stock || 0));
   };
 
@@ -146,11 +147,18 @@ const AdminProductsDirect: React.FC = () => {
     setEditStock('');
   };
 
+  // Handle price input with thousand separator
+  const handleEditPriceChange = (value: string) => {
+    // Parse the input to get numeric value, then format it back
+    const numericValue = parseNumberID(value);
+    setEditPrice(numericValue > 0 ? formatNumberID(numericValue) : '');
+  };
+
   // SAVE EDIT - USE API ENDPOINT (has service role to bypass RLS)
   const saveEdit = async () => {
     if (!editingId) return;
 
-    const newPrice = parseFloat(editPrice) || 0;
+    const newPrice = parseNumberID(editPrice) || 0;
     const newStock = parseInt(editStock) || 0;
     const originalProduct = products.find(p => p.id === editingId);
 
@@ -440,15 +448,16 @@ const AdminProductsDirect: React.FC = () => {
                       {editingId === product.id ? (
                         <div className="space-y-2">
                           <input
-                            type="number"
-                            value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value)}
+                            type="text"
+                            inputMode="numeric"
+                            value={editPrice ? `Rp ${editPrice}` : ''}
+                            onChange={(e) => handleEditPriceChange(e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') saveEdit();
                               if (e.key === 'Escape') cancelEditing();
                             }}
-                            className="w-28 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
-                            placeholder="Price"
+                            className="w-32 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
+                            placeholder="Rp 0"
                             autoFocus
                             disabled={saving}
                           />
@@ -460,7 +469,7 @@ const AdminProductsDirect: React.FC = () => {
                               if (e.key === 'Enter') saveEdit();
                               if (e.key === 'Escape') cancelEditing();
                             }}
-                            className="w-28 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
+                            className="w-32 px-2 py-1 bg-gray-700 border border-pink-500 rounded text-white text-sm"
                             placeholder="Stock"
                             disabled={saving}
                           />

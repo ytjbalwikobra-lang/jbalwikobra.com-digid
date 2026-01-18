@@ -11,6 +11,7 @@ import { useToast } from '../../../components/Toast';
 import { useAdminConfirm } from './ui/AdminConfirmModal';
 import { Product } from '../../../types';
 import { AdminButton } from './ui/AdminButton';
+import { formatNumberID, parseNumberID } from '../../../utils/helpers';
 
 interface FlashSaleModalProps {
   isOpen: boolean;
@@ -213,6 +214,18 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     }
   };
 
+  // Helper to handle price input with thousand separator
+  const handlePriceInputChange = (field: 'salePrice' | 'originalPrice', inputValue: string) => {
+    const numericValue = parseNumberID(inputValue);
+    handleChange(field, numericValue);
+  };
+
+  // Format price for display in input
+  const formatPriceForInput = (value: number): string => {
+    if (!value || value === 0) return '';
+    return `Rp ${formatNumberID(value)}`;
+  };
+
   if (!isOpen) return null;
 
   const discount = formData.originalPrice > 0 && formData.salePrice > 0
@@ -280,11 +293,12 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
                 Harga Asli <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                value={formData.originalPrice}
-                onChange={(e) => handleChange('originalPrice', parseFloat(e.target.value) || 0)}
+                type="text"
+                inputMode="numeric"
+                value={formatPriceForInput(formData.originalPrice)}
+                onChange={(e) => handlePriceInputChange('originalPrice', e.target.value)}
                 className={`admin-input ${errors.originalPrice ? 'border-red-500' : ''}`}
-                placeholder="100000"
+                placeholder="Rp 0"
               />
               {errors.originalPrice && (
                 <p className="text-sm text-red-600 mt-1">{errors.originalPrice}</p>
@@ -296,11 +310,12 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
                 Harga Sale <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                value={formData.salePrice}
-                onChange={(e) => handleChange('salePrice', parseFloat(e.target.value) || 0)}
+                type="text"
+                inputMode="numeric"
+                value={formatPriceForInput(formData.salePrice)}
+                onChange={(e) => handlePriceInputChange('salePrice', e.target.value)}
                 className={`admin-input ${errors.salePrice ? 'border-red-500' : ''}`}
-                placeholder="75000"
+                placeholder="Rp 0"
               />
               {errors.salePrice && (
                 <p className="text-sm text-red-600 mt-1">{errors.salePrice}</p>

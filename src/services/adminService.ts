@@ -1047,10 +1047,149 @@ export interface UserItem {
 }
 
 export const adminService = {
-  async completeOrder(orderId: string) {
-    const service = new AdminService();
-    return service.completeOrder(orderId);
+  // Inline product update methods (previously in AdminService class)
+  async updateProductFields(id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>): Promise<Product | null> {
+    try {
+      console.error('🚨 [adminService.updateProductFields] STARTING UPDATE:', { id, fields });
+      
+      // Try to use the admin API first (has service role access)
+      try {
+        const response = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}`
+          },
+          body: JSON.stringify({
+            action: 'updateProduct',
+            id,
+            fields: { ...fields, updated_at: new Date().toISOString() }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.error('🚨 [adminService.updateProductFields] API RESPONSE:', result);
+          if (result.success && result.data) {
+            console.error('🚨 [adminService.updateProductFields] ✅ UPDATED VIA API:', result.data);
+            adminCache.invalidatePattern('admin:products');
+            return result.data as Product;
+          } else {
+            console.error('🚨 [adminService.updateProductFields] API returned non-success:', result);
+          }
+        } else {
+          const errorText = await response.text();
+          console.warn('[adminService.updateProductFields] API HTTP error:', response.status, errorText);
+        }
+      } catch (apiError) {
+        console.warn('[adminService.updateProductFields] API call failed:', apiError);
+      }
+
+      // Fallback to direct Supabase update
+      const client = supabaseAdmin || supabase;
+      
+      if (!client) {
+        throw new Error('Supabase client not available');
+      }
+      
+      console.log('[adminService.updateProductFields] Using direct Supabase fallback');
+      
+      const updatePayload: any = { ...fields, updated_at: new Date().toISOString() };
+      const { data, error } = await client
+        .from('products')
+        .update(updatePayload)
+        .eq('id', id)
+        .select();
+      
+      console.log('[adminService.updateProductFields] Response:', { data, error });
+      
+      if (error) {
+        console.error('[adminService.updateProductFields] Supabase error:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        console.error('[adminService.updateProductFields] ❌ UPDATE BLOCKED - Empty response');
+        return null;
+      }
+      
+      // Verify the update
+      const updatedProduct = data[0];
+      
+      if (fields.price !== undefined && updatedProduct.price !== fields.price) {
+        console.error('[adminService.updateProductFields] ❌ Price mismatch! Expected:', fields.price, 'Got:', updatedProduct.price);
+        return null;
+      }
+      if (fields.stock !== undefined && updatedProduct.stock !== fields.stock) {
+        console.error('[adminService.updateProductFields] ❌ Stock mismatch! Expected:', fields.stock, 'Got:', updatedProduct.stock);
+        return null;
+      }
+      if (fields.is_active !== undefined && updatedProduct.is_active !== fields.is_active) {
+        console.error('[adminService.updateProductFields] ❌ Status mismatch! Expected:', fields.is_active, 'Got:', updatedProduct.is_active);
+        return null;
+      }
+      
+      console.log('[adminService.updateProductFields] ✅ Success via fallback:', updatedProduct);
+      adminCache.invalidatePattern('admin:products');
+      return updatedProduct as Product;
+    } catch (e) {
+      console.error('[adminService.updateProductFields] Caught error:', e);
+      return null;
+    }
   },
+
+  async toggleProductActive(id: string, current: boolean): Promise<boolean> {
+    const res = await adminService.updateProductFields(id, { is_active: !current });
+    return !!res;
+  },
+
+  async deleteProduct(id: string): Promise<boolean> {
+    try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'archive_product',
+          productId: id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to archive product');
+      }
+
+      console.log(`[adminService.deleteProduct] Successfully archived product ${id}`);
+      
+      return true;
+    } catch (e: any) {
+      console.error('[adminService.deleteProduct] error', e);
+      throw e;
+    }
+  },
+
+  async completeOrder(orderId: string): Promise<boolean> {
+    try {
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+      const { error } = await supabase.from('orders').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', orderId);
+      if (error) throw error;
+      return true;
+    } catch(e) {
+      console.error('completeOrder error', e);
+      return false;
+    }
+  },
+
   async getAdminStats(): Promise<AdminStats> {
     console.log('🔄 [adminService.getAdminStats] Starting stats fetch...');
     
@@ -1352,19 +1491,7 @@ export const adminService = {
     });
   },
 
-  // Inline quick update wrappers
-  async updateProductFields(id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>) {
-    const service = new AdminService();
-    return service.updateProductFields(id, fields);
-  },
-  async toggleProductActive(id: string, current: boolean) {
-    const service = new AdminService();
-    return service.toggleProductActive(id, current);
-  },
-  async deleteProduct(id: string) {
-    const service = new AdminService();
-    return service.deleteProduct(id);
-  },  async getUsers(page: number = 1, limit: number = 10, searchTerm?: string): Promise<PaginatedResponse<User>> {
+  async getUsers(page: number = 1, limit: number = 10, searchTerm?: string): Promise<PaginatedResponse<User>> {
     console.log('[adminService.getUsers - CACHED] Fetching users - page:', page, 'limit:', limit, 'searchTerm:', searchTerm);
     return adminCache.getOrFetch(`admin:users:${page}:${limit}:${searchTerm || ''}`, async () => {
       // Prefer serverless admin API (service role) to bypass RLS issues in browser

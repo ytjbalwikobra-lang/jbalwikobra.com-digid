@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Package, Search, RefreshCw, Plus, Edit, Archive, Eye } from 'lucide-react';
+import { Package, RefreshCw, Plus, Edit, Archive, Eye } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
+import { AdminLoadingState } from './components/ui/AdminLoadingState';
+import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { AdminFilter } from './components/AdminFilter';
 import { formatNumberID, parseNumberID, formatCurrency } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
@@ -343,17 +346,13 @@ const AdminProductsDirect: React.FC = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-pink-500"
-        />
-      </div>
+      {/* Search - Using shared AdminFilter */}
+      <AdminFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search products..."
+        loading={loading}
+      />
 
       {/* Table */}
       <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
@@ -370,18 +369,21 @@ const AdminProductsDirect: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-800">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
-                    Loading...
-                  </td>
-                </tr>
+                <AdminLoadingState variant="skeleton-table" rows={5} columns={5} />
               ) : filteredProducts.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                    No products found
-                  </td>
-                </tr>
+                <AdminEmptyState 
+                  icon={<Package className="w-16 h-16" />}
+                  title="No Products Found"
+                  description={searchTerm ? undefined : "No products have been created yet."}
+                  hasFilters={!!searchTerm}
+                  variant="table-row"
+                  colSpan={5}
+                  action={!searchTerm ? {
+                    label: "Add Product",
+                    onClick: handleCreateProduct,
+                    icon: <Plus size={18} />
+                  } : undefined}
+                />
               ) : (
                 filteredProducts.map(product => (
                   <tr 

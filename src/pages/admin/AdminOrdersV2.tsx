@@ -5,7 +5,6 @@ import {
   Eye,
   Package,
   Clock,
-  XCircle,
   RefreshCw,
   Calendar,
   DollarSign
@@ -15,6 +14,9 @@ import { adminService, type Order as AdminOrder } from '../../services/adminServ
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminLoadingState } from './components/ui/AdminLoadingState';
+import { AdminEmptyState } from './components/ui/AdminEmptyState';
+import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
 import { formatCurrency, formatDate } from '../../utils/helpers';
@@ -229,17 +231,12 @@ const AdminOrdersV2: React.FC = () => {
   if (error) {
     return (
       <div className="admin-page">
-          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
-            <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-400 mb-2">Error Loading Orders</h2>
-            <p className="text-gray-300 mb-6">{error}</p>
-            <button
-              onClick={() => loadOrders()}
-              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 font-medium"
-            >
-              Try Again
-            </button>
-          </div>
+        <AdminErrorState 
+          variant="full-page"
+          title="Error Loading Orders"
+          message={error}
+          onRetry={() => loadOrders()}
+        />
       </div>
     );
   }
@@ -375,47 +372,15 @@ const AdminOrdersV2: React.FC = () => {
                 </thead>
                 <tbody>
                 {loading ? (
-                  // Loading skeleton
-                  [...Array(5)].map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4">
-                        <div className="space-y-2">
-                          <div className="h-4 bg-gray-700 rounded w-32"></div>
-                          <div className="h-3 bg-gray-800 rounded w-48"></div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-700 rounded w-24"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-700 rounded w-20"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-6 bg-gray-700 rounded-full w-20"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-6 bg-gray-700 rounded w-16"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-700 rounded w-24"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-8 bg-gray-700 rounded w-8 ml-auto"></div>
-                      </td>
-                    </tr>
-                  ))
+                  <AdminLoadingState variant="skeleton-table" rows={5} columns={6} />
                 ) : filteredOrders.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
-                      <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-400 mb-2">No Orders Found</h3>
-                      <p className="text-gray-500">
-                        {searchTerm || statusFilter || typeFilter
-                          ? 'Try adjusting your filters to see more results.'
-                          : 'No orders have been placed yet.'}
-                      </p>
-                    </td>
-                  </tr>
+                  <AdminEmptyState 
+                    icon={<Package className="w-16 h-16" />}
+                    title="No Orders Found"
+                    hasFilters={!!(searchTerm || statusFilter || typeFilter)}
+                    variant="table-row"
+                    colSpan={6}
+                  />
                 ) : (
                   paginatedOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-900/50 transition-colors duration-150">

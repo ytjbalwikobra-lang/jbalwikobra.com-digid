@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { WebsiteSettings } from '../types';
 import { uploadFile, deletePublicUrls } from './storageService';
+import { globalCache, cacheUtils } from './globalCacheManager';
 
 const DEFAULT_SETTINGS: WebsiteSettings = {
   id: 'default',
@@ -9,15 +10,15 @@ const DEFAULT_SETTINGS: WebsiteSettings = {
   heroSubtitle: 'Aman, cepat, terpercaya',
 };
 
-export class SettingsService {
-  // Small in-memory cache to minimize repeated DB fetches across the SPA session
-  private static cache: { v: WebsiteSettings; t: number } | null = null;
-  private static TTL = 5 * 60 * 1000; // 5 minutes
+// Cache tag for settings - used for coordinated invalidation
+const SETTINGS_CACHE_TAG = 'settings';
+const SETTINGS_CACHE_KEY = 'website:settings';
 
+export class SettingsService {
   // Method to clear cache - useful for debugging and after updates
   static clearCache(): void {
     console.log('🧹 Clearing SettingsService cache');
-    this.cache = null;
+    globalCache.invalidateByTags([SETTINGS_CACHE_TAG]);
   }
 
   // Method to force refresh settings without cache
@@ -30,12 +31,8 @@ export class SettingsService {
   // Debug method to check current cache and database state
   static async debugStatus(): Promise<void> {
     console.log('🐛 SettingsService Debug Status:');
-    console.log('📦 Cache state:', this.cache ? {
-      cached: true,
-      age: Date.now() - this.cache.t,
-      ttl: this.TTL,
-      expired: (Date.now() - this.cache.t) > this.TTL
-    } : { cached: false });
+    const cached = globalCache.get<WebsiteSettings>(SETTINGS_CACHE_KEY);
+    console.log('📦 Cache state:', cached ? { cached: true } : { cached: false });
     
     try {
       const fresh = await this.forceRefresh();
@@ -50,18 +47,22 @@ export class SettingsService {
   }
 
   static async get(): Promise<WebsiteSettings> {
+    // Use globalCache.getOrSet for automatic cache management
+    return globalCache.getOrSet<WebsiteSettings>(
+      SETTINGS_CACHE_KEY,
+      async () => {
+        console.log('🔍 SettingsService.get() - fetching fresh data');
+        return this.fetchSettings();
+      },
+      { ttl: cacheUtils.TTL.MEDIUM, tags: [SETTINGS_CACHE_TAG] }
+    );
+  }
+
+  private static async fetchSettings(): Promise<WebsiteSettings> {
     try {
-      console.log('🔍 SettingsService.get() called');
-      
-      // Serve from cache if fresh
-      if (this.cache && Date.now() - this.cache.t < this.TTL) {
-        console.log('📦 Serving from cache');
-        return this.cache.v;
-      }
 
       if (!supabase) {
         console.log('⚠️ No Supabase client, using DEFAULT_SETTINGS');
-        this.cache = { v: DEFAULT_SETTINGS, t: Date.now() };
         return DEFAULT_SETTINGS;
       }
       
@@ -113,7 +114,6 @@ export class SettingsService {
                 updatedAt: data.updated_at ?? undefined,
               };
               
-              this.cache = { v: mappedResult, t: Date.now() };
               return mappedResult;
             }
           } else {
@@ -185,7 +185,6 @@ export class SettingsService {
         topupGameUrl: result.topupGameUrl
       });
       
-      this.cache = { v: result, t: Date.now() };
       return result;
     } catch (e) {
       console.error('SettingsService.get error:', e);
@@ -244,7 +243,7 @@ export class SettingsService {
           if (response.ok) {
             const result = await response.json();
             console.log('✅ Settings updated via admin API');
-            this.cache = null; // Clear cache
+            this.clearCache(); // Clear cache
             return await this.get(); // Return fresh data
           } else {
             console.log('⚠️ Admin API failed, falling back to direct Supabase');
@@ -334,13 +333,14 @@ export class SettingsService {
         whatsappChannelUrl: result.whatsappChannelUrl
       });
       
-      // Invalidate/refresh cache
-      this.cache = { v: result, t: Date.now() };
+      // Invalidate/refresh cache and store new value
+      this.clearCache();
+      globalCache.set(SETTINGS_CACHE_KEY, result, { ttl: cacheUtils.TTL.MEDIUM, tags: [SETTINGS_CACHE_TAG] });
       return result;
     } catch (e) {
       console.error('SettingsService.upsert error:', e);
       // Clear cache on error to force fresh fetch next time
-      this.cache = null;
+      this.clearCache();
       return null;
     }
   }

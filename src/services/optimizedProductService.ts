@@ -1,7 +1,9 @@
 // Optimized ProductService with pagination and caching
+// Uses centralized globalCacheManager for consistent caching across the app
 import { supabase } from './supabase';
 import { deletePublicUrls } from './storageService';
 import { Product, FlashSale, Tier, GameTitle } from '../types';
+import { globalCache, cacheUtils } from './globalCacheManager';
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -24,35 +26,17 @@ interface PaginationOptions {
   limit?: number;
 }
 
-// Cache for frequently accessed data
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+// Cache tag constants for tag-based invalidation
+const CACHE_TAGS = {
+  PRODUCTS: 'opt-products',
+  PRODUCTS_LIST: 'opt-products-list',
+  GAME_TITLES: 'opt-game-titles',
+  TIERS: 'opt-tiers',
+};
 
 class OptimizedProductService {
-  private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
   private static getCacheKey(key: string, filters?: any): string {
-    return filters ? `${key}:${JSON.stringify(filters)}` : key;
-  }
-
-  private static getFromCache<T>(key: string): T | null {
-    const cached = cache.get(key);
-    if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
-    }
-    cache.delete(key);
-    return null;
-  }
-
-  private static setCache<T>(key: string, data: T, ttl: number = this.CACHE_TTL): void {
-    cache.set(key, { data, timestamp: Date.now(), ttl });
-  }
-
-  private static clearCachePattern(pattern: string): void {
-    for (const key of cache.keys()) {
-      if (key.includes(pattern)) {
-        cache.delete(key);
-      }
-    }
+    return cacheUtils.generateKey(`optimized:${key}`, filters || {});
   }
 
   /**
@@ -66,82 +50,82 @@ class OptimizedProductService {
     const { search, gameTitle, tier, status = 'active' } = filters;
     
     const cacheKey = this.getCacheKey('products_paginated', { filters, pagination });
-    const cached = this.getFromCache<PaginatedResponse<Product>>(cacheKey);
-    if (cached) return cached;
+    
+    // Use globalCache.getOrSet for automatic cache management
+    return globalCache.getOrSet<PaginatedResponse<Product>>(
+      cacheKey,
+      async () => {
+        try {
+          if (!supabase) throw new Error('Supabase not configured');
 
-    try {
-      if (!supabase) throw new Error('Supabase not configured');
+          // Build the query with proper filtering at database level
+          let query = supabase
+            .from('products')
+            .select(`
+              id, name, description, price, original_price,
+              images, is_active, archived_at, created_at,
+              game_title_id, tier_id, has_rental, category_id,
+              tiers (
+                id, name, slug, color, background_gradient, icon
+              ),
+              game_titles (
+                id, name, slug, icon, logo_url
+              ),
+              categories:categories!fk_products_category (
+                id, name, slug, icon, color, is_active, sort_order
+              )
+            `, { count: 'exact' });
 
-      // Build the query with proper filtering at database level
-      let query = supabase
-        .from('products')
-        .select(`
-          id, name, description, price, original_price,
-          images, is_active, archived_at, created_at,
-          game_title_id, tier_id, has_rental, category_id,
-          tiers (
-            id, name, slug, color, background_gradient, icon
-          ),
-          game_titles (
-            id, name, slug, icon, logo_url
-          ),
-          categories:categories!fk_products_category (
-            id, name, slug, icon, color, is_active, sort_order
-          )
-        `, { count: 'exact' });
+          // Apply filters at database level
+          if (status === 'active') {
+            query = query.eq('is_active', true).is('archived_at', null);
+          } else if (status === 'archived') {
+            query = query.or('is_active.eq.false,archived_at.not.is.null');
+          }
 
-      // Apply filters at database level
-      if (status === 'active') {
-        query = query.eq('is_active', true).is('archived_at', null);
-      } else if (status === 'archived') {
-        query = query.or('is_active.eq.false,archived_at.not.is.null');
-      }
+          if (search && search.trim()) {
+            query = query.or(`name.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%`);
+          }
 
-      if (search && search.trim()) {
-        query = query.or(`name.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%`);
-      }
+          if (gameTitle && gameTitle !== 'all') {
+            query = query.eq('game_title_id', gameTitle);
+          }
 
-      if (gameTitle && gameTitle !== 'all') {
-        query = query.eq('game_title_id', gameTitle);
-      }
+          if (tier && tier !== 'all') {
+            query = query.eq('tier_id', tier);
+          }
 
-      if (tier && tier !== 'all') {
-        query = query.eq('tier_id', tier);
-      }
+          // Apply pagination at database level
+          const offset = (page - 1) * limit;
+          query = query
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
 
-      // Apply pagination at database level
-      const offset = (page - 1) * limit;
-      query = query
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+          const { data, error, count } = await query;
 
-      const { data, error, count } = await query;
+          if (error) throw error;
 
-      if (error) throw error;
+          return {
+            data: (data || []).map(this.mapDatabaseProduct),
+            total: count || 0,
+            page,
+            limit,
+            totalPages: Math.ceil((count || 0) / limit)
+          };
 
-      const result: PaginatedResponse<Product> = {
-        data: (data || []).map(this.mapDatabaseProduct),
-        total: count || 0,
-        page,
-        limit,
-        totalPages: Math.ceil((count || 0) / limit)
-      };
-
-      // Cache for 2 minutes for paginated results
-      this.setCache(cacheKey, result, 2 * 60 * 1000);
-      return result;
-
-    } catch (error) {
-      console.error('Error fetching paginated products:', error);
-      // Fallback to empty result
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0
-      };
-    }
+        } catch (error) {
+          console.error('Error fetching paginated products:', error);
+          return {
+            data: [],
+            total: 0,
+            page,
+            limit,
+            totalPages: 0
+          };
+        }
+      },
+      { ttl: cacheUtils.TTL.SHORT, tags: [CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_LIST] }
+    );
   }
 
   /**
@@ -149,107 +133,113 @@ class OptimizedProductService {
    */
   static async getProductsCount(filters: ProductFilters = {}): Promise<number> {
     const cacheKey = this.getCacheKey('products_count', filters);
-    const cached = this.getFromCache<number>(cacheKey);
-    if (cached !== null) return cached;
+    
+    return globalCache.getOrSet<number>(
+      cacheKey,
+      async () => {
+        try {
+          if (!supabase) return 0;
 
-    try {
-      if (!supabase) return 0;
+          let query = supabase
+            .from('products')
+            .select('id', { count: 'exact', head: true });
 
-      let query = supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true });
+          const { status } = filters;
+          if (status === 'active') {
+            query = query.eq('is_active', true).is('archived_at', null);
+          } else if (status === 'archived') {
+            query = query.or('is_active.eq.false,archived_at.not.is.null');
+          }
 
-      const { status } = filters;
-      if (status === 'active') {
-        query = query.eq('is_active', true).is('archived_at', null);
-      } else if (status === 'archived') {
-        query = query.or('is_active.eq.false,archived_at.not.is.null');
-      }
+          const { count, error } = await query;
+          if (error) throw error;
 
-      const { count, error } = await query;
-      if (error) throw error;
+          return count || 0;
 
-      const result = count || 0;
-      this.setCache(cacheKey, result, 60 * 1000); // Cache for 1 minute
-      return result;
-
-    } catch (error) {
-      console.error('Error getting products count:', error);
-      return 0;
-    }
+        } catch (error) {
+          console.error('Error getting products count:', error);
+          return 0;
+        }
+      },
+      { ttl: cacheUtils.TTL.SHORT, tags: [CACHE_TAGS.PRODUCTS] }
+    );
   }
 
   /**
    * Get game titles for filters (cached)
    */
   static async getGameTitles(): Promise<GameTitle[]> {
-    const cacheKey = 'game_titles';
-    const cached = this.getFromCache<GameTitle[]>(cacheKey);
-    if (cached) return cached;
+    const cacheKey = 'optimized:game_titles';
+    
+    return globalCache.getOrSet<GameTitle[]>(
+      cacheKey,
+      async () => {
+        try {
+          if (!supabase) return [];
 
-    try {
-      if (!supabase) return [];
+          const { data, error } = await supabase
+            .from('game_titles')
+            .select('id, name, slug, icon, logo_url, is_active, color, is_popular')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
 
-      const { data, error } = await supabase
-        .from('game_titles')
-        .select('id, name, slug, icon, logo_url, is_active, color, is_popular')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+          if (error) throw error;
 
-      if (error) throw error;
+          return (data || []).map((item: any) => ({
+            ...item,
+            isActive: item.is_active,
+            isPopular: item.is_popular ?? false,
+            logoUrl: item.logo_url
+          }));
 
-      const result = (data || []).map((item: any) => ({
-        ...item,
-        isActive: item.is_active,
-        isPopular: item.is_popular ?? false,
-        logoUrl: item.logo_url
-      }));
-      this.setCache(cacheKey, result, 10 * 60 * 1000); // Cache for 10 minutes
-      return result;
-
-    } catch (error) {
-      console.error('Error fetching game titles:', error);
-      return [];
-    }
+        } catch (error) {
+          console.error('Error fetching game titles:', error);
+          return [];
+        }
+      },
+      { ttl: cacheUtils.TTL.LONG, tags: [CACHE_TAGS.GAME_TITLES] }
+    );
   }
 
   /**
    * Get tiers for filters (cached)
    */
   static async getTiers(): Promise<Tier[]> {
-    const cacheKey = 'tiers';
-    const cached = this.getFromCache<Tier[]>(cacheKey);
-    if (cached) return cached;
+    const cacheKey = 'optimized:tiers';
+    
+    return globalCache.getOrSet<Tier[]>(
+      cacheKey,
+      async () => {
+        try {
+          if (!supabase) return [];
 
-    try {
-      if (!supabase) return [];
+          const { data, error } = await supabase
+            .from('tiers')
+            .select('id, name, slug, description, color, border_color, background_gradient, icon, price_range_min, price_range_max, is_active, sort_order, created_at, updated_at')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
 
-      const { data, error } = await supabase
-        .from('tiers')
-        .select('id, name, slug, description, color, border_color, background_gradient, icon, price_range_min, price_range_max, is_active, sort_order, created_at, updated_at')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+          if (error) throw error;
 
-      if (error) throw error;
+          return (data || []).map((item: any) => ({
+            ...item,
+            borderColor: item.border_color,
+            backgroundGradient: item.background_gradient,
+            priceRangeMin: item.price_range_min,
+            priceRangeMax: item.price_range_max,
+            isActive: item.is_active,
+            sortOrder: item.sort_order,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at
+          }));
 
-      const result = (data || []).map((item: any) => ({
-        ...item,
-        borderColor: item.border_color,
-        backgroundGradient: item.background_gradient,
-        priceRangeMin: item.price_range_min,
-        priceRangeMax: item.price_range_max,
-        isActive: item.is_active,
-        sortOrder: item.sort_order,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at
-      }));
-      this.setCache(cacheKey, result, 10 * 60 * 1000); // Cache for 10 minutes
-      return result;
-
-    } catch (error) {
-      console.error('Error fetching tiers:', error);
-      return [];
-    }
+        } catch (error) {
+          console.error('Error fetching tiers:', error);
+          return [];
+        }
+      },
+      { ttl: cacheUtils.TTL.LONG, tags: [CACHE_TAGS.TIERS] }
+    );
   }
 
   private static mapDatabaseProduct(product: any): Product {
@@ -281,14 +271,19 @@ class OptimizedProductService {
    * Clear cache when products are modified
    */
   static clearProductsCache(): void {
-    this.clearCachePattern('products');
+    globalCache.invalidateByTags([CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_LIST]);
   }
 
   /**
-   * Invalidate cache
+   * Invalidate all optimized product caches
    */
   static invalidateCache(): void {
-    cache.clear();
+    globalCache.invalidateByTags([
+      CACHE_TAGS.PRODUCTS,
+      CACHE_TAGS.PRODUCTS_LIST,
+      CACHE_TAGS.GAME_TITLES,
+      CACHE_TAGS.TIERS
+    ]);
   }
 }
 

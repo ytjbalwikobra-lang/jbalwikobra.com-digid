@@ -260,10 +260,49 @@ export interface TopProductStat {
   revenue: number;
 }
 
+// Simple in-memory cache for admin data
+const adminDataCache = {
+  orders: null as { data: Order[]; count: number; timestamp: number } | null,
+  users: null as { data: User[]; count: number; timestamp: number } | null,
+  CACHE_DURATION: 60 * 1000, // 1 minute
+
+  isValid(cache: { timestamp: number } | null): boolean {
+    if (!cache) return false;
+    return Date.now() - cache.timestamp < this.CACHE_DURATION;
+  },
+
+  clearOrders() {
+    this.orders = null;
+  },
+
+  clearUsers() {
+    this.users = null;
+  },
+
+  clearAll() {
+    this.orders = null;
+    this.users = null;
+  }
+};
+
 class AdminService {
-  // Dashboard Stats
-  // Orders Management
+  // Clear cache methods for force refresh
+  clearOrdersCache() {
+    adminDataCache.clearOrders();
+  }
+
+  clearUsersCache() {
+    adminDataCache.clearUsers();
+  }
+
+  // Orders Management with caching
   async getOrders(page = 1, limit = 20, status?: string): Promise<{ data: Order[], count: number }> {
+    // Use cache for first page without status filter (common case)
+    if (page === 1 && limit >= 100 && !status && adminDataCache.isValid(adminDataCache.orders)) {
+      console.log('[adminService.getOrders] Using cached orders data');
+      return { data: adminDataCache.orders!.data, count: adminDataCache.orders!.count };
+    }
+
     try {
       if (!supabase) {
         console.error('[adminService.getOrders] Supabase client not available');
@@ -357,6 +396,12 @@ class AdminService {
           } : undefined
         };
       });
+
+      // Cache the result for first page queries
+      if (page === 1 && limit >= 100 && !status) {
+        adminDataCache.orders = { data: orders, count: count || 0, timestamp: Date.now() };
+        console.log('[adminService.getOrders] Cached orders data');
+      }
 
       return { data: orders, count: count || 0 };
     } catch (error) {
@@ -616,6 +661,12 @@ class AdminService {
   // Users Management
   async getUsers(page = 1, limit = 20, search?: string): Promise<{ data: User[], count: number }> {
     try {
+      // Check cache first for initial load (page 1, no search, high limit)
+      if (page === 1 && !search && limit >= 20 && adminDataCache.isValid(adminDataCache.users)) {
+        console.log('[adminService.getUsers] Returning cached users data');
+        return { data: adminDataCache.users!.data, count: adminDataCache.users!.count };
+      }
+      
       if (!supabase) {
         console.error('[adminService.getUsers] Supabase client not available');
         throw new Error('Supabase client not available');
@@ -648,6 +699,11 @@ class AdminService {
         ...user,
         last_login: user.last_login_at
       }));
+
+      // Cache the result for initial load
+      if (page === 1 && !search && limit >= 20) {
+        adminDataCache.users = { data: mappedData, count: count || 0, timestamp: Date.now() };
+      }
 
       return { data: mappedData, count: count || 0 };
     } catch (error) {
@@ -2145,8 +2201,19 @@ export const adminService = {
     ]);
   },
 
+  // Cached dashboard stats for instant page loads
+  _dashboardStatsCache: null as { data: AdminStats; timestamp: number } | null,
+  _dashboardStatsCacheDuration: 60 * 1000, // 1 minute cache
+
   // Alias for backwards compatibility
   async getDashboardStats(): Promise<AdminStats> {
+    // Check cache first for instant loading
+    const now = Date.now();
+    if (this._dashboardStatsCache && (now - this._dashboardStatsCache.timestamp) < this._dashboardStatsCacheDuration) {
+      console.log('[adminService.getDashboardStats] Using cached stats');
+      return this._dashboardStatsCache.data;
+    }
+
     // Use the admin API endpoint instead of direct Supabase queries
     // This ensures we use service_role key for proper data access
     try {
@@ -2174,7 +2241,7 @@ export const adminService = {
       console.log('[adminService.getDashboardStats] API response:', data);
 
       // Transform API response to AdminStats format
-      return {
+      const stats: AdminStats = {
         totalOrders: data.orders?.count || 0,
         totalRevenue: data.orders?.revenue || 0,
         totalUsers: data.users?.count || 0,
@@ -2186,6 +2253,11 @@ export const adminService = {
         totalFlashSales: data.flashSales?.count || 0,
         activeFlashSales: 0
       };
+
+      // Cache the result
+      this._dashboardStatsCache = { data: stats, timestamp: now };
+      
+      return stats;
     } catch (error) {
       console.error('[adminService.getDashboardStats] Error calling API:', error);
       // Fallback to direct Supabase queries if API fails

@@ -150,11 +150,47 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
     lastActivity: 'No recent activity'
   });
 
+  // Cache for instant loading between page navigations
+  const [cachedData, setCachedData] = useState<{
+    provider: ProviderSettingsResp | null;
+    apiKey: ApiKeyInfo | null;
+    groups: WhatsAppGroup[];
+    timestamp: number;
+  } | null>(null);
+  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
   // ========================================
   // API FUNCTIONS
   // ========================================
 
-  const load = async () => {
+  const load = async (forceRefresh = false) => {
+    // Use cache if available and not expired
+    const now = Date.now();
+    if (!forceRefresh && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
+      console.log('[AdminWhatsApp] Using cached data');
+      setProvider(cachedData.provider);
+      setApiKey(cachedData.apiKey);
+      setGroups(cachedData.groups);
+      if (cachedData.provider?.settings) {
+        setDefaultGroupId(cachedData.provider.settings.default_group_id || '');
+        const configs = cachedData.provider.settings.group_configurations || {};
+        setGroupConfigurations({
+          purchase_orders: configs.purchase_orders || '',
+          rental_orders: configs.rental_orders || '',
+          flash_sales: configs.flash_sales || '',
+          general_notifications: configs.general_notifications || ''
+        });
+      }
+      setProviderStatus({
+        isConnected: !!(cachedData.provider && cachedData.apiKey),
+        lastChecked: new Date().toLocaleString(),
+        activeGroups: cachedData.groups.length,
+        lastActivity: 'Loaded from cache'
+      });
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -190,6 +226,14 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
           ? `Last used: ${new Date(data.api_key.last_used_at).toLocaleString()}` 
           : hasValidConfig ? 'Ready to use' : 'Not configured'
       });
+
+      // Cache the provider and apiKey data (groups will be cached separately)
+      setCachedData(prev => ({
+        provider: data.provider || data,
+        apiKey: data.api_key,
+        groups: prev?.groups || [],
+        timestamp: now
+      }));
     } catch (e: unknown) {
       const errorMessage = parseErrorMessage(e);
       setError(errorMessage);
@@ -268,6 +312,13 @@ const AdminWhatsAppSettingsEnhanced: React.FC = () => {
         lastActivity: 'Groups loaded successfully',
         lastChecked: new Date().toLocaleString()
       }));
+      
+      // Cache groups data
+      setCachedData(prev => prev ? {
+        ...prev,
+        groups: data.groups || [],
+        timestamp: Date.now()
+      } : null);
       
       setMessage('Groups loaded successfully');
       setTimeout(() => setMessage(''), 3000);

@@ -41,6 +41,14 @@ const AdminUsersV2: React.FC = () => {
   });
   const { push } = useToast();
 
+  // Cache for instant loading between page navigations
+  const [cachedData, setCachedData] = useState<{
+    users: User[];
+    stats: UserStats;
+    timestamp: number;
+  } | null>(null);
+  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
   // Use real stats from API instead of calculating from paginated array
   const stats = realStats;
 
@@ -69,51 +77,59 @@ const AdminUsersV2: React.FC = () => {
     });
   }, [users, filters]);
 
-  const loadUsers = async () => {
+  const loadUsers = async (forceRefresh = false) => {
+    // Use cache if available and not expired
+    const now = Date.now();
+    if (!forceRefresh && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
+      console.log('[AdminUsersV2] Using cached data');
+      setUsers(cachedData.users);
+      setRealStats(cachedData.stats);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      // Load real stats from dashboard API
-      try {
-        const dashboardStats = await adminService.getDashboardStats();
-        // Calculate user stats from available data
-        const result = await adminService.getUsers(1, 50); // Load sample for active/admin counts
-        
-        const adminCount = result.data.filter(u => u.is_admin).length;
-        const activeCount = result.data.filter(u => u.last_login).length;
-        
-        // Calculate proportions
-        const totalUsers = dashboardStats.totalUsers || result.data.length;
-        const adminRatio = result.data.length > 0 ? adminCount / result.data.length : 0;
-        const activeRatio = result.data.length > 0 ? activeCount / result.data.length : 0;
-        
-        // Calculate 30-day recent users
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const recentCount = result.data.filter(u => new Date(u.created_at) > thirtyDaysAgo).length;
-        const recentRatio = result.data.length > 0 ? recentCount / result.data.length : 0;
-        
-        setRealStats({
-          total: totalUsers,
-          admin: Math.round(totalUsers * adminRatio),
-          active: Math.round(totalUsers * activeRatio),
-          recent: Math.round(totalUsers * recentRatio)
-        });
-      } catch (statsErr) {
-        console.warn('[AdminUsersV2] Failed to load dashboard stats:', statsErr);
-      }
+      // Load stats and users in parallel for speed
+      const [dashboardStats, usersResult] = await Promise.all([
+        adminService.getDashboardStats().catch(() => null),
+        adminService.getUsers(1, 100)
+      ]);
       
-      // Clear cache to ensure fresh data
-      if (adminService.clearUsersCache) {
-        adminService.clearUsersCache();
-      }
-
-      const result = await adminService.getUsers(1, 100); // Load first 100 for display
-      console.log('[AdminUsersV2] Loaded users:', {
-        displayed: result.data.length,
-        total: realStats.total
+      // Calculate stats from loaded data
+      const adminCount = usersResult.data.filter(u => u.is_admin).length;
+      const activeCount = usersResult.data.filter(u => u.last_login).length;
+      const totalUsers = dashboardStats?.totalUsers || usersResult.data.length;
+      
+      // Calculate proportions
+      const adminRatio = usersResult.data.length > 0 ? adminCount / usersResult.data.length : 0;
+      const activeRatio = usersResult.data.length > 0 ? activeCount / usersResult.data.length : 0;
+      
+      // Calculate 30-day recent users
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recentCount = usersResult.data.filter(u => new Date(u.created_at) > thirtyDaysAgo).length;
+      const recentRatio = usersResult.data.length > 0 ? recentCount / usersResult.data.length : 0;
+      
+      const stats: UserStats = {
+        total: totalUsers,
+        admin: Math.round(totalUsers * adminRatio),
+        active: Math.round(totalUsers * activeRatio),
+        recent: Math.round(totalUsers * recentRatio)
+      };
+      
+      setRealStats(stats);
+      setUsers(usersResult.data);
+      
+      // Cache the results
+      setCachedData({
+        users: usersResult.data,
+        stats,
+        timestamp: now
       });
-      setUsers(result.data);
+      
+      console.log('[AdminUsersV2] Loaded and cached users:', usersResult.data.length);
     } catch (err: any) {
       const message = err?.message || 'Failed to load users';
       setError(message);
@@ -129,7 +145,7 @@ const AdminUsersV2: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadUsers();
+    await loadUsers(true); // Force refresh
     setRefreshing(false);
   };
 

@@ -79,56 +79,68 @@ const AdminOrdersV2: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Load orders data
-  const loadOrders = useCallback(async () => {
+  // Cache for instant loading between page navigations
+  const [cachedData, setCachedData] = useState<{
+    orders: AdminOrder[];
+    stats: OrderStats;
+    totalCount: number;
+    timestamp: number;
+  } | null>(null);
+  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
+  // Load orders data with caching for seamless navigation
+  const loadOrders = useCallback(async (forceRefresh = false) => {
+    // Use cache if available and not expired
+    const now = Date.now();
+    if (!forceRefresh && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
+      console.log('[AdminOrdersV2] Using cached data');
+      setOrders(cachedData.orders);
+      setRealStats(cachedData.stats);
+      setTotalOrdersCount(cachedData.totalCount);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
       
-      // Load real stats from dashboard API for accurate counts
-      try {
-        const dashboardStats = await adminService.getDashboardStats();
-        setRealStats({
-          total: dashboardStats.totalOrders || 0,
-          pending: dashboardStats.pendingOrders || 0,
-          paid: 0, // Will be calculated from completed
-          completed: dashboardStats.completedOrders || 0,
-          cancelled: 0, // Not available in dashboard stats
-          totalRevenue: dashboardStats.totalRevenue || 0,
-          todayOrders: 0 // Will be calculated from loaded orders
-        });
-        setTotalOrdersCount(dashboardStats.totalOrders || 0);
-      } catch (statsErr) {
-        console.warn('[AdminOrdersV2] Failed to load dashboard stats:', statsErr);
-      }
+      // Load stats and orders in parallel for speed
+      const [dashboardStats, ordersResult] = await Promise.all([
+        adminService.getDashboardStats().catch(() => null),
+        adminService.getOrders(1, 100)
+      ]);
       
-      // Clear cache to ensure fresh data
-      if (adminService.clearOrdersCache) {
-        adminService.clearOrdersCache();
-      }
+      const stats: OrderStats = {
+        total: dashboardStats?.totalOrders || ordersResult.count || 0,
+        pending: dashboardStats?.pendingOrders || 0,
+        paid: 0,
+        completed: dashboardStats?.completedOrders || 0,
+        cancelled: 0,
+        totalRevenue: dashboardStats?.totalRevenue || 0,
+        todayOrders: 0
+      };
       
-      // Load paginated orders for display (not for stats)
-      const result = await adminService.getOrders(1, 100); // Load first 100 for display
-      
-      console.log('[AdminOrdersV2] Loaded orders:', {
-        displayed: result.data.length,
-        total: totalOrdersCount
-      });
-      
-      setOrders(result.data);
-      
-      // Update today's orders count from loaded data
+      // Calculate today's orders
       const today = new Date().toDateString();
-      const todayCount = result.data.filter(order => 
+      stats.todayOrders = ordersResult.data.filter(order => 
         new Date(order.created_at).toDateString() === today
       ).length;
       
-      setRealStats(prev => ({
-        ...prev,
-        todayOrders: todayCount
-      }));
+      // Update state
+      setRealStats(stats);
+      setTotalOrdersCount(stats.total);
+      setOrders(ordersResult.data);
       
-      push('Orders data loaded successfully!', 'success');
+      // Cache the results
+      setCachedData({
+        orders: ordersResult.data,
+        stats,
+        totalCount: stats.total,
+        timestamp: now
+      });
+      
+      console.log('[AdminOrdersV2] Loaded and cached orders:', ordersResult.data.length);
     } catch (err: any) {
       console.error('Error loading orders:', err);
       setError(err.message);
@@ -136,7 +148,7 @@ const AdminOrdersV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [push]);
+  }, [push, cachedData]);
 
   // Update order status function
   const updateOrderStatus = async (orderId: string, newStatus: string) => {

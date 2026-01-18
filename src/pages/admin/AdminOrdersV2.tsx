@@ -234,7 +234,7 @@ const AdminOrdersV2: React.FC = () => {
             <h2 className="text-2xl font-bold text-red-400 mb-2">Error Loading Orders</h2>
             <p className="text-gray-300 mb-6">{error}</p>
             <button
-              onClick={loadOrders}
+              onClick={() => loadOrders()}
               className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 font-medium"
             >
               Try Again
@@ -257,7 +257,7 @@ const AdminOrdersV2: React.FC = () => {
         <div className="flex gap-3">
           <AdminButton
             variant="secondary"
-            onClick={loadOrders}
+            onClick={() => loadOrders()}
             disabled={loading}
             icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
           >

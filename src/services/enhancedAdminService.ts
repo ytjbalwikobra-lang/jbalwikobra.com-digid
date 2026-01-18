@@ -354,7 +354,7 @@ class EnhancedAdminService {
     return this.handleApiCall(async () => {
       // Attempt relational join first; fallback to basic select if schema mismatch
       let relational = true;
-      let query = supabase.from('products').select('*, categories:categories(id,name,slug,description,icon,color,is_active,sort_order)', { count: 'exact' });
+      let query = supabase.from('products').select('id, name, description, price, original_price, image, images, is_active, stock, created_at, updated_at, category_id, game_title_id, tier_id, has_rental, archived_at, categories:categories(id,name,slug,description,icon,color,is_active,sort_order)', { count: 'exact' });
 
       // Apply filters
       if (filters.search) {
@@ -385,7 +385,7 @@ class EnhancedAdminService {
         this.telemetry.productsRelationalFallback++;
         console.warn('[enhancedAdminService.getProducts] relational select failed, falling back:', error.message);
         relational = false;
-        const basic = supabase.from('products').select('*', { count: 'exact' })
+        const basic = supabase.from('products').select('id, name, description, price, original_price, image, images, is_active, stock, created_at, updated_at, category_id, game_title_id, tier_id, has_rental, archived_at', { count: 'exact' })
           .order(sortBy, { ascending: sortOrder === 'asc' })
           .range(from, to);
         ({ data, error, count } = await basic);
@@ -452,42 +452,43 @@ class EnhancedAdminService {
     return this.handleApiCall(async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*, categories:categories(id,name,slug,description,icon,color,is_active,sort_order)')
+        .select('id, name, description, price, original_price, image, images, is_active, stock, created_at, updated_at, category_id, game_title_id, tier_id, has_rental, archived_at, categories:categories(id,name,slug,description,icon,color,is_active,sort_order)')
         .eq('id', id)
         .single();
 
       if (error) throw error;
+      const row = data as any; // Type assertion for flexible property access
       const mapped: Product = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        original_price: data.original_price,
-        image: data.image || '',
-        images: data.images || [],
-        category_id: data.category_id,
-        categoryData: data.categories ? {
-          id: data.categories.id,
-            name: data.categories.name,
-            slug: data.categories.slug,
-            description: data.categories.description,
-            icon: data.categories.icon,
-            color: data.categories.color,
-            is_active: data.categories.is_active,
-            sort_order: data.categories.sort_order
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        original_price: row.original_price,
+        image: row.image || '',
+        images: row.images || [],
+        category_id: row.category_id,
+        categoryData: row.categories ? {
+          id: row.categories.id,
+            name: row.categories.name,
+            slug: row.categories.slug,
+            description: row.categories.description,
+            icon: row.categories.icon,
+            color: row.categories.color,
+            is_active: row.categories.is_active,
+            sort_order: row.categories.sort_order
         } : undefined,
   // legacy game_title column removed (relational-only)
   // account_details removed
-        is_flash_sale: data.is_flash_sale || false,
-        flash_sale_end_time: data.flash_sale_end_time,
-        has_rental: data.has_rental || false,
-        stock: data.stock || 0,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        tier_id: data.tier_id,
-        game_title_id: data.game_title_id,
-        is_active: data.is_active,
-        archived_at: data.archived_at
+        is_flash_sale: row.is_flash_sale || false,
+        flash_sale_end_time: row.flash_sale_end_time,
+        has_rental: row.has_rental || false,
+        stock: row.stock || 0,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        tier_id: row.tier_id,
+        game_title_id: row.game_title_id,
+        is_active: row.is_active,
+        archived_at: row.archived_at
       };
       this.setCache(cacheKey, mapped);
       return mapped;

@@ -1262,7 +1262,7 @@ export const adminService = {
 
       let query = supabase
         .from('orders')
-        .select('*', { count: 'exact' });
+        .select('id, product_id, customer_name, customer_email, customer_phone, order_type, rental_duration, amount, status, payment_method, user_id, created_at, updated_at, client_external_id', { count: 'exact' });
 
       if (statusFilter && statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
@@ -1425,7 +1425,7 @@ export const adminService = {
       }
       let query = supabase
         .from('users')
-        .select('*', { count: 'exact' });
+        .select('id, email, name, phone, created_at, is_admin, last_login_at, is_active, phone_verified, profile_completed', { count: 'exact' });
 
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
@@ -1448,7 +1448,7 @@ export const adminService = {
         console.warn('[adminService.getUsers - CACHED] users table empty, trying profiles fallback');
         const { data: profiles, error: profilesError, count: profilesCount } = await supabase
           .from('profiles')
-          .select('*', { count: 'exact' })
+          .select('id, email, name, phone, created_at, is_admin, last_login_at, is_active, phone_verified, profile_completed', { count: 'exact' })
           .order('created_at', { ascending: false })
           .range((page - 1) * limit, page * limit - 1);
 
@@ -1600,7 +1600,7 @@ export const adminService = {
       try {
         const { data, error, count } = await supabase
           .from('reviews')
-          .select('*', { count: 'exact' })
+          .select('id, product_id, user_id, rating, comment, created_at, updated_at', { count: 'exact' })
           .order('created_at', { ascending: false })
           .range((page - 1) * limit, page * limit - 1);
 
@@ -1713,7 +1713,7 @@ export const adminService = {
       }
       const { data, error, count } = await supabase
         .from('banners')
-        .select('*', { count: 'exact' })
+        .select('id, title, subtitle, image_url, link_url, cta_text, sort_order, is_active, created_at, updated_at', { count: 'exact' })
         .order('sort_order', { ascending: true })
         .range((page - 1) * limit, page * limit - 1);
 
@@ -2714,7 +2714,7 @@ export const adminService = {
       console.warn('RLS may have blocked SELECT after UPDATE, fetching product separately');
       const { data: fetchedProducts, error: fetchError } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, description, price, original_price, image, images, is_active, stock, created_at, updated_at, category_id, game_title_id, tier_id, has_rental, archived_at')
         .eq('id', id)
         .limit(1);
       

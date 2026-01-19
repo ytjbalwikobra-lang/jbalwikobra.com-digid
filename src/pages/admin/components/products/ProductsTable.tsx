@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Product } from '../../../../services/adminService';
 import { Eye, Pencil, Trash2, Check, X } from 'lucide-react';
 import { AdminDSTable, DSTableColumn, DSTableAction } from '../ui/AdminDSTable';
+import { formatCurrency } from '../../../../utils/helpers';
 
 interface ProductsTableProps {
   products: Product[];
@@ -84,7 +85,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
           />
         ) : (
           <button onClick={()=>startEdit(p)} className="text-left text-ds-pink hover:opacity-80 focus:outline-none">
-            Rp {Number(p.price||0).toLocaleString('id-ID')}
+            {formatCurrency(Number(p.price||0))}
           </button>
         )
       ),

@@ -79,7 +79,8 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
       Number(order.amount || 0),
       'paid_order',
       order.customer_phone,
-      order.order_type
+      order.order_type,
+      order.rental_duration
     );
     
     console.log('[Admin] Paid order database notification created successfully');
@@ -703,7 +704,7 @@ export default async function handler(req: any, res: any) {
           expires_at: expiresAt,
         })
         .eq('xendit_invoice_id', invoiceId)
-        .select('id, status, xendit_invoice_id, client_external_id, order_type');
+        .select('id, status, xendit_invoice_id, client_external_id, order_type, product_id');
       if (!error) {
         updated = (up || []).length;
         console.log('[Webhook] Updated', updated, 'orders by xendit_invoice_id');
@@ -732,7 +733,7 @@ export default async function handler(req: any, res: any) {
           expires_at: expiresAt,
         })
         .eq('client_external_id', externalId)
-        .select('id, status, xendit_invoice_id, client_external_id, order_type');
+        .select('id, status, xendit_invoice_id, client_external_id, order_type, product_id');
       if (!e2) {
         updated = (up2 || []).length;
         console.log('[Webhook] Updated', updated, 'orders by client_external_id');
@@ -776,7 +777,7 @@ export default async function handler(req: any, res: any) {
             expires_at: expiresAt,
           })
           .eq('id', up3[0].id)
-          .select('id, status, xendit_invoice_id, client_external_id, order_type');
+          .select('id, status, xendit_invoice_id, client_external_id, order_type, product_id');
         
         if (!e3Update && up3Update && up3Update.length > 0) {
           updated = up3Update.length;
@@ -795,6 +796,36 @@ export default async function handler(req: any, res: any) {
       console.error('[Webhook] Looked for xendit_invoice_id:', invoiceId);
       console.error('[Webhook] Looked for client_external_id:', externalId);
       console.error('[Webhook] This order will remain in pending status unless metadata fallback works!');
+    }
+
+    // If paid/complete, mark product as sold via web (purchase only)
+    if (status === 'paid' || status === 'completed') {
+      try {
+        let orderRow: any | null = null;
+
+        if (foundOrderId) {
+          const { data: orderData } = await sb
+            .from('orders')
+            .select('id, order_type, product_id, status')
+            .eq('id', foundOrderId)
+            .single();
+          orderRow = orderData || null;
+        }
+
+        if (orderRow?.order_type === 'purchase' && orderRow.product_id) {
+          await sb
+            .from('products')
+            .update({
+              sold_channel: 'web',
+              is_active: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', orderRow.product_id);
+          console.log('[Webhook] ✅ Product marked sold via web:', orderRow.product_id);
+        }
+      } catch (soldErr) {
+        console.error('[Webhook] ❌ Failed to mark product as sold via web:', soldErr);
+      }
     }
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling

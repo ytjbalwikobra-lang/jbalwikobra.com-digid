@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Package, RefreshCw, Plus, Edit, Archive, Eye } from 'lucide-react';
-import { supabase } from '../../services/supabase';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Package, RefreshCw, Plus, ShoppingCart, MessageCircle, DollarSign } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
@@ -8,7 +7,10 @@ import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import { AdminFilter } from './components/AdminFilter';
+import { AdminPagination } from './components/AdminPagination';
+import { adminService } from '../../services/adminService';
 import { formatNumberID, parseNumberID, formatCurrency } from '../../utils/helpers';
+import { formatAnalyticsValue } from '../../utils/adminUtils';
 import '../../styles/admin-design-system-v3.css';
 
 interface Product {
@@ -28,20 +30,34 @@ interface Product {
   updated_at?: string;
   archived_at?: string | null;
   has_rental?: boolean;
+  sold_channel?: 'web' | 'wa' | null;
+  tiers?: { name?: string | null } | null;
+  game_titles?: { name?: string | null } | null;
+  categoryData?: { name?: string | null } | null;
   tier_name?: string;
   category_name?: string;
   game_title_name?: string;
 }
 
-// Use formatCurrency from utils/helpers (aliased as formatPrice for backward compatibility)
-const formatPrice = (price: number | null | undefined): string => {
-  return formatCurrency(price ?? 0);
-};
-
 const AdminProductsDirect: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  // Analytics stats
+  const [stats, setStats] = useState<{
+    total: number;
+    active: number;
+    soldViaWeb: number;
+    soldViaWA: number;
+    totalValue: number;
+    activeValue: number;
+  }>({ total: 0, active: 0, soldViaWeb: 0, soldViaWA: 0, totalValue: 0, activeValue: 0 });
   
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -62,74 +78,56 @@ const AdminProductsDirect: React.FC = () => {
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
 
-  // LOAD PRODUCTS - DIRECT FROM DATABASE
-  const loadProducts = useCallback(async () => {
-    if (!supabase) {
-      push('Database not available', 'error');
-      return;
-    }
+  // Debounce search to reduce requests
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+    }, 350);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
 
+  const mapProduct = useCallback((row: any): Product => {
+    return {
+      ...row,
+      category_id: row.categoryId || row.category_id || null,
+      tier_name: row.tiers?.name || null,
+      category_name: row.categoryData?.name || null,
+      game_title_name: row.game_titles?.name || null,
+      sold_channel: row.sold_channel || null
+    };
+  }, []);
+
+  // LOAD PRODUCTS - PAGINATED VIA ADMIN SERVICE
+  const loadProducts = useCallback(async () => {
     setLoading(true);
-    console.log('🔄 [DIRECT] Loading products from database...');
 
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          id, name, description, price, original_price, stock, is_active, 
-          image, images, tier_id, category_id, game_title_id,
-          created_at, updated_at, archived_at, has_rental,
-          tiers(id, name),
-          game_titles(id, name)
-        `)
-        .is('archived_at', null)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch categories separately to avoid ambiguous relationship
-      const categoryIds = [...new Set((data || []).filter(p => p.category_id).map(p => p.category_id))];
-      let categoriesMap = new Map();
+      // Fetch products and stats in parallel for efficiency
+      const [result, statsResult] = await Promise.all([
+        adminService.getProducts(currentPage, itemsPerPage, debouncedSearch),
+        adminService.getProductStats()
+      ]);
       
-      if (categoryIds.length > 0) {
-        const { data: categories } = await supabase
-          .from('categories')
-          .select('id, name')
-          .in('id', categoryIds);
-        
-        if (categories) {
-          categories.forEach((cat: any) => categoriesMap.set(cat.id, cat.name));
-        }
-      }
+      const mapped = (result.data || []).map(mapProduct);
 
-      const mapped = (data || []).map((row: any) => ({
-        ...row,
-        tier_name: row.tiers?.name || null,
-        category_name: categoriesMap.get(row.category_id) || null,
-        game_title_name: row.game_titles?.name || null,
-      }));
-
-      console.log('✅ [DIRECT] Loaded', mapped.length, 'products');
       setProducts(mapped);
+      setTotalCount(result.count || 0);
+      setTotalPages(result.totalPages || 1);
+      setStats(statsResult);
     } catch (err: any) {
-      console.error('❌ [DIRECT] Load error:', err);
       push(`Failed to load: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
-  }, [push]);
+  }, [currentPage, itemsPerPage, debouncedSearch, mapProduct, push]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, itemsPerPage]);
 
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
-
-  // Filter products
-  const filteredProducts = products.filter(p => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return p.name?.toLowerCase().includes(term) || 
-           p.description?.toLowerCase().includes(term);
-  });
 
   // START EDITING - store raw numeric value but will display formatted
   const startEditing = (product: Product) => {
@@ -204,20 +202,6 @@ const AdminProductsDirect: React.FC = () => {
         return;
       }
 
-      // Verify by reading back from DB
-      if (supabase) {
-        const { data: verifyData } = await supabase
-          .from('products')
-          .select('id, price')
-          .eq('id', editingId)
-          .single();
-
-        if (verifyData && verifyData.price !== newPrice) {
-          push('Database tidak cocok! Perubahan mungkin diblokir.', 'error');
-          return;
-        }
-      }
-
       // Update price in local state - PRESERVE tier_name!
       setProducts(prev => prev.map(p => 
         p.id === editingId 
@@ -238,69 +222,60 @@ const AdminProductsDirect: React.FC = () => {
     }
   };
 
-  // Toggle active status
-  const toggleActive = async (product: Product) => {
-    if (!supabase) return;
-
-    const newStatus = !product.is_active;
-    const action = newStatus ? 'mengaktifkan' : 'menonaktifkan';
-
+  const markSoldViaWA = async (product: Product) => {
     const confirmed = await showConfirm({
-      title: `Konfirmasi ${newStatus ? 'Aktifkan' : 'Nonaktifkan'}`,
-      message: `Anda akan ${action} produk "${product.name}".\n\nLanjutkan?`,
-      type: 'info',
-      confirmText: newStatus ? 'Aktifkan' : 'Nonaktifkan',
+      title: 'Terjual via WA',
+      message: `Anda akan menandai produk "${product.name}" sebagai terjual via WhatsApp.\n\nLanjutkan?`,
+      type: 'warning',
+      confirmText: 'Tandai Terjual',
       cancelText: 'Batal'
     });
 
     if (!confirmed) return;
 
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_active: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', product.id);
+      const sessionToken = localStorage.getItem('session_token') || '';
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          action: 'updateProduct',
+          id: product.id,
+          fields: {
+            sold_channel: 'wa',
+            is_active: false,
+            updated_at: new Date().toISOString()
+          }
+        })
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'update_failed');
+      }
 
-      setProducts(prev => prev.map(p => 
-        p.id === product.id ? { ...p, is_active: newStatus } : p
+      setProducts(prev => prev.map(p =>
+        p.id === product.id ? { ...p, sold_channel: 'wa', is_active: false } : p
       ));
-
-      push(newStatus ? 'Produk diaktifkan' : 'Produk dinonaktifkan', 'success');
+      push('Produk ditandai terjual via WA', 'success');
     } catch (err: any) {
       push(`Gagal: ${err.message}`, 'error');
     }
   };
 
-  // Archive product
-  const archiveProduct = async (product: Product) => {
-    const confirmed = await showConfirm({
-      title: 'Arsipkan Produk',
-      message: `Anda akan mengarsipkan produk "${product.name}".\n\nProduk yang diarsipkan tidak akan ditampilkan di katalog.\n\nLanjutkan?`,
-      type: 'warning',
-      confirmText: 'Arsipkan',
-      cancelText: 'Batal'
-    });
+  const getStatusLabel = (product: Product) => {
+    if (product.sold_channel === 'wa') return 'Terjual via WA';
+    if (product.sold_channel === 'web' || !product.is_active) return 'Terjual via Web';
+    return 'Active';
+  };
 
-    if (!confirmed || !supabase) return;
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ 
-          archived_at: new Date().toISOString(),
-          is_active: false
-        })
-        .eq('id', product.id);
-
-      if (error) throw error;
-
-      setProducts(prev => prev.filter(p => p.id !== product.id));
-      push('Produk berhasil diarsipkan', 'success');
-    } catch (err: any) {
-      push(`Gagal: ${err.message}`, 'error');
-    }
+  const getStatusStyle = (product: Product) => {
+    if (product.sold_channel === 'wa') return 'bg-purple-500/20 text-purple-300';
+    if (product.sold_channel === 'web' || !product.is_active) return 'bg-blue-500/20 text-blue-300';
+    return 'bg-green-500/20 text-green-300';
   };
 
   // Modal handlers
@@ -322,6 +297,42 @@ const AdminProductsDirect: React.FC = () => {
     push(modalState.mode === 'create' ? 'Produk berhasil dibuat!' : 'Produk berhasil diperbarui!', 'success');
   };
 
+  // Analytics cards config - memoized to prevent unnecessary re-renders
+  const analyticsCards = useMemo(() => [
+    {
+      label: 'Total Produk',
+      value: stats.total,
+      icon: Package,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/10',
+      format: 'number'
+    },
+    {
+      label: 'Terjual via Web',
+      value: stats.soldViaWeb,
+      icon: ShoppingCart,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-500/10',
+      format: 'number'
+    },
+    {
+      label: 'Terjual via WA',
+      value: stats.soldViaWA,
+      icon: MessageCircle,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-500/10',
+      format: 'number'
+    },
+    {
+      label: 'Total Nilai Produk',
+      value: stats.totalValue,
+      icon: DollarSign,
+      color: 'from-pink-500 to-pink-600',
+      bgColor: 'bg-pink-500/10',
+      format: 'currency'
+    }
+  ], [stats]);
+
   return (
     <div className="admin-page space-y-8">
       <ConfirmModal />
@@ -333,7 +344,7 @@ const AdminProductsDirect: React.FC = () => {
             Manajemen Produk
           </h1>
           <p className="text-gray-400 mt-1">
-            {filteredProducts.length} produk tersedia
+            {stats.active} produk aktif • {stats.soldViaWeb + stats.soldViaWA} terjual
           </p>
         </div>
         <div className="flex gap-3">
@@ -344,6 +355,37 @@ const AdminProductsDirect: React.FC = () => {
             Add Product
           </AdminButton>
         </div>
+      </div>
+
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {analyticsCards.map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <div 
+              key={idx}
+              className={`${card.bgColor} rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color}`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide">{card.label}</p>
+                  <p className="text-xl font-bold text-white">
+                    {loading ? (
+                      <span className="inline-block w-16 h-6 bg-gray-700 rounded animate-pulse" />
+                    ) : card.format === 'currency' ? (
+                      formatCurrency(card.value)
+                    ) : (
+                      formatAnalyticsValue(card.value)
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Search - Using shared AdminFilter */}
@@ -370,22 +412,29 @@ const AdminProductsDirect: React.FC = () => {
             <tbody className="divide-y divide-gray-800">
               {loading ? (
                 <AdminLoadingState variant="skeleton-table" rows={5} columns={5} />
-              ) : filteredProducts.length === 0 ? (
+              ) : products.length === 0 ? (
                 <AdminEmptyState 
                   icon={<Package className="w-16 h-16" />}
-                  title="No Products Found"
-                  description={searchTerm ? undefined : "No products have been created yet."}
-                  hasFilters={!!searchTerm}
+                  title={debouncedSearch ? "No Products Found" : "No Products Yet"}
+                  description={debouncedSearch ? undefined : "No products have been created yet."}
+                  hasFilters={!!debouncedSearch}
                   variant="table-row"
                   colSpan={5}
-                  action={!searchTerm ? {
+                  action={!debouncedSearch ? {
                     label: "Add Product",
                     onClick: handleCreateProduct,
                     icon: <Plus size={18} />
                   } : undefined}
                 />
               ) : (
-                filteredProducts.map(product => (
+                products.map(product => {
+                  const term = debouncedSearch.toLowerCase();
+                  const isMatch = !!debouncedSearch && (
+                    product.name?.toLowerCase().includes(term) ||
+                    product.description?.toLowerCase().includes(term)
+                  );
+
+                  return (
                   <tr 
                     key={product.id} 
                     className={`hover:bg-gray-800/30 transition-all duration-300 ${
@@ -393,6 +442,9 @@ const AdminProductsDirect: React.FC = () => {
                         ? 'bg-pink-500/10 animate-pulse' 
                         : ''
                     }`}
+                    style={{
+                      background: isMatch ? 'rgba(236, 72, 153, 0.08)' : undefined
+                    }}
                   >
                     {/* Product Info */}
                     <td className="px-4 py-3">
@@ -463,7 +515,7 @@ const AdminProductsDirect: React.FC = () => {
                           title="Click to edit price"
                         >
                           <div className="font-bold text-white">
-                            {formatPrice(product.price)}
+                            {formatCurrency(product.price ?? 0)}
                           </div>
                         </div>
                       )}
@@ -471,51 +523,57 @@ const AdminProductsDirect: React.FC = () => {
 
                     {/* Status */}
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleActive(product)}
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          product.is_active
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(product)}`}
                       >
-                        {product.is_active ? 'Active' : 'Inactive'}
-                      </button>
+                        {getStatusLabel(product)}
+                      </span>
                     </td>
 
                     {/* Actions */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewProduct(product)}
-                          className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
-                          title="View"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
                         >
-                          <Eye className="w-4 h-4" />
+                          Lihat
                         </button>
                         <button
                           onClick={() => handleEditProduct(product)}
-                          className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
-                          title="Edit"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                         >
-                          <Edit className="w-4 h-4" />
+                          Edit
                         </button>
                         <button
-                          onClick={() => archiveProduct(product)}
-                          className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-red-400"
-                          title="Archive"
+                          onClick={() => markSoldViaWA(product)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
                         >
-                          <Archive className="w-4 h-4" />
+                          Terjual via WA
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalCount > 0 && totalPages > 1 && (
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalCount}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          loading={loading}
+        />
+      )}
 
       {/* Modal */}
       {modalState.isOpen && (

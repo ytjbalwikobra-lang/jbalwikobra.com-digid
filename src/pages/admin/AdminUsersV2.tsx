@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Users, UserCheck, Shield, Clock, Plus, Edit, Trash2, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { adminService, User } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
-import { AdminButton } from './components/ui/AdminButton';
-import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
-import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminCard, AdminCardBody } from './components/ui/AdminCard';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminFilter } from './components/AdminFilter';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
+import { formatPhoneNumber } from '../../utils/phoneUtils';
 import '../../styles/admin-design-system-v3.css';
 
 interface UserStats {
@@ -32,6 +31,12 @@ const AdminUsersV2: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 50;
   const [filters, setFilters] = useState<UserFilters>({
     role: 'all',
     status: 'all',
@@ -52,9 +57,6 @@ const AdminUsersV2: React.FC = () => {
     timestamp: number;
   } | null>(null);
   const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
-
-  // Use real stats from API instead of calculating from paginated array
-  const stats = realStats;
 
   // Filter users based on current filters
   const filteredUsers = useMemo(() => {
@@ -81,13 +83,14 @@ const AdminUsersV2: React.FC = () => {
     });
   }, [users, filters]);
 
-  const loadUsers = async (forceRefresh = false) => {
-    // Use cache if available and not expired
+  const loadUsers = useCallback(async (forceRefresh = false, page = currentPage) => {
+    // Use cache if available and not expired (only for page 1)
     const now = Date.now();
-    if (!forceRefresh && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-      console.log('[AdminUsersV2] Using cached data');
+    if (!forceRefresh && page === 1 && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
       setUsers(cachedData.users);
       setRealStats(cachedData.stats);
+      setTotalCount(cachedData.stats.total);
+      setTotalPages(Math.ceil(cachedData.stats.total / PAGE_SIZE));
       setLoading(false);
       return;
     }
@@ -95,45 +98,40 @@ const AdminUsersV2: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      // Load stats and users in parallel for speed
-      const [dashboardStats, usersResult] = await Promise.all([
-        adminService.getDashboardStats().catch(() => null),
-        adminService.getUsers(1, 100)
-      ]);
-      
-      // Calculate stats from loaded data
-      const adminCount = usersResult.data.filter(u => u.is_admin).length;
-      const activeCount = usersResult.data.filter(u => u.last_login).length;
-      const totalUsers = dashboardStats?.totalUsers || usersResult.data.length;
-      
-      // Calculate proportions
-      const adminRatio = usersResult.data.length > 0 ? adminCount / usersResult.data.length : 0;
-      const activeRatio = usersResult.data.length > 0 ? activeCount / usersResult.data.length : 0;
-      
-      // Calculate 30-day recent users
+      // Fetch paginated users with actual count
+      const usersResult = await adminService.getUsers(page, PAGE_SIZE);
+      const usersData = usersResult.data || [];
+      const actualTotal = usersResult.count || 0;
+
+      // Calculate stats from loaded data (approximation for current page)
+      const adminCount = usersData.filter(u => u.is_admin).length;
+      const activeCount = usersData.filter(u => u.last_login).length;
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentCount = usersResult.data.filter(u => new Date(u.created_at) > thirtyDaysAgo).length;
-      const recentRatio = usersResult.data.length > 0 ? recentCount / usersResult.data.length : 0;
-      
+      const recentCount = usersData.filter(u => new Date(u.created_at) > thirtyDaysAgo).length;
+
+      // Use actual total from database, not usersData.length
       const stats: UserStats = {
-        total: totalUsers,
-        admin: Math.round(totalUsers * adminRatio),
-        active: Math.round(totalUsers * activeRatio),
-        recent: Math.round(totalUsers * recentRatio)
+        total: actualTotal,
+        admin: adminCount,
+        active: activeCount,
+        recent: recentCount
       };
       
       setRealStats(stats);
-      setUsers(usersResult.data);
+      setUsers(usersData);
+      setTotalCount(actualTotal);
+      setTotalPages(usersResult.totalPages || Math.ceil(actualTotal / PAGE_SIZE));
+      setCurrentPage(page);
       
-      // Cache the results
-      setCachedData({
-        users: usersResult.data,
-        stats,
-        timestamp: now
-      });
-      
-      console.log('[AdminUsersV2] Loaded and cached users:', usersResult.data.length);
+      // Cache page 1 results
+      if (page === 1) {
+        setCachedData({
+          users: usersData,
+          stats,
+          timestamp: now
+        });
+      }
     } catch (err: any) {
       const message = err?.message || 'Failed to load users';
       setError(message);
@@ -141,11 +139,11 @@ const AdminUsersV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cachedData, push, currentPage, PAGE_SIZE]);
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -164,7 +162,6 @@ const AdminUsersV2: React.FC = () => {
   };
 
   // Use shared formatter from utils/helpers
-  const formatDate = (dateString: string) => formatDateHelper(dateString);
   const formatLastLogin = (lastLogin?: string) => lastLogin ? formatDateHelper(lastLogin) : 'Never';
 
   return (
@@ -202,7 +199,7 @@ const AdminUsersV2: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-400 mb-1">Total Users</p>
-                  <p className="text-3xl font-bold text-white">{loading ? "..." : stats.total}</p>
+                  <p className="text-3xl font-bold text-white">{loading ? "..." : realStats.total}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Users className="text-blue-600" size={24} />
@@ -216,7 +213,7 @@ const AdminUsersV2: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 mb-1">Active Users</p>
-                  <p className="text-3xl font-bold text-green-600">{loading ? "..." : stats.active}</p>
+                  <p className="text-3xl font-bold text-green-600">{loading ? "..." : realStats.active}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <UserCheck className="text-green-600" size={24} />
@@ -230,7 +227,7 @@ const AdminUsersV2: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 mb-1">Admin Users</p>
-                  <p className="text-3xl font-bold text-purple-600">{loading ? "..." : stats.admin}</p>
+                  <p className="text-3xl font-bold text-purple-600">{loading ? "..." : realStats.admin}</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Shield className="text-purple-600" size={24} />
@@ -244,7 +241,7 @@ const AdminUsersV2: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 mb-1">New This Month</p>
-                  <p className="text-3xl font-bold text-orange-600">{loading ? "..." : stats.recent}</p>
+                  <p className="text-3xl font-bold text-orange-600">{loading ? "..." : realStats.recent}</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Clock className="text-orange-600" size={24} />
@@ -318,15 +315,15 @@ const AdminUsersV2: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-black border border-gray-800 rounded-xl">
-                  <p className="text-2xl font-bold text-white mb-1">{Math.round((stats.active / stats.total) * 100) || 0}%</p>
+                  <p className="text-2xl font-bold text-white mb-1">{Math.round((realStats.active / realStats.total) * 100) || 0}%</p>
                   <p className="text-sm text-gray-400">Activity Rate</p>
                 </div>
                 <div className="text-center p-4 bg-black border border-gray-800 rounded-xl">
-                  <p className="text-2xl font-bold text-white mb-1">{Math.round((stats.admin / stats.total) * 100) || 0}%</p>
+                  <p className="text-2xl font-bold text-white mb-1">{Math.round((realStats.admin / realStats.total) * 100) || 0}%</p>
                   <p className="text-sm text-gray-400">Admin Ratio</p>
                 </div>
                 <div className="text-center p-4 bg-black border border-gray-800 rounded-xl">
-                  <p className="text-2xl font-bold text-white mb-1">{Math.round((stats.recent / stats.total) * 100) || 0}%</p>
+                  <p className="text-2xl font-bold text-white mb-1">{Math.round((realStats.recent / realStats.total) * 100) || 0}%</p>
                   <p className="text-sm text-gray-400">Growth Rate</p>
                 </div>
               </div>
@@ -365,11 +362,31 @@ const AdminUsersV2: React.FC = () => {
           loading={refreshing}
         />
         
-        {/* Results Count */}
+        {/* Results Count & Pagination */}
         <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-lg">
           <span className="text-slate-400 text-sm">
-            Showing <span className="font-semibold text-white">{filteredUsers.length}</span> of <span className="font-semibold text-white">{users.length}</span> users
+            Showing <span className="font-semibold text-white">{filteredUsers.length}</span> of <span className="font-semibold text-white">{totalCount.toLocaleString()}</span> users
+            {totalPages > 1 && <span className="ml-2">(Page {currentPage} of {totalPages})</span>}
           </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => loadUsers(true, currentPage - 1)}
+                disabled={currentPage <= 1 || loading}
+                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-gray-400 text-sm px-2">{currentPage}/{totalPages}</span>
+              <button
+                onClick={() => loadUsers(true, currentPage + 1)}
+                disabled={currentPage >= totalPages || loading}
+                className="px-3 py-1.5 text-sm bg-pink-600 hover:bg-pink-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Users Grid */}
@@ -445,13 +462,13 @@ const AdminUsersV2: React.FC = () => {
                   {user.phone && (
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                       <Phone className="h-4 w-4" />
-                      <span>{user.phone}</span>
+                      <span>{formatPhoneNumber(user.phone)}</span>
                     </div>
                   )}
                   
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>Joined {formatDate(user.created_at)}</span>
+                    <span>Joined {formatDateHelper(user.created_at)}</span>
                   </div>
                   
                   <div className="flex items-center gap-2 text-gray-400 text-sm">

@@ -1,9 +1,8 @@
 // New refactored components
-export { ProductFilters } from './ProductFilters';
 export { ProductStats } from './ProductStats';
 export { ProductForm } from './ProductForm';
 export { ProductActions } from './ProductActions';
-// Note: Legacy ProductsFilters and ProductsManager are not exported anymore.
+export { ProductsTable } from './ProductsTable';
 
 // Legacy form components (kept for compatibility)
 export * from './BasicInfoSection';

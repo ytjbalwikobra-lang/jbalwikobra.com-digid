@@ -55,6 +55,8 @@ export interface NotificationStyle {
   icon: string;
   badge: string;
   glow?: string;
+  bg?: string;
+  pulse?: string;
 }
 
 /**
@@ -69,6 +71,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-blue-500 to-cyan-600',
         badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
         glow: 'shadow-blue-500/20',
+        bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
+        pulse: 'bg-blue-500',
       };
     case 'paid_order':
       return {
@@ -77,6 +81,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-emerald-500 to-green-600',
         badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
         glow: 'shadow-emerald-500/20',
+        bg: 'bg-gradient-to-br from-emerald-500/20 to-green-500/20',
+        pulse: 'bg-emerald-500',
       };
     case 'new_rent':
       return {
@@ -85,6 +91,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-orange-500 to-amber-600',
         badge: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
         glow: 'shadow-orange-500/20',
+        bg: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
+        pulse: 'bg-orange-500',
       };
     case 'paid_rent':
       return {
@@ -93,6 +101,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-yellow-500 to-emerald-600',
         badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
         glow: 'shadow-yellow-500/20',
+        bg: 'bg-gradient-to-br from-yellow-500/20 to-emerald-500/20',
+        pulse: 'bg-yellow-500',
       };
     case 'order_cancelled':
       return {
@@ -101,6 +111,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-red-500 to-rose-600',
         badge: 'bg-red-500/20 text-red-300 border-red-500/30',
         glow: 'shadow-red-500/20',
+        bg: 'bg-gradient-to-br from-red-500/20 to-rose-500/20',
+        pulse: 'bg-red-500',
       };
     case 'new_user':
       return {
@@ -109,6 +121,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-purple-500 to-violet-600',
         badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
         glow: 'shadow-purple-500/20',
+        bg: 'bg-gradient-to-br from-purple-500/20 to-violet-500/20',
+        pulse: 'bg-purple-500',
       };
     case 'new_review':
       return {
@@ -117,6 +131,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-yellow-500 to-amber-600',
         badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
         glow: 'shadow-yellow-500/20',
+        bg: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
+        pulse: 'bg-amber-500',
       };
     default:
       return {
@@ -125,6 +141,8 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-gray-500 to-slate-600',
         badge: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
         glow: 'shadow-gray-500/20',
+        bg: 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20',
+        pulse: 'bg-pink-500',
       };
   }
 };
@@ -160,21 +178,14 @@ export const getNotificationTypeLabel = (type: AdminNotificationType): string =>
  */
 export const formatNotificationTime = (dateString: string): string => {
   const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  if (Number.isNaN(date.getTime())) return '-';
 
-  if (diffMins < 1) return 'Baru saja';
-  if (diffMins < 60) return `${diffMins} menit lalu`;
-  if (diffHours < 24) return `${diffHours} jam lalu`;
-  if (diffDays < 7) return `${diffDays} hari lalu`;
-  
-  return date.toLocaleDateString('id-ID', {
-    day: 'numeric',
+  return date.toLocaleString('id-ID', {
+    day: '2-digit',
     month: 'short',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 };
 

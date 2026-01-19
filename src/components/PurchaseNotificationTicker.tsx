@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Rocket } from 'lucide-react';
 
 interface RecentPurchase {
@@ -22,6 +22,9 @@ const PurchaseNotificationTicker: React.FC = () => {
   const [purchases, setPurchases] = useState<RecentPurchase[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [displayIndex, setDisplayIndex] = useState(0);
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get background gradient based on order type and tier
   const getBackgroundGradient = (purchase: RecentPurchase): string => {
@@ -52,15 +55,28 @@ const PurchaseNotificationTicker: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Slideshow effect - change item every 3 seconds
+  // Seamless slideshow transition - change item every 4 seconds with smooth animation
   useEffect(() => {
-    if (purchases.length === 0) return;
+    if (purchases.length <= 1) return;
     
     const slideInterval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % purchases.length);
-    }, 3000);
+      // Start exit transition
+      setIsTransitioning(true);
+      
+      // After exit animation completes, update index and start enter animation
+      transitionTimeoutRef.current = setTimeout(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % purchases.length);
+        setDisplayIndex((prevIndex) => (prevIndex + 1) % purchases.length);
+        setIsTransitioning(false);
+      }, 400); // Match this with CSS transition duration
+    }, 4000);
     
-    return () => clearInterval(slideInterval);
+    return () => {
+      clearInterval(slideInterval);
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+    };
   }, [purchases.length]);
 
   // Detect scroll position for desktop positioning
@@ -106,33 +122,68 @@ const PurchaseNotificationTicker: React.FC = () => {
     return `${diffDays}h`;
   };
 
-  const currentPurchase = purchases[currentIndex];
+  const currentPurchase = purchases[displayIndex];
   const transactionType = currentPurchase.order_type === 'rental' ? 'menyewa' : 'membeli';
   const timeAgo = getTimeAgo(currentPurchase.created_at);
   const backgroundGradient = getBackgroundGradient(currentPurchase);
+  
+  // Next purchase for smooth background transition
+  const nextIndex = (displayIndex + 1) % purchases.length;
+  const nextPurchase = purchases[nextIndex];
+  const nextBackgroundGradient = getBackgroundGradient(nextPurchase);
 
   // Dynamic positioning: on desktop, move to top when scrolled
   const positionClass = isScrolled 
     ? 'top-0' 
     : 'top-0 md:top-[64px]';
 
+  // Transition classes for seamless animation
+  const contentTransitionClass = isTransitioning
+    ? 'opacity-0 transform -translate-x-4'
+    : 'opacity-100 transform translate-x-0';
+
   return (
     <div className={`fixed left-0 right-0 z-[45] overflow-hidden transition-all duration-300 ${positionClass}`}>
+      {/* Background layer with smooth color transition */}
       <div 
-        className="relative transition-all duration-500"
-        style={{ background: backgroundGradient }}
-      >
-        <div className="flex items-center justify-between gap-2 px-4 py-2.5 text-white text-sm animate-slide-in">
+        className="absolute inset-0 transition-all duration-500 ease-in-out"
+        style={{ 
+          background: isTransitioning ? nextBackgroundGradient : backgroundGradient,
+        }}
+      />
+      
+      {/* Content layer with slide animation */}
+      <div className="relative">
+        <div 
+          className={`flex items-center justify-between gap-2 px-4 py-2.5 text-white text-sm transition-all duration-400 ease-out ${contentTransitionClass}`}
+        >
           <div className="flex items-center gap-2">
             <Rocket className="w-4 h-4 flex-shrink-0 animate-pulse-slow" />
-            <span className="font-medium">{currentPurchase.customer_name}</span>
-            <span>{transactionType}</span>
-            <span className="font-bold">{currentPurchase.product_name}</span>
+            <span className="font-medium truncate max-w-[100px] sm:max-w-none">{currentPurchase.customer_name}</span>
+            <span className="hidden xs:inline">{transactionType}</span>
+            <span className="font-bold truncate max-w-[120px] sm:max-w-none">{currentPurchase.product_name}</span>
             {currentPurchase.order_type === 'rental' && currentPurchase.rental_duration && (
-              <span className="text-xs opacity-90">({currentPurchase.rental_duration})</span>
+              <span className="text-xs opacity-90 hidden sm:inline">({currentPurchase.rental_duration})</span>
             )}
           </div>
-          <span className="text-xs opacity-80">{timeAgo}</span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Progress indicator dots */}
+            {purchases.length > 1 && (
+              <div className="hidden sm:flex items-center gap-1">
+                {purchases.map((_, idx) => (
+                  <span 
+                    key={idx}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      idx === displayIndex 
+                        ? 'bg-white scale-125' 
+                        : 'bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            <span className="text-xs opacity-80">{timeAgo}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -141,34 +192,47 @@ const PurchaseNotificationTicker: React.FC = () => {
 
 export default PurchaseNotificationTicker;
 
-// Add custom styles for slideshow animation
+// Add custom styles for seamless slideshow animation
 const style = document.createElement('style');
 style.textContent = `
   @keyframes pulse-slow {
     0%, 100% {
       opacity: 1;
+      transform: scale(1);
     }
     50% {
       opacity: 0.7;
+      transform: scale(1.1);
     }
   }
   .animate-pulse-slow {
     animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
   
-  @keyframes slide-in {
+  /* Smooth transition timing */
+  .duration-400 {
+    transition-duration: 400ms;
+  }
+  
+  /* Shimmer effect for active state */
+  @keyframes shimmer {
     0% {
-      opacity: 0;
-      transform: translateY(-10px);
+      background-position: -200% 0;
     }
     100% {
-      opacity: 1;
-      transform: translateY(0);
+      background-position: 200% 0;
     }
   }
   
-  .animate-slide-in {
-    animation: slide-in 0.5s ease-out;
+  .ticker-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255,255,255,0.1) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
   }
 `;
 if (typeof document !== 'undefined' && !document.querySelector('style[data-ticker-animations]')) {

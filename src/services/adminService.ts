@@ -755,7 +755,6 @@ export const adminService = {
   },
 
   async getUsers(page: number = 1, limit: number = 10, searchTerm?: string): Promise<PaginatedResponse<User>> {
-    console.log('[adminService.getUsers - CACHED] Fetching users - page:', page, 'limit:', limit, 'searchTerm:', searchTerm);
     return adminCache.getOrFetch(`admin:users:${page}:${limit}:${searchTerm || ''}`, async () => {
       // Prefer serverless admin API (service role) to bypass RLS issues in browser
       try {
@@ -782,8 +781,6 @@ export const adminService = {
           const rows = payload.data || [];
           const total = payload.count ?? rows.length;
 
-          console.log('[adminService.getUsers - CACHED] Fetched via API:', rows.length, 'of', total, 'sample:', rows[0]);
-
           // Normalize fields to UI expectations
           const normalized = rows.map((u: any) => ({
             id: u.id,
@@ -803,14 +800,12 @@ export const adminService = {
             totalPages: Math.ceil((total || 0) / limit)
           };
         }
-        const errText = await resp.text().catch(() => 'no body');
-        console.warn('[adminService.getUsers - CACHED] API fallback failed with status', resp.status, 'body:', errText);
-      } catch (apiErr) {
-        console.error('[adminService.getUsers - CACHED] API fetch failed, falling back to direct supabase:', apiErr);
+        // API fallback failed silently, try Supabase direct
+      } catch {
+        // API fetch failed, falling back to direct supabase
       }
 
       if (!supabase) {
-        console.error('[adminService.getUsers - CACHED] Supabase client not available');
         throw new Error('Supabase client not available');
       }
       let query = supabase
@@ -826,7 +821,6 @@ export const adminService = {
         .range((page - 1) * limit, page * limit - 1);
 
       if (error) {
-        console.error('[adminService.getUsers - CACHED] Query error:', error);
         throw error;
       }
       
@@ -835,7 +829,6 @@ export const adminService = {
 
       // Fallback: if no rows returned, try profiles table (common Supabase schema)
       if (usersData.length === 0) {
-        console.warn('[adminService.getUsers - CACHED] users table empty, trying profiles fallback');
         const { data: profiles, error: profilesError, count: profilesCount } = await supabase
           .from('profiles')
           .select('id, email, name, phone, created_at, is_admin, last_login_at, is_active, phone_verified, profile_completed', { count: 'exact' })
@@ -845,8 +838,6 @@ export const adminService = {
         if (!profilesError && profiles) {
           usersData = profiles;
           usersCount = profilesCount || profiles.length;
-        } else {
-          console.error('[adminService.getUsers - CACHED] profiles fallback error:', profilesError);
         }
       }
 
@@ -862,8 +853,6 @@ export const adminService = {
         last_login: u.last_login || u.last_sign_in_at || u.updated_at
       }));
 
-      console.log('[adminService.getUsers - CACHED] Successfully fetched', normalized.length, 'users out of', usersCount, 'total');
-      
       return {
         data: normalized,
         count: usersCount,
@@ -885,7 +874,7 @@ export const adminService = {
         .from('products')
         .select(`
           id, name, description, price, original_price, tier_id, game_title_id, category_id,
-          stock, is_active, image, images, created_at, updated_at, archived_at,
+          stock, is_active, image, images, created_at, updated_at, archived_at, sold_channel,
           is_flash_sale, flash_sale_end_time, has_rental,
           tiers (
             id, name, slug, color, background_gradient, icon
@@ -957,7 +946,14 @@ export const adminService = {
     });
   },
 
-  async getProductStats(): Promise<{ total: number; active: number; archived: number; totalValue: number }> {
+  async getProductStats(): Promise<{ 
+    total: number; 
+    active: number; 
+    soldViaWeb: number; 
+    soldViaWA: number; 
+    totalValue: number;
+    activeValue: number;
+  }> {
     return adminCache.getOrFetch('admin:product-stats', async () => {
       if (!supabase) {
         throw new Error('Supabase client not available');
@@ -966,20 +962,24 @@ export const adminService = {
         // Get all products to calculate accurate statistics
         const { data: allProducts, error } = await supabase
           .from('products')
-          .select('price, is_active, archived_at');
+          .select('price, is_active, archived_at, sold_channel');
 
         if (error) throw error;
 
         const products = allProducts || [];
         const total = products.length;
-        const active = products.filter(p => p.is_active && !p.archived_at).length;
-        const archived = products.filter(p => !p.is_active || p.archived_at).length;
+        const active = products.filter(p => p.is_active && !p.sold_channel).length;
+        const soldViaWeb = products.filter(p => p.sold_channel === 'web').length;
+        const soldViaWA = products.filter(p => p.sold_channel === 'wa').length;
         const totalValue = products.reduce((sum, p) => sum + (p.price || 0), 0);
+        const activeValue = products
+          .filter(p => p.is_active && !p.sold_channel)
+          .reduce((sum, p) => sum + (p.price || 0), 0);
 
-        return { total, active, archived, totalValue };
+        return { total, active, soldViaWeb, soldViaWA, totalValue, activeValue };
       } catch (error) {
         console.error('[adminService.getProductStats] error:', error);
-        return { total: 0, active: 0, archived: 0, totalValue: 0 };
+        return { total: 0, active: 0, soldViaWeb: 0, soldViaWA: 0, totalValue: 0, activeValue: 0 };
       }
     }, { ttl: 300000 }); // Cache for 5 minutes
   },  async getReviews(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Review>> {
@@ -1096,6 +1096,104 @@ export const adminService = {
     return data;
   },
 
+  async updateFlashSale(id: string, updates: {
+    product_id?: string;
+    original_price?: number;
+    sale_price?: number;
+    start_time?: string;
+    end_time?: string;
+    is_active?: boolean;
+    stock?: number;
+  }): Promise<FlashSale> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    const { data, error } = await supabase
+      .from('flash_sales')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        products(name, price, image)
+      `)
+      .single();
+
+    if (error) throw error;
+    
+    // Clear cache after updating
+    adminCache.clear();
+    
+    return data;
+  },
+
+  async deleteFlashSale(id: string): Promise<boolean> {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    const { error } = await supabase
+      .from('flash_sales')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    
+    // Invalidate flash sale cache
+    adminCache.invalidatePattern('admin:flash-sale');
+    adminCache.invalidatePattern('admin:flash-sales');
+    
+    return true;
+  },
+
+  async getFlashSaleStats(): Promise<{
+    total: number;
+    active: number;
+    ongoing: number;
+    upcoming: number;
+    expired: number;
+  }> {
+    return adminCache.getOrFetch('admin:flash-sale-stats', async () => {
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+      try {
+        const now = new Date().toISOString();
+        const { data, error } = await supabase
+          .from('flash_sales')
+          .select('id, is_active, start_time, end_time');
+
+        if (error) throw error;
+
+        const sales = data || [];
+        const total = sales.length;
+        const active = sales.filter(s => s.is_active).length;
+        const ongoing = sales.filter(s => {
+          const start = new Date(s.start_time);
+          const end = new Date(s.end_time);
+          const current = new Date(now);
+          return s.is_active && current >= start && current <= end;
+        }).length;
+        const upcoming = sales.filter(s => {
+          const start = new Date(s.start_time);
+          const current = new Date(now);
+          return s.is_active && current < start;
+        }).length;
+        const expired = sales.filter(s => {
+          const end = new Date(s.end_time);
+          const current = new Date(now);
+          return current > end;
+        }).length;
+
+        return { total, active, ongoing, upcoming, expired };
+      } catch (error) {
+        console.error('[adminService.getFlashSaleStats] error:', error);
+        return { total: 0, active: 0, ongoing: 0, upcoming: 0, expired: 0 };
+      }
+    }, { ttl: 60000 }); // Cache for 1 minute
+  },
+
   async getBanners(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Banner>> {
     return adminCache.getOrFetch(`admin:banners:${page}:${limit}`, async () => {
       if (!supabase) {
@@ -1130,8 +1228,8 @@ export const adminService = {
 
     if (error) throw error;
     
-    // Clear cache
-    adminCache.clear();
+    // Invalidate banner cache
+    adminCache.invalidatePattern('admin:banner');
     
     return data;
   },
@@ -1149,8 +1247,8 @@ export const adminService = {
 
     if (error) throw error;
     
-    // Clear cache
-    adminCache.clear();
+    // Invalidate banner cache
+    adminCache.invalidatePattern('admin:banner');
     
     return data;
   },
@@ -1166,8 +1264,37 @@ export const adminService = {
 
     if (error) throw error;
     
-    // Clear cache
-    adminCache.clear();
+    // Invalidate banner cache
+    adminCache.invalidatePattern('admin:banner');
+  },
+
+  async getBannerStats(): Promise<{
+    total: number;
+    active: number;
+    inactive: number;
+  }> {
+    return adminCache.getOrFetch('admin:banner-stats', async () => {
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+      try {
+        const { data, error } = await supabase
+          .from('banners')
+          .select('id, is_active');
+
+        if (error) throw error;
+
+        const banners = data || [];
+        const total = banners.length;
+        const active = banners.filter(b => b.is_active).length;
+        const inactive = banners.filter(b => !b.is_active).length;
+
+        return { total, active, inactive };
+      } catch (error) {
+        console.error('[adminService.getBannerStats] error:', error);
+        return { total: 0, active: 0, inactive: 0 };
+      }
+    }, { ttl: 60000 }); // Cache for 1 minute
   },
 
   async toggleBannerStatus(id: string): Promise<Banner> {
@@ -2121,5 +2248,219 @@ export const adminService = {
     }
     
     return products[0] as Product;
+  },
+
+  // ========================================
+  // WHATSAPP SETTINGS
+  // ========================================
+
+  /**
+   * Get WhatsApp settings (provider, API key, groups)
+   * Cached for 2 minutes
+   */
+  async getWhatsAppSettings(): Promise<{
+    provider: {
+      id: string;
+      name: string;
+      display_name: string;
+      base_url: string;
+      settings: {
+        default_group_id?: string;
+        group_configurations?: {
+          purchase_orders?: string;
+          rental_orders?: string;
+          flash_sales?: string;
+          general_notifications?: string;
+        };
+      };
+    } | null;
+    apiKey: {
+      id: string;
+      key_name: string;
+      api_key: string;
+      is_active: boolean;
+      is_primary: boolean;
+      usage_count: number;
+      last_used_at: string | null;
+    } | null;
+  }> {
+    const CACHE_KEY = 'admin:whatsapp:settings';
+    const cached = adminCache.get<{
+      provider: any;
+      apiKey: any;
+    }>(CACHE_KEY);
+    if (cached) return cached;
+
+    const sessionToken = localStorage.getItem('session_token');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
+    }
+
+    const response = await fetch('/api/admin-whatsapp', { headers });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Failed to load WhatsApp settings');
+    }
+
+    const result = {
+      provider: data.provider || null,
+      apiKey: data.api_key || null
+    };
+
+    adminCache.set(CACHE_KEY, result, 2 * 60 * 1000); // 2 minute cache
+    return result;
+  },
+
+  /**
+   * Get WhatsApp groups
+   * Cached for 2 minutes
+   */
+  async getWhatsAppGroups(): Promise<Array<{ id: string; name: string }>> {
+    const CACHE_KEY = 'admin:whatsapp:groups';
+    const cached = adminCache.get<Array<{ id: string; name: string }>>(CACHE_KEY);
+    if (cached) return cached;
+
+    const sessionToken = localStorage.getItem('session_token');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
+    }
+
+    const response = await fetch('/api/admin-whatsapp-groups', { headers });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Failed to load groups');
+    }
+
+    const groups = data.groups || [];
+    adminCache.set(CACHE_KEY, groups, 2 * 60 * 1000); // 2 minute cache
+    return groups;
+  },
+
+  /**
+   * Update WhatsApp API key
+   */
+  async updateWhatsAppApiKey(apiKey: string): Promise<{
+    api_key: string;
+    provider: any;
+  }> {
+    const sessionToken = localStorage.getItem('session_token');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
+    }
+
+    const response = await fetch('/api/admin-whatsapp', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ api_key: apiKey.trim() })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Failed to update API key');
+    }
+
+    // Invalidate cache
+    adminCache.invalidatePattern('admin:whatsapp');
+
+    return data;
+  },
+
+  /**
+   * Update WhatsApp configuration (default group, group configurations)
+   */
+  async updateWhatsAppConfig(config: {
+    default_group_id?: string | null;
+    group_configurations?: {
+      purchase_orders?: string;
+      rental_orders?: string;
+      flash_sales?: string;
+      general_notifications?: string;
+    };
+  }): Promise<{ provider: any }> {
+    const sessionToken = localStorage.getItem('session_token');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
+    }
+
+    const response = await fetch('/api/admin-whatsapp', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(config)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Failed to save configuration');
+    }
+
+    // Invalidate cache
+    adminCache.invalidatePattern('admin:whatsapp');
+
+    return data;
+  },
+
+  /**
+   * Send test WhatsApp message
+   */
+  async sendTestWhatsAppMessage(message: string, groupId?: string): Promise<{
+    success: boolean;
+    messageId?: string;
+    provider?: string;
+    responseTime?: number;
+    error?: string;
+  }> {
+    const response = await fetch('/api/xendit/webhook?testGroupSend=1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        message, 
+        groupId: groupId || undefined 
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Failed to send test message');
+    }
+
+    return {
+      success: true,
+      messageId: data.messageId || data.message_id,
+      provider: data.provider,
+      responseTime: data.responseTime
+    };
+  },
+
+  /**
+   * Get WhatsApp stats for analytics cards
+   */
+  async getWhatsAppStats(): Promise<{
+    isConnected: boolean;
+    activeGroups: number;
+    providerName: string;
+    apiUsage: number;
+    lastActivity: string;
+  }> {
+    const settings = await this.getWhatsAppSettings();
+    const groups = await this.getWhatsAppGroups().catch(() => []);
+
+    return {
+      isConnected: settings.apiKey?.is_active || false,
+      activeGroups: groups.length,
+      providerName: settings.provider?.display_name || settings.provider?.name || 'Unknown',
+      apiUsage: settings.apiKey?.usage_count || 0,
+      lastActivity: settings.apiKey?.last_used_at 
+        ? new Date(settings.apiKey.last_used_at).toLocaleString()
+        : 'Never'
+    };
   }
 };

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { setCacheHeaders, CacheStrategies } from './_utils/cacheControl.js';
 import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
 import { validateAdminAuth } from './_middleware/authMiddleware.js';
+import { createOrderNotification, getProductName } from './_utils/notificationService.js';
 
 // Lazy supabase client (service role preferred for admin operations)
 // Clean environment variables to remove any CRLF characters
@@ -286,8 +287,85 @@ async function listOrders(page: number, limit: number, status?: string) {
 async function updateOrderStatus(orderId: string, newStatus: string) {
   if (!supabase) return false;
   if (!orderId || !newStatus) return false;
-  const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-  return !error;
+  
+  try {
+    // Get the current order data before updating
+    const { data: order, error: fetchError } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        customer_name,
+        customer_email,
+        customer_phone,
+        amount,
+        status,
+        order_type,
+        rental_duration,
+        product_id,
+        products:product_id (
+          id,
+          name
+        )
+      `)
+      .eq('id', orderId)
+      .single();
+    
+    if (fetchError || !order) {
+      console.error('[updateOrderStatus] Failed to fetch order:', fetchError);
+      return false;
+    }
+    
+    const oldStatus = order.status;
+    console.log('[updateOrderStatus] Updating order', orderId, 'from', oldStatus, 'to', newStatus);
+    
+    // Update the order status
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+    
+    if (updateError) {
+      console.error('[updateOrderStatus] Update failed:', updateError);
+      return false;
+    }
+    
+    // If status changed to completed (admin manually marks as done), create a notification
+    // Note: 'paid' status is set automatically by Xendit webhook
+    const isCompleted = newStatus === 'completed';
+    const wasNotCompleted = oldStatus !== 'completed';
+    
+    if (isCompleted && wasNotCompleted) {
+      console.log('[updateOrderStatus] Status changed to completed, creating notification');
+      
+      try {
+        // Get product name using shared utility
+        const productName = await getProductName(supabase, order.product_id, order.order_type);
+        
+        // Create the admin notification for completed order
+        await createOrderNotification(
+          supabase,
+          order.id,
+          order.customer_name || 'Guest Customer',
+          productName,
+          Number(order.amount || 0),
+          'paid_order', // Use paid_order type since it means payment is complete
+          order.customer_phone,
+          order.order_type,
+          order.rental_duration
+        );
+        
+        console.log('[updateOrderStatus] ✅ Paid notification created successfully');
+      } catch (notificationError) {
+        console.error('[updateOrderStatus] Failed to create notification:', notificationError);
+        // Don't fail the update if notification fails
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[updateOrderStatus] Exception:', error);
+    return false;
+  }
 }
 
 async function listUsers(page: number, limit: number, search?: string) {
@@ -524,6 +602,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { orderId, status } = req.body || {};
       const ok = await updateOrderStatus(orderId, status);
       return respond(res, ok ? 200 : 400, ok ? { success: true } : { error: 'update_failed' });
+    }
+
+    // Egress-optimized: Fetch single order details for modal
+    if (req.method === 'GET' && action === 'get-order') {
+      if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+      
+      const orderId = req.query.orderId as string;
+      if (!orderId) return respond(res, 400, { error: 'missing_order_id' });
+
+      try {
+        // Fetch only necessary fields - egress optimization
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            customer_name,
+            customer_phone,
+            product_name,
+            amount,
+            order_type,
+            rental_duration,
+            status,
+            payment_method,
+            created_at,
+            updated_at,
+            product_id
+          `)
+          .eq('id', orderId)
+          .single();
+
+        if (orderError || !order) {
+          console.error('❌ Get order error:', orderError);
+          return respond(res, 404, { error: 'order_not_found' });
+        }
+
+        // Fetch only first product image - egress optimization
+        let productImage = null;
+        if (order.product_id) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('images')
+            .eq('id', order.product_id)
+            .single();
+
+          if (product?.images && product.images.length > 0) {
+            productImage = product.images[0]; // Only first image
+          }
+        }
+
+        const orderDetails = {
+          ...order,
+          product_image: productImage
+        };
+
+        // Return fresh data to avoid stale status after updates
+        return respond(res, 200, { order: orderDetails }, 0);
+      } catch (err) {
+        console.error('❌ Get order exception:', err);
+        return respond(res, 500, { error: 'internal_error' });
+      }
     }
 
     if (req.method === 'POST' && action === 'update-settings') {

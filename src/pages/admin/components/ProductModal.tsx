@@ -4,7 +4,7 @@ import { adminService, Product } from '../../../services/adminService';
 import { uploadFiles, deletePublicUrls, UploadResult } from '../../../services/storageService';
 import { useToast } from '../../../components/Toast';
 import { useAdminConfirm } from './ui/AdminConfirmModal';
-import { formatNumberID, parseNumberID } from '../../../utils/helpers';
+import { formatNumberID, parseNumberID, formatCurrency } from '../../../utils/helpers';
 import { supabase } from '../../../services/supabase';
 
 interface ProductModalProps {
@@ -208,7 +208,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
     const actionText = mode === 'create' ? 'membuat' : 'menyimpan perubahan';
     const confirmed = await showConfirm({
       title: mode === 'create' ? 'Konfirmasi Buat Produk' : 'Konfirmasi Simpan Perubahan',
-      message: `Anda akan ${actionText} produk "${formData.name}".\n\nHarga: Rp ${formData.price.toLocaleString('id-ID')}\n\nLanjutkan?`,
+      message: `Anda akan ${actionText} produk "${formData.name}".\n\nHarga: ${formatCurrency(formData.price)}\n\nLanjutkan?`,
       type: 'info',
       confirmText: mode === 'create' ? 'Buat Produk' : 'Simpan',
       cancelText: 'Batal'
@@ -379,10 +379,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
     setDraggedIndex(null);
   }, [draggedIndex]);
 
-  const formatPrice = (price: number) => {
-    return `Rp ${price.toLocaleString('id-ID')}`;
-  };
-
   // Helper functions for thousand separator in inputs
   const formatNumberWithSeparator = (num: number | string) => {
     if (!num && num !== 0) return '';
@@ -488,7 +484,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   disabled={isReadOnly}
                 />
                 {isReadOnly && (
-                  <p className="text-sm text-gray-400 mt-1">{formatPrice(formData.price)}</p>
+                  <p className="text-sm text-gray-400 mt-1">{formatCurrency(formData.price)}</p>
                 )}
               </div>
 
@@ -507,7 +503,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   disabled={isReadOnly}
                 />
                 {isReadOnly && formData.original_price && (
-                  <p className="text-sm text-gray-400 mt-1">{formatPrice(formData.original_price)}</p>
+                  <p className="text-sm text-gray-400 mt-1">{formatCurrency(formData.original_price)}</p>
                 )}
               </div>
 

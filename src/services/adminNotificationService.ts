@@ -25,26 +25,9 @@ class AdminNotificationService {
     const key = `${this.cacheTag}:recent:${limit}`;
     return globalCache.getOrSet(key, async () => {
       console.log(`🔄 Fetching admin notifications (limit: ${limit})`);
-      try {
-        // Prefer direct DB read if anon client has permissions
-        if (supabase) {
-          const { data, error } = await supabase
-            .from('admin_notifications')
-            .select('id, type, title, message, order_id, user_id, product_name, amount, customer_name, created_at, is_read, metadata')
-            .order('created_at', { ascending: false })
-            .limit(limit);
-
-          if (!error && data) {
-            console.log(`✅ Fetched ${data.length} admin notifications from DB`);
-            return data as AdminNotification[];
-          }
-          if (error) throw error;
-        }
-      } catch (dbErr) {
-        console.warn('⚠️ Direct DB fetch failed, will fallback to API proxy:', dbErr);
-      }
-
-      // Fallback to server API proxy using service-role on server
+      
+      // Always use API proxy for admin notifications to ensure proper authentication
+      // Direct DB access may be blocked by RLS policies
       try {
         const sessionToken = localStorage.getItem('session_token');
         const headers: Record<string, string> = {};
@@ -53,16 +36,19 @@ class AdminNotificationService {
         }
         
         const resp = await fetch(`/api/admin-notifications?action=recent&limit=${encodeURIComponent(String(limit))}`, { headers });
-        if (!resp.ok) throw new Error(`API ${resp.status}`);
+        if (!resp.ok) {
+          console.error(`❌ API returned ${resp.status}`);
+          throw new Error(`API ${resp.status}`);
+        }
         const body = await resp.json();
         const arr = (body?.data || []) as AdminNotification[];
         console.log(`✅ Fetched ${arr.length} admin notifications via API`);
         return arr;
       } catch (apiErr) {
         console.error('❌ Failed to fetch admin notifications via API:', apiErr);
-        throw apiErr;
+        return []; // Return empty array instead of throwing
       }
-    }, { ttl: 30_000, tags: [this.cacheTag] });
+    }, { ttl: 300_000, tags: [this.cacheTag] }); // 5 minutes cache to reduce egress
   }
 
   // Create new order notification

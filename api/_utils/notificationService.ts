@@ -53,36 +53,46 @@ export async function createOrderNotification(
   amount: number,
   type: string = 'new_order',
   customerPhone?: string,
-  orderType?: string
+  orderType?: string,
+  rentalDuration?: string
 ) {
   try {
     const isRental = orderType === 'rental';
     const typeLabel = isRental ? 'RENTAL' : 'PURCHASE';
     
-    // Map types to rental-specific types when orderType is rental
+    // Map notification types for rental orders to rental-specific types
     let finalType = type;
     if (isRental) {
-      if (type === 'new_order') finalType = 'new_rent';
-      else if (type === 'paid_order') finalType = 'paid_rent';
+      if (type === 'new_order') {
+        finalType = 'new_rent';
+      } else if (type === 'paid_order') {
+        finalType = 'paid_rent';
+      }
+      // order_cancelled remains the same for both
     }
     
     const titles: Record<string, string> = {
-      new_order: 'Bang! ada yang ORDER PURCHASE nih!',
-      paid_order: 'Bang! ALHAMDULILLAH PURCHASE udah di bayar nih',
-      new_rent: 'Bang! ada yang ORDER RENTAL nih!',
-      paid_rent: 'Bang! ALHAMDULILLAH RENTAL udah di bayar nih',
-      order_cancelled: isRental 
-        ? 'Bang! ada yang CANCEL RENTAL order nih!' 
-        : 'Bang! ada yang CANCEL PURCHASE order nih!'
+      new_order: '🛒 Order Baru',
+      paid_order: '💰 Pembayaran Diterima',
+      new_rent: '🎮 Rental Baru',
+      paid_rent: '💰 Rental Dibayar',
+      order_cancelled: '❌ Order Dibatalkan'
     };
 
-    const messages: Record<string, string> = {
-      new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order PURCHASE, belum di bayar sih, tapi moga aja di bayar amin.`,
-      paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, PURCHASE udah di bayar Alhamdulillah.`,
-      new_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order RENTAL, belum di bayar sih, tapi moga aja di bayar amin.`,
-      paid_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, RENTAL udah di bayar Alhamdulillah.`,
-      order_cancelled: `namanya ${customerName}, ${isRental ? 'RENTAL' : 'PURCHASE'} produktnya ${productName} di cancel nih.`
-    };
+    // Concise message for panel: type + name + product + value
+    let message = '';
+    if (finalType === 'new_order') {
+      message = `[${typeLabel}] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
+    } else if (finalType === 'paid_order') {
+      message = `[${typeLabel} PAID] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
+    } else if (finalType === 'new_rent') {
+      message = `[RENTAL] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
+    } else if (finalType === 'paid_rent') {
+      message = `[RENTAL PAID] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
+    } else if (finalType === 'order_cancelled') {
+      const orderTypeLabel = isRental ? 'RENTAL' : 'PURCHASE';
+      message = `[${orderTypeLabel} CANCELLED] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
+    }
 
     // Validate orderId as UUID - use null if invalid
     let validOrderId: string | null = null;
@@ -98,7 +108,7 @@ export async function createOrderNotification(
     const notification = {
       type: finalType,
       title: titles[finalType] || 'Order Notification',
-      message: messages[finalType] || `${customerName} placed an order for ${productName}`,
+      message: message || `${customerName} - ${productName} - ${formatAmount(amount)}`,
       order_id: validOrderId,
       customer_name: customerName,
       product_name: productName,
@@ -109,7 +119,8 @@ export async function createOrderNotification(
         category: isPaidNotification ? 'payment' : 'order',
         order_type: orderType || 'purchase',
         customer_phone: customerPhone,
-        original_order_id: orderId
+        original_order_id: orderId,
+        rental_duration: rentalDuration
       },
       created_at: new Date().toISOString()
     };

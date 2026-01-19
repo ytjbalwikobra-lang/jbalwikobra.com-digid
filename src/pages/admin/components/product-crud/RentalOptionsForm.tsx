@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { IOSButton } from '../../../../components/ios/IOSDesignSystemV2';
+import { formatCurrency } from '../../../../utils/helpers';
 import type { RentalOption } from './types';
 
 interface RentalOptionsFormProps {
@@ -86,7 +87,7 @@ export const RentalOptionsForm: React.FC<RentalOptionsFormProps> = ({
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={option.price ? `Rp ${option.price.toLocaleString('id-ID')}` : ''}
+                  value={option.price ? formatCurrency(option.price) : ''}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/[^0-9]/g, '');
                     const val = raw ? parseInt(raw, 10) : 0;

@@ -22,17 +22,19 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": "src",
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node", "react", "react-dom", "jest"],
     "paths": {
       "*": ["*", "src/*"]
     }
   },
   "include": [
-    "src",
-    "api"
+    "src"
   ],
   "exclude": [
     "node_modules",
     "build",
-    "dist"
+    "dist",
+    "api"
   ]
 }

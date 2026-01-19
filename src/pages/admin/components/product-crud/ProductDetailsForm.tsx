@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GameTitle, Tier } from '../../../../types';
 import { ProductService } from '../../../../services/productService';
 import { useCategories } from '../../../../hooks/useCategories';
+import { formatCurrency } from '../../../../utils/helpers';
 
 interface ProductDetailsFormProps {
   formData: {
@@ -199,7 +200,7 @@ export const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({ formData
             id="price"
             type="text"
             inputMode="numeric"
-            value={formData.price ? `Rp ${formData.price.toLocaleString('id-ID')}` : ''}
+            value={formData.price ? formatCurrency(formData.price) : ''}
             onChange={(e) => {
               const raw = e.target.value.replace(/[^0-9]/g, '');
               const num = raw ? parseInt(raw, 10) : 0;
@@ -216,7 +217,7 @@ export const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({ formData
             id="originalPrice"
             type="text"
             inputMode="numeric"
-            value={formData.originalPrice ? `Rp ${formData.originalPrice.toLocaleString('id-ID')}` : ''}
+            value={formData.originalPrice ? formatCurrency(formData.originalPrice) : ''}
             onChange={(e) => {
               const raw = e.target.value.replace(/[^0-9]/g, '');
               const num = raw ? parseInt(raw, 10) : 0;

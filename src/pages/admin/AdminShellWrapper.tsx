@@ -85,7 +85,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
         <div className="lg:ml-64">
           {/* Top Header Bar */}
           <header
-            className="sticky top-0 z-30 border-b"
+            className="sticky top-0 z-40 border-b"
             style={{
               backgroundColor: AdminColors.primary.light,
               borderColor: AdminColors.border.DEFAULT,

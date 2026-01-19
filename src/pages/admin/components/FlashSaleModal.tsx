@@ -11,7 +11,7 @@ import { useToast } from '../../../components/Toast';
 import { useAdminConfirm } from './ui/AdminConfirmModal';
 import { Product } from '../../../types';
 import { AdminButton } from './ui/AdminButton';
-import { formatNumberID, parseNumberID } from '../../../utils/helpers';
+import { formatNumberID, parseNumberID, formatCurrency } from '../../../utils/helpers';
 
 interface FlashSaleModalProps {
   isOpen: boolean;
@@ -153,7 +153,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
 
     const confirmed = await showConfirm({
       title: flashSale ? 'Konfirmasi Perubahan' : 'Konfirmasi Buat Flash Sale',
-      message: `Anda akan ${actionText} flash sale untuk produk "${productName}".\n\nHarga Sale: Rp ${formData.salePrice.toLocaleString('id-ID')}\nDiskon: ${discount}%\n\nLanjutkan?`,
+      message: `Anda akan ${actionText} flash sale untuk produk "${productName}".\n\nHarga Sale: ${formatCurrency(formData.salePrice)}\nDiskon: ${discount}%\n\nLanjutkan?`,
       type: 'info',
       confirmText: flashSale ? 'Simpan' : 'Buat Flash Sale',
       cancelText: 'Batal'
@@ -276,7 +276,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
                 <option value="">Pilih produk...</option>
                 {products.map(product => (
                   <option key={product.id} value={product.id}>
-                    {product.name} - Rp {product.price?.toLocaleString('id-ID')}
+                    {product.name} - {formatCurrency(product.price || 0)}
                   </option>
                 ))}
               </select>

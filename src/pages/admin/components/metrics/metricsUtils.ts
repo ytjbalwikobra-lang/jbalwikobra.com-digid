@@ -1,5 +1,7 @@
 // Metrics utility functions and data formatting
 import { AdminStats } from '../../../../services/adminService';
+import { formatCurrency } from '../../../../utils/helpers';
+import { formatAnalyticsValue } from '../../../../utils/adminUtils';
 
 export const defaultStats: AdminStats = {
   totalOrders: 0,
@@ -16,27 +18,27 @@ export const defaultStats: AdminStats = {
 
 export const formatMetrics = (stats: AdminStats) => ({
   revenue: {
-    formatted: 'Rp ' + (stats?.totalRevenue ?? 0).toLocaleString('id-ID'),
+    formatted: formatCurrency(stats?.totalRevenue ?? 0),
     subtitle: `from ${stats.completedOrders} paid orders`
   },
   orders: {
-    formatted: (stats.totalOrders || 0).toLocaleString('id-ID'),
+    formatted: formatAnalyticsValue(stats.totalOrders || 0),
     subtitle: `${stats.pendingOrders || 0} pending, ${stats.completedOrders || 0} completed`
   },
   users: {
-    formatted: (stats.totalUsers || 0).toLocaleString('id-ID'),
+    formatted: formatAnalyticsValue(stats.totalUsers || 0),
     subtitle: 'registered users'
   },
   products: {
-    formatted: (stats.totalProducts || 0).toLocaleString('id-ID'),
+    formatted: formatAnalyticsValue(stats.totalProducts || 0),
     subtitle: 'active products'
   },
   reviews: {
-    formatted: (stats.totalReviews || 0).toLocaleString('id-ID'),
+    formatted: formatAnalyticsValue(stats.totalReviews || 0),
     subtitle: stats?.averageRating ? `${stats.averageRating.toFixed(1)}/5 avg rating` : 'No reviews yet'
   },
   flashSales: {
-    formatted: (stats.totalFlashSales || 0).toLocaleString('id-ID'),
+    formatted: formatAnalyticsValue(stats.totalFlashSales || 0),
     subtitle: `${stats.activeFlashSales || 0} currently active`
   }
 });

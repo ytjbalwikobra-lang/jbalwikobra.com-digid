@@ -1,6 +1,7 @@
 import React from 'react';
 import { IOSCard } from '../../../../components/ios/IOSDesignSystemV2';
 import { Product } from '../../../../types';
+import { formatCurrency } from '../../../../utils/helpers';
 
 interface ProductStatsProps {
   products: Product[];
@@ -49,7 +50,7 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ products, loading })
     },
     {
       label: 'Rata-rata Harga',
-      value: `Rp ${Math.round(averagePrice).toLocaleString('id-ID')}`,
+      value: formatCurrency(Math.round(averagePrice)),
       color: 'text-purple-400',
       bgColor: 'bg-purple-400/20',
     },

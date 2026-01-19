@@ -20,12 +20,16 @@ function allow(ip: string) {
   if (e.c >= LIMIT) return false; e.c++; return true;
 }
 
-function respond(res: VercelResponse, status: number, body: any) {
+function respond(res: VercelResponse, status: number, body: any, cacheable = false) {
   res.setHeader('Content-Type', 'application/json');
+  if (cacheable) {
+    // Cache notifications for 2 minutes to reduce egress
+    res.setHeader('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+  }
   res.status(status).send(JSON.stringify(body));
 }
 
-function parseLimit(v: any, def: number) { const n = parseInt(v as string, 10); return Number.isFinite(n) && n > 0 ? Math.min(n, 50) : def; }
+function parseLimit(v: any, def: number) { const n = parseInt(v as string, 10); return Number.isFinite(n) && n > 0 ? Math.min(n, 100) : def; } // Max 100 to reduce egress
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
@@ -65,12 +69,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'recent' && req.method === 'GET') {
       const limit = parseLimit(req.query.limit, 10);
+      console.log(`[API /api/admin-notifications] Fetching recent notifications with limit: ${limit}`);
+      
       const { data, error } = await sb
         .from('admin_notifications')
         .select('id, type, title, message, order_id, user_id, product_name, amount, customer_name, created_at, is_read, metadata')
+        .is('metadata->archived', null) // Exclude archived notifications to reduce egress
         .order('created_at', { ascending: false })
         .limit(limit);
-      if (error) return respond(res, 500, { error: 'db_error', details: error.message });
+      
+      if (error) {
+        console.error('[API /api/admin-notifications] Database error:', error);
+        return respond(res, 500, { error: 'db_error', details: error.message });
+      }
+
+      console.log(`[API /api/admin-notifications] Fetched ${data?.length || 0} notifications from DB`);
 
       // Optionally filter out obvious debug/test entries at the edge
       const filtered = (data || []).filter((n: any) => {
@@ -80,7 +93,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const isDebug = md.test === true || md.debug_mode === true || md.auto_read === true || title.includes('[debug]') || title.includes('test') || message.includes('[debug mode]');
         return !isDebug;
       });
-      return respond(res, 200, { data: filtered });
+      
+      console.log(`[API /api/admin-notifications] Returning ${filtered.length} notifications after filtering`);
+      return respond(res, 200, { data: filtered }, true); // Enable HTTP cache to reduce egress
     }
 
     if (action === 'mark-read' && req.method === 'POST') {

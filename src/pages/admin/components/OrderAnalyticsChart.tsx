@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Calendar } from 'lucide-react';
-import unifiedAdminClient from '../../../services/unifiedAdminClient';
 import { adminService } from '../../../services/adminService';
+import { formatCurrency } from '../../../utils/helpers';
+import { formatAnalyticsValue } from '../../../utils/adminUtils';
 
 interface OrderChartData {
   date: string;
@@ -29,8 +30,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <span className="text-gray-300">{entry.name}:</span>
             <span className="text-white font-medium">
               {entry.dataKey === 'revenue' 
-                ? `Rp ${entry.value?.toLocaleString()}` 
-                : entry.value?.toLocaleString()
+                ? formatCurrency(entry.value || 0)
+                : formatAnalyticsValue(entry.value || 0)
               }
             </span>
           </div>
@@ -47,18 +48,40 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [actualTotalRevenue, setActualTotalRevenue] = useState<number>(0);
 
-  useEffect(() => {
-    loadChartData();
-  }, [timeRange]);
+  // Generate mock data for fallback
+  const generateMockData = useCallback((range: '7d' | '30d' | '90d'): OrderChartData[] => {
+    const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
+    const data: OrderChartData[] = [];
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      
+      const totalOrders = Math.floor(Math.random() * 50) + 10;
+      const paidOrders = Math.floor(totalOrders * (0.7 + Math.random() * 0.25));
+      const revenue = paidOrders * (50000 + Math.random() * 200000);
+      
+      data.push({
+        date: date.toLocaleDateString('id-ID', { 
+          month: 'short', 
+          day: 'numeric' 
+        }),
+        totalOrders,
+        paidOrders,
+        revenue
+      });
+    }
+    
+    return data;
+  }, []);
 
-  const loadChartData = async () => {
+  const loadChartData = useCallback(async () => {
     try {
       setChartLoading(true);
       
-      // First, get the actual total revenue from adminService
+      // Get the actual total revenue from adminService
       const dashboardStats = await adminService.getDashboardStats();
       setActualTotalRevenue(dashboardStats.totalRevenue);
-      console.log('📊 Chart: Using actual total revenue:', dashboardStats.totalRevenue);
       
       // Get real data from API
       const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
@@ -85,9 +108,8 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
       // Transform API data to chart format
       const transformedData: OrderChartData[] = timeSeriesData.map((item: any) => {
         const date = new Date(item.date);
-        const paidOrders = item.paid + item.completed; // Count both paid and completed as successful
+        const paidOrders = item.paid + item.completed;
         const totalOrders = item.total;
-        // Use proportional revenue based on actual total revenue
         const totalPaidOrders = timeSeriesData.reduce((sum: number, d: any) => sum + d.paid + d.completed, 0);
         const revenue = totalPaidOrders > 0 ? (paidOrders / totalPaidOrders) * dashboardStats.totalRevenue : 0;
         
@@ -102,43 +124,18 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
         };
       });
       
-      // Fill in missing dates with zero values if needed
       setChartData(transformedData.length > 0 ? transformedData : generateMockData(timeRange));
       
     } catch (error) {
-      console.error('Error loading chart data:', error);
-      // Use mock data as fallback
       setChartData(generateMockData(timeRange));
     } finally {
       setChartLoading(false);
     }
-  };
+  }, [timeRange, generateMockData]);
 
-  const generateMockData = (range: '7d' | '30d' | '90d'): OrderChartData[] => {
-    const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
-    const data: OrderChartData[] = [];
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      
-      const totalOrders = Math.floor(Math.random() * 50) + 10;
-      const paidOrders = Math.floor(totalOrders * (0.7 + Math.random() * 0.25));
-      const revenue = paidOrders * (50000 + Math.random() * 200000);
-      
-      data.push({
-        date: date.toLocaleDateString('id-ID', { 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        totalOrders,
-        paidOrders,
-        revenue
-      });
-    }
-    
-    return data;
-  };
+  useEffect(() => {
+    loadChartData();
+  }, [loadChartData]);
 
   const timeRangeOptions = [
     { value: '7d', label: '7 Days' },
@@ -245,22 +242,22 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-800">
+      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-800" role="group" aria-label="Order summary statistics">
         <div className="text-center">
           <p className="text-lg font-semibold text-white">
-            {chartData.reduce((sum, day) => sum + day.totalOrders, 0).toLocaleString()}
+            {formatAnalyticsValue(chartData.reduce((sum, day) => sum + day.totalOrders, 0))}
           </p>
           <p className="text-xs text-gray-400">Total Orders</p>
         </div>
         <div className="text-center">
           <p className="text-lg font-semibold text-green-400">
-            {chartData.reduce((sum, day) => sum + day.paidOrders, 0).toLocaleString()}
+            {formatAnalyticsValue(chartData.reduce((sum, day) => sum + day.paidOrders, 0))}
           </p>
           <p className="text-xs text-gray-400">Paid Orders</p>
         </div>
         <div className="text-center">
           <p className="text-lg font-semibold text-pink-400">
-            Rp {actualTotalRevenue.toLocaleString()}
+            {formatCurrency(actualTotalRevenue)}
           </p>
           <p className="text-xs text-gray-400">Total Revenue</p>
         </div>

@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * Dashboard Metrics Overview - V3 Design System
+ * Wrapper component for MetricsGrid with data loading and error handling
+ */
+
+import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../../../services/adminService';
-import { IOSButton } from '../../../components/ios/IOSDesignSystemV2';
 import { RotateCcw, AlertCircle } from 'lucide-react';
-const cn = (...c: any[]) => c.filter(Boolean).join(' ');
 import { MetricsGrid, defaultStats } from './metrics/index';
+import { AdminButton } from './ui/AdminButton';
+
+const cn = (...c: (string | boolean | undefined)[]) => c.filter(Boolean).join(' ');
 
 export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const [stats, setStats] = useState(() => ({ ...defaultStats }));
@@ -11,53 +17,35 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
-    console.log('🔄 [DashboardMetricsOverview] Starting to load dashboard stats...');
-    
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       const s = await adminService.getDashboardStats();
-      console.log('📊 [DashboardMetricsOverview] Stats received:', JSON.stringify(s, null, 2));
       
-      // Guard against undefined/null returns so rendering never breaks
       if (!s) {
-        console.warn('⚠️ [DashboardMetricsOverview] Stats returned null/undefined, using defaults');
         setStats({ ...defaultStats });
         setError('No data received from server');
       } else {
         setStats({ ...defaultStats, ...s });
-        console.log('✅ [DashboardMetricsOverview] Stats set successfully');
       }
     } catch (e) {
-      console.error('❌ [DashboardMetricsOverview] load error:', e);
-      console.error('❌ [DashboardMetricsOverview] Error details:', {
-        message: e instanceof Error ? e.message : 'Unknown error',
-        stack: e instanceof Error ? e.stack : undefined
-      });
-      
-      // Ensure we always have safe stats object
       setStats({ ...defaultStats });
       setError(e instanceof Error ? e.message : 'Failed to load dashboard stats');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => { 
-    console.log('🚀 [DashboardMetricsOverview] Component mounted, loading stats...');
-    load(); 
   }, []);
 
+  useEffect(() => { 
+    load(); 
+  }, [load]);
+
   const handleRefresh = async () => {
-    console.log('🔄 [DashboardMetricsOverview] Manual refresh triggered');
     setRefreshing(true);
     try {
-      // Clear cache only on manual refresh
       adminService.clearStatsCache();
-      console.log('🗑️ [DashboardMetricsOverview] Cache cleared for manual refresh');
-      
       await load();
       onRefresh?.();
     } finally { 
@@ -66,32 +54,34 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
   };
 
   return (
-    <div className="space-y-6" aria-label="Store performance metrics">
+    <section className="space-y-6" aria-label="Store performance metrics">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
+        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-500" />
           Overview
         </h2>
-        <IOSButton 
-          size="sm" 
-          variant="ghost" 
+        <AdminButton 
+          variant="secondary"
+          size="sm"
           onClick={handleRefresh} 
-          disabled={refreshing || loading} 
-          className="flex items-center gap-2 hover:bg-pink-500/20 border border-pink-500/30"
+          disabled={refreshing || loading}
+          aria-label={refreshing ? 'Refreshing data...' : 'Refresh dashboard data'}
         >
-          <RotateCcw className={cn('w-4 h-4 text-pink-500', (refreshing || loading) && 'animate-spin')} />
-          <span className="hidden sm:inline text-pink-300">Refresh</span>
-        </IOSButton>
+          <RotateCcw className={cn('w-4 h-4', (refreshing || loading) && 'animate-spin')} />
+          <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+        </AdminButton>
       </div>
       
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+        <div 
+          className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <h3 className="text-red-400 font-semibold mb-1">Error Loading Dashboard Data</h3>
             <p className="text-red-300 text-sm">{error}</p>
-            <p className="text-red-300/70 text-xs mt-2">
-              Check the browser console for detailed error logs.
-            </p>
           </div>
         </div>
       )}
@@ -99,9 +89,8 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
       <MetricsGrid 
         stats={stats} 
         loading={loading} 
-        className="transition-all duration-500"
       />
-    </div>
+    </section>
   );
 };
 

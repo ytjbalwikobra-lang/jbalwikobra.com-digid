@@ -15,8 +15,9 @@ import {
 import { adminNotificationService, AdminNotification } from '../../services/adminNotificationService';
 import { supabase } from '../../services/supabase';
 import { announceToScreenReader } from './utils/accessibility';
-
-const cn = (...c: any[]) => c.filter(Boolean).join(' ');
+import { cn } from '../../utils/cn';
+import { formatCurrency } from '../../utils/helpers';
+import { getNotificationStyle, formatNotificationTime } from './utils/notificationUtils';
 
 interface NotificationItem extends AdminNotification {
   dismissed?: boolean;
@@ -56,8 +57,8 @@ const playNotificationSound = (type: string) => {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
     }
-  } catch (error) {
-    console.log('Audio notification not available:', error);
+  } catch {
+    // Audio notification not available - silently ignore
   }
 };
 
@@ -226,85 +227,6 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
     return Icon;
   };
 
-  const getNotificationStyle = (type: string) => {
-    const styles = {
-      new_order: {
-        gradient: 'from-blue-500 to-cyan-600',
-        glow: 'shadow-blue-500/50',
-        border: 'border-blue-500/50',
-        bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
-        pulse: 'bg-blue-500',
-      },
-      paid_order: {
-        gradient: 'from-emerald-500 to-green-600',
-        glow: 'shadow-emerald-500/50',
-        border: 'border-emerald-500/50',
-        bg: 'bg-gradient-to-br from-emerald-500/20 to-green-500/20',
-        pulse: 'bg-emerald-500',
-      },
-      new_user: {
-        gradient: 'from-purple-500 to-violet-600',
-        glow: 'shadow-purple-500/50',
-        border: 'border-purple-500/50',
-        bg: 'bg-gradient-to-br from-purple-500/20 to-violet-500/20',
-        pulse: 'bg-purple-500',
-      },
-      order_cancelled: {
-        gradient: 'from-red-500 to-rose-600',
-        glow: 'shadow-red-500/50',
-        border: 'border-red-500/50',
-        bg: 'bg-gradient-to-br from-red-500/20 to-rose-500/20',
-        pulse: 'bg-red-500',
-      },
-      new_review: {
-        gradient: 'from-amber-500 to-orange-600',
-        glow: 'shadow-amber-500/50',
-        border: 'border-amber-500/50',
-        bg: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
-        pulse: 'bg-amber-500',
-      },
-      // Rental notifications - distinctive orange/yellow for new rental
-      new_rent: {
-        gradient: 'from-orange-500 to-yellow-600',
-        glow: 'shadow-orange-500/50',
-        border: 'border-orange-500/50',
-        bg: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
-        pulse: 'bg-orange-500',
-      },
-      // Paid rental - golden/emerald for successful payment
-      paid_rent: {
-        gradient: 'from-yellow-500 to-emerald-600',
-        glow: 'shadow-yellow-500/50',
-        border: 'border-yellow-500/50',
-        bg: 'bg-gradient-to-br from-yellow-500/20 to-emerald-500/20',
-        pulse: 'bg-yellow-500',
-      },
-      system: {
-        gradient: 'from-pink-500 to-fuchsia-600',
-        glow: 'shadow-pink-500/50',
-        border: 'border-pink-500/50',
-        bg: 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20',
-        pulse: 'bg-pink-500',
-      },
-    };
-    return styles[type as keyof typeof styles] || styles.system;
-  };
-
-  const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const time = new Date(timestamp);
-    const diffMs = now.getTime() - time.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Baru saja';
-    if (diffMins < 60) return `${diffMins}m`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}j`;
-    
-    return `${Math.floor(diffHours / 24)}h`;
-  };
-
   // Get visible notifications (not dismissed, limit to MAX_VISIBLE)
   const visibleNotifications = notifications
     .filter(n => !n.dismissed && !n.is_read)
@@ -373,7 +295,7 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
               style.border,
               'shadow-2xl',
               style.glow,
-              isReappearing && 'ring-4 ring-pink-500/50 animate-pulse',
+              isReappearing ? 'ring-4 ring-pink-500/50 animate-pulse' : '',
               'focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent'
             )}
             style={{
@@ -424,7 +346,7 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
                       {notification.title}
                     </h4>
                     <span className="flex-shrink-0 text-xs text-gray-400">
-                      {formatTimeAgo(notification.created_at)}
+                      {formatNotificationTime(notification.created_at)}
                     </span>
                   </div>
                   
@@ -445,7 +367,7 @@ export const AdminFloatingNotificationsV2: React.FC = () => {
                       {notification.amount && (
                         <div className="px-2 py-1 rounded-lg bg-emerald-500/20 backdrop-blur-sm">
                           <span className="text-xs text-emerald-300 font-bold">
-                            Rp {notification.amount.toLocaleString('id-ID')}
+                            {formatCurrency(notification.amount)}
                           </span>
                         </div>
                       )}

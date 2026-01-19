@@ -495,11 +495,33 @@ export const getSupportedCountries = (): Array<{code: string, name: string, coun
   }));
 };
 
+/**
+ * Standard phone number placeholder for Indonesian numbers
+ */
+export const PHONE_PLACEHOLDER = '+62 812-3456-7890';
+
+/**
+ * Standard help text for phone number inputs
+ */
+export const PHONE_HELP_TEXT = 'Format: +62 XXX-XXXX-XXXX';
+
+/**
+ * Format phone number for consistent display
+ * Uses formatDisplayPhone internally but provides simpler API
+ */
+export const formatPhoneNumber = (phone: string | undefined | null): string => {
+  if (!phone) return '';
+  return formatDisplayPhone(phone);
+};
+
 // Export for use in components
 export default {
   normalizeIndonesianPhone,
   formatDisplayPhone,
+  formatPhoneNumber,
   isPhoneNumber,
   normalizeLoginIdentifier,
-  validateIndonesianPhone
+  validateIndonesianPhone,
+  PHONE_PLACEHOLDER,
+  PHONE_HELP_TEXT
 };

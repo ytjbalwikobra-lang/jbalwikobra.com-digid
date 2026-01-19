@@ -144,7 +144,8 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
           Number(data.amount || 0),
           'new_order',
           data.customer_phone,
-          data.order_type
+          data.order_type,
+          data.rental_duration
         );
         console.log('[Admin] New order notification created successfully (upsert path)');
       } catch (notificationError) {
@@ -173,7 +174,8 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
           Number(data.amount || 0),
           'new_order',
           data.customer_phone,
-          data.order_type
+          data.order_type,
+          data.rental_duration
         );
         console.log('[Admin] New order notification created successfully');
       } catch (notificationError) {

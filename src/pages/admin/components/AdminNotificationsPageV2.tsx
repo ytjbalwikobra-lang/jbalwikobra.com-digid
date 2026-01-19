@@ -17,6 +17,7 @@ import {
   formatNotificationTime 
 } from '../utils/notificationUtils';
 import { useRetry } from '../utils/useRetry';
+import { formatCurrency } from '../../../utils/helpers';
 
 const cn = (...c: any[]) => c.filter(Boolean).join(' ');
 
@@ -363,7 +364,7 @@ export const AdminNotificationsPageV2: React.FC = () => {
                             <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
                               <span className="text-xs text-gray-400">Jumlah: </span>
                               <span className="text-xs text-emerald-400 font-bold">
-                                Rp {notification.amount.toLocaleString('id-ID')}
+                                {formatCurrency(notification.amount)}
                               </span>
                             </div>
                           )}

@@ -26,6 +26,7 @@ export interface DbProductRow {
   created_at?: string;
   updated_at?: string;
   archived_at?: string | null;
+  sold_channel?: string | null;
   is_flash_sale?: boolean | null;
   flash_sale_end_time?: string | null;
   has_rental?: boolean | null;
@@ -74,6 +75,7 @@ export interface DomainProduct {
   flash_sale_end_time?: string | null;
   has_rental?: boolean | null;
   archived_at?: string | null;
+  sold_channel?: string | null;
   // LEFT JOIN relations for admin filtering
   tiers?: {
     id: string;
@@ -143,6 +145,7 @@ export function dbRowToDomainProduct(row: DbProductRow): DomainProduct {
     flash_sale_end_time: row.flash_sale_end_time || null,
     has_rental: row.has_rental || null,
     archived_at: row.archived_at || null,
+    sold_channel: (row as any).sold_channel ?? null,
     // Include LEFT JOIN relations for admin filtering
     tiers: row.tiers || null,
     game_titles: row.game_titles || null,

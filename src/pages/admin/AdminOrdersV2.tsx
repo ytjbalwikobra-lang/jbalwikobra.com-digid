@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatPhoneNumber } from '../../utils/phoneUtils';
 import { 
   ShoppingCart, 
   Eye,
@@ -12,18 +13,16 @@ import {
 import { useToast } from '../../components/Toast';
 import { adminService, type Order as AdminOrder } from '../../services/adminService';
 import { AdminButton } from './components/ui/AdminButton';
-import { AdminCard, AdminCardHeader, AdminCardBody } from './components/ui/AdminCard';
+import { AdminCard, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
-import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
 type OrderStatus = 'pending' | 'paid' | 'completed' | 'cancelled';
-type OrderType = 'purchase' | 'rental';
 
 interface OrderStats {
   total: number;
@@ -50,7 +49,6 @@ const mapOrderStatus = (status: OrderStatus): 'pending' | 'processing' | 'comple
 const AdminOrdersV2: React.FC = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [realStats, setRealStats] = useState<OrderStats>({
     total: 0,
     pending: 0,
@@ -63,11 +61,6 @@ const AdminOrdersV2: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const { push } = useToast();
-
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,10 +80,8 @@ const AdminOrdersV2: React.FC = () => {
     // Use cache if available and not expired
     const now = Date.now();
     if (!forceRefresh && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-      console.log('[AdminOrdersV2] Using cached data');
       setOrders(cachedData.orders);
       setRealStats(cachedData.stats);
-      setTotalOrdersCount(cachedData.totalCount);
       setLoading(false);
       return;
     }
@@ -100,41 +91,33 @@ const AdminOrdersV2: React.FC = () => {
       setError('');
       
       // Load stats and orders in parallel for speed
-      const [dashboardStats, ordersResult] = await Promise.all([
-        adminService.getDashboardStats().catch(() => null),
-        adminService.getOrders(1, 100)
-      ]);
-      
+      const ordersResult = await adminService.getOrders(1, 100);
+
+      const today = new Date().toDateString();
+      const todaysOrders = ordersResult.data.filter(order => new Date(order.created_at).toDateString() === today);
+
+      const paidOrders = todaysOrders.filter(o => o.status === 'paid' || o.status === 'completed');
+
       const stats: OrderStats = {
-        total: dashboardStats?.totalOrders || ordersResult.count || 0,
-        pending: dashboardStats?.pendingOrders || 0,
-        paid: 0,
-        completed: dashboardStats?.completedOrders || 0,
-        cancelled: 0,
-        totalRevenue: dashboardStats?.totalRevenue || 0,
-        todayOrders: 0
+        total: todaysOrders.length,
+        pending: todaysOrders.filter(o => o.status === 'pending').length,
+        paid: todaysOrders.filter(o => o.status === 'paid').length,
+        completed: todaysOrders.filter(o => o.status === 'completed').length,
+        cancelled: todaysOrders.filter(o => o.status === 'cancelled').length,
+        totalRevenue: paidOrders.reduce((acc, o) => acc + (o.amount || 0), 0),
+        todayOrders: todaysOrders.length
       };
       
-      // Calculate today's orders
-      const today = new Date().toDateString();
-      stats.todayOrders = ordersResult.data.filter(order => 
-        new Date(order.created_at).toDateString() === today
-      ).length;
-      
-      // Update state
       setRealStats(stats);
-      setTotalOrdersCount(stats.total);
-      setOrders(ordersResult.data);
+      setOrders(todaysOrders);
       
       // Cache the results
       setCachedData({
-        orders: ordersResult.data,
+        orders: todaysOrders,
         stats,
         totalCount: stats.total,
         timestamp: now
       });
-      
-      console.log('[AdminOrdersV2] Loaded and cached orders:', ordersResult.data.length);
     } catch (err: any) {
       console.error('Error loading orders:', err);
       setError(err.message);
@@ -144,89 +127,14 @@ const AdminOrdersV2: React.FC = () => {
     }
   }, [push, cachedData]);
 
-  // Update order status function
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    // Store previous state for rollback
-    const prev = orders;
-    
-    try {
-      // Optimistic UI update
-      setOrders(prev.map(order => 
-        order.id === orderId ? { ...order, status: newStatus as OrderStatus } : order
-      ));
-      push('Status pesanan berhasil diperbarui', 'success');
-      
-      // Update in background
-      const sessionToken = localStorage.getItem('session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (sessionToken) {
-        headers['Authorization'] = `Bearer ${sessionToken}`;
-      }
-      
-      const response = await fetch('/api/admin?action=update-order', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          orderId,
-          status: newStatus
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update order status');
-      }
-      
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update status');
-      }
-    } catch (error: any) {
-      // Rollback on failure
-      setOrders(prev);
-      push(`Gagal memperbarui status: ${error.message}`, 'error');
-    }
-  };
-
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
-
-  // Filter and search orders
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = !searchLower || 
-        order.customer_name.toLowerCase().includes(searchLower) ||
-        order.customer_email?.toLowerCase().includes(searchLower) ||
-        order.customer_phone?.includes(searchLower);
-
-      // Handle "completed" status to include both 'paid' and 'completed' orders
-      const matchesStatus = !statusFilter || 
-        (statusFilter === 'completed' 
-          ? (order.status === 'paid' || order.status === 'completed')
-          : order.status === statusFilter);
-      
-      const matchesType = !typeFilter || order.order_type === typeFilter;
-
-      return matchesSearch && matchesStatus && matchesType;
-    });
-  }, [orders, searchTerm, statusFilter, typeFilter]);
-
   // Pagination calculations
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, typeFilter, itemsPerPage]);
-
-  // Use real stats from API instead of calculating from paginated array
-  const stats: OrderStats = realStats;
+  const paginatedOrders = orders.slice(startIndex, endIndex);
 
   if (error) {
     return (
@@ -247,9 +155,9 @@ const AdminOrdersV2: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            Orders Management
+            Orders (Today)
           </h1>
-          <p className="text-gray-400 mt-1">Manage and track all customer orders</p>
+          <p className="text-gray-400 mt-1">Ringkasan pesanan hari ini saja</p>
         </div>
         <div className="flex gap-3">
           <AdminButton
@@ -270,7 +178,7 @@ const AdminOrdersV2: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Total Orders</p>
-                <p className="text-3xl font-bold text-white">{stats.total}</p>
+                <p className="text-3xl font-bold text-white">{realStats.total}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <ShoppingCart className="text-blue-600" size={24} />
@@ -284,7 +192,7 @@ const AdminOrdersV2: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Today's Orders</p>
-                <p className="text-3xl font-bold text-green-600">{stats.todayOrders}</p>
+                <p className="text-3xl font-bold text-green-600">{realStats.todayOrders}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Calendar className="text-green-600" size={24} />
@@ -298,7 +206,7 @@ const AdminOrdersV2: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Total Revenue</p>
-                <p className="text-3xl font-bold text-pink-600">{formatCurrency(stats.totalRevenue)}</p>
+                <p className="text-3xl font-bold text-pink-600">{formatCurrency(realStats.totalRevenue)}</p>
               </div>
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="text-pink-600" size={24} />
@@ -312,7 +220,7 @@ const AdminOrdersV2: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Pending Orders</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+                <p className="text-3xl font-bold text-orange-600">{realStats.pending}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <Clock className="text-orange-600" size={24} />
@@ -321,39 +229,6 @@ const AdminOrdersV2: React.FC = () => {
           </AdminCardBody>
         </AdminCard>
       </div>
-
-      {/* Filters */}
-      <AdminFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search orders by customer name, email, or phone..."
-        filters={[
-          {
-            label: 'Status',
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { value: '', label: 'All Status' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'paid', label: 'Paid' },
-              { value: 'completed', label: 'Completed (Including Paid)' },
-              { value: 'cancelled', label: 'Cancelled' }
-            ]
-          },
-          {
-            label: 'Type',
-            value: typeFilter,
-            onChange: setTypeFilter,
-            options: [
-              { value: '', label: 'All Types' },
-              { value: 'purchase', label: 'Purchase' },
-              { value: 'rental', label: 'Rental' }
-            ]
-          }
-        ]}
-        onRefresh={loadOrders}
-        loading={loading}
-      />
 
         {/* Orders Table */}
         <AdminCard>
@@ -373,11 +248,11 @@ const AdminOrdersV2: React.FC = () => {
                 <tbody>
                 {loading ? (
                   <AdminLoadingState variant="skeleton-table" rows={5} columns={6} />
-                ) : filteredOrders.length === 0 ? (
+                ) : orders.length === 0 ? (
                   <AdminEmptyState 
                     icon={<Package className="w-16 h-16" />}
-                    title="No Orders Found"
-                    hasFilters={!!(searchTerm || statusFilter || typeFilter)}
+                    title="No Orders Today"
+                    hasFilters={false}
                     variant="table-row"
                     colSpan={6}
                   />
@@ -388,7 +263,7 @@ const AdminOrdersV2: React.FC = () => {
                         <div className="space-y-1">
                           <div className="font-semibold text-white">{order.customer_name}</div>
                           <div className="text-sm text-gray-400">{order.customer_email}</div>
-                          <div className="text-xs text-gray-500">{order.customer_phone}</div>
+                          <div className="text-xs text-gray-500">{formatPhoneNumber(order.customer_phone)}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -428,33 +303,15 @@ const AdminOrdersV2: React.FC = () => {
                         <div className="flex items-center justify-end space-x-2">
                           <button 
                             onClick={() => {
-                              // Navigate to product detail page
                               if (order.product_id) {
                                 navigate(`/products/${order.product_id}`);
                               } else {
                                 push('Product ID tidak tersedia', 'error');
                               }
                             }}
-                            className="p-2 text-gray-400 hover:text-pink-400 hover:bg-pink-500/10 rounded-lg transition-all duration-200"
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                           >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => {
-                              if (order.status === 'completed') {
-                                push('Pesanan sudah diproses', 'info');
-                                return;
-                              }
-                              updateOrderStatus(order.id, 'completed');
-                            }}
-                            disabled={order.status === 'completed'}
-                            className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${
-                              order.status === 'completed' 
-                                ? 'text-gray-600 cursor-not-allowed bg-gray-800' 
-                                : 'text-white bg-green-600 hover:bg-green-700'
-                            }`}
-                          >
-                            Tandai Selesai
+                            Lihat Produk
                           </button>
                         </div>
                       </td>
@@ -468,11 +325,11 @@ const AdminOrdersV2: React.FC = () => {
         </AdminCard>
 
       {/* Pagination */}
-      {filteredOrders.length > 0 && (
+      {orders.length > 0 && (
         <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filteredOrders.length}
+          totalItems={orders.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}

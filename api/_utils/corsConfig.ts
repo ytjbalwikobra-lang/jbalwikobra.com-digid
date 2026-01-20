@@ -5,8 +5,9 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
  * Supports production, preview, and local development domains
  */
 export function setCorsHeaders(req: VercelRequest, res: VercelResponse): void {
-  // Get the origin from the request
-  const origin = req.headers.origin || req.headers.referer || '';
+  // Get the origin from the request (with null safety)
+  const headers = req.headers || {};
+  const origin = headers.origin || headers.referer || '';
   
   // Configure allowed origins
   const allowedOrigins = [

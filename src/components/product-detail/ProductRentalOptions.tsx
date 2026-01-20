@@ -27,20 +27,12 @@ export const ProductRentalOptions = React.memo(({
   isFlashSaleActive = false
 }: ProductRentalOptionsProps) => {
   // Debug logging
-  console.log('ProductRentalOptions Debug:', {
-    hasRental,
-    rentalOptionsCount: rentalOptions?.length || 0,
-    cameFromFlashSaleCard,
-    isFlashSaleActive,
-    selectedRental: selectedRental?.id || null
-  });
 
   // Don't show rental options if:
   // 1. No rental data is available
   // 2. Product is from flash sale card
   // 3. Flash sale is currently active (prioritize flash sale over rentals)
   if (!hasRental || !rentalOptions || rentalOptions.length === 0 || cameFromFlashSaleCard || isFlashSaleActive) {
-    console.log('ProductRentalOptions: Hidden due to flash sale active or no rental data');
     return null;
   }
 

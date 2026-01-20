@@ -18,8 +18,6 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 // Log which key is being used (for debugging)
 if (supabase) {
   const keyType = supabaseServiceKey ? 'SERVICE_ROLE' : 'ANON';
-  console.log(`[admin.ts] Supabase initialized with ${keyType} key`);
-  console.log(`[admin.ts] URL length: ${supabaseUrl.length}, Key length: ${supabaseKey.length}`);
   if (!supabaseServiceKey) {
     console.warn('[admin.ts] WARNING: Using ANON key instead of SERVICE_ROLE key - RLS policies will apply!');
   }
@@ -70,7 +68,6 @@ function normalizeAction(action?: string | string[]): string {
 }
 
 async function dashboardStats() {
-  console.log('📊 [API /api/admin] dashboardStats: Starting to fetch dashboard statistics');
   
   if (!supabase) {
     console.error('❌ [API /api/admin] dashboardStats: Supabase client not available');
@@ -78,8 +75,6 @@ async function dashboardStats() {
   }
   
   try {
-    console.log('🔍 [API /api/admin] dashboardStats: Querying database...');
-    console.log('🔑 [API /api/admin] Using Supabase key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
     
     // Use optimized approach with separate queries and error handling
     const [ordersRes, usersRes, productsRes] = await Promise.all([
@@ -87,15 +82,6 @@ async function dashboardStats() {
       supabase.from('users').select('id', { count: 'exact', head: true }),
       supabase.from('products').select('id', { count: 'exact', head: true })
     ]);
-    
-    console.log('📈 [API /api/admin] dashboardStats: Basic counts:', {
-      orders: ordersRes.count,
-      users: usersRes.count,
-      products: productsRes.count,
-      ordersError: ordersRes.error?.message,
-      usersError: usersRes.error?.message,
-      productsError: productsRes.error?.message
-    });
     
     let flashSalesCount = 0;
     try {
@@ -119,7 +105,6 @@ async function dashboardStats() {
     }
     
     // Get order statistics efficiently with separate targeted queries
-    console.log('💰 [API /api/admin] dashboardStats: Fetching order statistics...');
     
     // Get completed/paid orders
     const [completedRes, pendingRes, paidOrdersRes] = await Promise.all([
@@ -139,12 +124,6 @@ async function dashboardStats() {
       }, 0);
     }
     
-    console.log('✅ [API /api/admin] dashboardStats: Order stats calculated:', {
-      completed,
-      pending,
-      revenue
-    });
-    
     const stats = {
       orders: { 
         count: ordersRes.count || 0, 
@@ -159,8 +138,7 @@ async function dashboardStats() {
       reviews: { count: reviewsCount, averageRating: Math.round(averageRating * 10) / 10 }
     };
     
-    console.log('✅ [API /api/admin] dashboardStats: Final stats:', JSON.stringify(stats, null, 2));
-    
+        
     return stats;
   } catch (error) {
     console.error('❌ [API /api/admin] dashboardStats: Unexpected error:', error);
@@ -186,17 +164,11 @@ async function recentNotifications(limit: number) {
 }
 
 async function listOrders(page: number, limit: number, status?: string) {
-  console.log('📦 [API /api/admin] listOrders: page', page, 'limit', limit, 'status', status);
-  console.log('🔑 [API /api/admin] Using key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
-  console.log('🔑 [API /api/admin] Supabase URL:', supabaseUrl);
-  console.log('🔑 [API /api/admin] SERVICE_KEY present:', !!supabaseServiceKey);
   
   if (!supabase) return { data: [], count: 0, page };
   
   // FIRST: Test raw count without any filters
-  console.log('[listOrders] Testing raw table access...');
   const rawTest = await supabase.from('orders').select('id', { count: 'exact', head: true });
-  console.log('[listOrders] Raw table count test:', { count: rawTest.count, error: rawTest.error });
   
   const from = (page - 1) * limit; const to = from + limit - 1;
   
@@ -211,13 +183,6 @@ async function listOrders(page: number, limit: number, status?: string) {
     }
   }
   const { data: orders, error, count } = await query;
-  
-  console.log('📊 [API /api/admin] listOrders result:', {
-    count,
-    ordersLength: orders?.length,
-    hasError: !!error,
-    errorMessage: error?.message
-  });
   
   if (error) {
     console.error('❌ [API /api/admin] listOrders error:', error);
@@ -316,7 +281,6 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
     }
     
     const oldStatus = order.status;
-    console.log('[updateOrderStatus] Updating order', orderId, 'from', oldStatus, 'to', newStatus);
     
     // Update the order status
     const { error: updateError } = await supabase
@@ -335,7 +299,6 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
     const wasNotCompleted = oldStatus !== 'completed';
     
     if (isCompleted && wasNotCompleted) {
-      console.log('[updateOrderStatus] Status changed to completed, creating notification');
       
       try {
         // Get product name using shared utility
@@ -353,8 +316,6 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
           order.order_type,
           order.rental_duration
         );
-        
-        console.log('[updateOrderStatus] ✅ Paid notification created successfully');
       } catch (notificationError) {
         console.error('[updateOrderStatus] Failed to create notification:', notificationError);
         // Don't fail the update if notification fails
@@ -369,22 +330,14 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
 }
 
 async function listUsers(page: number, limit: number, search?: string) {
-  console.log('👥 [API /api/admin] listUsers: page', page, 'limit', limit, 'search', search);
-  console.log('🔑 [API /api/admin] Using key type:', supabaseServiceKey ? 'SERVICE_ROLE ✅' : 'ANON ⚠️');
-  console.log('🔑 [API /api/admin] Supabase URL:', supabaseUrl);
-  console.log('🔑 [API /api/admin] SERVICE_KEY present:', !!supabaseServiceKey);
   
   if (!supabase) {
     console.error('[listUsers] Supabase client not initialized');
     return { data: [], count: 0, page };
   }
   
-  console.log('[listUsers] Querying users - page:', page, 'limit:', limit, 'search:', search);
-  
   // FIRST: Test raw count without any filters
-  console.log('[listUsers] Testing raw table access...');
   const rawTest = await supabase.from('users').select('id', { count: 'exact', head: true });
-  console.log('[listUsers] Raw table count test:', { count: rawTest.count, error: rawTest.error });
   
   const from = (page - 1) * limit; 
   const to = from + limit - 1;
@@ -401,21 +354,11 @@ async function listUsers(page: number, limit: number, search?: string) {
   
   const { data, error, count } = await query;
   
-  console.log('📊 [API /api/admin] listUsers result:', {
-    count,
-    dataLength: data?.length,
-    hasError: !!error,
-    errorMessage: error?.message,
-    sampleUser: data?.[0] ? { id: data[0].id, email: data[0].email } : null
-  });
-  
   if (error) {
     console.error('[listUsers] Query error:', error);
     console.error('[listUsers] Error details:', JSON.stringify(error, null, 2));
     return { data: [], count: 0, page };
   }
-  
-  console.log('[listUsers] Successfully fetched', data?.length || 0, 'users out of', count || 0, 'total');
   
   if ((count || 0) === 0) {
     console.warn('[listUsers] WARNING: No users found in database. Check RLS policies or table data.');
@@ -466,11 +409,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Log successful admin access
-    console.log('[API /api/admin] Authenticated admin access:', {
-      userId: auth.userId,
-      email: auth.userEmail,
-      action: req.query.action || req.body?.action
-    });
 
     // Get action from query string or body (for POST requests)
     const action = normalizeAction(req.query.action || req.body?.action);
@@ -511,8 +449,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           updated_at: new Date().toISOString()
         };
         
-        console.log('[Admin API] Creating product with data:', insertData);
-        
         // Use service role to bypass RLS
         const { data, error } = await supabase
           .from('products')
@@ -524,8 +460,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[Admin API] Product create error:', error);
           return respond(res, 400, { error: 'create_failed', details: error.message });
         }
-        
-        console.log('[Admin API] ✅ Product created successfully:', data?.id);
         return respond(res, 200, { success: true, data });
       } catch (e: any) {
         console.error('[Admin API] Exception:', e);
@@ -543,8 +477,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return respond(res, 400, { error: 'missing_parameters' });
         }
         
-        console.log('[Admin API] Updating product:', id, 'with fields:', fields);
-        
         // Use service role to bypass RLS
         const { data, error } = await supabase
           .from('products')
@@ -557,8 +489,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[Admin API] Product update error:', error);
           return respond(res, 400, { error: 'update_failed', details: error.message });
         }
-        
-        console.log('[Admin API] ✅ Product updated successfully');
         return respond(res, 200, { success: true, data });
       } catch (e: any) {
         console.error('[Admin API] Exception:', e);
@@ -577,8 +507,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return respond(res, 400, { error: 'missing_flash_sale_id' });
         }
         
-        console.log('[Admin API] Deleting flash sale:', id);
-        
         // Use service role to bypass RLS
         const { error } = await supabase
           .from('flash_sales')
@@ -589,8 +517,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[Admin API] Flash sale delete error:', error);
           return respond(res, 400, { error: 'delete_failed', details: error.message });
         }
-        
-        console.log('[Admin API] ✅ Flash sale deleted successfully');
         return respond(res, 200, { success: true });
       } catch (e: any) {
         console.error('[Admin API] Exception:', e);
@@ -669,7 +595,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       try {
         const settingsData = req.body || {};
-        console.log('🔧 Admin API: Updating website settings', settingsData);
         
         // Get current settings first
         const { data: current } = await supabase
@@ -690,8 +615,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             console.error('❌ Admin API: Settings update error', error);
             return respond(res, 400, { error: 'update_failed', details: error.message });
           }
-          
-          console.log('✅ Admin API: Settings updated successfully');
           return respond(res, 200, { success: true, data });
         } else {
           // Create new settings record
@@ -705,8 +628,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             console.error('❌ Admin API: Settings insert error', error);
             return respond(res, 400, { error: 'insert_failed', details: error.message });
           }
-          
-          console.log('✅ Admin API: Settings created successfully');
           return respond(res, 200, { success: true, data });
         }
       } catch (e: any) {
@@ -720,10 +641,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     switch (action) {
       case 'dashboard-stats': {
-        console.log('🎯 [API /api/admin] Handling dashboard-stats request');
         const data = await dashboardStats();
-        console.log('📤 [API /api/admin] Sending dashboard-stats response:', JSON.stringify(data, null, 2));
-        return respond(res, 200, data, 0); // No cache - always fresh data
+                return respond(res, 200, data, 0); // No cache - always fresh data
       }
       case 'recent-notifications': {
         const data = await recentNotifications(limit);
@@ -780,8 +699,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return respond(res, 400, { error: 'missing_product_id' });
           }
           
-          console.log('🗄️ Admin API: Archiving product', productId);
-          
           const { data, error } = await supabase
             .from('products')
             .update({ 
@@ -796,8 +713,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             console.error('❌ Admin API: Archive product error', error);
             return respond(res, 400, { error: 'archive_failed', details: error.message });
           }
-          
-          console.log('✅ Admin API: Product archived successfully');
           return respond(res, 200, { success: true, data });
         } catch (e: any) {
           console.error('❌ Admin API: Archive product failed', e);

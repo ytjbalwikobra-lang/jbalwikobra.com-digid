@@ -190,13 +190,6 @@ export class DynamicWhatsAppService {
         requestBody.url = options.mediaUrl;
       }
 
-      console.log(`📱 Sending WhatsApp via ${provider.display_name}:`, {
-        provider: provider.name,
-        endpoint: apiUrl,
-        phone: options.phone,
-        messageLength: options.message.length
-      });
-
       // Make API request
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -230,10 +223,6 @@ export class DynamicWhatsAppService {
       });
 
       if (isSuccess) {
-        console.log(`✅ WhatsApp sent successfully via ${provider.display_name}:`, {
-          messageId,
-          responseTime: `${responseTime}ms`
-        });
 
         return {
           success: true,

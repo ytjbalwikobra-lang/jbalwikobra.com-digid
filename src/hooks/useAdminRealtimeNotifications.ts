@@ -254,7 +254,6 @@ export function useAdminRealtimeNotifications(
           setIsConnected(globalIsConnected);
           
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Admin notifications realtime connected');
           } else if (status === 'CHANNEL_ERROR') {
             console.error('❌ Admin notifications realtime error');
           }

@@ -109,7 +109,6 @@ class TrackingService {
    */
   private log(message: string, data?: any) {
     if (this.isDevelopment) {
-      console.log(`[Tracking] ${message}`, data || '');
     }
   }
 

@@ -10,7 +10,6 @@ const NavigationTest: React.FC = () => {
   const navigate = useNavigate();
 
   const testNavigation = () => {
-    console.log('🧪 Testing navigation to products page...');
     navigate('/products/1'); // Test with a hardcoded product ID
   };
 

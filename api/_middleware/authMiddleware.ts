@@ -70,7 +70,6 @@ export async function validateAdminAuth(req: VercelRequest): Promise<AuthResult>
                          req.headers.host?.includes('localhost');
     
     if (isDevelopment) {
-      console.log('[authMiddleware] Development mode - bypassing authentication');
       return {
         valid: true,
         userId: 'dev-user-id',

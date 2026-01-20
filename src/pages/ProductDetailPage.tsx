@@ -140,6 +140,8 @@ const ProductDetailPage: React.FC = () => {
               {/* Actions */}
               <ProductActions
                 stock={product.stock}
+                isActive={(product as any).isActive !== false && (product as any).is_active !== false}
+                soldChannel={(product as any).sold_channel}
                 cameFromFlashSaleCard={cameFromFlashSaleCard}
                 hasRental={product.hasRental || false}
                 selectedRental={rentalState.selectedRental}

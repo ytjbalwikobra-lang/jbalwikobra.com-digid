@@ -68,12 +68,6 @@ export const useProductDetail = () => {
   // Debug logging
   useEffect(() => {
     if (cameFromFlashSaleCard) {
-      console.log('🔍 ProductDetail: Navigated from flash sale card', {
-        productId: id,
-        hasFlashSaleData: !!flashSaleData,
-        flashSaleData: flashSaleData,
-        shouldOpenCheckoutModal
-      });
     }
   }, [cameFromFlashSaleCard, flashSaleData, id, shouldOpenCheckoutModal]);
 
@@ -161,7 +155,6 @@ export const useProductDetail = () => {
       if (data && cameFromFlashSaleCard) {
         if (flashSaleData) {
           // Use the flash sale data passed from the card
-          console.log('🔍 Applying flash sale data from card:', flashSaleData);
           
           const updatedProduct = {
             ...data,
@@ -170,8 +163,6 @@ export const useProductDetail = () => {
             price: flashSaleData.salePrice,
             originalPrice: flashSaleData.originalPrice || data.originalPrice || data.price
           };
-          
-          console.log('🔍 Updated product with flash sale data:', updatedProduct);
           
           setState(prev => ({
             ...prev,
@@ -344,14 +335,12 @@ export const useProductDetail = () => {
     
     // Immediate duplicate prevention using refs (faster than state)
     if (submissionInProgress.current) {
-      console.log('🚫 Order submission already in progress, ignoring duplicate request');
       return;
     }
 
     // Prevent rapid successive submissions (within 3 seconds)
     const now = Date.now();
     if (lastSubmissionTime.current && (now - lastSubmissionTime.current) < 3000) {
-      console.log('🚫 Too soon after last submission, ignoring request');
       return;
     }
     
@@ -368,8 +357,6 @@ export const useProductDetail = () => {
         lastSubmissionTime: now
       }));
       
-      console.log('🚀 Starting order creation process...');
-      
       const { createXenditInvoice } = await import('../services/paymentService');
       
       // Generate unique external ID with multiple randomness sources
@@ -378,8 +365,6 @@ export const useProductDetail = () => {
       const random2 = performance.now().toString(36).substr(2, 5);
       const random3 = Math.random().toString(36).substr(2, 4);
       const externalId = `order_${timestamp}_${random1}_${random2}_${random3}`;
-      
-      console.log('📝 Generated external ID:', externalId);
       
       // Calculate effective price
       const isFlashSaleActive = Boolean(state.product?.flashSaleEndTime && state.product.isFlashSale);
@@ -450,7 +435,6 @@ export const useProductDetail = () => {
         creatingInvoice: false,
         submissionInProgress: false
       }));
-      console.log('✅ Order submission process completed');
     }
   }, [state.product, checkoutState, rentalState.selectedRental, showToast]);
 
@@ -576,18 +560,6 @@ export const useProductDetail = () => {
   // Debug final computed values
   useEffect(() => {
     if (state.product && cameFromFlashSaleCard) {
-      console.log('🔍 Final computed values:', {
-        productName: state.product.name,
-        isFlashSale: state.product.isFlashSale,
-        flashSaleEndTime: state.product.flashSaleEndTime,
-        isFlashSaleActive,
-        actuallyFlashSaleActive,
-        isTimeValid,
-        price: state.product.price,
-        originalPrice: state.product.originalPrice,
-        effectivePrice,
-        timeRemaining
-      });
     }
   }, [state.product, isFlashSaleActive, actuallyFlashSaleActive, effectivePrice, timeRemaining, cameFromFlashSaleCard]);
 

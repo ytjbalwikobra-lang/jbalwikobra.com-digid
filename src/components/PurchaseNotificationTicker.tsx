@@ -94,10 +94,8 @@ const PurchaseNotificationTicker: React.FC = () => {
       const response = await fetch('/api/recent-purchases');
       if (response.ok) {
         const result = await response.json();
-        console.log('📊 Purchase Ticker - Fetched data:', result);
         if (result.success && result.data.length > 0) {
           setPurchases(result.data);
-          console.log('✅ Purchase Ticker - Set purchases:', result.data.length, 'items');
         }
       }
     } catch (error) {

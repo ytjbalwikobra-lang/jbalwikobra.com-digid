@@ -30,17 +30,13 @@ export async function dedupedRequest<T>(
 ): Promise<T> {
   // Check if there's already a pending request for this key
   if (pendingRequests.has(key)) {
-    console.log(`[Request Dedup] Reusing pending request: ${key}`);
     return pendingRequests.get(key) as Promise<T>;
   }
-  
-  console.log(`[Request Dedup] Starting new request: ${key}`);
   
   // Create new request and cache it
   const promise = requestFn().finally(() => {
     // Remove from cache when done (success or error)
     pendingRequests.delete(key);
-    console.log(`[Request Dedup] Request completed: ${key}`);
   });
   
   pendingRequests.set(key, promise);
@@ -55,7 +51,6 @@ export async function dedupedRequest<T>(
  */
 export function clearRequestCache(key: string): void {
   pendingRequests.delete(key);
-  console.log(`[Request Dedup] Cache cleared: ${key}`);
 }
 
 /**
@@ -64,7 +59,6 @@ export function clearRequestCache(key: string): void {
  */
 export function clearAllRequestCache(): void {
   pendingRequests.clear();
-  console.log('[Request Dedup] All cache cleared');
 }
 
 /**

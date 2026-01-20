@@ -93,7 +93,6 @@ const LinkifyText: React.FC<LinkifyTextProps> = ({ text, className = '' }) => {
             className="text-pink-500 font-medium cursor-pointer hover:text-pink-500/80 transition-colors"
             onClick={() => {
               // Could integrate with search functionality
-              console.log('Hashtag clicked:', matchedText);
             }}
           >
             {matchedText}
@@ -107,7 +106,6 @@ const LinkifyText: React.FC<LinkifyTextProps> = ({ text, className = '' }) => {
             className="text-pink-500 font-medium cursor-pointer hover:text-pink-500/80 transition-colors"
             onClick={() => {
               // Could integrate with user profile functionality
-              console.log('Mention clicked:', matchedText);
             }}
           >
             {matchedText}

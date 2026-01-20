@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { adminService } from '../../services/adminService';
+import { SettingsService } from '../../services/settingsService';
 import { copyToClipboard, maskApiKey, parseErrorMessage, formatAnalyticsValue } from '../../utils/adminUtils';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
@@ -231,6 +232,14 @@ const AdminWhatsAppSettings: React.FC = () => {
       if (result.provider) {
         setProvider(result.provider);
       }
+      
+      // Clear global settings cache to ensure all components get fresh data
+      SettingsService.clearCache();
+      
+      // Dispatch custom event to notify all components that settings have changed
+      window.dispatchEvent(new CustomEvent('whatsapp-settings-updated', {
+        detail: { apiKeyUpdated: true }
+      }));
     } catch (err) {
       const errorMsg = parseErrorMessage(err);
       showToast('Failed to update API key: ' + errorMsg, 'error');
@@ -252,6 +261,15 @@ const AdminWhatsAppSettings: React.FC = () => {
         setProvider(result.provider);
       }
       setLastUpdated(new Date());
+      
+      // Clear global settings cache to ensure all components get fresh data
+      SettingsService.clearCache();
+      
+      // Dispatch custom event to notify all components that settings have changed
+      window.dispatchEvent(new CustomEvent('whatsapp-settings-updated', {
+        detail: { groupConfigurations, defaultGroupId }
+      }));
+      
       showToast('Configuration saved!', 'success');
     } catch (err) {
       const errorMsg = parseErrorMessage(err);

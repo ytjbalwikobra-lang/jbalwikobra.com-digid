@@ -67,37 +67,14 @@ const FlashSaleProductDetailPage: React.FC = () => {
   } = useFlashSaleProductDetail();
 
   // Debug logging
-  console.log('🔍 FlashSaleProductDetailPage Debug:', {
-    loading,
-    error,
-    product: product ? { 
-      id: product.id, 
-      name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      isFlashSale: product.isFlashSale,
-      flashSaleEndTime: product.flashSaleEndTime
-    } : null,
-    galleryImagesCount: galleryState?.images?.length || 0,
-    pricing: {
-      effectivePrice,
-      originalPrice,
-      discountPercentage,
-      isFlashSaleActive,
-      flashSaleEndTime: product?.flashSaleEndTime
-    },
-    timeRemaining
-  });
 
   // Loading state
   if (loading || !product) {
-    console.log('🔄 Showing loading skeleton');
     return <FlashSaleProductDetailLoadingSkeleton />;
   }
 
   // Error state
   if (error) {
-    console.log('❌ Showing error state:', error);
     return (
       <PNSection padding="lg" className="min-h-screen flex items-center justify-center">
         <PNContainer>
@@ -122,8 +99,6 @@ const FlashSaleProductDetailPage: React.FC = () => {
       </PNSection>
     );
   }
-
-  console.log('✅ Rendering main content');
 
   return (
     <div className="min-h-screen bg-black text-white">

@@ -38,16 +38,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   // Debug logging for flash sales
   if (showFlashSaleTimer) {
-    console.log(`ProductCard Debug for ${product.name}:`, {
-      showFlashSaleTimer,
-      isFlashSale: product.isFlashSale,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      flashSaleEndTime: product.flashSaleEndTime,
-      timeRemaining,
-      isFlashSaleActive,
-      hasValidDiscount: product.originalPrice && product.originalPrice > product.price
-    });
   }
 
   // Determine which price to show on the card

@@ -59,17 +59,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           message: auth.error || 'Authentication required'
         });
       }
-      
-      console.log('[API /api/admin-notifications] Authenticated admin access:', {
-        userId: auth.userId,
-        email: auth.userEmail,
-        action
-      });
     }
 
     if (action === 'recent' && req.method === 'GET') {
       const limit = parseLimit(req.query.limit, 10);
-      console.log(`[API /api/admin-notifications] Fetching recent notifications with limit: ${limit}`);
       
       const { data, error } = await sb
         .from('admin_notifications')
@@ -83,8 +76,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return respond(res, 500, { error: 'db_error', details: error.message });
       }
 
-      console.log(`[API /api/admin-notifications] Fetched ${data?.length || 0} notifications from DB`);
-
       // Optionally filter out obvious debug/test entries at the edge
       const filtered = (data || []).filter((n: any) => {
         const title = (n.title || '').toString().toLowerCase();
@@ -93,8 +84,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const isDebug = md.test === true || md.debug_mode === true || md.auto_read === true || title.includes('[debug]') || title.includes('test') || message.includes('[debug mode]');
         return !isDebug;
       });
-      
-      console.log(`[API /api/admin-notifications] Returning ${filtered.length} notifications after filtering`);
       return respond(res, 200, { data: filtered }, true); // Enable HTTP cache to reduce egress
     }
 

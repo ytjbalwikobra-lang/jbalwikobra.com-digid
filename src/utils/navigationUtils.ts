@@ -28,7 +28,6 @@ export function safeNavigateToProduct(
       productId.trim() === 'null') {
     
     console.error('[Navigation] Invalid product ID detected:', productId);
-    console.log('[Navigation] Redirecting to fallback route:', fallbackRoute);
     
     // Navigate to fallback route instead
     navigate(fallbackRoute, { replace });
@@ -42,7 +41,6 @@ export function safeNavigateToProduct(
       state,
       replace
     });
-    console.log('[Navigation] Successfully navigated to product:', trimmedId);
     return true;
   } catch (error) {
     console.error('[Navigation] Error navigating to product:', error);
@@ -73,7 +71,6 @@ export function safeNavigateToFlashSaleProduct(
       productId.trim() === 'null') {
     
     console.error('[Navigation] Invalid flash sale product ID detected:', productId);
-    console.log('[Navigation] Redirecting to fallback route:', fallbackRoute);
     
     navigate(fallbackRoute, { replace });
     return false;
@@ -86,7 +83,6 @@ export function safeNavigateToFlashSaleProduct(
       state,
       replace
     });
-    console.log('[Navigation] Successfully navigated to flash sale product:', trimmedId);
     return true;
   } catch (error) {
     console.error('[Navigation] Error navigating to flash sale product:', error);

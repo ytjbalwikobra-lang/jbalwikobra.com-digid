@@ -146,13 +146,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    console.log('[API /api/admin-whatsapp] Authenticated admin access:', {
-      userId: auth.userId,
-      email: auth.userEmail,
-      method: req.method,
-      action: req.query.action
-    });
-
     const sb = getSupabase();
     // Development fallback: allow local UI testing without real Supabase credentials
     if (!sb && process.env.NODE_ENV !== 'production') {

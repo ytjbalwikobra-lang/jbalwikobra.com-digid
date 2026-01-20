@@ -11,4 +11,4 @@ Disallow: /internal
 Disallow: /api
 
 # Sitemaps
-Sitemap: https://your-domain.vercel.app/sitemap.xml
+Sitemap: https://www.jbalwikobra.com/sitemap.xml

@@ -8,7 +8,6 @@ import { supabaseAdmin } from './supabaseAdmin';
 // This ensures RLS policies work correctly with the user's session
 try {
   if (supabase) {
-    console.log('AdminService: Using authenticated Supabase client with user session');
   } else {
     console.warn('AdminService: Supabase not configured — running with dev fallbacks');
   }
@@ -355,16 +354,12 @@ export const adminService = {
         throw new Error('Supabase client not available');
       }
       
-      console.log('[adminService.updateProductFields] Using direct Supabase fallback');
-      
       const updatePayload: any = { ...fields, updated_at: new Date().toISOString() };
       const { data, error } = await client
         .from('products')
         .update(updatePayload)
         .eq('id', id)
         .select();
-      
-      console.log('[adminService.updateProductFields] Response:', { data, error });
       
       if (error) {
         console.error('[adminService.updateProductFields] Supabase error:', error);
@@ -391,8 +386,6 @@ export const adminService = {
         console.error('[adminService.updateProductFields] ❌ Status mismatch! Expected:', fields.is_active, 'Got:', updatedProduct.is_active);
         return null;
       }
-      
-      console.log('[adminService.updateProductFields] ✅ Success via fallback:', updatedProduct);
       adminCache.invalidatePattern('admin:products');
       return updatedProduct as Product;
     } catch (e) {
@@ -429,8 +422,6 @@ export const adminService = {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to archive product');
       }
-
-      console.log(`[adminService.deleteProduct] Successfully archived product ${id}`);
       
       return true;
     } catch (e: any) {
@@ -454,7 +445,6 @@ export const adminService = {
   },
 
   async getAdminStats(): Promise<AdminStats> {
-    console.log('🔄 [adminService.getAdminStats] Starting stats fetch...');
     
     // In development without Supabase, return safe fallback to avoid crashing the Admin UI
     if (!supabase) {
@@ -475,7 +465,6 @@ export const adminService = {
 
     return adminCache.getOrFetch('admin:stats', async () => {
       try {
-        console.log('📊 [adminService.getAdminStats] Fetching fresh stats from database...');
         
         // Get all stats in parallel - optimized queries
         const [
@@ -496,24 +485,12 @@ export const adminService = {
           (supabase as any).from('orders').select('amount, status').in('status', ['paid', 'completed'])
         ]);
 
-        console.log('📈 [adminService.getAdminStats] Query results:', {
-          totalUsers,
-          totalProducts,
-          totalOrders,
-          pendingOrders,
-          completedOrders,
-          paidOrders,
-          revenueOrders: ordersWithRevenue.data?.length
-        });
-
         // Calculate total revenue from paid and completed orders
         let totalRevenue = 0;
         if (ordersWithRevenue.data) {
           totalRevenue = ordersWithRevenue.data.reduce((sum, order) => 
             sum + (Number(order.amount) || 0), 0);
         }
-        
-        console.log('💰 [adminService.getAdminStats] Total revenue calculated:', totalRevenue);
 
         // Try to get reviews (might not exist)
         let totalReviews = 0;
@@ -569,8 +546,7 @@ export const adminService = {
           activeFlashSales
         };
         
-        console.log('✅ [adminService.getAdminStats] Final stats:', JSON.stringify(stats, null, 2));
-        
+                
         return stats;
       } catch (error) {
         console.error('❌ [adminService.getAdminStats] Error fetching dashboard stats:', error);
@@ -598,24 +574,20 @@ export const adminService = {
   // Clear admin stats cache to force fresh data
   clearStatsCache(): void {
     adminCache.invalidate('admin:stats');
-    console.log('Admin stats cache cleared');
   },
 
   // Clear orders cache to force fresh data
   clearOrdersCache(): void {
     // Clear all orders cache entries (all pages, limits, and filters)
     adminCache.invalidatePattern('admin:orders:');
-    console.log('Admin orders cache cleared');
   },
 
   // Clear users cache to force fresh data
   clearUsersCache(): void {
     adminCache.invalidatePattern('admin:users:');
-    console.log('Admin users cache cleared');
   },
 
   async getOrders(page: number = 1, limit: number = 10, statusFilter?: string): Promise<PaginatedResponse<Order>> {
-    console.log('[adminService.getOrders - CACHED] Fetching orders - page:', page, 'limit:', limit, 'statusFilter:', statusFilter);
     return adminCache.getOrFetch(`admin:orders:${page}:${limit}:${statusFilter || 'all'}`, async () => {
       // Prefer serverless admin API (service role) to bypass RLS issues in browser
       try {
@@ -643,8 +615,6 @@ export const adminService = {
           const rows = payload.data || [];
           const total = payload.count ?? rows.length;
 
-          console.log('[adminService.getOrders - CACHED] Fetched via API:', rows.length, 'of', total);
-
           return {
             data: rows as Order[],
             count: total,
@@ -669,8 +639,6 @@ export const adminService = {
       if (statusFilter && statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
-
-      console.log('[adminService.getOrders] querying orders with payment data');
       const { data: orders, error, count } = await query
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
@@ -681,7 +649,6 @@ export const adminService = {
       }
 
       const rows = orders || [];
-      console.log('[adminService.getOrders - CACHED] Successfully fetched', rows.length, 'orders out of', count || 0, 'total');
 
       // Get payment data for these orders
       const externalIds = rows.map(order => order.client_external_id).filter(Boolean);
@@ -894,7 +861,6 @@ export const adminService = {
 
       const orderColumn = sort?.column || 'created_at';
       const ascending = sort ? sort.direction === 'asc' : false;
-      console.log('[adminService.getProducts] using actual schema columns with sort', { orderColumn, ascending });
       const { data, error, count } = await query
         .order(orderColumn, { ascending })
         .range((page - 1) * limit, page * limit - 1);
@@ -905,7 +871,6 @@ export const adminService = {
       }
 
       const rows = data || [];
-      console.log('[adminService.getProducts] success:', { rows: rows.length, count });
 
       // Fetch category data separately for products that have category_id
       const categoryIds = [...new Set(rows.filter(r => r.category_id).map(r => r.category_id))];
@@ -1022,7 +987,6 @@ export const adminService = {
           totalPages: Math.ceil((count || 0) / limit)
         };
       } catch (error) {
-        console.log('Reviews table not found');
         return {
           data: [],
           count: 0,
@@ -1727,14 +1691,12 @@ export const adminService = {
     // Check cache first for instant loading
     const now = Date.now();
     if (this._dashboardStatsCache && (now - this._dashboardStatsCache.timestamp) < this._dashboardStatsCacheDuration) {
-      console.log('[adminService.getDashboardStats] Using cached stats');
       return this._dashboardStatsCache.data;
     }
 
     // Use the admin API endpoint instead of direct Supabase queries
     // This ensures we use service_role key for proper data access
     try {
-      console.log('[adminService.getDashboardStats] Calling /api/admin endpoint...');
       
       const sessionToken = localStorage.getItem('session_token');
       const headers: Record<string, string> = {
@@ -1755,7 +1717,6 @@ export const adminService = {
       }
 
       const data = await response.json();
-      console.log('[adminService.getDashboardStats] API response:', data);
 
       // Transform API response to AdminStats format
       const stats: AdminStats = {
@@ -2140,8 +2101,6 @@ export const adminService = {
         throw new Error(result.details || result.message || result.error || 'Failed to create product');
       }
       
-      console.log('[adminService.createProduct] ✅ Product created via API:', result.data?.id);
-      
       // Clear cache
       adminCache.clear();
       
@@ -2177,8 +2136,6 @@ export const adminService = {
       updated_at: new Date().toISOString()
     };
     
-    console.log('[adminService.updateProduct] Updating product:', id, 'with data:', finalUpdateData);
-    
     // Try API endpoint first (has service role to bypass RLS)
     try {
       const sessionToken = localStorage.getItem('session_token') || '';
@@ -2196,10 +2153,8 @@ export const adminService = {
       });
       
       const result = await response.json();
-      console.log('[adminService.updateProduct] API response:', result);
       
       if (response.ok && result.success && result.data) {
-        console.log('[adminService.updateProduct] ✅ Updated via API');
         adminCache.invalidatePattern('admin:products');
         return result.data as Product;
       } else {
@@ -2213,8 +2168,6 @@ export const adminService = {
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
-    
-    console.log('[adminService.updateProduct] Falling back to direct Supabase');
     const { data: products, error } = await supabase
       .from('products')
       .update(finalUpdateData)

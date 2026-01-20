@@ -6,6 +6,7 @@ import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { useSoldViaWAModal } from './components/ui/SoldViaWAModal';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
 import { adminService } from '../../services/adminService';
@@ -80,6 +81,7 @@ const AdminProductsDirect: React.FC = () => {
 
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const { showSoldViaWAModal, SoldViaWAModalComponent } = useSoldViaWAModal();
   const { getSignal } = useAbortController(); // Request deduplication
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -253,15 +255,12 @@ const AdminProductsDirect: React.FC = () => {
       return;
     }
 
-    const confirmed = await showConfirm({
-      title: 'Terjual via WA',
-      message: `Anda akan menandai produk "${product.name}" sebagai terjual via WhatsApp.\n\nLanjutkan?`,
-      type: 'warning',
-      confirmText: 'Tandai Terjual',
-      cancelText: 'Batal'
-    });
+    // Show modal with price input
+    const result = await showSoldViaWAModal(product);
+    
+    if (!result) return; // User cancelled
 
-    if (!confirmed) return;
+    const { soldPrice } = result;
 
     setMarkingSoldId(product.id);
     try {
@@ -278,18 +277,19 @@ const AdminProductsDirect: React.FC = () => {
           fields: {
             sold_channel: 'wa',
             is_active: false,
+            price: soldPrice, // Use the confirmed price from modal
             updated_at: new Date().toISOString()
           }
         })
       });
 
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'update_failed');
+      const resultData = await response.json();
+      if (!response.ok || !resultData.success) {
+        throw new Error(resultData.error || 'update_failed');
       }
 
       setProducts(prev => prev.map(p =>
-        p.id === product.id ? { ...p, sold_channel: 'wa', is_active: false } : p
+        p.id === product.id ? { ...p, sold_channel: 'wa', is_active: false, price: soldPrice } : p
       ));
       push('Produk ditandai terjual via WA', 'success');
     } catch (err: any) {
@@ -640,6 +640,9 @@ const AdminProductsDirect: React.FC = () => {
           product={modalState.product as any}
         />
       )}
+
+      {/* Sold Via WA Modal */}
+      <SoldViaWAModalComponent />
     </div>
   );
 };

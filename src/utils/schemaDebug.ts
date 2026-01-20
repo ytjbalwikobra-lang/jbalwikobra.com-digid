@@ -24,11 +24,8 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
     return result;
   }
 
-  console.log('🔍 Starting comprehensive schema check...');
-
   try {
     // Check if relational tables exist and have data
-    console.log('📊 Checking tiers table...');
     const { data: tiers, error: tiersError } = await supabase
       .from('tiers')
       .select('id, name, is_active')
@@ -38,10 +35,7 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
       result.issues.push(`Tiers table error: ${tiersError.message}`);
     } else {
       result.tiersCount = tiers?.length || 0;
-      console.log(`✅ Found ${result.tiersCount} active tiers`);
     }
-
-    console.log('🎮 Checking game_titles table...');
     const { data: games, error: gamesError } = await supabase
       .from('game_titles')
       .select('id, name, is_active')
@@ -51,11 +45,9 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
       result.issues.push(`Game titles table error: ${gamesError.message}`);
     } else {
       result.gameTitlesCount = games?.length || 0;
-      console.log(`✅ Found ${result.gameTitlesCount} active game titles`);
     }
 
     // Check products table with relational fields
-    console.log('📦 Checking products table with relational fields...');
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('id, name, price, game_title_id, tier_id')
@@ -65,7 +57,6 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
       result.issues.push(`Products relational query error: ${productsError.message}`);
       
       // Try basic products query
-      console.log('📦 Trying basic products query...');
       const { data: basicProducts, error: basicError } = await supabase
         .from('products')
         .select('id, name, price')
@@ -75,12 +66,10 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
         result.issues.push(`Products basic query error: ${basicError.message}`);
       } else {
         result.productsCount = basicProducts?.length || 0;
-        console.log(`⚠️ Products table accessible but missing relational fields`);
       }
     } else {
       result.productsCount = products?.length || 0;
       result.hasRelationalSchema = true;
-      console.log(`✅ Products table supports relational queries`);
 
       // Analyze data consistency
       const withRelations = products?.filter(p => p.game_title_id || p.tier_id).length || 0;
@@ -90,12 +79,9 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
         result.issues.push(`${withLegacyFields} products unexpectedly still using legacy game_title field`);
         result.recommendations.push('Investigate residual legacy game_title usage; migration should be complete');
       }
-
-      console.log(`📊 Products analysis: ${withRelations} with relations, ${withLegacyFields} with legacy fields`);
     }
 
     // Test product creation
-    console.log('🧪 Testing product creation...');
     const testProduct = {
       name: `Test Product ${Date.now()}`,
       description: 'Test description',
@@ -121,15 +107,12 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
       result.issues.push(`Product creation test failed: ${createError.message}`);
       console.error('❌ Product creation test failed:', createError);
     } else {
-      console.log('✅ Product creation test successful');
       
       // Clean up test product
       await supabase.from('products').delete().eq('id', createdProduct.id);
-      console.log('🗑️ Test product cleaned up');
     }
 
     // Check rental_options table
-    console.log('🏠 Checking rental_options table...');
     const { data: rentals, error: rentalsError } = await supabase
       .from('rental_options')
       .select('id, product_id, duration, price')
@@ -138,7 +121,6 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
     if (rentalsError) {
       result.issues.push(`Rental options table error: ${rentalsError.message}`);
     } else {
-      console.log('✅ Rental options table accessible');
     }
 
     // Provide recommendations
@@ -151,8 +133,6 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
     if (result.productsCount === 0) {
       result.recommendations.push('No products found - consider creating sample products');
     }
-
-    console.log('✅ Schema check completed');
     return result;
 
   } catch (error) {
@@ -167,15 +147,12 @@ export const fixCommonSchemaIssues = async (): Promise<{ success: boolean; messa
     return { success: false, message: 'Supabase client not initialized' };
   }
 
-  console.log('🔧 Attempting to fix common schema issues...');
-
   try {
     // Check if we need to populate reference data
     const { data: tiers } = await supabase.from('tiers').select('id').limit(1);
     const { data: games } = await supabase.from('game_titles').select('id').limit(1);
 
     if (!tiers || tiers.length === 0) {
-      console.log('📊 Populating missing tiers...');
       const tierData = [
         {
           name: 'Bronze',
@@ -222,12 +199,10 @@ export const fixCommonSchemaIssues = async (): Promise<{ success: boolean; messa
       if (tiersError) {
         console.error('❌ Failed to populate tiers:', tiersError);
       } else {
-        console.log('✅ Tiers populated successfully');
       }
     }
 
     if (!games || games.length === 0) {
-      console.log('🎮 Populating missing game titles...');
       const gameData = [
         {
           name: 'Mobile Legends',
@@ -279,7 +254,6 @@ export const fixCommonSchemaIssues = async (): Promise<{ success: boolean; messa
       if (gamesError) {
         console.error('❌ Failed to populate game titles:', gamesError);
       } else {
-        console.log('✅ Game titles populated successfully');
       }
     }
 

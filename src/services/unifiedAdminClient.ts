@@ -528,14 +528,11 @@ class UnifiedAdminClient {
       });
 
       const endpoint = `?${params.toString()}`;
-      console.log('Requesting time-series data from:', endpoint);
       
       const result = await this.apiRequest<{ data: OrderStatusTimeSeries[] }>(
         endpoint,
         requestOptions
       );
-
-      console.log('Time-series result:', result);
       return result.data || [];
     } catch (error) {
       console.error('Error fetching time-series data:', error);

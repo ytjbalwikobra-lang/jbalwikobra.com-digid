@@ -44,12 +44,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (paymentData) {
-      console.log('[Get Payment] Found payment data with status:', paymentData.status);
       
       // DEBUG: Log the raw payment data to understand what's stored
-      console.log('[Get Payment] Raw payment_data field:', JSON.stringify(paymentData.payment_data, null, 2));
-      console.log('[Get Payment] Stored payment_method:', paymentData.payment_method);
-      
+            
       // CRITICAL FIX: Check if this is a VA payment that's missing VA details
       const isVAPayment = paymentData.payment_method === 'invoice' || 
                          paymentData.payment_method === 'bri' || 
@@ -59,11 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const hasVADetails = !!(paymentData.payment_data?.account_number || paymentData.payment_data?.virtual_account_number);
       
-      console.log('[Get Payment] VA Payment check:', { isVAPayment, hasVADetails });
-      
       // If this is a VA payment but missing VA details, try to get them from fixed_virtual_accounts table
       if (isVAPayment && !hasVADetails) {
-        console.log('[Get Payment] 🔄 VA payment missing details - checking fixed_virtual_accounts table');
         
         try {
           // Optimize: Select only needed fields
@@ -74,7 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .single();
           
           if (fixedVAData && !vaError) {
-            console.log('[Get Payment] ✅ Found Fixed VA data:', fixedVAData.account_number);
             
             // Return with VA details from fixed_virtual_accounts table
             return res.status(200).json({
@@ -103,7 +96,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               qr_url: paymentData.payment_data?.qr_url
             });
           } else {
-            console.log('[Get Payment] ⚠️ No Fixed VA data found:', vaError?.message);
           }
         } catch (error) {
           console.error('[Get Payment] Error fetching Fixed VA data:', error);
@@ -114,10 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const isQRISPayment = paymentData.payment_method === 'qris' || paymentData.payment_method === 'QRIS';
       const hasQRString = !!(paymentData.payment_data?.qr_string);
       
-      console.log('[Get Payment] QRIS check:', { isQRISPayment, hasQRString });
-      
       if (isQRISPayment && !hasQRString) {
-        console.log('[Get Payment] 🔄 QRIS payment missing QR string - attempting to fetch from Xendit Invoice API');
         
         try {
           const XENDIT_SECRET_KEY = process.env.XENDIT_SECRET_KEY;
@@ -132,7 +121,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             
             if (xenditResponse.ok) {
               const xenditData = await xenditResponse.json();
-              console.log('[Get Payment] 📥 Xendit Invoice API response received');
               
               // Check available_banks for QRIS QR string
               if (xenditData.available_banks && xenditData.available_banks.length > 0) {
@@ -141,7 +129,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 );
                 
                 if (qrisBank && qrisBank.bank_branch) {
-                  console.log('[Get Payment] ✅ Found QR string in Invoice API!');
                   
                   // Update our database with the QR string
                   const updatedPaymentData = {
@@ -234,11 +221,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (orderData && !orderError) {
-      console.log('[Get Payment] Found order data with status:', orderData.status);
       
       // Convert order data to payment format for consistency
       const convertedStatus = orderData.status?.toUpperCase(); // Convert to uppercase for consistency
-      console.log('[Get Payment] Converted status to:', convertedStatus);
       
       return res.status(200).json({
         id: orderData.xendit_invoice_id || id,

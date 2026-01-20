@@ -135,7 +135,6 @@ class NotificationService {
     if (!userId) return; // guests: skip
     if (!supabase) return;
     try {
-      console.log('🔄 NotificationService: markAsRead called for notification:', notificationId, 'user:', userId);
       
       // Try to use RPC, fall back to direct query if RPC doesn't exist
       try {
@@ -158,11 +157,8 @@ class NotificationService {
         }
       }
       
-      console.log('✅ NotificationService: Notification marked as read');
-      
       // More comprehensive cache invalidation
       this.invalidateCache(userId);
-      console.log('✅ NotificationService: Cache invalidated for user:', userId);
     } catch (e) {
       console.error('❌ NotificationService: markAsRead failed:', e);
       // Don't re-throw, just log - fail silently for better UX
@@ -204,7 +200,6 @@ class NotificationService {
     if (!userId) return; // guests: skip
     if (!supabase) return;
     try {
-      console.log('🔄 NotificationService: markAllAsRead called for user:', userId);
       
       // Try to use RPC, fall back to direct query if RPC doesn't exist
       try {
@@ -227,11 +222,8 @@ class NotificationService {
         }
       }
       
-      console.log('✅ NotificationService: All notifications marked as read');
-      
       // More comprehensive cache invalidation
       this.invalidateCache(userId);
-      console.log('✅ NotificationService: Cache invalidated for user:', userId);
     } catch (e) {
       console.error('❌ NotificationService: markAllAsRead failed:', e);
       // Don't re-throw, just log - fail silently for better UX

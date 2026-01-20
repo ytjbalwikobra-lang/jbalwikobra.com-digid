@@ -32,8 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    console.log('[Payment Reminder] Starting cron job...');
-
     // Find pending orders older than 1 hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -64,8 +62,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw error;
     }
 
-    console.log(`[Payment Reminder] Found ${pendingOrders?.length || 0} pending orders`);
-
     if (!pendingOrders || pendingOrders.length === 0) {
       return res.status(200).json({
         success: true,
@@ -91,20 +87,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     for (const order of pendingOrders) {
       // Skip if no mobile number
       if (!order.customer_mobile_number) {
-        console.log(`[Payment Reminder] Skipping order ${order.id} - no mobile number`);
         continue;
       }
 
       // Get payment info
       const payment = order.payments?.[0];
       if (!payment || !payment.payment_url) {
-        console.log(`[Payment Reminder] Skipping order ${order.id} - no payment info`);
         continue;
       }
 
       // Check if payment expired
       if (payment.expires_at && new Date(payment.expires_at) < new Date()) {
-        console.log(`[Payment Reminder] Skipping order ${order.id} - payment expired`);
         continue;
       }
 
@@ -140,7 +133,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           rentalDuration = orderDetail.rental_duration || '';
         }
       } catch (err) {
-        console.log('[Payment Reminder] Could not fetch product details, using defaults');
       }
       
       const isRental = orderType === 'rental';
@@ -277,8 +269,6 @@ Buruan bayar ya Bosku, jangan sampai hangus! ⚡`;
           error: result.error
         });
 
-        console.log(`[Payment Reminder] Order ${order.external_id}: ${result.success ? 'SUCCESS' : 'FAILED'}`);
-
         // Small delay between messages to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -296,8 +286,6 @@ Buruan bayar ya Bosku, jangan sampai hangus! ⚡`;
 
     const successCount = results.filter(r => r.success).length;
     const failCount = results.filter(r => !r.success).length;
-
-    console.log(`[Payment Reminder] Complete: ${successCount} success, ${failCount} failed`);
 
     return res.status(200).json({
       success: true,

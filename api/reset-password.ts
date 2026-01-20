@@ -72,8 +72,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Failed to update password' });
     }
 
-    console.log(`Password reset successful for user: ${email}`);
-
     return res.status(200).json({
       success: true,
       message: 'Password reset successful',

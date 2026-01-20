@@ -6,8 +6,6 @@ export const fixRLSPolicies = async (): Promise<{ success: boolean; message: str
     return { success: false, message: 'Supabase client not initialized' };
   }
 
-  console.log('🔧 Fixing RLS policies...');
-
   try {
     // The RLS policies need to be fixed at the database level
     // For now, let's try a different approach - using the service_role key if available
@@ -54,8 +52,6 @@ const testProductCreationWithDetails = async (): Promise<{ success: boolean; err
       tier_id: null
     };
 
-    console.log('🧪 Testing product creation with detailed error info...');
-
     const { data, error } = await supabase
       .from('products')
       .insert([testProduct])
@@ -92,7 +88,6 @@ export const createProductWithAdminAccess = async (productData: any): Promise<an
   // For now, we'll document this as a requirement
   
   console.warn('⚠️ Admin product creation requires service role access or RLS policy updates');
-  console.log('💡 Recommended solution: Update Supabase RLS policies to allow admin operations');
   
   return null;
 };

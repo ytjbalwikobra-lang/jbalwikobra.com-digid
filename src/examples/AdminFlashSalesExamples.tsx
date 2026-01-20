@@ -26,7 +26,6 @@ import type { FlashSaleFilters } from '../types/flashSales';
  */
 export const CompleteFlashSalesExample: React.FC = () => {
   const handleRefresh = () => {
-    console.log('Flash sales data refreshed');
     // Additional refresh logic if needed
   };
 
@@ -65,23 +64,18 @@ export const CustomFlashSalesDashboard: React.FC = () => {
   const flashSales = []; // Your flash sales data
 
   const handleCreateNew = () => {
-    console.log('Create new flash sale');
   };
 
   const handleFiltersChange = (newFilters: FlashSaleFilters) => {
-    console.log('Filters changed:', newFilters);
   };
 
   const handleEdit = (flashSale: any) => {
-    console.log('Edit flash sale:', flashSale);
   };
 
   const handleDelete = (id: string) => {
-    console.log('Delete flash sale:', id);
   };
 
   const handleToggleStatus = (id: string, status: boolean) => {
-    console.log('Toggle status:', id, status);
   };
 
   return (

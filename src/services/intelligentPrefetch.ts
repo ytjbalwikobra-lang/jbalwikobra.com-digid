@@ -221,7 +221,6 @@ class IntelligentPrefetchManager {
     if (!this.config.prefetchOnIdle || this.isUserIdle) return;
     
     this.isUserIdle = true;
-    console.log('🏃‍♂️ User idle - starting background prefetch');
     
     // Prefetch low-priority data during idle time
     this.prefetchIdleData();

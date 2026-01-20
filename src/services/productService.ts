@@ -190,7 +190,6 @@ export class ProductService {
   static resetCapabilities() {
     hasRelations = null;
     hasFlashSaleJoin = null;
-    console.log('🔄 ProductService capabilities reset');
   }
 
   // Test and detect current schema capabilities
@@ -219,10 +218,8 @@ export class ProductService {
       if (!error) {
         capabilities.hasRelationalSchema = true;
         hasRelations = true;
-        console.log('✅ Relational schema detected');
       } else {
         hasRelations = false;
-        console.log('⚠️ Legacy schema detected');
       }
 
   // Legacy products.game_title text column has been dropped – no detection needed
@@ -235,7 +232,6 @@ export class ProductService {
 
       if (!rentalError) {
         capabilities.hasRentalOptions = true;
-        console.log('✅ Rental options table available');
       }
 
       // Test flash sales
@@ -246,7 +242,6 @@ export class ProductService {
 
       if (!flashError) {
         capabilities.hasFlashSales = true;
-        console.log('✅ Flash sales table available');
       }
 
     } catch (error) {
@@ -393,7 +388,6 @@ export class ProductService {
 
   static async getProductById(id: string): Promise<Product | null> {
     try {
-      console.log('[ProductService] getProductById called with id:', id, 'type:', typeof id);
       
       // Validate input ID
       if (!id || typeof id !== 'string' || id.trim() === '' || id.trim() === 'undefined') {
@@ -407,21 +401,18 @@ export class ProductService {
       if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
         console.warn('[ProductService] Supabase not configured, using sample data');
         const sample = sampleProducts.find(p => p.id === trimmedId) || null;
-        console.log('[ProductService] Returning sample product:', sample?.id);
         return sample;
       }
 
       if (!supabase) {
         console.warn('[ProductService] No supabase client available, using sample data');
         const sample = sampleProducts.find(p => p.id === trimmedId) || null;
-        console.log('[ProductService] No supabase client, returning sample:', sample?.id);
         return sample;
       }
 
       // Add production environment logging
       const isProduction = process.env.NODE_ENV === 'production';
       if (isProduction) {
-        console.log('[ProductService] Production environment - fetching product:', trimmedId);
       }
 
       // Prefer single-call with nested rental options to reduce round-trips
@@ -461,25 +452,14 @@ export class ProductService {
         }
         
         const sample = sampleProducts.find(p => p.id === trimmedId) || null;
-        console.log('[ProductService] Error fallback to sample:', sample?.id);
         return sample;
       }
 
       if (!data) {
-        console.log('[ProductService] No product found for id:', trimmedId);
         if (isProduction) {
-          console.log('[ProductService] Production: Product not found, this might indicate a routing or database issue');
         }
         return null;
       }
-      
-      console.log('[ProductService] Found product from DB:', { 
-        id: data.id, 
-        name: data.name, 
-        idType: typeof data.id,
-        isActive: data.is_active,
-        archivedAt: data.archived_at
-      });
       
       const rentalOptions: any[] = (data as any).rental_options || [];
       const cat = (data as any).categories;
@@ -505,14 +485,6 @@ export class ProductService {
         archivedAt: (data as any).archived_at ?? (data as any).archivedAt ?? null,
       } as any;
       
-      console.log('[ProductService] Returning final product:', { 
-        id: result.id, 
-        name: result.name, 
-        idType: typeof result.id,
-        isActive: result.isActive,
-        archivedAt: result.archivedAt
-      });
-      
       return result;
     } catch (error) {
       console.error('[ProductService] Exception in getProductById:', {
@@ -524,7 +496,6 @@ export class ProductService {
       });
       
       const sample = sampleProducts.find(p => p.id === id) || null;
-      console.log('[ProductService] Exception fallback to sample:', sample?.id);
       return sample;
     }
   }
@@ -916,15 +887,7 @@ export class ProductService {
 
   static async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & Record<string, any>): Promise<Product | null> {
     try {
-      console.log('🚀 ProductService.createProduct called with (sanitized):', {
-        name: product.name,
-        price: product.price,
-        categoryId: product.categoryId,
-        hasRental: product.hasRental,
-        isFlashSale: product.isFlashSale,
-      });
-
-      // Server-side defensive guard: prevent any blob: URLs leaking into DB
+            // Server-side defensive guard: prevent any blob: URLs leaking into DB
       if (Array.isArray(product.images) && product.images.some((img: string) => typeof img === 'string' && img.startsWith('blob:'))) {
         throw new Error('Blob URL detected in images payload (create). Upload not finished.');
       }
@@ -1004,8 +967,6 @@ export class ProductService {
       });
       // --- Defensive normalization end ---
 
-      console.log('💾 Final create payload:', payload);
-
       const { data, error } = await supabase.from('products').insert([payload]).select().single();
 
       if (error) {
@@ -1035,8 +996,6 @@ export class ProductService {
 
         throw error;
       }
-
-      console.log('✅ Product created successfully:', data?.id);
       return data;
     } catch (error) {
       console.error('💥 ProductService.createProduct error:', error);
@@ -1046,12 +1005,7 @@ export class ProductService {
 
   static async updateProduct(id: string, updates: Partial<Product> & Record<string, any>): Promise<Product | null> {
     try {
-      console.log('🚀 ProductService.updateProduct called with:', {
-        id,
-        fields: Object.keys(updates)
-      });
-
-      // Server-side defensive guard: reject blob placeholders
+            // Server-side defensive guard: reject blob placeholders
       if (Array.isArray((updates as any).images) && (updates as any).images.some((img: string) => typeof img === 'string' && img.startsWith('blob:'))) {
         throw new Error('Blob URL detected in images payload (update). Upload not finished.');
       }
@@ -1114,17 +1068,13 @@ export class ProductService {
   payload.game_title_id = normalizeFk(emptyToNull((updates as any).game_title_id ?? updates.gameTitleId));
   payload.tier_id = normalizeFk(emptyToNull((updates as any).tier_id ?? updates.tierId));
   delete payload.game_title; // ensure not sent
-  console.log('� Using relational schema (legacy game_title fully removed)');
-
-      // Remove undefined values to prevent database issues
+        // Remove undefined values to prevent database issues
       Object.keys(payload).forEach(k => {
         if (payload[k] === undefined) {
           delete payload[k];
         }
       });
       // --- Defensive normalization end (update) ---
-
-      console.log('💾 Final update payload:', payload);
 
       const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
 
@@ -1138,8 +1088,6 @@ export class ProductService {
         });
         throw error;
       }
-
-      console.log('✅ Product updated successfully:', data?.id);
       return data;
     } catch (error) {
       console.error('💥 ProductService.updateProduct error:', error);

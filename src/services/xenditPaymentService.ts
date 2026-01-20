@@ -55,7 +55,6 @@ export async function fetchAvailablePaymentMethods(amount?: number): Promise<Xen
   try {
     // For development, return static methods immediately to avoid 404
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Development] Using static payment methods');
       return getStaticPaymentMethods();
     }
 

@@ -85,21 +85,17 @@ const PaymentStatusPage: React.FC = () => {
     if (!order || order.status !== 'pending') {
       return; // Don't poll if no order or already paid/completed/cancelled
     }
-
-    console.log('[PaymentStatus] Starting polling for order status updates...');
     
     // Poll every 5 seconds for status updates
     const pollInterval = setInterval(async () => {
       try {
         const updatedOrder = await fetchOrder();
         if (updatedOrder && updatedOrder.status !== order.status) {
-          console.log('[PaymentStatus] Status changed from', order.status, 'to', updatedOrder.status);
           setOrder(updatedOrder);
           
           // Stop polling if status is no longer pending
           if (updatedOrder.status !== 'pending') {
             clearInterval(pollInterval);
-            console.log('[PaymentStatus] Payment status updated, stopping poll');
           }
         }
       } catch (error) {
@@ -109,7 +105,6 @@ const PaymentStatusPage: React.FC = () => {
 
     // Cleanup on unmount or when order changes
     return () => {
-      console.log('[PaymentStatus] Stopping polling');
       clearInterval(pollInterval);
     };
   }, [order?.id, order?.status]);

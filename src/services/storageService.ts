@@ -41,15 +41,6 @@ export async function uploadFile(file: File, folder = 'products'): Promise<Uploa
     
     const isProduction = process.env.NODE_ENV === 'production';
     
-    console.log('[StorageService] Uploading file:', { 
-      fileName: file.name, 
-      fileSize: file.size,
-      fileType: file.type,
-      path, 
-      bucket: BUCKET,
-      isProduction
-    });
-    
     const { data: uploadData, error } = await supabase.storage
       .from(BUCKET)
       .upload(path, file, {
@@ -96,12 +87,6 @@ export async function uploadFile(file: File, folder = 'products'): Promise<Uploa
     if (!urlData?.publicUrl) {
       throw new Error('Failed to get public URL for uploaded file');
     }
-    
-    console.log('[StorageService] Upload successful:', { 
-      path: uploadData.path, 
-      url: urlData.publicUrl,
-      isProduction
-    });
     
     return {
       path: uploadData.path,

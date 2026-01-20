@@ -62,14 +62,7 @@ export const useFlashSaleProductDetail = () => {
   const shouldOpenCheckoutModal = Boolean((location as any)?.state?.openCheckoutModal);
 
   // Debug navigation state
-  console.log('🧭 Navigation state debug:', {
-    locationState: (location as any)?.state,
-    flashSaleData,
-    shouldOpenCheckoutModal,
-    fromFlashSaleCard: (location as any)?.state?.fromFlashSaleCard
-  });
-
-  // Product state
+    // Product state
   const [state, setState] = useState<ProductDetailState>({
     product: null,
     loading: true,
@@ -109,12 +102,6 @@ export const useFlashSaleProductDetail = () => {
 
   // Debug logging
   useEffect(() => {
-    console.log('🎯 FlashSaleProductDetailPage: Initialized', {
-      productId: id,
-      hasFlashSaleData: !!flashSaleData,
-      flashSaleData,
-      shouldOpenCheckoutModal
-    });
   }, [id, flashSaleData, shouldOpenCheckoutModal]);
 
   // Load WhatsApp configuration
@@ -149,7 +136,6 @@ export const useFlashSaleProductDetail = () => {
       // Apply flash sale data if available
       let finalProduct = data;
       if (flashSaleData) {
-        console.log('🎯 Applying flash sale data:', flashSaleData);
         
         // Use flash sale data if valid, otherwise use product data as fallback
         const flashSalePrice = flashSaleData.salePrice || (data.price * 0.8); // Assume 20% discount if no sale price
@@ -163,15 +149,6 @@ export const useFlashSaleProductDetail = () => {
           price: flashSalePrice,
           originalPrice: originalPrice
         };
-        
-        console.log('🎯 Final product with flash sale data:', {
-          name: finalProduct.name,
-          isFlashSale: finalProduct.isFlashSale,
-          flashSaleEndTime: finalProduct.flashSaleEndTime,
-          price: finalProduct.price,
-          originalPrice: finalProduct.originalPrice,
-          flashSaleDataWasValid: !!flashSaleData.salePrice
-        });
       }
 
       setState(prev => ({
@@ -330,8 +307,6 @@ export const useFlashSaleProductDetail = () => {
           user_id: null
         }
       });
-
-      console.log('✅ Flash sale invoice created:', invoiceData);
       
       // Redirect to payment URL
       if (invoiceData.invoice_url) {

@@ -19,7 +19,6 @@ function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancell
 // Separate function specifically for creating admin database notifications when payment is completed
 async function createAdminPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
   try {
-    console.log('[Admin] Looking for order to create paid notification:', { invoiceId, externalId });
     
     // Query for order with paid status to ensure we only notify for actually paid orders
     let q = sb.from('orders')
@@ -56,19 +55,11 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
     const order = orders?.[0];
     
     if (!order) {
-      console.log('[Admin] No paid order found for creating paid notification');
       return;
     }
 
-    console.log('[Admin] Found paid order for notification:', {
-      id: order.id,
-      status: order.status,
-      order_type: order.order_type
-    });
-
     // Get product name using shared utility with enhanced fallback logic
     const productName = await getProductName(sb, order.product_id, order.order_type);
-    console.log('[Admin] Final product name for notification:', productName);
 
     // Create the admin notification using shared service
     await createOrderNotification(
@@ -83,25 +74,13 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
       order.rental_duration
     );
     
-    console.log('[Admin] Paid order database notification created successfully');
-    
   } catch (error) {
     console.error('[Admin] Failed to create paid order database notification:', error);
   }
 }
 
 async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
-  console.log('[WhatsApp] ============ NOTIFICATION START ============');
-  console.log('[WhatsApp] Starting notification with:', { invoiceId, externalId });
-  console.log('[WhatsApp] Timestamp:', new Date().toISOString());
-  console.log('[WhatsApp] Supabase client provided:', !!sb);
-  console.log('[WhatsApp] Environment check:', {
-    hasSupabaseUrl: !!process.env.SUPABASE_URL,
-    hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    hasReactUrl: !!process.env.REACT_APP_SUPABASE_URL,
-    hasAltKey: !!process.env.SUPABASE_SERVICE_KEY
-  });
-  
+    
   try {
     
     // First, try to find the order without status filter to see if it exists
@@ -130,12 +109,9 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     
     if (invoiceId) {
       checkQuery = checkQuery.eq('xendit_invoice_id', invoiceId);
-      console.log('[WhatsApp] Checking order by xendit_invoice_id:', invoiceId);
     } else if (externalId) {
       checkQuery = checkQuery.eq('client_external_id', externalId);
-      console.log('[WhatsApp] Checking order by client_external_id:', externalId);
     } else {
-      console.log('[WhatsApp] No invoice_id or external_id provided, cannot send notification');
       return;
     }
     
@@ -147,38 +123,21 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     }
     
     if (!checkOrders || checkOrders.length === 0) {
-      console.log('[WhatsApp] ⚠️  Order not found in database:', { invoiceId, externalId });
-      console.log('[WhatsApp] This might be a webhook for a QR code that hasn\'t been linked to an order yet');
       return;
     }
     
     const order = checkOrders[0];
-    console.log('[WhatsApp] Found order:', {
-      id: order.id,
-      status: order.status,
-      order_type: order.order_type,
-      amount: order.amount,
-      paid_at: order.paid_at
-    });
     
     // Check if order status is paid or completed
     if (order.status !== 'paid' && order.status !== 'completed') {
-      console.log('[WhatsApp] ⚠️  Order found but status is not paid/completed:', order.status);
-      console.log('[WhatsApp] Order might not have been updated yet, notification will be skipped');
       return;
     }
-    
-    console.log('[WhatsApp] ✅ Order is paid/completed, proceeding with notification');
-    console.log('[WhatsApp] Will attempt to send to:');
-    console.log('[WhatsApp]   - Group notification for order type:', order.order_type);
-    console.log('[WhatsApp]   - Customer notification to:', order.customer_phone);
     
     const product = order.products;
     let productName = product?.name;
     
     // If product name is still not found, try to fetch it directly
     if (!productName && order.product_id) {
-      console.log('[WhatsApp] Product name not found in relationship, fetching directly...');
       try {
         const { data: productData } = await sb
           .from('products')
@@ -186,7 +145,6 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
           .eq('id', order.product_id)
           .single();
         productName = productData?.name;
-        console.log('[WhatsApp] Direct product fetch result:', productName);
       } catch (fetchError) {
         console.error('[WhatsApp] Failed to fetch product directly:', fetchError);
       }
@@ -197,9 +155,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     // Final fallback with better description
     if (!productName) {
       productName = isRental ? 'Akun Game Rental' : 'Akun Game Premium';
-      console.log('[WhatsApp] Using fallback product name based on order type:', productName);
     }
-    console.log('[WhatsApp] Final product name for notification:', productName);
     
     // Get product URL
     const productId = order.product_id;
@@ -369,8 +325,6 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
     const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
     const wa = new DynamicWhatsAppService();
     
-    console.log('[WhatsApp] ✓ WhatsApp service initialized');
-    
     // Get contact phone for customer support
     const contactPhone = await wa.getContactPhone();
     
@@ -408,17 +362,10 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
       });
       const duration = Date.now() - start;
       if (resp.success) {
-        console.log('[WhatsApp] Admin group notified', { 
-          groupId, 
-          orderType: order.order_type,
-          isRental,
-          ms: duration 
-        });
       } else {
         console.error('[WhatsApp] Admin group notification failed:', resp.error);
       }
     } else {
-      console.log('[WhatsApp] Admin group already notified for', contextId);
     }
 
 
@@ -434,7 +381,6 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
         else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
         if (!/^62\d{8,15}$/.test(customerPhone)) {
-          console.log(`[WhatsApp] Invalid phone number format: ${order.customer_phone}`);
           return;
         }
 
@@ -567,7 +513,6 @@ Happy Gaming Bosku! 🔥`;
         // Idempotency per order+status for customer
   const alreadySentCustomer = await wa.hasMessageLog('order-paid-customer', contextId);
         if (alreadySentCustomer) {
-          console.log('[WhatsApp] Customer already notified for', contextId);
           return;
         }
 
@@ -579,7 +524,6 @@ Happy Gaming Bosku! 🔥`;
           contextId
         });
         if (sendRes.success) {
-          console.log(`[WhatsApp] Customer notification sent to ${customerPhone}`);
         } else {
           console.error('[WhatsApp] Customer notification failed:', sendRes.error);
         }
@@ -587,7 +531,6 @@ Happy Gaming Bosku! 🔥`;
         console.error('[WhatsApp] Error sending customer notification:', customerError);
       }
     } else {
-      console.log('[WhatsApp] No customer phone number provided, skipping customer notification');
     }
 
   } catch (error) {
@@ -595,13 +538,11 @@ Happy Gaming Bosku! 🔥`;
     console.error('[WhatsApp] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     console.error('[WhatsApp] Error details:', JSON.stringify(error, null, 2));
   } finally {
-    console.log('[WhatsApp] ============ NOTIFICATION END ============');
   }
 }
 
 export default async function handler(req: any, res: any) {
-  console.log('[Webhook] Handler invoked at', new Date().toISOString());
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // Admin test hook: send a WhatsApp group message using DB-configured provider
   // Usage: POST /api/xendit/webhook?testGroupSend=1 { message, groupId? }
@@ -637,9 +578,7 @@ export default async function handler(req: any, res: any) {
     const event = (payload.event || payload.type || '').toString();
     const data = payload.data || payload;
 
-    console.log('[Webhook] Raw payload received:', JSON.stringify(payload, null, 2));
-
-    // Extract identifiers from various possible shapes
+        // Extract identifiers from various possible shapes
     const invoiceId: string | undefined =
       data.id || data.invoice_id || data.payment_request_id || data.payment_method_id ||
       data.qr_code?.id || data.payment_method?.id;
@@ -648,15 +587,11 @@ export default async function handler(req: any, res: any) {
       data.external_id || data.reference_id || data.qr_code?.external_id || data.qr_code?.reference_id ||
       data.payment_method?.reference_id || data.payment_method?.external_id;
 
-    console.log('[Webhook] Extracted identifiers:', { invoiceId, externalId, event });
-
     // Determine status from field or event name
     const rawStatus: string | undefined = data.status || data.qr_code?.status || data.payment_method?.status ||
       (event.includes('succeeded') ? 'SUCCEEDED' : undefined) ||
       (event.includes('failed') ? 'FAILED' : undefined) ||
       (event.includes('expired') ? 'EXPIRED' : undefined);
-
-    console.log('[Webhook] Status determination:', { rawStatus, event });
 
     if (!externalId && !invoiceId) {
       console.error('[Webhook] Missing identifiers in payload');
@@ -677,20 +612,11 @@ export default async function handler(req: any, res: any) {
     const { createClient } = await import('@supabase/supabase-js');
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    console.log('[Webhook] Processing payment webhook:', {
-      event,
-      invoiceId,
-      externalId,
-      status,
-      rawStatus
-    });
-
     // Try update by invoice id first
     let updated = 0;
     let foundOrderId: string | null = null;
     
     if (invoiceId) {
-      console.log('[Webhook] Attempting update by xendit_invoice_id:', invoiceId);
       const { data: up, error } = await sb
         .from('orders')
         .update({
@@ -707,9 +633,7 @@ export default async function handler(req: any, res: any) {
         .select('id, status, xendit_invoice_id, client_external_id, order_type, product_id');
       if (!error) {
         updated = (up || []).length;
-        console.log('[Webhook] Updated', updated, 'orders by xendit_invoice_id');
         if (up && up.length > 0) {
-          console.log('[Webhook] Updated order details:', up[0]);
           foundOrderId = up[0].id;
         }
       } else {
@@ -719,7 +643,6 @@ export default async function handler(req: any, res: any) {
 
     // Fallback: update by client_external_id (we set external_id === client_external_id when creating invoice)
     if (updated === 0 && externalId) {
-      console.log('[Webhook] Attempting update by client_external_id:', externalId);
       const { data: up2, error: e2 } = await sb
         .from('orders')
         .update({
@@ -736,15 +659,12 @@ export default async function handler(req: any, res: any) {
         .select('id, status, xendit_invoice_id, client_external_id, order_type, product_id');
       if (!e2) {
         updated = (up2 || []).length;
-        console.log('[Webhook] Updated', updated, 'orders by client_external_id');
         if (up2 && up2.length > 0) {
-          console.log('[Webhook] Updated order details:', up2[0]);
           foundOrderId = up2[0].id;
           
           // CRITICAL FIX: If we found the order by client_external_id but it didn't have xendit_invoice_id,
           // this means the invoice was created but the order wasn't linked. Now it's linked.
           if (!up2[0].xendit_invoice_id && invoiceId) {
-            console.log('[Webhook] ✅ FIXED: Linked xendit_invoice_id to order that was missing it');
           }
         }
       } else {
@@ -755,7 +675,6 @@ export default async function handler(req: any, res: any) {
     // Additional fallback: Try to find order using partial match on external_id
     // This handles cases where external_id might have prefixes/suffixes
     if (updated === 0 && externalId) {
-      console.log('[Webhook] Attempting fuzzy match on client_external_id containing:', externalId);
       const { data: up3, error: e3 } = await sb
         .from('orders')
         .select('id, client_external_id, xendit_invoice_id, status, order_type')
@@ -763,7 +682,6 @@ export default async function handler(req: any, res: any) {
         .limit(1);
       
       if (!e3 && up3 && up3.length > 0) {
-        console.log('[Webhook] Found potential match via fuzzy search:', up3[0]);
         const { data: up3Update, error: e3Update } = await sb
           .from('orders')
           .update({
@@ -781,8 +699,6 @@ export default async function handler(req: any, res: any) {
         
         if (!e3Update && up3Update && up3Update.length > 0) {
           updated = up3Update.length;
-          console.log('[Webhook] Updated', updated, 'orders via fuzzy match');
-          console.log('[Webhook] Updated order details:', up3Update[0]);
           foundOrderId = up3Update[0].id;
         }
       } else if (e3) {
@@ -821,7 +737,6 @@ export default async function handler(req: any, res: any) {
               updated_at: new Date().toISOString()
             })
             .eq('id', orderRow.product_id);
-          console.log('[Webhook] ✅ Product marked sold via web:', orderRow.product_id);
         }
       } catch (soldErr) {
         console.error('[Webhook] ❌ Failed to mark product as sold via web:', soldErr);
@@ -829,7 +744,6 @@ export default async function handler(req: any, res: any) {
     }
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling
-    console.log(`[Webhook] Starting payment status sync: status=${status}, invoiceId=${invoiceId}, externalId=${externalId}`);
     
     let ordersUpdated = 0;
     let paymentsUpdated = 0;
@@ -837,7 +751,6 @@ export default async function handler(req: any, res: any) {
 
     // Update payments table first to ensure payment status is recorded
     try {
-      console.log('[Webhook] Updating payments table...');
       
       if (externalId) {
         const paymentUpdateData: any = {
@@ -857,14 +770,11 @@ export default async function handler(req: any, res: any) {
 
         if (!paymentError && paymentUpdate && paymentUpdate.length > 0) {
           paymentsUpdated += paymentUpdate.length;
-          console.log(`[Webhook] ✅ Successfully updated ${paymentUpdate.length} payment record(s) by external_id to status: ${status.toUpperCase()}`);
-          console.log(`[Webhook] Updated payment records:`, paymentUpdate.map(p => ({ id: p.id, status: p.status, external_id: p.external_id })));
-        } else if (paymentError) {
+                            } else if (paymentError) {
           const error = `Error updating payments table by external_id: ${JSON.stringify(paymentError)}`;
           console.error(`[Webhook] ❌ ${error}`);
           updateErrors.push(error);
         } else {
-          console.log(`[Webhook] ⚠️ No payment records found to update for external_id: ${externalId}`);
         }
       }
 
@@ -887,9 +797,7 @@ export default async function handler(req: any, res: any) {
 
         if (!paymentErrorById && paymentUpdateById && paymentUpdateById.length > 0) {
           paymentsUpdated += paymentUpdateById.length;
-          console.log(`[Webhook] ✅ Successfully updated ${paymentUpdateById.length} payment record(s) by xendit_id to status: ${status.toUpperCase()}`);
-          console.log(`[Webhook] Updated payment records:`, paymentUpdateById.map(p => ({ id: p.id, status: p.status, xendit_id: p.xendit_id })));
-        } else if (paymentErrorById) {
+                            } else if (paymentErrorById) {
           const error = `Error updating payments table by xendit_id: ${JSON.stringify(paymentErrorById)}`;
           console.error(`[Webhook] ❌ ${error}`);
           updateErrors.push(error);
@@ -902,7 +810,6 @@ export default async function handler(req: any, res: any) {
     }
 
     // Log final payment update status
-    console.log(`[Webhook] Payment table update summary: ${paymentsUpdated} records updated`);
     
     if (updateErrors.length > 0) {
       console.error(`[Webhook] ❌ ${updateErrors.length} errors occurred during payment status sync:`);
@@ -1014,28 +921,22 @@ export default async function handler(req: any, res: any) {
 
     // Send notifications on successful payment
     try {
-      console.log('[Webhook] Processing complete:', { updated, status, invoiceId, externalId });
       
       // Always attempt to send notification if status is paid/completed, regardless of update count
       // This handles edge cases where webhook is called multiple times or order was already updated
       if (status === 'paid' || status === 'completed') {
-        console.log('[Webhook] Payment status is paid/completed, attempting notification');
         
         // Send WhatsApp notifications for successful payments
         // Some channels report final state as 'completed' (e.g., SETTLED), not 'paid'
-        console.log('[Webhook] Calling sendOrderPaidNotification with:', { invoiceId, externalId });
         await sendOrderPaidNotification(sb, invoiceId, externalId);
         
         // Create admin database notification separately
-        console.log('[Webhook] Creating admin database notification for paid order');
         try {
           await createAdminPaidNotification(sb, invoiceId, externalId);
-          console.log('[Webhook] Admin database notification completed successfully');
         } catch (adminNotificationError) {
           console.error('[Webhook] Admin database notification failed:', adminNotificationError);
         }
       } else {
-        console.log('[Webhook] Status not paid/completed, skipping notifications:', { status });
       }
     } catch (e) {
       console.error('[Webhook] Failed to send notifications after payment:', e);
@@ -1045,7 +946,6 @@ export default async function handler(req: any, res: any) {
     let syncStatus = 'unknown';
     try {
       if ((status === 'paid' || status === 'completed') && (invoiceId || externalId)) {
-        console.log('[Webhook] Performing final sync verification...');
         
         // Query both tables to verify sync
         let orderQuery = sb.from('orders').select('id, status, paid_at');
@@ -1074,7 +974,6 @@ export default async function handler(req: any, res: any) {
           if ((orderStatus === 'paid' || orderStatus === 'completed') && 
               (paymentStatus === 'paid' || paymentStatus === 'completed')) {
             syncStatus = 'synced';
-            console.log('[Webhook] ✅ Sync verification successful: Both tables updated');
           } else {
             syncStatus = 'out_of_sync';
             console.error('[Webhook] ❌ Sync verification failed: Tables out of sync');

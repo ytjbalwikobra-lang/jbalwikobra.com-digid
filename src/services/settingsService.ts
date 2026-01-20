@@ -17,30 +17,21 @@ const SETTINGS_CACHE_KEY = 'website:settings';
 export class SettingsService {
   // Method to clear cache - useful for debugging and after updates
   static clearCache(): void {
-    console.log('🧹 Clearing SettingsService cache');
     globalCache.invalidateByTags([SETTINGS_CACHE_TAG]);
   }
 
   // Method to force refresh settings without cache
   static async forceRefresh(): Promise<WebsiteSettings> {
-    console.log('🔄 Force refreshing settings (bypassing cache)');
-    this.clearCache();
+        this.clearCache();
     return await this.get();
   }
 
   // Debug method to check current cache and database state
   static async debugStatus(): Promise<void> {
-    console.log('🐛 SettingsService Debug Status:');
     const cached = globalCache.get<WebsiteSettings>(SETTINGS_CACHE_KEY);
-    console.log('📦 Cache state:', cached ? { cached: true } : { cached: false });
     
     try {
       const fresh = await this.forceRefresh();
-      console.log('🌐 Fresh database data:', {
-        heroButtonUrl: fresh.heroButtonUrl,
-        topupGameUrl: fresh.topupGameUrl,
-        whatsappChannelUrl: fresh.whatsappChannelUrl
-      });
     } catch (e) {
       console.error('❌ Failed to fetch fresh data:', e);
     }
@@ -51,8 +42,7 @@ export class SettingsService {
     return globalCache.getOrSet<WebsiteSettings>(
       SETTINGS_CACHE_KEY,
       async () => {
-        console.log('🔍 SettingsService.get() - fetching fresh data');
-        return this.fetchSettings();
+                return this.fetchSettings();
       },
       { ttl: cacheUtils.TTL.MEDIUM, tags: [SETTINGS_CACHE_TAG] }
     );
@@ -62,14 +52,12 @@ export class SettingsService {
     try {
 
       if (!supabase) {
-        console.log('⚠️ No Supabase client, using DEFAULT_SETTINGS');
         return DEFAULT_SETTINGS;
       }
       
       // Try admin API first if we have a session token
       const sessionToken = localStorage.getItem('session_token');
       if (sessionToken) {
-        console.log('🔧 Trying admin API for settings fetch');
         try {
           const response = await fetch('/api/admin?action=settings', {
             method: 'GET',
@@ -81,7 +69,6 @@ export class SettingsService {
           
           if (response.ok) {
             const result = await response.json();
-            console.log('✅ Settings fetched via admin API');
             if (result.data) {
               // Map the database format to our interface format
               const data = result.data;
@@ -117,14 +104,10 @@ export class SettingsService {
               return mappedResult;
             }
           } else {
-            console.log('⚠️ Admin API failed, falling back to direct Supabase');
           }
         } catch (apiError) {
-          console.log('⚠️ Admin API error, falling back to direct Supabase:', apiError);
         }
       }
-
-      console.log('🌐 Fetching from database...');
       const { data, error } = await (supabase as any)
         .from('website_settings')
         .select('id, site_name, logo_url, favicon_url, contact_email, support_email, contact_phone, whatsapp_number, address, business_hours, company_description, facebook_url, instagram_url, tiktok_url, youtube_url, twitter_url, hero_title, hero_subtitle, footer_copyright_text, newsletter_enabled, social_media_enabled, topup_game_url, whatsapp_channel_url, hero_button_url, jual_akun_whatsapp_url, updated_at')
@@ -137,16 +120,8 @@ export class SettingsService {
       }
       
       if (!data) {
-        console.log('📭 No data found, using DEFAULT_SETTINGS');
         return DEFAULT_SETTINGS;
       }
-      
-      console.log('✅ Database data fetched:', {
-        id: data.id,
-        site_name: data.site_name,
-        contact_email: data.contact_email,
-        whatsapp_number: data.whatsapp_number
-      });
       const result: WebsiteSettings = {
         id: data.id ?? 'default',
         siteName: data.site_name ?? DEFAULT_SETTINGS.siteName,
@@ -176,15 +151,6 @@ export class SettingsService {
         updatedAt: data.updated_at ?? undefined,
       };
       
-      console.log('🎯 Mapped result:', {
-        siteName: result.siteName,
-        contactEmail: result.contactEmail,
-        whatsappNumber: result.whatsappNumber,
-        businessHours: result.businessHours,
-        whatsappChannelUrl: result.whatsappChannelUrl,
-        topupGameUrl: result.topupGameUrl
-      });
-      
       return result;
     } catch (e) {
       console.error('SettingsService.get error:', e);
@@ -200,7 +166,6 @@ export class SettingsService {
       // This ensures proper authentication and permissions
       const sessionToken = localStorage.getItem('session_token');
       if (sessionToken) {
-        console.log('🔧 Using admin API for settings update');
         try {
           // Transform interface format to database column names
           const dbInput: any = {};
@@ -228,8 +193,6 @@ export class SettingsService {
           if ('whatsappChannelUrl' in input) dbInput.whatsapp_channel_url = input.whatsappChannelUrl;
           if ('heroButtonUrl' in input) dbInput.hero_button_url = input.heroButtonUrl;
           if ('jualAkunWhatsappUrl' in input) dbInput.jual_akun_whatsapp_url = input.jualAkunWhatsappUrl;
-          
-          console.log('📤 Sending to admin API:', dbInput);
 
           const response = await fetch('/api/admin?action=update-settings', {
             method: 'POST',
@@ -242,14 +205,11 @@ export class SettingsService {
           
           if (response.ok) {
             const result = await response.json();
-            console.log('✅ Settings updated via admin API');
             this.clearCache(); // Clear cache
             return await this.get(); // Return fresh data
           } else {
-            console.log('⚠️ Admin API failed, falling back to direct Supabase');
           }
         } catch (apiError) {
-          console.log('⚠️ Admin API error, falling back to direct Supabase:', apiError);
         }
       }
       
@@ -325,13 +285,6 @@ export class SettingsService {
         jualAkunWhatsappUrl: row.jual_akun_whatsapp_url ?? current.jualAkunWhatsappUrl,
         updatedAt: row.updated_at ?? new Date().toISOString(),
       };
-      
-      console.log('✅ Settings upsert successful:', {
-        id: result.id,
-        heroButtonUrl: result.heroButtonUrl,
-        topupGameUrl: result.topupGameUrl,
-        whatsappChannelUrl: result.whatsappChannelUrl
-      });
       
       // Invalidate/refresh cache and store new value
       this.clearCache();

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /**
  * useKeyboardShortcuts Hook - Power User Keyboard Navigation
  * 

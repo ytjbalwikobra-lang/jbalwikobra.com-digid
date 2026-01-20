@@ -1,0 +1,21 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="50%" style="stop-color:#16213e"/>
+      <stop offset="100%" style="stop-color:#0f0f23"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="50" y="50" width="120" height="120" rx="24" fill="url(#accent)"/>
+  <text x="110" y="130" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="white" text-anchor="middle">JB</text>
+  <text x="200" y="130" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">Alwikobra</text>
+  <text x="600" y="340" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="white" text-anchor="middle">Jual Beli &amp; Rental</text>
+  <text x="600" y="420" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="url(#accent)" text-anchor="middle">Akun Game Terpercaya</text>
+  <text x="600" y="520" font-family="Arial, sans-serif" font-size="32" fill="#9ca3af" text-anchor="middle">Mobile Legends  PUBG Mobile  Free Fire  Genshin Impact</text>
+  <rect x="0" y="610" width="1200" height="20" fill="url(#accent)"/>
+</svg>

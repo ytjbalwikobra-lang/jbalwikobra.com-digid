@@ -20,7 +20,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    console.log('[Get Invoice Details] Fetching invoice from Xendit:', invoice_id);
     
     const response = await fetch(`${XENDIT_BASE_URL}/v2/invoices/${invoice_id}`, {
       method: 'GET',
@@ -37,10 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const invoiceData = await response.json();
-    console.log('[Get Invoice Details] ✅ Invoice data received');
-    console.log('[Get Invoice Details] 🔍 FULL INVOICE DATA:', JSON.stringify(invoiceData, null, 2));
-
-    // Extract Virtual Account details
+        // Extract Virtual Account details
     let vaDetails: Record<string, any> = {};
     
     if (invoiceData.available_banks && invoiceData.available_banks.length > 0) {
@@ -52,7 +48,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         account_holder_name: bank.account_holder_name,
         transfer_amount: bank.transfer_amount
       };
-      console.log('[Get Invoice Details] ✅ VA details extracted:', vaDetails);
     } else if (invoiceData.available_virtual_account_banks && invoiceData.available_virtual_account_banks.length > 0) {
       const vaBank = invoiceData.available_virtual_account_banks[0];
       vaDetails = {
@@ -61,7 +56,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         bank_name: vaBank.bank_name,
         account_holder_name: vaBank.account_holder_name
       };
-      console.log('[Get Invoice Details] ✅ VA bank details extracted:', vaDetails);
     }
 
     return res.status(200).json({

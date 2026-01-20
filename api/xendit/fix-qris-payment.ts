@@ -30,7 +30,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    console.log('[Fix QRIS] Starting fix for payment:', paymentId);
 
     // Step 1: Fetch from Xendit Invoice API v2
     const xenditUrl = `https://api.xendit.co/v2/invoices/${paymentId}`;
@@ -54,7 +53,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const invoiceData = await xenditResponse.json();
-    console.log('[Fix QRIS] Invoice fetched, status:', invoiceData.status);
 
     // Step 2: Extract QR string from available_banks
     if (!invoiceData.available_banks || invoiceData.available_banks.length === 0) {
@@ -87,8 +85,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    console.log('[Fix QRIS] QR string found, length:', qrString.length);
-
     // Step 3: Update database
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -107,8 +103,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         details: fetchError
       });
     }
-
-    console.log('[Fix QRIS] Current payment_data:', existingPayment.payment_data);
 
     // Update with QR string
     const updatedPaymentData = {
@@ -137,8 +131,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         details: updateError
       });
     }
-
-    console.log('[Fix QRIS] ✅ Payment updated successfully');
 
     return res.status(200).json({
       success: true,

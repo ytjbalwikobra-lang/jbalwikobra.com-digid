@@ -29,7 +29,6 @@ import { createOrderNotification, getProductName } from '../_utils/notificationS
 async function createOrderIfProvided(order: any, clientExternalId?: string) {
   try {
     if (!order) {
-      console.log('[createOrderIfProvided] No order payload provided');
       return null;
     }
     if (!SUPABASE_URL) {
@@ -40,13 +39,6 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       console.error('[createOrderIfProvided] Missing SUPABASE_SERVICE_ROLE_KEY env var');
       return null;
     }
-    
-    console.log('[createOrderIfProvided] Attempting to create order:', { 
-      clientExternalId, 
-      product_id: order.product_id, 
-      customer_name: order.customer_name,
-      amount: order.amount 
-    });
     
     const { createClient } = await import('@supabase/supabase-js');
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -59,7 +51,6 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
         order.product_id = null; // Set to null instead of failing
       } else {
         // Log that we have a valid product_id (useful for debugging)
-        console.log('[createOrderIfProvided] Valid product_id provided:', order.product_id);
       }
     }
     
@@ -78,7 +69,6 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
     };
     // If we have a client external id, try to reuse existing order row to be idempotent
     if (clientExternalId) {
-      console.log('[createOrderIfProvided] Checking for existing order with client_external_id:', clientExternalId);
       const existingRes = await sb
         .from('orders')
         .select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id')
@@ -89,14 +79,11 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       }
       const existing = Array.isArray(existingRes.data) ? existingRes.data[0] : null;
       if (existing) {
-        console.log('[createOrderIfProvided] Found existing order:', existing.id);
         // If invoice already attached (likely paid/pending at gateway), just return it
         if (existing.xendit_invoice_id) {
-          console.log('[createOrderIfProvided] Existing order already has invoice, returning it');
           return existing;
         }
         // Otherwise, update basic fields and return
-        console.log('[createOrderIfProvided] Updating existing order fields');
         const { data: upd } = await sb
           .from('orders')
           .update({
@@ -112,14 +99,13 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
           .eq('id', existing.id)
           .select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id')
           .single();
-        if (upd) console.log('[createOrderIfProvided] Updated existing order successfully');
+        if (upd)
         return upd || existing;
       }
     }
 
     // Insert new or upsert by client_external_id to avoid race duplicates
     if (clientExternalId) {
-      console.log('[createOrderIfProvided] Upserting new order with client_external_id');
       const { data, error } = await sb
         .from('orders')
         .upsert(payload, { onConflict: 'client_external_id' })
@@ -129,7 +115,6 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
         console.error('[createOrderIfProvided] Upsert error:', error);
         throw error;
       }
-      console.log('[createOrderIfProvided] Upserted order successfully:', data?.id);
       
       // Create admin notification for new order (upsert path)
       try {
@@ -147,20 +132,17 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
           data.order_type,
           data.rental_duration
         );
-        console.log('[Admin] New order notification created successfully (upsert path)');
-      } catch (notificationError) {
+              } catch (notificationError) {
         console.error('[Admin] Failed to create new order notification (upsert path):', notificationError);
       }
       
       return data;
     } else {
-      console.log('[createOrderIfProvided] Inserting new order without client_external_id');
       const { data, error } = await sb.from('orders').insert(payload).select('id, customer_name, product_name, amount, status, order_type, rental_duration, created_at, updated_at, user_id, product_id, customer_email, customer_phone, payment_method, xendit_invoice_id, client_external_id').single();
       if (error) {
         console.error('[createOrderIfProvided] Insert error:', error);
         throw error;
       }
-      console.log('[createOrderIfProvided] Inserted order successfully:', data?.id);
       
       // Create admin notification for new order using shared utility
       try {
@@ -177,7 +159,6 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
           data.order_type,
           data.rental_duration
         );
-        console.log('[Admin] New order notification created successfully');
       } catch (notificationError) {
         console.error('[Admin] Failed to create new order notification:', notificationError);
       }
@@ -214,23 +195,14 @@ export default async function handler(req: any, res: any) {
 
   try {
   const { external_id, amount, payer_email, description, success_redirect_url, failure_redirect_url, customer, order } = req.body || {};
-    console.log('[create-invoice] Request received:', { 
-      external_id, 
-      amount, 
-      hasOrder: !!order, 
-      orderKeys: order ? Object.keys(order) : [],
-      hasCustomer: !!customer 
-    });
-    
+        
     if (!external_id || typeof external_id !== 'string') return res.status(400).json({ error: 'external_id (string) is required' });
     if (!amount || typeof amount !== 'number' || amount <= 0) return res.status(400).json({ error: 'amount (number>0) is required' });
     const desc = description || 'Invoice Pembelian JB Alwikobra';
     
     // Optionally create order on server using client external id for idempotency
     const finalExternalId = external_id;
-    console.log('[create-invoice] About to create order if provided...');
     const createdOrder = await createOrderIfProvided(order, finalExternalId);
-    console.log('[create-invoice] Order creation result:', { orderId: createdOrder?.id, hasOrder: !!createdOrder });
 
     const withOrderId = (url?: string | null) => {
       if (!url) return undefined;
@@ -242,8 +214,6 @@ export default async function handler(req: any, res: any) {
     // Optimize: Reduce timeout from 20s to 10s for faster user feedback
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-
-    console.log('[Xendit] Creating invoice', { external_id: finalExternalId, amount, hasCustomer: !!customer });
 
     // Performance optimization: Parallel processing of database operations
     const invoicePromise = fetch('https://api.xendit.co/v2/invoices', {
@@ -287,21 +257,17 @@ export default async function handler(req: any, res: any) {
       console.error('[Xendit] Create invoice failed', resp.status, data);
       return res.status(resp.status).json({ error: data?.message || 'Failed to create invoice', details: data });
     }
-    console.log('[create-invoice] Xendit invoice created successfully:', data?.id);
     
     // CRITICAL FIX: Always await metadata attachment to prevent race condition with webhook
     // The webhook might arrive before the order is linked to the Xendit invoice ID
     if (createdOrder?.id) {
-      console.log('[create-invoice] Attaching metadata to order:', createdOrder.id);
       try {
         await attachInvoiceToOrder(createdOrder.id, data);
-        console.log('[create-invoice] ✅ Metadata attached successfully');
       } catch (err) {
         console.error('[create-invoice] Failed to attach metadata:', err);
       }
     } else if (finalExternalId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       // FALLBACK: Try to attach metadata by client_external_id if createdOrder is null
-      console.log('[create-invoice] No createdOrder, attempting fallback attach by client_external_id:', finalExternalId);
       try {
         const { createClient } = await import('@supabase/supabase-js');
         const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -319,7 +285,6 @@ export default async function handler(req: any, res: any) {
         if (updateError) {
           console.error('[create-invoice] Fallback update failed:', updateError);
         } else if (updateResult && updateResult.length > 0) {
-          console.log('[create-invoice] ✅ Metadata attached via fallback for order:', updateResult[0].id);
         } else {
           console.warn('[create-invoice] ⚠️ No order found for client_external_id:', finalExternalId);
         }
@@ -327,7 +292,6 @@ export default async function handler(req: any, res: any) {
         console.error('[create-invoice] Fallback attachment error:', fallbackErr);
       }
     } else {
-      console.log('[create-invoice] No order created, skipping metadata attachment');
     }
     
     // Return to user

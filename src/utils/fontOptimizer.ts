@@ -163,7 +163,6 @@ class FontOptimizer {
     const docAny: any = document as any;
     if (docAny.fonts && typeof docAny.fonts.addEventListener === 'function') {
       docAny.fonts.addEventListener('loadingdone', () => {
-        console.log('All fonts loaded');
       });
 
       docAny.fonts.addEventListener('loadingerror', (e: any) => {

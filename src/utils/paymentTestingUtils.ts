@@ -183,8 +183,7 @@ export class PaymentTester {
     const results: PaymentTestResult[] = [];
     
     for (const method of methods) {
-      console.log(`🧪 Testing ${method.toUpperCase()} payment...`);
-      const result = await this.testCreatePayment(method, amount, orderType);
+            const result = await this.testCreatePayment(method, amount, orderType);
       results.push(result);
       
       // Small delay between tests
@@ -208,14 +207,11 @@ export class PaymentTester {
       successRate: number;
     };
   }> {
-    console.log('🚀 Starting comprehensive payment test suite...');
     
     // Test payment methods API
-    console.log('1️⃣ Testing payment methods API...');
     const paymentMethods = await this.testPaymentMethods();
     
     // Test purchase flows
-    console.log('2️⃣ Testing purchase flows...');
     const purchaseTests = await this.testMultiplePaymentMethods([
       PaymentTestConfig.PAYMENT_METHODS.QRIS,
       PaymentTestConfig.PAYMENT_METHODS.BNI_VA,
@@ -223,7 +219,6 @@ export class PaymentTester {
     ], PaymentTestConfig.TEST_AMOUNTS.MEDIUM, 'purchase');
     
     // Test rental flows
-    console.log('3️⃣ Testing rental flows...');
     const rentalTests = await this.testMultiplePaymentMethods([
       PaymentTestConfig.PAYMENT_METHODS.QRIS,
       PaymentTestConfig.PAYMENT_METHODS.MANDIRI_VA
@@ -241,8 +236,7 @@ export class PaymentTester {
       successRate: (successful / total) * 100
     };
     
-    console.log(`✅ Test suite completed: ${successful}/${total} tests passed (${summary.successRate.toFixed(1)}%)`);
-    
+        
     return {
       paymentMethods,
       purchaseTests,

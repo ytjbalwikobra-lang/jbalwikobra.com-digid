@@ -125,8 +125,6 @@ export async function createOrderNotification(
       created_at: new Date().toISOString()
     };
 
-    console.log('[NotificationService] Creating notification:', { type: finalType, orderId: validOrderId, orderType });
-
     const { data, error } = await sb
       .from('admin_notifications')
       .insert(notification)
@@ -137,8 +135,6 @@ export async function createOrderNotification(
       console.error('[NotificationService] Insert error:', error);
       throw error;
     }
-    
-    console.log('[NotificationService] Notification created successfully:', data?.id);
     return data;
     
   } catch (error) {

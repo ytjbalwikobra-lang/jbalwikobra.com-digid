@@ -127,7 +127,6 @@ function App() {
   useEffect(() => {
     // Production monitor is automatically initialized when imported
     if (productionMonitor.isProduction()) {
-      console.log('🔍 Production monitoring active');
     }
 
     // Idle warmup: pre-load frequently visited routes

@@ -31,12 +31,6 @@ export type CreateInvoiceInput = {
 };
 
 export async function createXenditInvoice(input: CreateInvoiceInput) {
-  console.log('[Payment] Creating payment:', {
-    externalId: input.externalId,
-    amount: input.amount,
-    method: input.paymentMethod,
-    hasOrder: !!input.order
-  });
   
   // Timeout for better UX
   const controller = new AbortController();
@@ -64,8 +58,6 @@ export async function createXenditInvoice(input: CreateInvoiceInput) {
       order: input.order
     };
     
-    console.log('[Payment] Calling API with method:', input.paymentMethod);
-    
     const response = await fetch('/api/xendit/create-direct-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -76,7 +68,6 @@ export async function createXenditInvoice(input: CreateInvoiceInput) {
     clearTimeout(timeout);
     
     const data = await response.json();
-    console.log('[Payment] Response:', { status: response.status, hasUrl: !!data.payment_url });
     
     if (!response.ok) {
       console.error('[Payment] Failed:', data);

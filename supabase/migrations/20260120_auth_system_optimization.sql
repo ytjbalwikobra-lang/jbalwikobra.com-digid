@@ -362,8 +362,115 @@ CREATE TRIGGER trigger_cleanup_old_verifications
     EXECUTE FUNCTION public.trigger_cleanup_old_verifications();
 
 -- =============================================================================
--- 6. ADD MISSING COLUMNS TO USERS TABLE
+-- 6. ADD MISSING COLUMNS TO ALL TABLES
 -- =============================================================================
+
+-- Add missing columns to user_sessions table if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'user_sessions' 
+        AND column_name = 'last_activity'
+    ) THEN
+        ALTER TABLE public.user_sessions ADD COLUMN last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'user_sessions' 
+        AND column_name = 'is_active'
+    ) THEN
+        ALTER TABLE public.user_sessions ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'user_sessions' 
+        AND column_name = 'invalidated_at'
+    ) THEN
+        ALTER TABLE public.user_sessions ADD COLUMN invalidated_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'user_sessions' 
+        AND column_name = 'ip_address'
+    ) THEN
+        ALTER TABLE public.user_sessions ADD COLUMN ip_address VARCHAR(45);
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'user_sessions' 
+        AND column_name = 'user_agent'
+    ) THEN
+        ALTER TABLE public.user_sessions ADD COLUMN user_agent TEXT;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'user_sessions' 
+        AND column_name = 'device_info'
+    ) THEN
+        ALTER TABLE public.user_sessions ADD COLUMN device_info JSONB DEFAULT '{}'::jsonb;
+    END IF;
+END $$;
+
+-- Add missing columns to phone_verifications table if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'phone_verifications' 
+        AND column_name = 'verified_at'
+    ) THEN
+        ALTER TABLE public.phone_verifications ADD COLUMN verified_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'phone_verifications' 
+        AND column_name = 'is_used'
+    ) THEN
+        ALTER TABLE public.phone_verifications ADD COLUMN is_used BOOLEAN DEFAULT FALSE;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'phone_verifications' 
+        AND column_name = 'attempts'
+    ) THEN
+        ALTER TABLE public.phone_verifications ADD COLUMN attempts INTEGER DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'phone_verifications' 
+        AND column_name = 'ip_address'
+    ) THEN
+        ALTER TABLE public.phone_verifications ADD COLUMN ip_address VARCHAR(45);
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'phone_verifications' 
+        AND column_name = 'user_agent'
+    ) THEN
+        ALTER TABLE public.phone_verifications ADD COLUMN user_agent TEXT;
+    END IF;
+END $$;
 
 -- Add password_hash column if not exists
 DO $$

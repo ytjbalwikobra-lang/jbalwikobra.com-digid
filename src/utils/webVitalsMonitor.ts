@@ -56,8 +56,6 @@ class WebVitalsMonitor {
       getFID(this.onMetric.bind(this));
       getLCP(this.onMetric.bind(this));
       getTTFB(this.onMetric.bind(this));
-
-      console.log('🔍 Web Vitals monitoring initialized');
     } catch (error) {
       console.warn('Failed to initialize Web Vitals monitoring:', error);
     }
@@ -111,8 +109,7 @@ class WebVitalsMonitor {
       }
     }
 
-    console.log(`${status} ${metric.name}: ${value}ms (${metric.rating})`);
-  }
+      }
 
   // Add metric listener
   onMetricChange(listener: (metric: WebVitalMetric) => void): () => void {
@@ -186,12 +183,7 @@ class WebVitalsMonitor {
       // Note: Analytics endpoint was consolidated into admin dashboard
       // Custom analytics collection is now handled via Vercel Analytics instead
       if (process.env.NODE_ENV === 'development') {
-        console.log('📊 Web Vitals collected (analytics consolidated into admin dashboard):', {
-          name: metric.name,
-          value: `${Math.round(metric.value)}ms`,
-          rating: metric.rating
-        });
-      }
+              }
     } catch (error) {
       // Prevent analytics errors from affecting the app
       if (process.env.NODE_ENV === 'development') {

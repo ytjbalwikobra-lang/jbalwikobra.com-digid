@@ -2,7 +2,6 @@ import { supabase } from '../services/supabase';
 
 // Test database connectivity and schema
 export const testDatabaseConnection = async () => {
-  console.log('🔍 Testing database connection...');
   
   if (!supabase) {
     console.error('❌ Supabase client not initialized');
@@ -16,10 +15,8 @@ export const testDatabaseConnection = async () => {
       console.error('❌ Database connection failed:', error);
       return false;
     }
-    console.log('✅ Database connection successful');
 
     // Test schema capabilities
-    console.log('🔍 Testing schema capabilities...');
     
     // Check if tiers table exists
     try {
@@ -27,7 +24,6 @@ export const testDatabaseConnection = async () => {
       if (tiersError) {
         console.warn('⚠️ Tiers table issue:', tiersError.message);
       } else {
-        console.log('✅ Tiers table accessible');
       }
     } catch (e) {
       console.warn('⚠️ Tiers table not accessible');
@@ -39,7 +35,6 @@ export const testDatabaseConnection = async () => {
       if (gamesError) {
         console.warn('⚠️ Game titles table issue:', gamesError.message);
       } else {
-        console.log('✅ Game titles table accessible');
       }
     } catch (e) {
       console.warn('⚠️ Game titles table not accessible');
@@ -64,11 +59,9 @@ export const testDatabaseConnection = async () => {
         if (basicError) {
           console.error('❌ Products table not accessible:', basicError.message);
         } else {
-          console.log('✅ Products table accessible (basic query)');
-        }
+                  }
       } else {
-        console.log('✅ Products table accessible (with foreign keys)');
-      }
+              }
     } catch (e) {
       console.error('❌ Products table test failed:', e);
     }
@@ -82,7 +75,6 @@ export const testDatabaseConnection = async () => {
 
 // Test product creation with minimal data
 export const testProductCreation = async () => {
-  console.log('🧪 Testing product creation...');
   
   if (!supabase) {
     console.error('❌ Supabase client not initialized');
@@ -105,8 +97,6 @@ export const testProductCreation = async () => {
       tier_id: null
     };
 
-    console.log('📝 Creating test product:', testProduct);
-
     const { data, error } = await supabase
       .from('products')
       .insert([testProduct])
@@ -122,12 +112,9 @@ export const testProductCreation = async () => {
       });
       return null;
     }
-
-    console.log('✅ Test product created successfully:', data.id);
     
     // Clean up test product
     await supabase.from('products').delete().eq('id', data.id);
-    console.log('🗑️ Test product cleaned up');
     
     return data;
   } catch (error) {

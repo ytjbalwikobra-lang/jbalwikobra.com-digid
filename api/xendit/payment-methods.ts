@@ -31,9 +31,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { amount } = req.body;
-
-    console.log('[Xendit Payment Methods] Fetching from API...');
-    console.log('[Xendit Payment Methods] Secret key present:', !!XENDIT_SECRET_KEY);
     
     // For now, let's test with a simple request to check if credentials work
     // Try to get payment channels instead
@@ -48,12 +45,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let paymentMethods: PaymentMethodResponse[] = [];
     let apiCallSuccessful = false;
 
-    console.log('[Xendit Payment Methods] API Response Status:', response.status);
-
     if (response.ok) {
       const data = await response.json();
-      console.log('[Xendit Payment Methods] API Response received successfully');
-      console.log('[Xendit Payment Methods] Available channels:', data.length || 'No channels data');
       apiCallSuccessful = true;
     } else {
       const errorText = await response.text();

@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { CreditCard, Calendar, Shield, CheckCircle, Clock, MessageCircle } from 'lucide-react';
+import { CreditCard, Calendar, Shield, CheckCircle, Clock, MessageCircle, XCircle } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { RentalOption } from '../../types';
 import { PNButton, PNCard } from '../ui/PinkNeonDesignSystem';
@@ -12,6 +12,8 @@ import { PNButton, PNCard } from '../ui/PinkNeonDesignSystem';
 interface ProductActionsProps {
   // Product data
   stock: number;
+  isActive?: boolean;
+  soldChannel?: 'web' | 'wa' | null;
   
   // Rental
   cameFromFlashSaleCard: boolean;
@@ -25,38 +27,64 @@ interface ProductActionsProps {
 
 export const ProductActions = React.memo(({
   stock,
+  isActive = true,
+  soldChannel,
   cameFromFlashSaleCard,
   hasRental,
   selectedRental,
   onPurchase,
   onRental
 }: ProductActionsProps) => {
+  // Check if product is unavailable (sold or inactive)
+  const isUnavailable = !isActive || !!soldChannel || stock === 0;
+  
+  const getButtonText = () => {
+    if (soldChannel === 'web') return 'Sudah Terjual via Web';
+    if (soldChannel === 'wa') return 'Sudah Terjual via WA';
+    if (!isActive) return 'Produk Tidak Tersedia';
+    if (stock === 0) return 'Stok Habis';
+    return 'Beli Sekarang';
+  };
+
   return (
     <div className="space-y-6">
+      {/* Sold/Unavailable Notice */}
+      {(soldChannel || !isActive) && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3">
+          <XCircle className="text-red-400 flex-shrink-0" size={20} />
+          <div>
+            <p className="text-red-300 font-medium">
+              {soldChannel ? `Produk ini sudah terjual via ${soldChannel === 'web' ? 'Website' : 'WhatsApp'}` : 'Produk tidak tersedia'}
+            </p>
+            <p className="text-red-400/70 text-sm">Silakan lihat produk lainnya di katalog</p>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="space-y-3">
         {/* Purchase Button */}
         <PNButton
-          variant={stock === 0 ? "secondary" : "primary"}
+          variant={isUnavailable ? "secondary" : "primary"}
           size="lg"
           onClick={onPurchase}
-          disabled={stock === 0}
+          disabled={isUnavailable}
           fullWidth
-          className={`flex items-center justify-center space-x-2 ${stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`flex items-center justify-center space-x-2 ${isUnavailable ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <CreditCard size={20} />
-          <span>{stock === 0 ? 'Stok Habis' : 'Beli Sekarang'}</span>
+          <span>{getButtonText()}</span>
         </PNButton>
 
         {/* Rental Button - hidden if user came from flash sale card */}
         {!cameFromFlashSaleCard && hasRental && selectedRental && (
           <PNButton
-            variant={stock === 0 ? "secondary" : "ghost"}
+            variant={isUnavailable ? "secondary" : "ghost"}
             size="lg"
             onClick={() => onRental(selectedRental)}
-            disabled={stock === 0}
+            disabled={isUnavailable}
             fullWidth
-            className={`flex items-center justify-center space-x-2 border-2 border-pink-500/50 text-pink-400 hover:bg-pink-500/10 ${stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center space-x-2 border-2 border-pink-500/50 text-pink-400 hover:bg-pink-500/10 ${isUnavailable ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Calendar size={20} />
             <span>Rental {selectedRental.duration} - {formatCurrency(selectedRental.price)}</span>

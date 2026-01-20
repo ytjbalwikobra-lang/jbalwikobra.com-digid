@@ -104,9 +104,7 @@ export const registerServiceWorker = async () => {
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered:', registration);
     } catch (error) {
-      console.log('Service Worker registration failed:', error);
     }
   }
 };
@@ -118,16 +116,14 @@ export const initPerformanceMonitoring = () => {
     // Largest Contentful Paint
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries() as PerformanceEntry[]) {
-        console.log('LCP:', (entry as any).startTime);
-      }
+              }
     }).observe({ type: 'largest-contentful-paint', buffered: true } as any);
 
     // First Input Delay
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries() as PerformanceEntry[]) {
         const e: any = entry;
-        console.log('FID:', (e.processingStart || 0) - (e.startTime || 0));
-      }
+              }
     }).observe({ type: 'first-input', buffered: true } as any);
 
     // Cumulative Layout Shift
@@ -135,7 +131,6 @@ export const initPerformanceMonitoring = () => {
       for (const entry of list.getEntries() as PerformanceEntry[]) {
         const e: any = entry;
         if (!e.hadRecentInput) {
-          console.log('CLS:', e.value);
         }
       }
     }).observe({ type: 'layout-shift', buffered: true } as any);

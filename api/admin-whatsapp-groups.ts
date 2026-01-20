@@ -20,11 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).send(JSON.stringify({ error: 'method_not_allowed' }));
   }
 
-  console.log('[admin-whatsapp-groups] Request received at', new Date().toISOString());
-  console.log('[admin-whatsapp-groups] Request method:', req.method);
-  console.log('[admin-whatsapp-groups] Request headers:', JSON.stringify(req.headers, null, 2));
-
-  try {
+      try {
     // ✅ SECURITY: Validate admin authentication
     const auth = await validateAdminAuth(req);
     if (!auth.valid) {
@@ -39,11 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         message: auth.error || 'Authentication required'
       }));
     }
-
-    console.log('[API /api/admin-whatsapp-groups] Authenticated admin access:', {
-      userId: auth.userId,
-      email: auth.userEmail
-    });
 
     // In local development without DB config, return a mock list
     const hasSupabase = !!(process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL);
@@ -145,13 +136,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const url = `${baseUrl}${endpoint}`;
     
-    console.log('[admin-whatsapp-groups] Fetching groups from external API:', {
-      url,
-      keyField,
-      providerKeyField: provider.key_field_name,
-      provider: provider.name
-    });
-    
     let response;
     try {
       // NotifAPI /get_group_id requires GET with JSON body (non-standard HTTP)
@@ -193,7 +177,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // If the endpoint doesn't exist (404), return configured groups from provider settings
       if (apiError.response?.status === 404) {
-        console.log('[admin-whatsapp-groups] Groups API not available, returning configured groups');
         
         const configuredGroups: Array<{ id: string; name: string; value: string }> = [];
         const groupConfigs = provider.settings?.group_configurations || {};
@@ -251,12 +234,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
     
-    console.log('[admin-whatsapp-groups] External API response received:', {
-      status: response.status,
-      hasData: !!response.data,
-      hasResults: !!(response.data && response.data[responseField])
-    });
-    
+        
     if (response.data && response.data[responseField]) {
       // Format the groups data properly for the frontend
       const formattedGroups = response.data[responseField].map((group: any) => ({
@@ -265,15 +243,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         value: group.id // For the dropdown value
       }));
       
-      console.log('[admin-whatsapp-groups] Successfully formatted groups:', formattedGroups.length);
-      
       return res.status(200).json({ 
         groups: formattedGroups,
         message: 'Groups loaded successfully'
       });
     }
-    
-    console.log('[admin-whatsapp-groups] No groups found in response');
     
     return res.status(200).json({ 
       groups: [],

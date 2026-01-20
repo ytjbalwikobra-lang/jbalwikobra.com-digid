@@ -1,0 +1,25 @@
+# Security Policy - JB Alwikobra
+# ISO 27001:2013 Compliance (A.16.1.5 - Response to information security incidents)
+# Last updated: 2026-01-21
+
+Contact: mailto:security@jbalwikobra.com
+Contact: mailto:support@jbalwikobra.com
+Expires: 2027-01-21T00:00:00.000Z
+Preferred-Languages: id, en
+Canonical: https://www.jbalwikobra.com/.well-known/security.txt
+Policy: https://www.jbalwikobra.com/privacy-policy
+Acknowledgments: https://www.jbalwikobra.com/security-hall-of-fame
+
+# Encryption
+# Our PGP key fingerprint for secure communications (optional)
+# Encryption: https://www.jbalwikobra.com/.well-known/pgp-key.txt
+
+# Scope
+# Please report any security vulnerabilities related to:
+# - jbalwikobra.com and its subdomains
+# - API endpoints at api.jbalwikobra.com
+# - Payment processing integrations
+
+# Response Time
+# We aim to respond to security reports within 48 hours
+# Critical vulnerabilities will be addressed within 24 hours

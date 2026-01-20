@@ -68,7 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       results.sessions_cleaned = sessionsResult || 0;
-      console.log(`[Cron] Cleaned ${results.sessions_cleaned} expired sessions`);
     } catch (error: any) {
       console.error('[Cron] Failed to clean sessions:', error);
       results.errors.push(`Sessions: ${error.message}`);
@@ -84,7 +83,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       results.verifications_cleaned = verificationsResult || 0;
-      console.log(`[Cron] Cleaned ${results.verifications_cleaned} expired verifications`);
     } catch (error: any) {
       console.error('[Cron] Failed to clean verifications:', error);
       results.errors.push(`Verifications: ${error.message}`);
@@ -100,14 +98,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       results.analytics_refreshed = true;
-      console.log('[Cron] Refreshed session analytics');
     } catch (error: any) {
       console.error('[Cron] Failed to refresh analytics:', error);
       results.errors.push(`Analytics: ${error.message}`);
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Cron] Cleanup completed in ${duration}ms`);
 
     return res.status(200).json({
       success: true,

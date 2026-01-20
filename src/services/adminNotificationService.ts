@@ -357,13 +357,10 @@ class AdminNotificationService {
   // Clear cache manually (for debugging)
   clearCache(): void {
     globalCache.invalidateByTags([this.cacheTag]);
-    console.log('✅ Admin notifications cache cleared manually');
   }
 
   // Debug method to test mark as read functionality
   async debugMarkAsRead(notificationId: string): Promise<void> {
-    console.log('🐛 DEBUG: Testing mark as read functionality');
-    console.log(`🔍 Notification ID: ${notificationId}`);
     
     try {
       if (!supabase) {
@@ -382,16 +379,7 @@ class AdminNotificationService {
         return;
       }
       
-      console.log('📋 DEBUG: Before update:', {
-        id: beforeData.id,
-        title: beforeData.title,
-        is_read: beforeData.is_read,
-        created_at: beforeData.created_at,
-        updated_at: beforeData.updated_at
-      });
-      
       // Perform the update
-      console.log('🔄 DEBUG: Performing mark as read update...');
       const { data: updateData, error: updateError } = await supabase
         .from('admin_notifications')
         .update({ is_read: true, updated_at: new Date().toISOString() })
@@ -402,8 +390,6 @@ class AdminNotificationService {
         console.error('❌ DEBUG: Update failed:', updateError);
         return;
       }
-      
-      console.log('✅ DEBUG: Update successful:', updateData);
       
       // Verify the update
       const { data: afterData, error: afterError } = await supabase
@@ -417,19 +403,8 @@ class AdminNotificationService {
         return;
       }
       
-      console.log('🔍 DEBUG: After update:', {
-        id: afterData.id,
-        title: afterData.title,
-        is_read: afterData.is_read,
-        created_at: afterData.created_at,
-        updated_at: afterData.updated_at
-      });
-      
       // Clear cache
       this.invalidateCache();
-      console.log('🗑️ DEBUG: Cache invalidated');
-      
-      console.log('✅ DEBUG: Mark as read test completed successfully');
       
     } catch (error) {
       console.error('❌ DEBUG: Mark as read test failed:', error);

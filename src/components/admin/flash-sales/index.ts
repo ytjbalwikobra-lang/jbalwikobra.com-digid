@@ -40,10 +40,7 @@
  * const AdminPage = () => {
  *   return (
  *     <RefactoredAdminFlashSalesManagement 
- *       onRefresh={() => console.log('Data refreshed')}
- *     />
- *   );
- * };
+ *       onRefresh={() =>  * };
  * ```
  * 
  * ## Individual Component Usage:

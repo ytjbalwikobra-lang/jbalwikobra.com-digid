@@ -160,12 +160,10 @@ class EnhancedAdminCacheManager {
     // Check if we have valid cached data using the new get method
     const cachedData = this.get<T>(cacheKey);
     if (cachedData) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
       return cachedData;
     }
 
     // Fetch fresh data
-    console.log(`📡 Cache MISS: ${cacheKey} - Fetching...`);
     try {
       const data = await fetchFunction();
       
@@ -177,7 +175,6 @@ class EnhancedAdminCacheManager {
       // If fetch fails and we have stale data, return it
       const staleData = this.getStale<T>(cacheKey);
       if (staleData) {
-        console.log(`⚠️  Using stale cache for ${cacheKey} due to fetch error`);
         return staleData;
       }
       throw error;
@@ -208,7 +205,6 @@ class EnhancedAdminCacheManager {
    */
   invalidate(key: string): void {
     this.cache.delete(key);
-    console.log(`🗑️  Cache invalidated: ${key}`);
   }
 
   /**
@@ -217,7 +213,6 @@ class EnhancedAdminCacheManager {
   invalidatePattern(pattern: string): void {
     const keys = Array.from(this.cache.keys()).filter(key => key.includes(pattern));
     keys.forEach(key => this.cache.delete(key));
-    console.log(`🗑️  Cache invalidated pattern "${pattern}": ${keys.length} entries`);
   }
 
   /**
@@ -225,7 +220,6 @@ class EnhancedAdminCacheManager {
    */
   clear(): void {
     this.cache.clear();
-    console.log('🗑️  All cache cleared');
   }
 
   /**
@@ -274,7 +268,6 @@ class EnhancedAdminCacheManager {
     }
 
     if (cleaned > 0) {
-      console.log(`🧹 Cleaned up ${cleaned} expired cache entries`);
     }
   }
 
@@ -294,8 +287,7 @@ class EnhancedAdminCacheManager {
     };
 
     const keysToWarm = prefetchMap[currentPage] || [];
-    console.log(`🔥 Smart prefetch for ${currentPage}: ${keysToWarm.join(', ')}`);
-    
+        
     // This would be implemented by the component using this cache
     // by calling the appropriate fetch functions
   }

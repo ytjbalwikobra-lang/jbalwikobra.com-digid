@@ -10,8 +10,7 @@ if (redisUrl) {
     const Redis = require('ioredis');
     redisClient = new Redis(redisUrl);
     redisClient.on('error', (err: unknown) => console.error('Redis Client Error:', err));
-    redisClient.on('connect', () => console.log('Redis Client Connected'));
-  } catch (e) {
+    redisClient.on('connect', () =>   } catch (e) {
     console.warn('ioredis not installed or failed to initialize. Falling back to in-memory cache.');
     redisClient = null;
   }

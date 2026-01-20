@@ -68,18 +68,13 @@ const PaymentInterface: React.FC = () => {
         paymentData.status !== 'PAID' &&
         paymentData.status !== 'COMPLETED') {
       
-      console.log('🔄 QRIS QR string missing, starting polling...');
-      
       const pollForQRString = async () => {
         try {
-          console.log('🔍 Polling for QR string...');
           const response = await fetch(`/api/xendit/get-payment?id=${paymentId}`);
           if (response.ok) {
             const data = await response.json();
-            console.log('📥 Polling response - QR string present:', !!data.qr_string);
             
             if (data.qr_string) {
-              console.log('✅ QR string found during polling!');
               setPaymentData(prev => ({
                 ...prev!,
                 qr_string: data.qr_string,
@@ -108,7 +103,6 @@ const PaymentInterface: React.FC = () => {
           
           // Stop polling after 60 seconds
           setTimeout(() => {
-            console.log('⏰ Stopping QR string polling after 60 seconds');
             clearInterval(pollInterval);
           }, 60000);
           
@@ -129,8 +123,6 @@ const PaymentInterface: React.FC = () => {
         !paymentData.account_number &&
         paymentData.invoice_url) {
       
-      console.log('VA number missing, attempting to fetch from Xendit invoice...');
-      
       // Try to get VA details directly from Xendit invoice
       const fetchVAFromInvoice = async () => {
         try {
@@ -139,7 +131,6 @@ const PaymentInterface: React.FC = () => {
             const invoiceData = await response.json();
             
             if (invoiceData.virtual_account_number) {
-              console.log('VA number found from invoice:', invoiceData.virtual_account_number);
               setPaymentData(prev => ({
                 ...prev!,
                 virtual_account_number: invoiceData.virtual_account_number,
@@ -162,7 +153,6 @@ const PaymentInterface: React.FC = () => {
       // If still no VA number after initial attempt, start polling
       const pollTimeout = setTimeout(() => {
         const pollForVA = setInterval(async () => {
-          console.log('Polling for VA details...');
           
           try {
             // First try the invoice endpoint
@@ -174,7 +164,6 @@ const PaymentInterface: React.FC = () => {
               const data = await response.json();
               
               if (data.virtual_account_number || data.account_number) {
-                console.log('VA number found in polling:', data.virtual_account_number || data.account_number);
                 setPaymentData(data);
                 clearInterval(pollForVA);
               }
@@ -186,7 +175,6 @@ const PaymentInterface: React.FC = () => {
         
         // Stop polling after 60 seconds
         setTimeout(() => {
-          console.log('Stopping VA polling after 60 seconds');
           clearInterval(pollForVA);
         }, 60000);
         
@@ -215,17 +203,14 @@ const PaymentInterface: React.FC = () => {
 
     const pollInterval = setInterval(async () => {
       try {
-        console.log('Polling payment status for ID:', paymentId);
         
         // Try primary method - check by payment ID
         const response = await fetch(`/api/xendit/get-payment?id=${paymentId}`);
         if (response.ok) {
           const data = await response.json();
-          console.log('Payment status poll result:', data.status, '(raw status from API)');
-          
+                    
           // Check if payment is completed (handle all status variations)
           if (isPaymentCompleted(data.status)) {
-            console.log('Payment completed! Redirecting to success page...');
             clearInterval(pollInterval);
             
             // Use order_id if available, otherwise use payment id
@@ -238,7 +223,6 @@ const PaymentInterface: React.FC = () => {
           
           // Update payment data if status changed
           if (data.status !== paymentData.status) {
-            console.log('Payment status changed from', paymentData.status, 'to', data.status);
             setPaymentData(data);
           }
         } else {
@@ -251,10 +235,8 @@ const PaymentInterface: React.FC = () => {
             const externalResponse = await fetch(`/api/xendit/check-order-status?external_id=${encodeURIComponent(paymentData.external_id)}`);
             if (externalResponse.ok) {
               const externalData = await externalResponse.json();
-              console.log('Order status check result:', externalData.status, '(raw status from order check)');
-              
+                            
               if (isPaymentCompleted(externalData.status)) {
-                console.log('Payment completed via order check! Redirecting to success page...');
                 clearInterval(pollInterval);
                 
                 // Redirect to success page using order ID
@@ -263,8 +245,7 @@ const PaymentInterface: React.FC = () => {
               }
             }
           } catch (externalError) {
-            console.log('External ID check failed (not critical):', externalError);
-          }
+                      }
         }
       } catch (error) {
         console.error('Payment status polling error:', error);
@@ -289,32 +270,9 @@ const PaymentInterface: React.FC = () => {
       const response = await fetch(`/api/xendit/get-payment?id=${paymentId}`);
       if (!response.ok) throw new Error('Payment not found');
       const data = await response.json();
-      
-      console.log('Payment data received:', {
-        id: data.id,
-        status: data.status,
-        expiry_date: data.expiry_date,
-        created: data.created,
-        amount: data.amount
-      });
-      console.log('🔍 FULL PAYMENT DATA IN FRONTEND:', JSON.stringify(data, null, 2));
-      console.log('🔍 VA DATA CHECK:', {
-        virtual_account_number: data.virtual_account_number,
-        account_number: data.account_number,
-        bank_code: data.bank_code,
-        bank_name: data.bank_name,
-        invoice_url: data.invoice_url
-      });
-      console.log('🔍 QRIS DATA CHECK:', {
-        payment_method: data.payment_method,
-        qr_string: data.qr_string ? `Present (${data.qr_string.length} chars)` : 'NOT PRESENT',
-        qr_url: data.qr_url,
-        action_type: data.action_type
-      });
-      
+                  
       // Check if payment is already completed
       if (isPaymentCompleted(data.status)) {
-        console.log('Payment already completed! Status:', data.status, '- Redirecting to success page...');
         
         // Use order_id if available, otherwise use payment id
         const orderId = data.order_id || data.external_id || paymentId;
@@ -332,17 +290,14 @@ const PaymentInterface: React.FC = () => {
           const orderResponse = await fetch(`/api/xendit/check-order-status?external_id=${encodeURIComponent(data.external_id)}`);
           if (orderResponse.ok) {
             const orderData = await orderResponse.json();
-            console.log('Order status check result:', orderData.status, '(during initial fetch)');
-            
+                        
             if (isPaymentCompleted(orderData.status)) {
-              console.log('Payment completed via order check! Redirecting to success page...');
               window.location.href = `/payment-status?status=success&order_id=${encodeURIComponent(orderData.order_id)}`;
               return;
             }
           }
         } catch (orderError) {
-          console.log('Order status check failed (not critical):', orderError);
-        }
+                  }
       }
     } catch (err) {
       console.error('Failed to fetch payment data:', err);

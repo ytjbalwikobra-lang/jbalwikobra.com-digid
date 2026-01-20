@@ -23,8 +23,8 @@
     <meta property="og:title" content="JB Alwikobra - Jual Beli Rental Akun Game Terpercaya" />
     <meta property="og:description" content="Platform terpercaya untuk jual beli dan rental akun game di Indonesia. Dapatkan akun game impian Anda dengan harga terbaik dan layanan profesional." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://your-domain.vercel.app" />
-    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+    <meta property="og:url" content="https://www.jbalwikobra.com" />
+    <meta property="og:image" content="https://www.jbalwikobra.com/og-image.svg" />
     <meta property="og:site_name" content="JB Alwikobra" />
     <meta property="og:locale" content="id_ID" />
     
@@ -32,26 +32,22 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="JB Alwikobra - Jual Beli Rental Akun Game Terpercaya" />
     <meta name="twitter:description" content="Platform terpercaya untuk jual beli dan rental akun game di Indonesia. Dapatkan akun game impian Anda dengan harga terbaik." />
-    <meta name="twitter:image" content="%PUBLIC_URL%/og-image.jpg" />
+    <meta name="twitter:image" content="https://www.jbalwikobra.com/og-image.svg" />
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://your-domain.vercel.app" />
+    <link rel="canonical" href="https://www.jbalwikobra.com" />
     
-  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.svg" />
   <meta name="apple-mobile-web-app-title" content="JB Alwikobra" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','%REACT_APP_GTM_CONTAINER_ID%');</script>
-    <!-- End Google Tag Manager -->
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <!-- GTM Container ID (loaded via consent manager) -->
+    <meta name="gtm-container-id" content="%REACT_APP_GTM_CONTAINER_ID%" />
+    
+    <!-- Self-hosted Inter Font (ISO 27001: Data sovereignty, Egress optimization) -->
+    <link rel="preload" href="%PUBLIC_URL%/fonts/inter-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="%PUBLIC_URL%/fonts/inter-latin-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="%PUBLIC_URL%/fonts/inter.css">
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -60,10 +56,10 @@
       "@type": "WebSite",
       "name": "JB Alwikobra",
       "description": "Platform jual beli dan rental akun game terpercaya di Indonesia",
-      "url": "https://your-domain.vercel.app",
+      "url": "https://www.jbalwikobra.com",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://your-domain.vercel.app/products?search={search_term_string}",
+        "target": "https://www.jbalwikobra.com/products?search={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     }
@@ -72,23 +68,11 @@
     <title>JB Alwikobra - Jual Beli Rental Akun Game Terpercaya</title>
   </head>
   <body>
-    <!-- Google tag (gtag.js) - load only in production environments -->
-    <script>
-      // GTM is already handled by the script in head section - no additional setup needed
-    </script>
-    <script>
-      // Ensure dark mode by default and prevent iOS white flash during load
-      try {
-        document.documentElement.classList.add('dark');
-        document.documentElement.style.backgroundColor = '#000';
-        document.body && (document.body.style.backgroundColor = '#000');
-      } catch (e) {}
-    </script>
+    <!-- Dark mode initialization (externalized for CSP compliance) -->
+    <script src="%PUBLIC_URL%/js/init-dark-mode.js"></script>
     
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=%REACT_APP_GTM_CONTAINER_ID%"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    <!-- Cookie Consent Manager (ISO 27001 A.18.1.4 - Privacy compliance) -->
+    <script src="%PUBLIC_URL%/js/cookie-consent.js"></script>
     
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>

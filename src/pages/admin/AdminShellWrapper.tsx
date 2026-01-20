@@ -5,9 +5,10 @@
 
 import React, { useState } from 'react';
 import { AdminNavigation } from './components/AdminNavigation';
-import { Menu, Bell, User, LogOut } from 'lucide-react';
+import { Menu, Bell, LogOut } from 'lucide-react';
 import { AdminColors } from './design-tokens';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/TraditionalAuthContext';
 import { AdminToastProvider } from './components/ui/AdminToast';
 import AdminNotificationPanel from './components/AdminNotificationPanel';
 import AdminFloatingNotifications from './AdminFloatingNotifications';
@@ -23,14 +24,22 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Use unified realtime notifications hook - single subscription pattern
   const { unreadCount } = useAdminRealtimeNotifications({ limit: 50 });
 
-  const handleLogout = () => {
-    // Clear auth and redirect
-    localStorage.removeItem('admin_token');
-    navigate('/admin/login');
+  const handleLogout = async () => {
+    try {
+      // Use proper auth logout which clears all session data
+      await logout();
+      // Navigate to admin login after logout
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate to login even if logout fails
+      navigate('/admin/login');
+    }
   };
 
   return (
@@ -97,20 +106,6 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
                   onClose={() => setNotificationPanelOpen(false)}
                 />
               </div>
-
-              {/* User Profile */}
-              <button
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                aria-label="User profile"
-              >
-                <User size={20} style={{ color: AdminColors.text.secondary }} />
-                <span
-                  className="hidden sm:inline text-sm font-medium"
-                  style={{ color: AdminColors.text.primary }}
-                >
-                  Admin
-                </span>
-              </button>
 
               {/* Logout */}
               <button

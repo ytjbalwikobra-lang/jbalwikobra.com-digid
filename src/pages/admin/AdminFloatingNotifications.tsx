@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { X, Check, Sparkles, ExternalLink } from 'lucide-react';
+import { X, Check, ExternalLink } from 'lucide-react';
 import { AdminNotification } from '../../services/adminNotificationService';
 import { useAdminRealtimeNotifications } from '../../hooks/useAdminRealtimeNotifications';
 import { AdminColors } from './design-tokens';
@@ -38,8 +38,7 @@ import {
 // ========================================
 
 const MAX_VISIBLE = 3;
-const AUTO_DISMISS_MS = 8000;
-const REAPPEAR_MS = 30000;
+// Auto-dismiss removed - notifications should only dismiss when clicked
 
 // ========================================
 // TYPES
@@ -47,7 +46,6 @@ const REAPPEAR_MS = 30000;
 
 interface FloatingNotification extends AdminNotification {
   dismissed?: boolean;
-  reappearAt?: number;
 }
 
 // ========================================
@@ -72,9 +70,7 @@ const AdminFloatingNotifications: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Refs for timer management and processed IDs
-  const dismissTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const reappearTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  // Refs for processed IDs tracking
   const processedIdsRef = useRef<Set<string>>(new Set());
   const initialLoadRef = useRef(true);
 
@@ -117,76 +113,23 @@ const AdminFloatingNotifications: React.FC = () => {
     );
   }, [notifications]);
 
-  // ========================================
-  // CLEANUP ON UNMOUNT
-  // ========================================
-  
-  useEffect(() => {
-    return () => {
-      dismissTimersRef.current.forEach(timer => clearTimeout(timer));
-      reappearTimersRef.current.forEach(timer => clearTimeout(timer));
-    };
-  }, []);
 
-  // ========================================
-  // AUTO-DISMISS EFFECT
-  // ========================================
-  
-  useEffect(() => {
-    floatingNotifs.forEach(notif => {
-      if (!notif.is_read && !notif.dismissed && !dismissTimersRef.current.has(notif.id)) {
-        const timer = setTimeout(() => {
-          handleDismiss(notif.id, true);
-        }, AUTO_DISMISS_MS);
-        dismissTimersRef.current.set(notif.id, timer);
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [floatingNotifs]);
+
+
 
   // ========================================
   // HANDLERS
   // ========================================
   
-  const handleDismiss = useCallback((id: string, withReappear = false) => {
-    // Clear dismiss timer
-    const dismissTimer = dismissTimersRef.current.get(id);
-    if (dismissTimer) {
-      clearTimeout(dismissTimer);
-      dismissTimersRef.current.delete(id);
-    }
-
+  const handleDismiss = useCallback((id: string) => {
+    // Simply mark as dismissed - no auto-reappear
     setFloatingNotifs(prev => 
       prev.map(n => n.id === id ? { ...n, dismissed: true } : n)
     );
-
-    // Set reappear timer for unread
-    if (withReappear) {
-      setFloatingNotifs(prev => {
-        const notif = prev.find(n => n.id === id);
-        if (notif && !notif.is_read) {
-          const timer = setTimeout(() => {
-            setFloatingNotifs(p => 
-              p.map(n => n.id === id ? { ...n, dismissed: false, reappearAt: Date.now() } : n)
-            );
-            reappearTimersRef.current.delete(id);
-          }, REAPPEAR_MS);
-          reappearTimersRef.current.set(id, timer);
-        }
-        return prev;
-      });
-    }
   }, []);
 
   const handleMarkAsRead = useCallback(async (id: string) => {
-    handleDismiss(id, false);
-    
-    // Clear reappear timer
-    const reappearTimer = reappearTimersRef.current.get(id);
-    if (reappearTimer) {
-      clearTimeout(reappearTimer);
-      reappearTimersRef.current.delete(id);
-    }
+    handleDismiss(id);
 
     try {
       await markAsRead(id);
@@ -201,7 +144,7 @@ const AdminFloatingNotifications: React.FC = () => {
       handleMarkAsRead(id);
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      handleDismiss(id, true);
+      handleDismiss(id);
     }
   }, [handleMarkAsRead, handleDismiss]);
 
@@ -252,7 +195,6 @@ const AdminFloatingNotifications: React.FC = () => {
     >
       {visibleNotifications.map((notification, index) => {
         const style = getNotificationStyle(notification.type);
-        const isReappearing = notification.reappearAt && Date.now() - notification.reappearAt < 3000;
         const floatingTitle = getFloatingTitle(notification.type);
         const floatingCopy = getFloatingCopy(notification);
         const statusLabel = getStatusLabel(notification.type);
@@ -282,7 +224,6 @@ const AdminFloatingNotifications: React.FC = () => {
                           style.border.includes('yellow') || style.border.includes('amber') ? AdminColors.warning.border :
                           AdminColors.accent.DEFAULT + '40',
             }}
-            data-reappearing={isReappearing || undefined}
           >
             {/* Icon */}
             <div className="admin-floating-notification__icon">
@@ -349,30 +290,15 @@ const AdminFloatingNotifications: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDismiss(notification.id, true);
+                    handleDismiss(notification.id);
                   }}
-                  aria-label={`Tutup sementara "${notification.title}"`}
+                  aria-label={`Tutup "${notification.title}"`}
                   className="admin-floating-notification__btn admin-floating-notification__btn--dismiss"
                 >
                   <X size={16} aria-hidden="true" />
                 </button>
               </div>
-
-              {/* Reappearing indicator */}
-              {isReappearing && (
-                <div className="admin-floating-notification__reappear">
-                  <Sparkles size={12} aria-hidden="true" />
-                  <span>Belum dibaca - muncul kembali</span>
-                </div>
-              )}
             </div>
-
-            {/* Progress bar */}
-            <div 
-              className="admin-floating-notification__progress" 
-              aria-hidden="true"
-              style={{ '--auto-dismiss-duration': `${AUTO_DISMISS_MS}ms` } as React.CSSProperties}
-            />
           </div>
         );
       })}

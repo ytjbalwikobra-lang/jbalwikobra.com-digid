@@ -39,12 +39,9 @@ const NotificationsPage: React.FC = () => {
     try {
       setLoading(true);
       const uid = await getAuthUserId();
-      console.log('🔄 NotificationsPage: Loading notifications for user:', uid);
       const latest = await notificationService.getLatest(20, uid);
-      console.log('🔄 NotificationsPage: Raw notifications from service:', latest.map(n => ({ id: n.id, title: n.title, is_read: n.is_read, user_id: n.user_id })));
-      const mappedNotifications = latest.map(mapToUI);
-      console.log('🔄 NotificationsPage: Mapped notifications:', mappedNotifications.map(n => ({ id: n.id, title: n.title, isRead: n.isRead })));
-      setNotifications(mappedNotifications);
+            const mappedNotifications = latest.map(mapToUI);
+            setNotifications(mappedNotifications);
     } catch (error) {
       console.error('❌ NotificationsPage: Error loading notifications:', error);
     } finally {
@@ -54,12 +51,9 @@ const NotificationsPage: React.FC = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      console.log('🔄 NotificationsPage: Marking notification as read:', id);
       const uid = await getAuthUserId();
       await notificationService.markAsRead(id, uid);
-      console.log('✅ NotificationsPage: markAsRead service call completed for:', id);
       await loadNotifications();
-      console.log('✅ NotificationsPage: Notifications reloaded after markAsRead');
     } catch (e) {
       console.error('❌ NotificationsPage: markAsRead failed for notification:', id, e);
       // Optimistic fallback
@@ -69,16 +63,11 @@ const NotificationsPage: React.FC = () => {
 
   const markAllAsRead = async () => {
     try {
-      console.log('🔄 NotificationsPage: Starting markAllAsRead...');
       const uid = await getAuthUserId();
-      console.log('🔄 NotificationsPage: User ID:', uid);
-      console.log('🔄 NotificationsPage: Current notifications before mark as read:', notifications.map(n => ({ id: n.id, title: n.title, isRead: n.isRead })));
-      
+            
       await notificationService.markAllAsRead(uid);
-      console.log('✅ NotificationsPage: markAllAsRead service call completed');
       
       await loadNotifications();
-      console.log('✅ NotificationsPage: Notifications reloaded after markAllAsRead');
     } catch (e) {
       console.error('❌ NotificationsPage: markAllAsRead failed:', e);
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));

@@ -275,11 +275,6 @@ export const AdminPerformanceMonitor: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                console.log('Admin Performance Stats:', {
-                  metrics,
-                  cacheMetrics,
-                  prefetchStats
-                });
               }}
               className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
             >

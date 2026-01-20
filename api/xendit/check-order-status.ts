@@ -35,11 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!orderData) {
-      console.log('[Check Order Status] Order not found for external_id:', external_id);
       return res.status(404).json({ error: 'Order not found' });
     }
-
-    console.log('[Check Order Status] Found order with status:', orderData.status);
 
     // Return order status information
     return res.status(200).json({

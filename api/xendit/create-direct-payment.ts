@@ -87,12 +87,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    console.log('[Payment] Creating payment link:', { 
-      external_id, 
-      amount, 
-      payment_method: payment_method_id 
-    });
-
     // Get Xendit channel code
     const methodKey = payment_method_id.toLowerCase();
     const channelCode = PAYMENT_METHODS[methodKey];
@@ -103,6 +97,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         message: `Payment method '${payment_method_id}' is not supported`,
         supported_methods: Object.keys(PAYMENT_METHODS)
       });
+    }
+
+    // Validate product is active before creating payment (prevent purchasing sold products)
+    if (order?.product_id && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        
+        const { data: product } = await supabase
+          .from('products')
+          .select('id, is_active, sold_channel')
+          .eq('id', order.product_id)
+          .single();
+        
+        if (product && (!product.is_active || product.sold_channel)) {
+          console.warn('[Payment] Attempted to purchase inactive/sold product:', order.product_id);
+          return res.status(400).json({
+            error: 'Product unavailable',
+            message: 'Produk ini sudah tidak tersedia atau sudah terjual'
+          });
+        }
+      } catch (err) {
+        console.error('[Payment] Error checking product availability:', err);
+        // Continue with payment creation - fail-open for better UX
+      }
     }
 
     // Create order in database if provided
@@ -142,7 +161,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .select()
             .single();
           createdOrder = data;
-          console.log('[Payment] Order updated:', existing.id);
         } else {
           const { data } = await supabase
             .from('orders')
@@ -150,7 +168,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .select()
             .single();
           createdOrder = data;
-          console.log('[Payment] Order created:', data?.id);
         }
       } catch (err) {
         console.error('[Payment] Database error:', err);
@@ -182,14 +199,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set expiry to 24 hours
     payload.expiry_date = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    console.log('[Payment] Xendit payload:', JSON.stringify(payload, null, 2));
-
-    // For QRIS, use QR Code API instead of Invoice API
+        // For QRIS, use QR Code API instead of Invoice API
     let xenditData: any;
     let paymentSpecificData: any = {};
     
     if (channelCode === 'QRIS') {
-      console.log('[Payment] 🔄 Using Xendit QR Code API for QRIS');
       
       // Create QR Code using Xendit QR Code API
       const qrPayload = {
@@ -219,9 +233,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           details: qrData
         });
       }
-      
-      console.log('[Payment] ✅ QR Code created:', qrData.id);
-      console.log('[Payment] QR String length:', qrData.qr_string?.length || 0);
       
       // Format response to match Invoice API structure
       xenditData = {
@@ -262,8 +273,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      console.log('[Payment] Payment link created:', xenditData.id);
-
       paymentSpecificData = {
         invoice_url: xenditData.invoice_url,
         payment_url: xenditData.invoice_url
@@ -290,8 +299,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           description: description || 'Payment'
         };
 
-        console.log('[Payment] Saving to database:', paymentRecord);
-
         const { data: savedPayment, error: saveError } = await supabase
           .from('payments')
           .upsert(paymentRecord, { onConflict: 'xendit_id' })
@@ -301,7 +308,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (saveError) {
           console.error('[Payment] Failed to save payment:', saveError);
         } else {
-          console.log('[Payment] ✅ Payment saved to database');
         }
 
         // CRITICAL FIX: Always link order to Xendit invoice ID
@@ -321,12 +327,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (orderUpdateError) {
             console.error('[Payment] Failed to update order by ID:', orderUpdateError);
           } else {
-            console.log('[Payment] ✅ Order linked to xendit_invoice_id by order ID:', createdOrder.id);
           }
         } else if (external_id) {
           // FALLBACK: Update by client_external_id if createdOrder is null
           // This handles race conditions where order creation might have issues
-          console.log('[Payment] createdOrder is null, attempting update by client_external_id:', external_id);
           const { data: orderUpdate, error: orderUpdateError } = await supabase
             .from('orders')
             .update(orderUpdateData)
@@ -336,7 +340,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (orderUpdateError) {
             console.error('[Payment] Failed to update order by client_external_id:', orderUpdateError);
           } else if (orderUpdate && orderUpdate.length > 0) {
-            console.log('[Payment] ✅ Order linked to xendit_invoice_id via client_external_id fallback:', orderUpdate[0].id);
           } else {
             console.warn('[Payment] ⚠️ No order found to link for client_external_id:', external_id);
           }
@@ -349,21 +352,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Send WhatsApp notification to customer AFTER invoice is created
-    console.log('[Payment] Checking WhatsApp notification conditions:', {
-      hasOrder: !!order,
-      hasCreatedOrder: !!createdOrder,
-      hasCustomerMobile: !!customer?.mobile_number,
-      hasInvoiceUrl: !!xenditData?.invoice_url,
-      hasXenditId: !!xenditData?.id,
-      customerMobile: customer?.mobile_number,
-      invoiceUrl: xenditData?.invoice_url,
-      xenditId: xenditData?.id
-    });
     
     // Send WhatsApp if we have customer mobile and payment was created successfully
     // Don't require createdOrder because database might not be configured
     if (customer?.mobile_number && xenditData?.id && order) {
-      console.log('[Payment] Required conditions met, attempting to send WhatsApp notification...');
       try {
         const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
         const wa = new DynamicWhatsAppService();
@@ -378,10 +370,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
         else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
         
-        console.log('[Payment] Normalized phone number:', customerPhone);
-        
         if (/^62\d{8,15}$/.test(customerPhone)) {
-          console.log('[Payment] Phone number valid, preparing message...');
           // Use order data from request, fallback to createdOrder if available
           const productName = order.product_name || createdOrder?.product_name || 'Produk Digital';
           const productId = order.product_id || createdOrder?.product_id;
@@ -518,10 +507,7 @@ Ada pertanyaan? Chat aja:
 Ditunggu pembayarannya Bosku! 🔥`;
 
           const contextId = `order:${xenditData.external_id}:created`;
-          
-          console.log('[Payment] Sending WhatsApp message, contextId:', contextId);
-          console.log('[Payment] Message preview:', message.substring(0, 200) + '...');
-          
+                    
           const sendRes = await wa.sendMessage({
             phone: customerPhone,
             message,
@@ -529,10 +515,8 @@ Ditunggu pembayarannya Bosku! 🔥`;
             contextId
           });
           
-          console.log('[Payment] WhatsApp send result:', JSON.stringify(sendRes));
-          
+                    
           if (sendRes.success) {
-            console.log('[WhatsApp] ✅ New order notification with payment link sent to:', customerPhone);
           } else {
             console.error('[WhatsApp] ❌ Failed to send notification. Error:', sendRes.error);
           }
@@ -544,11 +528,6 @@ Ditunggu pembayarannya Bosku! 🔥`;
         console.error('[WhatsApp] ❌ Error stack:', waError?.stack);
       }
     } else {
-      console.log('[Payment] WhatsApp notification skipped - required conditions not met:', {
-        hasCustomerMobile: !!customer?.mobile_number,
-        hasXenditId: !!xenditData?.id,
-        hasOrder: !!order
-      });
     }
 
     // Return standardized response (Invoice API format)

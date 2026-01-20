@@ -56,15 +56,6 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
 
   // Handle card click navigation
   const handleCardClick = (e: React.MouseEvent) => {
-    console.log('🖱️ Flash sale card clicked:', {
-      productId: product.id,
-      productName: product.name,
-      hasFlashSale: !!flashSale,
-      flashSaleData: flashSale,
-      disableLink,
-      target: e.target,
-      currentTarget: e.currentTarget
-    });
     
     if (!disableLink) {
       e.preventDefault();
@@ -102,7 +93,6 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
   // Handle button click to prevent navigation
   const handleButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('🛒 Buy button clicked for:', product.name);
     
     // Validate product ID before navigation
     if (!product.id || product.id.trim() === '' || product.id === 'undefined') {

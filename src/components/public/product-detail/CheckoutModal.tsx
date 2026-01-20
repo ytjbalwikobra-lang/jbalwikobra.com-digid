@@ -67,7 +67,6 @@ const CheckoutModal: React.FC<Props> = ({
 
   // Handle payment method selection (don't redirect immediately)
   const handlePaymentMethodSelect = (methodId: string) => {
-    console.log('Payment method selected:', methodId);
     setSelectedPaymentMethod(methodId);
     // Don't trigger form submission - wait for user to click "Bayar Sekarang"
   };
@@ -202,7 +201,6 @@ const CheckoutModal: React.FC<Props> = ({
 
     // Prevent duplicate submissions
     if (creatingInvoice) {
-      console.log('🚫 Already creating invoice, ignoring submission');
       return;
     }
 

@@ -678,7 +678,7 @@ async function handleUpdateProfile(req: VercelRequest, res: VercelResponse) {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
-  setCorsHeaders(res);
+  setCorsHeaders(req, res);
   
   if (req.method === 'OPTIONS') {
     return handleCorsPreFlight(req, res);

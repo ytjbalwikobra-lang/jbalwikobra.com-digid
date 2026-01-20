@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
@@ -78,7 +78,6 @@ function getSupabase(): SupabaseClient {
     throw new Error('Missing Supabase configuration');
   }
   
-  const { createClient } = require('@supabase/supabase-js');
   supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,

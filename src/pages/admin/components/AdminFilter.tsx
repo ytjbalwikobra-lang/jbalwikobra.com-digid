@@ -4,7 +4,7 @@
  * WCAG 2.1 AA Compliant
  */
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 import { AdminButton } from './ui/AdminButton';
 import '../../../styles/admin-design-system-v3.css';
@@ -28,20 +28,21 @@ interface AdminFilterProps {
   loading?: boolean;
 }
 
-export const AdminFilter: React.FC<AdminFilterProps> = ({
+export const AdminFilter = forwardRef<HTMLInputElement, AdminFilterProps>(({
   searchTerm,
   onSearchChange,
   searchPlaceholder = 'Search...',
   filters = [],
   onRefresh,
   loading = false
-}) => {
+}, ref) => {
   return (
     <div className="admin-filter-container">
       {/* Search Bar */}
       <div className="admin-search-wrapper">
         <Search className="admin-search-icon" size={20} />
         <input
+          ref={ref}
           type="text"
           placeholder={searchPlaceholder}
           value={searchTerm}
@@ -87,4 +88,6 @@ export const AdminFilter: React.FC<AdminFilterProps> = ({
       )}
     </div>
   );
-};
+});
+
+AdminFilter.displayName = 'AdminFilter';

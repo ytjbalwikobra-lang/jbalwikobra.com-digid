@@ -3,9 +3,18 @@ import { X, Package, User, Calendar, CreditCard, Phone } from 'lucide-react';
 import { AdminColors } from '../../pages/admin/design-tokens';
 import { cn } from '../../utils/cn';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
+import { formatCurrency } from '../../utils/helpers';
+import { useModalData } from '../../hooks/useModalData';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
-// ISO 9241-110: Dialog principles - Modal for order details
-// Egress optimization: Lazy load order details only when modal opens
+/**
+ * OrderDetailsModal - Refactored with useModalData hook
+ * 
+ * IMPROVEMENTS:
+ * - useModalData: Lazy loads order data only when modal opens (egress optimization)
+ * - Keyboard shortcuts: Escape to close
+ * - Reduced duplicate loading logic
+ */
 
 interface OrderDetails {
   id: string;
@@ -33,65 +42,51 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onClose,
   orderId
 }) => {
-  const [order, setOrder] = useState<OrderDetails | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  // Lazy load order details - egress optimization
-  useEffect(() => {
-    if (!isOpen || !orderId) {
-      setOrder(null);
-      setError(null);
-      return;
+  // Use useModalData hook for lazy loading - eliminates ~40 lines of fetch logic
+  const {
+    data: order,
+    loading,
+    error,
+    refetch
+  } = useModalData<OrderDetails>({
+    isOpen,
+    entityId: orderId,
+    requiresId: true,
+    fetchFn: async (id) => {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+
+      const response = await fetch(`/api/admin?action=get-order&orderId=${id}`, { headers });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch order: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.order;
+    },
+    onError: (err) => {
+      console.error('Error fetching order details:', err);
     }
+  });
 
-    const fetchOrderDetails = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const sessionToken = localStorage.getItem('session_token');
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (sessionToken) {
-          headers['Authorization'] = `Bearer ${sessionToken}`;
-        }
-
-        // Fetch minimal data needed for modal - egress optimization
-        const response = await fetch(`/api/admin?action=get-order&orderId=${orderId}`, {
-          headers
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch order: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setOrder(data.order);
-      } catch (err) {
-        console.error('Error fetching order details:', err);
-        setError('Gagal memuat detail order');
-      } finally {
-        setLoading(false);
+  // Keyboard shortcuts (Escape to close)
+  useKeyboardShortcuts({
+    enabled: isOpen,
+    shortcuts: [
+      {
+        key: 'Escape',
+        action: onClose,
+        description: 'Close modal',
+        preventDefault: true
       }
-    };
-
-    fetchOrderDetails();
-  }, [isOpen, orderId]);
-
-  // ISO 9241-110: Close modal on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+    ]
+  });
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -128,8 +123,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         throw new Error(`Failed to update: ${response.status}`);
       }
 
-      const now = new Date().toISOString();
-      setOrder(prev => prev ? { ...prev, status: 'completed', updated_at: now } : prev);
+      // Refetch to get updated data
+      await refetch();
       setActionMessage(null);
     } catch (err) {
       console.error('Gagal menyelesaikan order:', err);
@@ -140,14 +135,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   };
 
   if (!isOpen) return null;
-
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -272,7 +259,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   color: AdminColors.error.DEFAULT
                 }}
               >
-                {error}
+                {error.message || 'Gagal memuat detail order'}
               </div>
             )}
 
@@ -336,7 +323,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       className="text-2xl font-bold"
                       style={{ color: AdminColors.success.DEFAULT }}
                     >
-                      {formatAmount(order.amount)}
+                      {formatCurrency(order.amount)}
                     </p>
                   </div>
                 </div>

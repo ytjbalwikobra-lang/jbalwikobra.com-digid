@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Plus, Trash2, Move, Loader, ImageIcon, Save } from 'lucide-react';
+import { Plus, Trash2, Move, Loader, ImageIcon, Save } from 'lucide-react';
 import { adminService, Product } from '../../../services/adminService';
 import { uploadFiles, deletePublicUrls, UploadResult } from '../../../services/storageService';
 import { useToast } from '../../../components/Toast';
 import { useAdminConfirm } from './ui/AdminConfirmModal';
+import { AdminModal } from './ui/AdminModal';
+import { AdminButton } from './ui/AdminButton';
 import { formatNumberID, parseNumberID, formatCurrency } from '../../../utils/helpers';
 import { supabase } from '../../../services/supabase';
+import { useAdminData } from '../../../contexts/AdminDataContext';
+import { useKeyboardShortcuts, createModalShortcuts } from '../../../hooks/useKeyboardShortcuts';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -65,11 +69,15 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   
-  const [dropdownData, setDropdownData] = useState<DropdownData>({
-    categories: [],
-    gameTitles: [],
-    tiers: []
-  });
+  // Use AdminDataContext instead of local state
+  const { 
+    categories, 
+    gameTitles, 
+    tiers,
+    categoriesLoading,
+    gameTitlesLoading,
+    tiersLoading
+  } = useAdminData();
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -89,16 +97,27 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
 
+  // Keyboard shortcuts for power users
+  useKeyboardShortcuts({
+    enabled: isOpen && mode !== 'view',
+    shortcuts: createModalShortcuts({
+      onSave: () => {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      },
+      onCancel: onClose
+    })
+  });
+
   // Load dropdown data and populate form
   useEffect(() => {
     if (isOpen) {
       const initializeModal = async () => {
         try {
-          // First load dropdown data
-          await loadDropdownData();
+          // Dropdown data already available from context - no API calls needed!
           
           // Small delay to ensure state is updated
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 50));
           
           // Then populate form data if editing/viewing
           if (product && (mode === 'edit' || mode === 'view')) {
@@ -170,21 +189,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
       initializeModal();
     }
   }, [isOpen, product, mode]);
-
-  const loadDropdownData = async () => {
-    try {
-      const [categories, gameTitles, tiers] = await Promise.all([
-        adminService.getCategories(),
-        adminService.getGameTitles(),
-        adminService.getTiers()
-      ]);
-      
-      setDropdownData({ categories, gameTitles, tiers });
-    } catch (error: any) {
-      console.error('Error loading dropdown data:', error);
-      push(`Failed to load dropdown data: ${error.message}`, 'error');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,7 +292,29 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const handleFileSelect = useCallback(async (files: FileList | null) => {
     if (!files || imageItems.length >= MAX_IMAGES) return;
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
     const filesArray = Array.from(files);
+    
+    // Validate file sizes and types
+    const invalidFiles = filesArray.filter(file => 
+      file.size > MAX_FILE_SIZE || !ALLOWED_TYPES.includes(file.type)
+    );
+    
+    if (invalidFiles.length > 0) {
+      const sizeErrors = invalidFiles.filter(f => f.size > MAX_FILE_SIZE);
+      const typeErrors = invalidFiles.filter(f => !ALLOWED_TYPES.includes(f.type));
+      
+      if (sizeErrors.length > 0) {
+        push(`${sizeErrors.length} file(s) exceed 5MB limit`, 'error');
+      }
+      if (typeErrors.length > 0) {
+        push(`Only JPEG, PNG, and WebP images are allowed`, 'error');
+      }
+      return;
+    }
+
     const remainingSlots = MAX_IMAGES - imageItems.length;
     const filesToUpload = filesArray.slice(0, remainingSlots);
 
@@ -410,32 +436,43 @@ const ProductModal: React.FC<ProductModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const isReadOnly = mode === 'view';
   const title = mode === 'create' ? 'Tambah Produk Baru' : mode === 'edit' ? 'Edit Produk' : 'Detail Produk';
+
+  // Modal actions
+  const modalActions = !isReadOnly ? (
+    <>
+      <AdminButton
+        type="button"
+        onClick={onClose}
+        variant="secondary"
+        disabled={loading}
+      >
+        Cancel
+      </AdminButton>
+      <AdminButton
+        type="submit"
+        form="product-form"
+        variant="primary"
+        disabled={loading}
+        icon={loading ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+      >
+        {loading ? 'Saving...' : mode === 'create' ? 'Buat Produk' : 'Simpan'}
+      </AdminButton>
+    </>
+  ) : undefined;
 
   return (
     <>
       <ConfirmModal />
-      <div className="admin-modal-overlay">
-        <div className="admin-modal-content max-w-2xl">
-        {/* Header */}
-        <div className="admin-modal-header">
-          <h2 className="admin-modal-title">
-            {title}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-            type="button"
-          >
-            <X size={20} className="text-slate-400" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="admin-modal-body space-y-6">
+      <AdminModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={title}
+        size="lg"
+        actions={modalActions}
+      >
+        <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Product Name */}
             <div className="md:col-span-2">
@@ -516,10 +553,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   value={formData.category_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
                   className="admin-select"
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || categoriesLoading}
                 >
-                  <option value="">Select Category</option>
-                  {dropdownData.categories.map(cat => (
+                  <option value="">{categoriesLoading ? 'Loading...' : 'Select Category'}</option>
+                  {categories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
@@ -534,10 +571,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   value={formData.game_title_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, game_title_id: e.target.value }))}
                   className="admin-select"
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || gameTitlesLoading}
                 >
-                  <option value="">Select Game Title</option>
-                  {dropdownData.gameTitles.map(game => (
+                  <option value="">{gameTitlesLoading ? 'Loading...' : 'Select Game Title'}</option>
+                  {gameTitles.map(game => (
                     <option key={game.id} value={game.id}>{game.name}</option>
                   ))}
                 </select>
@@ -552,10 +589,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   value={formData.tier_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, tier_id: e.target.value }))}
                   className="admin-select"
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || tiersLoading}
                 >
-                  <option value="">Select Tier</option>
-                  {dropdownData.tiers.map(tier => (
+                  <option value="">{tiersLoading ? 'Loading...' : 'Select Tier'}</option>
+                  {tiers.map(tier => (
                     <option key={tier.id} value={tier.id}>{tier.name}</option>
                   ))}
                 </select>
@@ -852,35 +889,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </label>
               </div>
             </div>
-
-            {/* Actions */}
-            {!isReadOnly && (
-              <div className="admin-modal-footer">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-6 py-2 text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center space-x-2 px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-colors disabled:opacity-50"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  <span>{mode === 'create' ? 'Buat Produk' : 'Simpan'}</span>
-                </button>
-              </div>
-            )}
-          </form>
-        </div>
-      </div>
+        </form>
+      </AdminModal>
     </>
   );
 };

@@ -26,6 +26,7 @@ import {
 } from '../../../types/flashSales';
 import { adminService } from '../../../services/adminService';
 import { supabase } from '../../../services/supabase';
+import { useAdminProducts } from '../../../contexts/AdminDataContext';
 
 interface AdminFlashSalesManagementProps {
   onRefresh?: () => void;
@@ -39,9 +40,19 @@ export const AdminFlashSalesManagement: React.FC<AdminFlashSalesManagementProps>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Products for form
-  const [products, setProducts] = useState<FlashSaleProduct[]>([]);
-  const [productsLoading, setProductsLoading] = useState(false);
+  // Use AdminDataContext for products instead of loading separately
+  const { products: contextProducts, productsLoading } = useAdminProducts();
+  
+  // Transform context products to match FlashSaleProduct type
+  const products = useMemo<FlashSaleProduct[]>(() => {
+    return contextProducts.map(p => ({
+      id: p.id,
+      name: p.name,
+      price: p.price || 0,
+      stock: p.stock || 0,
+      image: p.image || ''
+    }));
+  }, [contextProducts]);
 
   // UI state
   const [showForm, setShowForm] = useState(false);
@@ -67,10 +78,8 @@ export const AdminFlashSalesManagement: React.FC<AdminFlashSalesManagementProps>
     try {
       setLoading(true);
       setError(null);
-      await Promise.all([
-        loadFlashSales(),
-        loadProducts()
-      ]);
+      // Only load flash sales - products come from context
+      await loadFlashSales();
     } catch (err) {
       console.error('Error loading data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -128,38 +137,6 @@ export const AdminFlashSalesManagement: React.FC<AdminFlashSalesManagementProps>
     } catch (error) {
       console.error('Error loading flash sales:', error);
       setFlashSales([]);
-    }
-  };
-
-  const loadProducts = async () => {
-    try {
-      if (!supabase) {
-        throw new Error('Supabase client not initialized');
-      }
-      
-      setProductsLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, stock, image')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      
-      const transformedProducts: FlashSaleProduct[] = (data || []).map(product => ({
-        id: product.id,
-        name: product.name,
-        image: product.image,
-        price: product.price || 0,
-        stock: product.stock || 0
-      }));
-      
-      setProducts(transformedProducts);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      setProducts([]);
-    } finally {
-      setProductsLoading(false);
     }
   };
 

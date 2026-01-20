@@ -4,36 +4,65 @@
  * 
  * Design System: WCAG 2.1 AA Compliant
  * Layout: ISO 9241-210 Human-centred design principles
+ * 
+ * Uses unified useAdminRealtimeNotifications hook for single subscription pattern
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Bell, X, Check, CheckCheck, Trash2, AlertCircle, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { adminNotificationService, AdminNotification } from '../../../services/adminNotificationService';
-import { supabase } from '../../../services/supabase';
+import { AdminNotification } from '../../../services/adminNotificationService';
+import { useAdminRealtimeNotifications } from '../../../hooks/useAdminRealtimeNotifications';
 import { AdminColors } from '../design-tokens';
 import { trapFocus, announceToScreenReader, useArrowNavigation } from '../utils/accessibility';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { useToast } from '../../../components/Toast';
-import { getNotificationIcon, formatNotificationTime } from '../utils/notificationUtils';
-import { useRetry } from '../utils/useRetry';
+import { 
+  getNotificationIcon, 
+  formatNotificationTime,
+  formatCurrency,
+  isOrderNotification,
+  getOrderTypeLabel,
+  isCompletedNotification,
+  getStatusBadge,
+  getPanelTitle,
+  getPanelCopy,
+  getStatusLabel
+} from '../utils/notificationUtils';
 import { cn } from '../../../utils/cn';
-import { formatCurrency } from '../../../utils/helpers';
 import { OrderDetailsModal } from '../../../components/admin/OrderDetailsModal';
 
 interface AdminNotificationPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  onNotificationCountChange?: (count: number) => void;
 }
+
+/**
+ * Get status badge for notification - Indonesian labels
+ */
+const getLocalizedStatusBadge = (notification: AdminNotification): { label: string; color: string; bg: string } => {
+  const badge = getStatusBadge(notification);
+  // Override with Indonesian labels
+  const localizedLabel = getStatusLabel(notification.type);
+  return { ...badge, label: localizedLabel };
+};
 
 export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
   isOpen,
-  onClose,
-  onNotificationCountChange
+  onClose
 }) => {
-  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // Use unified realtime notifications hook - single subscription pattern
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    error: loadError,
+    refresh: loadNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    isConnected,
+  } = useAdminRealtimeNotifications({ limit: 50 });
+
   const [filter, setFilter] = useState<'all' | 'unread' | 'complete'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -46,117 +75,6 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
   
   // Toast notifications for feedback
   const toast = useToast();
-  
-  // Retry hook for failed operations
-  const { executeWithRetry } = useRetry({
-    maxRetries: 3,
-    initialDelay: 1000,
-    onRetry: (attempt) => {
-      announceToScreenReader(`Mencoba ulang... percobaan ${attempt}`, 'polite');
-    },
-    onMaxRetriesReached: () => {
-      toast.showToast('Gagal memuat notifikasi setelah beberapa percobaan', 'error');
-    }
-  });
-
-  const formatAmount = (value?: number) => {
-    if (typeof value !== 'number') return null;
-    return formatCurrency(value);
-  };
-
-  const isOrderNotification = (notification: AdminNotification) => {
-    return (
-      ['new_order', 'paid_order', 'new_rent', 'paid_rent', 'order_cancelled'].includes(notification.type) ||
-      !!notification.metadata?.order_type ||
-      !!notification.order_id
-    );
-  };
-
-  const getOrderTypeLabel = (notification: AdminNotification) => {
-    const orderType = (notification.metadata?.order_type as string) || (notification.type.includes('rent') ? 'rental' : 'purchase');
-    return orderType === 'rental' ? 'RENTAL' : 'PURCHASE';
-  };
-
-  const isCompletedNotification = (notification: AdminNotification) => {
-    const metaStatus = (notification.metadata?.status as string) || (notification.metadata?.order_status as string);
-    if (metaStatus === 'completed') return true;
-    return ['paid_order', 'paid_rent'].includes(notification.type);
-  };
-
-  const getStatusBadge = (notification: AdminNotification) => {
-    if (['paid_order', 'paid_rent'].includes(notification.type)) {
-      return { label: 'Paid', color: AdminColors.success.DEFAULT, bg: `${AdminColors.success.DEFAULT}15` };
-    }
-    if (['new_order', 'new_rent'].includes(notification.type)) {
-      return { label: 'Pending', color: AdminColors.warning.DEFAULT, bg: `${AdminColors.warning.DEFAULT}15` };
-    }
-    if (notification.type === 'order_cancelled') {
-      return { label: 'Cancelled', color: AdminColors.error.DEFAULT, bg: `${AdminColors.error.DEFAULT}15` };
-    }
-    return { label: 'Info', color: AdminColors.text.secondary, bg: `${AdminColors.primary.lighter}` };
-  };
-
-  // Load notifications with retry
-  const loadNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      setLoadError(null);
-      
-      const data = await executeWithRetry(
-        async () => adminNotificationService.getAdminNotifications(50), // Reduced from 200 to minimize egress
-        'Load Notifications'
-      );
-      
-      setNotifications(data || []);
-      
-      // Update unread count
-      const unreadCount = (data || []).filter(n => !n.is_read).length;
-      onNotificationCountChange?.(unreadCount);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-      setLoadError('Gagal memuat notifikasi. Klik untuk mencoba lagi.');
-    } finally {
-      setLoading(false);
-    }
-  }, [onNotificationCountChange, executeWithRetry]);
-
-  // Initial load
-  useEffect(() => {
-    if (isOpen) {
-      loadNotifications();
-    }
-  }, [isOpen, loadNotifications]);
-
-  // Real-time subscription
-  useEffect(() => {
-    if (!supabase || !isOpen) return;
-
-    const channel = supabase
-      .channel('admin-notifications-panel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'admin_notifications'
-        },
-        (payload) => {
-          const newNotif = payload.new as AdminNotification;
-          setNotifications(prev => [newNotif, ...prev]);
-          
-          // Update unread count
-          if (!newNotif.is_read) {
-            const unreadCount = notifications.filter(n => !n.is_read).length + 1;
-            onNotificationCountChange?.(unreadCount);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [isOpen, notifications, onNotificationCountChange]);
 
   // Focus trap, click-outside handler, and keyboard navigation
   useEffect(() => {
@@ -200,79 +118,40 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
     };
   }, [isOpen, onClose, isModalOpen]);
 
-  const updateReadState = useCallback((id: string, isRead: boolean) => {
-    setNotifications(prev => {
-      const updated = prev.map(n => n.id === id ? { ...n, is_read: isRead } : n);
-      const unreadCount = updated.filter(n => !n.is_read).length;
-      onNotificationCountChange?.(unreadCount);
-      return updated;
-    });
-  }, [onNotificationCountChange]);
-
-  // Mark as read
+  // Mark as read handler with toast feedback
   const handleMarkAsRead = async (id: string, silent = false) => {
     try {
-      updateReadState(id, true);
-
-      await adminNotificationService.markAsRead(id);
-      
+      await markAsRead(id);
       if (!silent) {
         toast.showToast('Ditandai sudah dibaca', 'success');
       }
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
-      // Rollback on error
-      updateReadState(id, false);
       if (!silent) {
         toast.showToast('Gagal menandai notifikasi', 'error');
       }
     }
   };
 
-  // Mark all as read
+  // Mark all as read handler with toast feedback
   const handleMarkAllAsRead = async () => {
-    const unreadNotifs = notifications.filter(n => !n.is_read);
-    const previousState = [...notifications];
-    
+    const unreadNotifCount = unreadCount;
     try {
-      // Optimistic update
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      
-      await Promise.all(
-        unreadNotifs.map(n => adminNotificationService.markAsRead(n.id))
-      );
-      onNotificationCountChange?.(0);
-      
-      toast.showToast(`${unreadNotifs.length} notifikasi ditandai sudah dibaca`, 'success');
+      await markAllAsRead();
+      toast.showToast(`${unreadNotifCount} notifikasi ditandai sudah dibaca`, 'success');
     } catch (error) {
       console.error('Failed to mark all as read:', error);
-      // Rollback on error
-      setNotifications(previousState);
       toast.showToast('Gagal menandai semua notifikasi', 'error');
     }
   };
 
-  // Delete notification
+  // Delete notification handler with toast feedback
   const handleDelete = async (id: string) => {
-    const previousState = [...notifications];
-    const deletedNotif = notifications.find(n => n.id === id);
-    
     try {
-      // Optimistic update
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      
-      await adminNotificationService.deleteNotification(id);
-      
-      // Update unread count
-      if (deletedNotif && !deletedNotif.is_read) {
-        const unreadCount = notifications.filter(n => !n.is_read && n.id !== id).length;
-        onNotificationCountChange?.(unreadCount);
-      }
-      
+      await deleteNotification(id);
       toast.showToast('Notifikasi dihapus', 'success');
     } catch (error) {
       console.error('Failed to delete notification:', error);
-      setNotifications(previousState);
       toast.showToast('Gagal menghapus notifikasi', 'error');
     }
   };
@@ -284,8 +163,6 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
     : filter === 'complete'
       ? notifications.filter(isCompletedNotification)
       : notifications;
-
-  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // Pagination - ISO 9241-151 guideline: manageable information chunks
   const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
@@ -403,13 +280,21 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             </div>
             
             <div>
-              <h2 
-                id="notification-panel-title" 
-                className="text-lg font-semibold"
-                style={{ color: AdminColors.text.primary }}
-              >
-                Notifikasi
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 
+                  id="notification-panel-title" 
+                  className="text-lg font-semibold"
+                  style={{ color: AdminColors.text.primary }}
+                >
+                  Notifikasi
+                </h2>
+                {/* Realtime connection indicator */}
+                <div 
+                  className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
+                  title={isConnected ? 'Realtime terhubung' : 'Realtime terputus'}
+                  aria-label={isConnected ? 'Realtime terhubung' : 'Realtime terputus'}
+                />
+              </div>
               <p 
                 id="notification-panel-desc"
                 className="text-xs"
@@ -614,7 +499,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <ul role="list" aria-label="Daftar notifikasi. Gunakan panah atas/bawah untuk navigasi">
               {paginatedNotifications.map((notification, index) => {
                 const orderBadge = isOrderNotification(notification) ? getOrderTypeLabel(notification) : null;
-                const amountLabel = formatAmount(notification.amount);
+                const amountLabel = notification.amount ? formatCurrency(notification.amount) : null;
                 const customerDisplay = notification.customer_name || 'Customer';
                 const productDisplay = notification.product_name || 'Produk';
 
@@ -752,17 +637,17 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
 
                       {/* Footer Row */}
                       <div className="flex items-center justify-between mt-2.5">
-                        {/* Timestamp */}
+                        {/* Timestamp with Indonesian status label */}
                         <div className="flex items-center gap-2">
                           <span
                             className="px-2 py-0.5 rounded-md text-[11px] font-semibold"
                             style={{
-                              background: getStatusBadge(notification).bg,
-                              color: getStatusBadge(notification).color,
-                              border: `1px solid ${getStatusBadge(notification).color}30`
+                              background: getLocalizedStatusBadge(notification).bg,
+                              color: getLocalizedStatusBadge(notification).color,
+                              border: `1px solid ${getLocalizedStatusBadge(notification).color}30`
                             }}
                           >
-                            {getStatusBadge(notification).label}
+                            {getLocalizedStatusBadge(notification).label}
                           </span>
                           <span
                             className="text-xs"

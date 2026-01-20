@@ -1,6 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, RefreshCw, Plus, Edit, Upload } from 'lucide-react';
+import React, { useRef } from 'react';
+import { RefreshCw, Plus, Edit, Upload } from 'lucide-react';
 import { BannerFormProps, BannerFormData } from './types';
+import { useModalForm } from '../../../../hooks/useModalForm';
+import { useKeyboardShortcuts, createModalShortcuts } from '../../../../hooks/useKeyboardShortcuts';
+import { bannerValidation } from '../../../../utils/adminValidation';
+import { AdminModal } from '../ui/AdminModal';
+import { AdminButton } from '../ui/AdminButton';
 
 export const BannerForm: React.FC<BannerFormProps> = ({
   isOpen,
@@ -9,45 +14,59 @@ export const BannerForm: React.FC<BannerFormProps> = ({
   onSubmit,
   submitting
 }) => {
-  const [formData, setFormData] = useState<BannerFormData>({
-    title: '',
-    subtitle: '',
-    image_url: '',
-    link_url: '',
-    cta_text: '',
-    sort_order: 1,
-    is_active: true
-  });
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (editingBanner) {
-      setFormData({
-        title: editingBanner.title,
-        subtitle: editingBanner.subtitle || '',
-        image_url: editingBanner.image_url,
-        link_url: editingBanner.link_url || '',
-        cta_text: editingBanner.cta_text || '',
-        sort_order: editingBanner.sort_order,
-        is_active: editingBanner.is_active
-      });
-    } else {
-      setFormData({
-        title: '',
-        subtitle: '',
-        image_url: '',
-        link_url: '',
-        cta_text: '',
-        sort_order: 1,
-        is_active: true
-      });
+  // Use useModalForm hook - eliminates ~40 lines of form state management
+  const { formData, updateField, validationError, validate } = useModalForm<BannerFormData>(
+    {
+      title: '',
+      subtitle: '',
+      image_url: '',
+      link_url: '',
+      cta_text: '',
+      sort_order: 1,
+      is_active: true
+    },
+    {
+      isOpen,
+      editData: editingBanner as BannerFormData | null,
+      transformEditData: (banner) => ({
+        title: banner.title,
+        subtitle: banner.subtitle || '',
+        image_url: banner.image_url,
+        link_url: banner.link_url || '',
+        cta_text: banner.cta_text || '',
+        sort_order: banner.sort_order,
+        is_active: banner.is_active
+      }),
+      validate: (data) => {
+        const validator = bannerValidation<BannerFormData>();
+        const result = validator.validate(data);
+        return result.isValid ? null : Object.values(result.errors)[0];
+      }
     }
-  }, [editingBanner, isOpen]);
+  );
+
+  // Keyboard shortcuts (Ctrl+S to save, Escape to cancel)
+  useKeyboardShortcuts({
+    enabled: isOpen && !submitting,
+    shortcuts: createModalShortcuts({
+      onSave: () => {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      },
+      onCancel: onClose
+    })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.image_url) return;
+    
+    // Use centralized validation
+    if (!validate()) {
+      return;
+    }
+    
     onSubmit(formData);
   };
 
@@ -56,41 +75,60 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     if (!file) return;
 
     // For now, just use a placeholder URL
-    // In real implementation, you would upload to storage service
+    // TODO: Implement actual upload using uploadFiles from storageService
     const mockImageUrl = `https://via.placeholder.com/800x400?text=${encodeURIComponent(file.name)}`;
-    setFormData(prev => ({ ...prev, image_url: mockImageUrl }));
+    updateField('image_url', mockImageUrl);
   };
 
-  if (!isOpen) return null;
+  const title = editingBanner ? 'Edit Banner' : 'Create New Banner';
+
+  // Modal actions
+  const modalActions = (
+    <>
+      <AdminButton
+        type="button"
+        onClick={onClose}
+        variant="secondary"
+        disabled={submitting}
+      >
+        Cancel
+      </AdminButton>
+      <AdminButton
+        type="submit"
+        form="banner-form"
+        variant="primary"
+        disabled={submitting || !formData.title || !formData.image_url}
+        icon={submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : editingBanner ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+      >
+        {submitting ? 'Saving...' : editingBanner ? 'Update Banner' : 'Create Banner'}
+      </AdminButton>
+    </>
+  );
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-black border border-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">
-            {editingBanner ? 'Edit Banner' : 'Create New Banner'}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 bg-gray-800 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-700 hover:text-white transition-all duration-200"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <AdminModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size="lg"
+      actions={modalActions}
+    >
+      <form id="banner-form" onSubmit={handleSubmit} className="space-y-6">
+          {validationError && (
+            <div className="admin-form-error" style={{padding: 'var(--admin-space-3)', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--admin-error)', borderRadius: 'var(--admin-radius-md)'}}>
+              {validationError}
+            </div>
+          )}
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Title *
+            <label className="admin-label">
+              Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+              onChange={(e) => updateField('title', e.target.value)}
+              className="admin-input"
               placeholder="Enter banner title..."
               required
             />
@@ -98,29 +136,29 @@ export const BannerForm: React.FC<BannerFormProps> = ({
 
           {/* Subtitle */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="admin-label">
               Subtitle
             </label>
             <input
               type="text"
               value={formData.subtitle}
-              onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-              className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+              onChange={(e) => updateField('subtitle', e.target.value)}
+              className="admin-input"
               placeholder="Enter banner subtitle..."
             />
           </div>
 
           {/* Image Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Banner Image *
+            <label className="admin-label">
+              Banner Image <span className="text-red-500">*</span>
             </label>
             <div className="space-y-4">
               <input
                 type="url"
                 value={formData.image_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                onChange={(e) => updateField('image_url', e.target.value)}
+                className="admin-input"
                 placeholder="Enter image URL or upload file..."
                 required
               />
@@ -159,54 +197,54 @@ export const BannerForm: React.FC<BannerFormProps> = ({
 
           {/* Link URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="admin-label">
               Link URL
             </label>
             <input
               type="url"
               value={formData.link_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
-              className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+              onChange={(e) => updateField('link_url', e.target.value)}
+              className="admin-input"
               placeholder="https://example.com"
             />
           </div>
 
           {/* CTA Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="admin-label">
               Call to Action Text
             </label>
             <input
               type="text"
               value={formData.cta_text}
-              onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
-              className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+              onChange={(e) => updateField('cta_text', e.target.value)}
+              className="admin-input"
               placeholder="Click here to learn more"
             />
           </div>
 
           {/* Sort Order */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="admin-label">
               Sort Order
             </label>
             <input
               type="number"
               value={formData.sort_order}
-              onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 1 }))}
-              className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+              onChange={(e) => updateField('sort_order', parseInt(e.target.value) || 1)}
+              className="admin-input"
               min="1"
             />
           </div>
 
           {/* Active Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="admin-label">
               Status
             </label>
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, is_active: !prev.is_active }))}
+              onClick={() => updateField('is_active', !formData.is_active)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 ${
                 formData.is_active 
                   ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' 
@@ -217,41 +255,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
               {formData.is_active ? 'Active' : 'Inactive'}
             </button>
           </div>
-
-          {/* Submit Buttons */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="px-6 py-3 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-700 hover:text-white transition-all duration-200 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting || !formData.title || !formData.image_url}
-              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-200 shadow-lg hover:shadow-pink-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin mr-2 inline-block" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  {editingBanner ? (
-                    <Edit className="w-4 h-4 mr-2 inline-block" />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2 inline-block" />
-                  )}
-                  {editingBanner ? 'Update Banner' : 'Create Banner'}
-                </>
-              )}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
-  );
+      </AdminModal>
+    );
 };

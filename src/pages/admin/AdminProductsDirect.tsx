@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Package, RefreshCw, Plus, ShoppingCart, MessageCircle, DollarSign } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
@@ -10,6 +10,9 @@ import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
 import { adminService } from '../../services/adminService';
 import { formatNumberID, parseNumberID, formatCurrency } from '../../utils/helpers';
+import { usePriceInput } from '../../hooks/usePriceInput';
+import { useAbortController } from '../../hooks/useAbortController';
+import { useKeyboardShortcuts, createListShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { formatAnalyticsValue } from '../../utils/adminUtils';
 import '../../styles/admin-design-system-v3.css';
 
@@ -61,9 +64,9 @@ const AdminProductsDirect: React.FC = () => {
   
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editPrice, setEditPrice] = useState('');
+  const priceInput = usePriceInput(0);
   const [saving, setSaving] = useState(false);
-
+  const saveTriggeredRef = useRef(false);
   // Modal state
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -77,6 +80,8 @@ const AdminProductsDirect: React.FC = () => {
 
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const { getSignal } = useAbortController(); // Request deduplication
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Debounce search to reduce requests
   useEffect(() => {
@@ -99,6 +104,7 @@ const AdminProductsDirect: React.FC = () => {
 
   // LOAD PRODUCTS - PAGINATED VIA ADMIN SERVICE
   const loadProducts = useCallback(async () => {
+    const signal = getSignal(); // Cancel previous requests (TODO: Pass signal to adminService)
     setLoading(true);
 
     try {
@@ -108,6 +114,9 @@ const AdminProductsDirect: React.FC = () => {
         adminService.getProductStats()
       ]);
       
+      // Check if request was aborted
+      if (signal.aborted) return;
+      
       const mapped = (result.data || []).map(mapProduct);
 
       setProducts(mapped);
@@ -115,11 +124,24 @@ const AdminProductsDirect: React.FC = () => {
       setTotalPages(result.totalPages || 1);
       setStats(statsResult);
     } catch (err: any) {
+      // Ignore abort errors
+      if (err.name === 'AbortError') return;
       push(`Failed to load: ${err.message}`, 'error');
     } finally {
-      setLoading(false);
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
-  }, [currentPage, itemsPerPage, debouncedSearch, mapProduct, push]);
+  }, [currentPage, itemsPerPage, debouncedSearch, mapProduct, push, getSignal]);
+
+  // Keyboard shortcuts for power users
+  useKeyboardShortcuts({
+    shortcuts: createListShortcuts({
+      onCreate: () => setModalState({ isOpen: true, mode: 'create', product: null }),
+      onRefresh: loadProducts,
+      onSearch: () => searchInputRef.current?.focus()
+    })
+  });
 
   useEffect(() => {
     setCurrentPage(1);
@@ -132,26 +154,20 @@ const AdminProductsDirect: React.FC = () => {
   // START EDITING - store raw numeric value but will display formatted
   const startEditing = (product: Product) => {
     setEditingId(product.id);
-    setEditPrice(product.price ? formatNumberID(product.price) : '0');
+    priceInput.setValue(product.price || 0);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
-    setEditPrice('');
-  };
-
-  // Handle price input with thousand separator
-  const handleEditPriceChange = (value: string) => {
-    // Parse the input to get numeric value, then format it back
-    const numericValue = parseNumberID(value);
-    setEditPrice(numericValue > 0 ? formatNumberID(numericValue) : '');
+    priceInput.reset();
+    saveTriggeredRef.current = false;
   };
 
   // SAVE EDIT - USE API ENDPOINT (has service role to bypass RLS)
   const saveEdit = async () => {
     if (!editingId || saving) return;
 
-    const newPrice = parseNumberID(editPrice) || 0;
+    const newPrice = priceInput.value;
     const originalProduct = products.find(p => p.id === editingId);
 
     if (!originalProduct) {
@@ -222,7 +238,21 @@ const AdminProductsDirect: React.FC = () => {
     }
   };
 
+  const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
+
   const markSoldViaWA = async (product: Product) => {
+    if (markingSoldId) return; // Prevent multiple clicks
+    
+    // Guard: Prevent marking if already sold or inactive
+    if (product.sold_channel) {
+      push(`Produk sudah terjual via ${product.sold_channel === 'web' ? 'Web' : 'WA'}`, 'info');
+      return;
+    }
+    if (!product.is_active) {
+      push('Produk tidak aktif', 'info');
+      return;
+    }
+
     const confirmed = await showConfirm({
       title: 'Terjual via WA',
       message: `Anda akan menandai produk "${product.name}" sebagai terjual via WhatsApp.\n\nLanjutkan?`,
@@ -233,6 +263,7 @@ const AdminProductsDirect: React.FC = () => {
 
     if (!confirmed) return;
 
+    setMarkingSoldId(product.id);
     try {
       const sessionToken = localStorage.getItem('session_token') || '';
       const response = await fetch('/api/admin', {
@@ -263,18 +294,22 @@ const AdminProductsDirect: React.FC = () => {
       push('Produk ditandai terjual via WA', 'success');
     } catch (err: any) {
       push(`Gagal: ${err.message}`, 'error');
+    } finally {
+      setMarkingSoldId(null);
     }
   };
 
   const getStatusLabel = (product: Product) => {
     if (product.sold_channel === 'wa') return 'Terjual via WA';
-    if (product.sold_channel === 'web' || !product.is_active) return 'Terjual via Web';
-    return 'Active';
+    if (product.sold_channel === 'web') return 'Terjual via Web';
+    if (!product.is_active) return 'Tidak Aktif';
+    return 'Aktif';
   };
 
   const getStatusStyle = (product: Product) => {
     if (product.sold_channel === 'wa') return 'bg-purple-500/20 text-purple-300';
-    if (product.sold_channel === 'web' || !product.is_active) return 'bg-blue-500/20 text-blue-300';
+    if (product.sold_channel === 'web') return 'bg-blue-500/20 text-blue-300';
+    if (!product.is_active) return 'bg-gray-500/20 text-gray-400';
     return 'bg-green-500/20 text-green-300';
   };
 
@@ -390,6 +425,7 @@ const AdminProductsDirect: React.FC = () => {
 
       {/* Search - Using shared AdminFilter */}
       <AdminFilter
+        ref={searchInputRef}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search products..."
@@ -479,8 +515,8 @@ const AdminProductsDirect: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={editPrice ? `Rp ${editPrice}` : ''}
-                            onChange={(e) => handleEditPriceChange(e.target.value)}
+                            value={priceInput.formatted ? `Rp ${priceInput.formatted}` : ''}
+                            onChange={(e) => priceInput.handleChange(e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
@@ -489,9 +525,9 @@ const AdminProductsDirect: React.FC = () => {
                               if (e.key === 'Escape') cancelEditing();
                             }}
                             onBlur={() => {
-                              // Small delay to allow Enter key to process first
-                              if (!saving) {
-                                setTimeout(() => cancelEditing(), 100);
+                              // Only cancel if save wasn't triggered by Enter key
+                              if (!saving && !saveTriggeredRef.current) {
+                                cancelEditing();
                               }
                             }}
                             className={`w-32 px-2 py-1 bg-gray-700 border rounded text-white text-sm transition-all ${
@@ -545,11 +581,30 @@ const AdminProductsDirect: React.FC = () => {
                         >
                           Edit
                         </button>
+                        {/* Disable "Terjual via WA" button if product is already sold */}
                         <button
                           onClick={() => markSoldViaWA(product)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                          disabled={!!product.sold_channel || !product.is_active}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                            product.sold_channel || !product.is_active
+                              ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                              : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
+                          }`}
+                          title={
+                            product.sold_channel === 'web' 
+                              ? 'Produk sudah terjual via Web' 
+                              : product.sold_channel === 'wa'
+                                ? 'Produk sudah terjual via WA'
+                                : !product.is_active
+                                  ? 'Produk tidak aktif'
+                                  : 'Tandai sebagai terjual via WhatsApp'
+                          }
                         >
-                          Terjual via WA
+                          {product.sold_channel === 'web' 
+                            ? 'Terjual Web' 
+                            : product.sold_channel === 'wa' 
+                              ? 'Terjual WA'
+                              : 'Terjual via WA'}
                         </button>
                       </div>
                     </td>

@@ -16,7 +16,6 @@ const MOBILE_CONSTANTS = {
 
 interface ProductsPageState {
   products: Product[];
-  filteredProducts: Product[];
   tiers: Tier[];
   gameTitles: GameTitle[];
   loading: boolean;
@@ -38,13 +37,26 @@ interface FilterState {
 
 type LayoutDensity = 'comfortable' | 'compact';
 
+// Default filter state constant (moved outside hook for reuse)
+const DEFAULT_FILTER_STATE: FilterState = {
+  searchTerm: '',
+  selectedCategory: '',
+  selectedGame: '',
+  selectedTier: '',
+  selectedGames: [],
+  selectedTiers: [],
+  minPrice: null,
+  maxPrice: null,
+  sortBy: 'newest',
+  rentalOnly: false,
+};
+
 export const useProductsData = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   
   const [state, setState] = useState<ProductsPageState>({
     products: [],
-    filteredProducts: [],
     tiers: [],
     gameTitles: [],
     loading: true,
@@ -83,8 +95,8 @@ export const useProductsData = () => {
     };
   });
 
-  // Layout density (persisted)
-  const [layoutDensity, setLayoutDensity] = useState<LayoutDensity>(() => {
+  // Layout density - read from localStorage once on mount
+  const layoutDensity: LayoutDensity = (() => {
     if (typeof window === 'undefined') return 'comfortable';
     try {
       const stored = localStorage.getItem('catalog_layout_density');
@@ -92,7 +104,7 @@ export const useProductsData = () => {
     } catch {
       return 'comfortable';
     }
-  });
+  })();
 
   const [currentPage, setCurrentPage] = useState(() => {
     const savedState = sessionStorage.getItem('productsPageState');
@@ -107,15 +119,10 @@ export const useProductsData = () => {
     return 1;
   });
 
-  // Determine products per page based on screen size
-  const productsPerPage = useMemo(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 768 
-        ? MOBILE_CONSTANTS.PRODUCTS_PER_PAGE_MOBILE 
-        : MOBILE_CONSTANTS.PRODUCTS_PER_PAGE;
-    }
-    return MOBILE_CONSTANTS.PRODUCTS_PER_PAGE;
-  }, []);
+  // Products per page - determine once on mount (mobile: 12, desktop: 16)
+  const productsPerPage = typeof window !== 'undefined' && window.innerWidth < 768 
+    ? MOBILE_CONSTANTS.PRODUCTS_PER_PAGE_MOBILE 
+    : MOBILE_CONSTANTS.PRODUCTS_PER_PAGE;
 
   // Optimized data fetching
   const fetchData = useCallback(async () => {
@@ -151,7 +158,6 @@ export const useProductsData = () => {
 
       setState({
         products: productsResponse.data,
-        filteredProducts: productsResponse.data,
         tiers: sortedTiers,
         gameTitles: gameTitlesData,
         loading: false,
@@ -171,16 +177,17 @@ export const useProductsData = () => {
     fetchData();
   }, [fetchData]);
 
-  // Filter products
-  useEffect(() => {
+  // Memoized filtered and sorted products
+  const filteredProducts = useMemo(() => {
     let filtered = [...state.products];
 
     // Search filter
     if (filterState.searchTerm) {
+      const searchLower = filterState.searchTerm.toLowerCase();
       filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(filterState.searchTerm.toLowerCase()) ||
-  product.gameTitleData?.name?.toLowerCase().includes(filterState.searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(filterState.searchTerm.toLowerCase())
+        product.name.toLowerCase().includes(searchLower) ||
+        product.gameTitleData?.name?.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower)
       );
     }
 
@@ -191,64 +198,61 @@ export const useProductsData = () => {
     }
 
     // Game filter (multi-select has priority)
-    if (filterState.selectedGames && filterState.selectedGames.length > 0) {
+    if (filterState.selectedGames?.length) {
       const setGames = new Set(filterState.selectedGames.map(g => g.toLowerCase()));
       filtered = filtered.filter(p => p.gameTitleData?.name && setGames.has(p.gameTitleData.name.toLowerCase()));
     } else if (filterState.selectedGame) {
-      filtered = filtered.filter(product => {
-        const gameName = product.gameTitleData?.name;
-        return gameName?.toLowerCase() === filterState.selectedGame.toLowerCase();
-      });
+      const gameLower = filterState.selectedGame.toLowerCase();
+      filtered = filtered.filter(p => p.gameTitleData?.name?.toLowerCase() === gameLower);
     }
 
     // Tier filter (multi-select has priority)
-    if (filterState.selectedTiers && filterState.selectedTiers.length > 0) {
+    if (filterState.selectedTiers?.length) {
       const setTiers = new Set(filterState.selectedTiers.map(t => t.toLowerCase()));
       filtered = filtered.filter(p => p.tierData?.slug && setTiers.has(p.tierData.slug.toLowerCase()));
     } else if (filterState.selectedTier) {
-      filtered = filtered.filter(product => {
-        const tierSlug = product.tierData?.slug;
-        return tierSlug?.toLowerCase() === filterState.selectedTier.toLowerCase();
-      });
+      const tierLower = filterState.selectedTier.toLowerCase();
+      filtered = filtered.filter(p => p.tierData?.slug?.toLowerCase() === tierLower);
     }
 
     // Rental filter
     if (filterState.rentalOnly) {
-      filtered = filtered.filter(product => Boolean(product.hasRental || product.rentalOptions?.length));
+      filtered = filtered.filter(p => Boolean(p.hasRental || p.rentalOptions?.length));
     }
 
     // Price range filter
-    if (typeof filterState.minPrice === 'number' && !Number.isNaN(filterState.minPrice)) {
-      filtered = filtered.filter(p => p.price >= (filterState.minPrice as number));
+    const { minPrice, maxPrice } = filterState;
+    if (typeof minPrice === 'number' && !Number.isNaN(minPrice)) {
+      filtered = filtered.filter(p => p.price >= minPrice);
     }
-    if (typeof filterState.maxPrice === 'number' && !Number.isNaN(filterState.maxPrice)) {
-      filtered = filtered.filter(p => p.price <= (filterState.maxPrice as number));
+    if (typeof maxPrice === 'number' && !Number.isNaN(maxPrice)) {
+      filtered = filtered.filter(p => p.price <= maxPrice);
     }
 
-    // Sort
+    // Sort (create copy to avoid mutating)
+    const sorted = [...filtered];
     switch (filterState.sortBy) {
       case 'newest':
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'oldest':
-        filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         break;
       case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
+        sorted.sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
+        sorted.sort((a, b) => b.price - a.price);
         break;
       case 'name-az':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'name-za':
-        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
         break;
     }
 
-    setState(prev => ({ ...prev, filteredProducts: filtered }));
-    setCurrentPage(1); // Reset to first page when filters change
+    return sorted;
   }, [
     state.products,
     filterState.searchTerm,
@@ -262,6 +266,24 @@ export const useProductsData = () => {
     filterState.maxPrice,
     filterState.sortBy
   ]);
+
+  // Reset page when filters change
+  const filterDepsString = JSON.stringify([
+    filterState.searchTerm,
+    filterState.selectedCategory,
+    filterState.selectedGame,
+    filterState.selectedTier,
+    filterState.selectedGames,
+    filterState.selectedTiers,
+    filterState.rentalOnly,
+    filterState.minPrice,
+    filterState.maxPrice,
+    filterState.sortBy
+  ]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterDepsString]);
 
   // Update URL params
   useEffect(() => {
@@ -297,14 +319,6 @@ export const useProductsData = () => {
     scrollToPaginationContent();
   }, []);
 
-  const resetFilters = useCallback(() => {
-    handleFilterChange('searchTerm', '');
-  handleFilterChange('selectedCategory', '');
-    handleFilterChange('selectedGame', '');
-    handleFilterChange('selectedTier', '');
-    handleFilterChange('sortBy', 'newest');
-  }, [handleFilterChange]);
-
   // Active filters derivation (memo)
   const activeFilters = useMemo(() => {
     const items: Array<{ key: string; label: string; value: string }> = [];
@@ -334,60 +348,38 @@ export const useProductsData = () => {
     } else if (key === 'rentalOnly') {
       handleFilterChange('rentalOnly', false);
     } else if (key === 'priceRange') {
-      handleFilterChange('minPrice', null);
-      handleFilterChange('maxPrice', null);
+      // Batch update for price range
+      setFilterState(prev => ({ ...prev, minPrice: null, maxPrice: null }));
     }
   }, [handleFilterChange]);
 
   const clearAllFilters = useCallback(() => {
-  handleFilterChange('searchTerm', '');
-  handleFilterChange('selectedCategory', '');
-  handleFilterChange('selectedGame', '');
-  handleFilterChange('selectedTier', '');
-  handleFilterChange('selectedGames', []);
-  handleFilterChange('selectedTiers', []);
-  handleFilterChange('minPrice', null);
-  handleFilterChange('maxPrice', null);
-  handleFilterChange('sortBy', 'newest');
-  handleFilterChange('rentalOnly', false);
-  }, [resetFilters]);
-
-  // Persist layout density
-  useEffect(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('catalog_layout_density', layoutDensity);
-      }
-    } catch {/* ignore */}
-  }, [layoutDensity]);
-
-  const handleSetLayoutDensity = useCallback((density: LayoutDensity) => {
-    setLayoutDensity(density);
+    // Single state update instead of 10 separate calls
+    setFilterState(DEFAULT_FILTER_STATE);
   }, []);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(state.filteredProducts.length / productsPerPage);
+  // Pagination calculations using memoized filteredProducts
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
   const endIndex = startIndex + productsPerPage;
-  const currentProducts = state.filteredProducts.slice(startIndex, endIndex);
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
   return {
     // State
     ...state,
+    filteredProducts, // Use memoized filteredProducts
     filterState,
     currentPage,
     currentProducts,
     totalPages,
-  layoutDensity,
-  activeFilters,
+    layoutDensity,
+    activeFilters,
     
     // Actions
     fetchData,
     handleFilterChange,
     handlePageChange,
-    resetFilters,
-  clearFilter,
-  clearAllFilters,
-  setLayoutDensity: handleSetLayoutDensity
+    clearFilter,
+    clearAllFilters
   };
 };

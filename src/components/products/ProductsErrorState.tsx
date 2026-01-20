@@ -5,11 +5,6 @@
 
 import React from 'react';
 
-// Mobile-first constants
-const MOBILE_CONSTANTS = {
-  MIN_TOUCH_TARGET: 44,
-} as const;
-
 interface ProductsErrorStateProps {
   error: string;
   onRetry: () => void;
@@ -27,8 +22,7 @@ export const ProductsErrorState = React.memo(({
         <p className="text-zinc-400 mb-6 text-sm">{error}</p>
         <button
           onClick={onRetry}
-          className="w-full bg-pink-600 hover:bg-pink-700 text-white font-medium py-3 px-6 rounded-xl transition-colors"
-          style={{ minHeight: MOBILE_CONSTANTS.MIN_TOUCH_TARGET }}
+          className="w-full bg-pink-600 hover:bg-pink-700 text-white font-medium py-3 px-6 rounded-xl transition-colors min-h-[44px]"
         >
           Coba Lagi
         </button>

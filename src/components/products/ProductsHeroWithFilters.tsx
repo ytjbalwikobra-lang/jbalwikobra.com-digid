@@ -10,13 +10,15 @@
  * - Back navigation link
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Search, Package, Gamepad2, ChevronDown, Filter } from 'lucide-react';
 import { PNContainer, PNHeading, PNText } from '../ui/PinkNeonDesignSystem';
 import { IOSButton } from '../ios/IOSDesignSystemV2';
 import { Tier, GameTitle } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
+import { useDebounce } from '../../hooks/useDebounce';
+import { FilterDropdown } from './FilterDropdown';
 
 // Sort options
 const SORT_OPTIONS = [
@@ -83,30 +85,49 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
   selectedCategory,
   onCategoryChange
 }) => {
-  const [gameDropdownOpen, setGameDropdownOpen] = useState(false);
-  const [tierDropdownOpen, setTierDropdownOpen] = useState(false);
-  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  
+  // Debounce search input (300ms delay for better UX)
+  const debouncedSearchTerm = useDebounce(localSearchTerm, 300);
+  
+  // Sync debounced search term to parent
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) {
+      onSearchChange(debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm, searchTerm, onSearchChange]);
+  
+  // Sync local state when parent changes (e.g., clear filters)
+  useEffect(() => {
+    if (searchTerm !== localSearchTerm && searchTerm === '') {
+      setLocalSearchTerm('');
+    }
+  }, [searchTerm, localSearchTerm]);
+  
+  // Handle search input change
+  const handleSearchInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearchTerm(e.target.value);
+  }, []);
   
   // Categories data
   const { categories, loading: categoriesLoading } = useCategories();
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    if (!gameDropdownOpen && !tierDropdownOpen && !sortDropdownOpen) return;
-    const onDocClick = (e: MouseEvent) => {
-      const target = e.target as Element;
-      if (!target.closest('[data-dropdown="games"]') && 
-          !target.closest('[data-dropdown="tiers"]') && 
-          !target.closest('[data-dropdown="sort"]')) {
-        setGameDropdownOpen(false);
-        setTierDropdownOpen(false);
-        setSortDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, [gameDropdownOpen, tierDropdownOpen, sortDropdownOpen]);
+  // Memoize dropdown options
+  const gameOptions = useMemo(() => [
+    { value: '', label: 'Semua Game' },
+    ...(gameTitles?.map(g => ({ value: g.name, label: g.name })) || [])
+  ], [gameTitles]);
+
+  const tierOptions = useMemo(() => [
+    { value: '', label: 'Semua Tier' },
+    ...(tiers?.map(t => ({ value: t.slug, label: t.name })) || [])
+  ], [tiers]);
+
+  const sortOptions = useMemo(() => 
+    SORT_OPTIONS.map(opt => ({ value: opt.value, label: opt.label })),
+    []
+  );
 
   return (
     <>
@@ -150,8 +171,8 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
               <input
                 type="text"
                 placeholder="Cari akun game..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
+                value={localSearchTerm}
+                onChange={handleSearchInput}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent backdrop-blur-sm"
               />
             </div>
@@ -165,11 +186,9 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             <div className="flex flex-wrap items-center justify-center gap-2">
               {categoriesLoading ? (
                 // Loading skeleton
-                <>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-8 w-16 rounded-lg bg-white/5 border border-white/10 animate-pulse" />
-                  ))}
-                </>
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-8 w-16 rounded-lg bg-white/5 border border-white/10 animate-pulse" />
+                ))
               ) : (
                 <>
                   <IOSButton
@@ -215,119 +234,38 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Game Selection */}
-                {gameTitles && gameTitles.length > 0 && (
-                  <div className="relative" data-dropdown="games">
-                    <label className="block text-sm font-medium text-white mb-2">Game</label>
-                    <button
-                      onClick={() => setGameDropdownOpen(!gameDropdownOpen)}
-                      className="w-full flex items-center justify-between px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors"
-                    >
-                      <span className="truncate">
-                        {selectedGame || 'Semua Game'}
-                      </span>
-                      <ChevronDown className={`ml-2 transform transition-transform ${gameDropdownOpen ? 'rotate-180' : ''}`} size={16} />
-                    </button>
-                    
-                    {gameDropdownOpen && (
-                      <div className="absolute top-full mt-1 w-full bg-black/90 border border-white/10 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                        <button
-                          onClick={() => {
-                            onGameChange?.('');
-                            setGameDropdownOpen(false);
-                          }}
-                          className="w-full px-3 py-2 text-left text-white hover:bg-white/10 transition-colors text-sm"
-                        >
-                          Semua Game
-                        </button>
-                        {gameTitles.map((game) => (
-                          <button
-                            key={game.name}
-                            onClick={() => {
-                              onGameChange?.(game.name);
-                              setGameDropdownOpen(false);
-                            }}
-                            className="w-full px-3 py-2 text-left text-white hover:bg-white/10 transition-colors text-sm truncate"
-                          >
-                            {game.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {gameOptions.length > 1 && (
+                  <FilterDropdown
+                    id="game-filter"
+                    label="Game"
+                    value={selectedGame || ''}
+                    options={gameOptions}
+                    placeholder="Semua Game"
+                    onChange={(v) => onGameChange?.(v)}
+                  />
                 )}
 
                 {/* Tier Selection */}
-                {tiers && tiers.length > 0 && (
-                  <div className="relative" data-dropdown="tiers">
-                    <label className="block text-sm font-medium text-white mb-2">Tier</label>
-                    <button
-                      onClick={() => setTierDropdownOpen(!tierDropdownOpen)}
-                      className="w-full flex items-center justify-between px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors"
-                    >
-                      <span className="truncate">
-                        {selectedTier ? tiers.find(t => t.slug === selectedTier)?.name || 'Semua Tier' : 'Semua Tier'}
-                      </span>
-                      <ChevronDown className={`ml-2 transform transition-transform ${tierDropdownOpen ? 'rotate-180' : ''}`} size={16} />
-                    </button>
-                    
-                    {tierDropdownOpen && (
-                      <div className="absolute top-full mt-1 w-full bg-black/90 border border-white/10 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                        <button
-                          onClick={() => {
-                            onTierChange?.('');
-                            setTierDropdownOpen(false);
-                          }}
-                          className="w-full px-3 py-2 text-left text-white hover:bg-white/10 transition-colors text-sm"
-                        >
-                          Semua Tier
-                        </button>
-                        {tiers.map((tier) => (
-                          <button
-                            key={tier.slug}
-                            onClick={() => {
-                              onTierChange?.(tier.slug);
-                              setTierDropdownOpen(false);
-                            }}
-                            className="w-full px-3 py-2 text-left text-white hover:bg-white/10 transition-colors text-sm truncate"
-                          >
-                            {tier.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {tierOptions.length > 1 && (
+                  <FilterDropdown
+                    id="tier-filter"
+                    label="Tier"
+                    value={selectedTier || ''}
+                    options={tierOptions}
+                    placeholder="Semua Tier"
+                    onChange={(v) => onTierChange?.(v)}
+                  />
                 )}
 
                 {/* Sort Selection */}
-                <div className="relative" data-dropdown="sort">
-                  <label className="block text-sm font-medium text-white mb-2">Urutkan</label>
-                  <button
-                    onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors"
-                  >
-                    <span className="truncate">
-                      {SORT_OPTIONS.find(option => option.value === sortBy)?.label || 'Terbaru'}
-                    </span>
-                    <ChevronDown className={`ml-2 transform transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} size={16} />
-                  </button>
-                  
-                  {sortDropdownOpen && (
-                    <div className="absolute top-full mt-1 w-full bg-black/90 border border-white/10 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                      {SORT_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => {
-                            onSortChange(option.value);
-                            setSortDropdownOpen(false);
-                          }}
-                          className="w-full px-3 py-2 text-left text-white hover:bg-white/10 transition-colors text-sm truncate"
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <FilterDropdown
+                  id="sort-filter"
+                  label="Urutkan"
+                  value={sortBy}
+                  options={sortOptions}
+                  placeholder="Terbaru"
+                  onChange={onSortChange}
+                />
               </div>
 
               {/* Rental Toggle */}

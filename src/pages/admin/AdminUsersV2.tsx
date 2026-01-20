@@ -9,6 +9,7 @@ import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminFilter } from './components/AdminFilter';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
+import { useAbortController } from '../../hooks/useAbortController';
 import '../../styles/admin-design-system-v3.css';
 
 interface UserStats {

@@ -71,22 +71,23 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
       <div 
         ref={modalRef}
         className={`w-full ${getSizeClasses()} max-h-[90vh] flex flex-col animate-in fade-in-0 zoom-in-95 duration-200`}
       >
-  <div className="dashboard-data-panel padded rounded-xl p-stack-lg surface-glass-lg flex flex-col max-h-full">
+        <div className="admin-card flex flex-col max-h-full overflow-hidden" style={{background: 'var(--admin-primary-light)', border: '1px solid var(--admin-border)'}}>
           {/* Header */}
-          <div className="flex items-center justify-between p-stack-lg border-b border-surface-tint-gray/30 flex-shrink-0">
-            <h2 className="heading-lg text-white">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b" style={{borderColor: 'var(--admin-border)'}}>
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
             {showCloseButton && (
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-ghost btn-sm text-surface-tint-gray hover:text-white"
+                className="admin-btn-ghost p-2 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Close modal"
               >
                 <X size={20} />
               </button>
@@ -94,13 +95,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-stack-lg">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
             {children}
           </div>
 
           {/* Actions */}
           {actions && (
-            <div className="flex items-center justify-end gap-cluster-sm p-stack-lg border-t border-surface-tint-gray/30 flex-shrink-0">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t" style={{borderColor: 'var(--admin-border)'}}>
               {actions}
             </div>
           )}
@@ -118,8 +119,8 @@ export const ModalActions = {
     loading?: boolean;
   }) => (
     <>
-  <button className="btn btn-secondary" onClick={onCancel} disabled={loading}>Cancel</button>
-  <button className="btn btn-primary" onClick={onSave} disabled={loading}>Save</button>
+      <button className="admin-btn admin-btn-secondary" onClick={onCancel} disabled={loading}>Cancel</button>
+      <button className="admin-btn admin-btn-primary" onClick={onSave} disabled={loading}>Save</button>
     </>
   ),
 
@@ -129,8 +130,8 @@ export const ModalActions = {
     loading?: boolean;
   }) => (
     <>
-  <button className="btn btn-secondary" onClick={onCancel} disabled={loading}>Cancel</button>
-  <button className="btn btn-primary bg-red-500 hover:bg-red-600" onClick={onDelete} disabled={loading}>Delete</button>
+      <button className="admin-btn admin-btn-secondary" onClick={onCancel} disabled={loading}>Cancel</button>
+      <button className="admin-btn admin-btn-danger" onClick={onDelete} disabled={loading}>Delete</button>
     </>
   ),
 
@@ -141,8 +142,8 @@ export const ModalActions = {
     confirmText?: string;
   }) => (
     <>
-  <button className="btn btn-secondary" onClick={onCancel} disabled={loading}>Cancel</button>
-  <button className="btn btn-primary" onClick={onConfirm} disabled={loading}>{confirmText}</button>
+      <button className="admin-btn admin-btn-secondary" onClick={onCancel} disabled={loading}>Cancel</button>
+      <button className="admin-btn admin-btn-primary" onClick={onConfirm} disabled={loading}>{confirmText}</button>
     </>
   )
 };

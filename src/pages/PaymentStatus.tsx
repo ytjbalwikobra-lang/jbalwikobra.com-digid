@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, ArrowLeft, Home } from 'lucide-react';
 import { PNContainer, PNCard, PNHeading, PNText, PNButton } from '../components/ui/PinkNeonDesignSystem';
+import { formatCurrency } from '../utils/helpers';
 
 const PaymentStatus: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -63,14 +64,6 @@ const PaymentStatus: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount);
   };
 
   const handleGoHome = () => {

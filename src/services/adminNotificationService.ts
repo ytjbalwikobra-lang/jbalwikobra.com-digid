@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { supabaseAdmin } from './supabaseAdmin';
 import { globalCache } from './globalCacheManager';
+import { formatCurrency } from '../utils/helpers';
 
 export interface AdminNotification {
   id: string;
@@ -24,8 +25,6 @@ class AdminNotificationService {
   async getAdminNotifications(limit = 10): Promise<AdminNotification[]> {
     const key = `${this.cacheTag}:recent:${limit}`;
     return globalCache.getOrSet(key, async () => {
-      console.log(`🔄 Fetching admin notifications (limit: ${limit})`);
-      
       // Always use API proxy for admin notifications to ensure proper authentication
       // Direct DB access may be blocked by RLS policies
       try {
@@ -37,15 +36,13 @@ class AdminNotificationService {
         
         const resp = await fetch(`/api/admin-notifications?action=recent&limit=${encodeURIComponent(String(limit))}`, { headers });
         if (!resp.ok) {
-          console.error(`❌ API returned ${resp.status}`);
           throw new Error(`API ${resp.status}`);
         }
         const body = await resp.json();
         const arr = (body?.data || []) as AdminNotification[];
-        console.log(`✅ Fetched ${arr.length} admin notifications via API`);
         return arr;
       } catch (apiErr) {
-        console.error('❌ Failed to fetch admin notifications via API:', apiErr);
+        console.error('Failed to fetch admin notifications via API:', apiErr);
         return []; // Return empty array instead of throwing
       }
     }, { ttl: 300_000, tags: [this.cacheTag] }); // 5 minutes cache to reduce egress
@@ -72,30 +69,21 @@ class AdminNotificationService {
       }
       
       const titles: Record<string, string> = {
-        new_order: 'Bang! ada yang ORDER PURCHASE nih!',
-        paid_order: 'Bang! ALHAMDULILLAH PURCHASE udah di bayar nih',
-        new_rent: 'Bang! ada yang ORDER RENTAL nih!',
-        paid_rent: 'Bang! ALHAMDULILLAH RENTAL udah di bayar nih',
+        new_order: 'Pesanan Pembelian Baru',
+        paid_order: 'Pembayaran Pembelian Diterima',
+        new_rent: 'Pesanan Penyewaan Baru',
+        paid_rent: 'Pembayaran Penyewaan Diterima',
         order_cancelled: isRental 
-          ? 'Bang! ada yang CANCEL RENTAL order nih!' 
-          : 'Bang! ada yang CANCEL order nih!'
-      };
-
-      const formatAmount = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        }).format(amount);
+          ? 'Pesanan Penyewaan Dibatalkan' 
+          : 'Pesanan Pembelian Dibatalkan'
       };
 
       const messages: Record<string, string> = {
-        new_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order PURCHASE, belum di bayar sih, tapi moga aja di bayar amin.`,
-        paid_order: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, PURCHASE udah di bayar Alhamdulillah.`,
-        new_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, order RENTAL, belum di bayar sih, tapi moga aja di bayar amin.`,
-        paid_rent: `namanya ${customerName}, produknya ${productName} harganya ${formatAmount(amount)}, RENTAL udah di bayar Alhamdulillah.`,
-        order_cancelled: `namanya ${customerName}, produktnya ${productName} di cancel nih.`
+        new_order: `${customerName} memesan ${productName} senilai ${formatCurrency(amount)}. Menunggu pembayaran.`,
+        paid_order: `${customerName} telah membayar pesanan ${productName} senilai ${formatCurrency(amount)}.`,
+        new_rent: `${customerName} menyewa ${productName} senilai ${formatCurrency(amount)}. Menunggu pembayaran.`,
+        paid_rent: `${customerName} telah membayar sewa ${productName} senilai ${formatCurrency(amount)}.`,
+        order_cancelled: `${customerName} membatalkan pesanan ${productName}.`
       };
 
       if (!supabase) {
@@ -147,8 +135,8 @@ class AdminNotificationService {
         .from('admin_notifications')
         .insert({
           type: 'new_user',
-          title: 'Bang! ada yang DAFTAR akun nih!',
-          message: `namanya ${userName} nomor wanya ${userPhone}`,
+          title: 'Pengguna Baru Terdaftar',
+          message: `${userName} mendaftar dengan nomor telepon ${userPhone}.`,
           user_id: userId,
           customer_name: userName,
           is_read: false,
@@ -182,8 +170,8 @@ class AdminNotificationService {
         .from('admin_notifications')
         .insert({
           type: 'new_review',
-          title: 'Bang! ada yang REVIEW produk nih!',
-          message: `namanya ${customerName} memberikan ulasan ${rating} bintang untuk produk ${productName}`,
+          title: 'Ulasan Produk Baru',
+          message: `${customerName} memberikan ulasan ${rating} bintang untuk ${productName}.`,
           product_name: productName,
           customer_name: customerName,
           is_read: false,
@@ -204,15 +192,9 @@ class AdminNotificationService {
   // Mark notification as read - MUST use admin client for write operations
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      console.log(`🔄 Marking notification ${notificationId} as read...`);
-      
-      // Check which client is available
-      console.log(`🔧 supabaseAdmin available: ${!!supabaseAdmin}`);
-      console.log(`🔧 supabase available: ${!!supabase}`);
-      
       // CRITICAL: Admin operations MUST use service key to bypass RLS
       if (!supabaseAdmin) {
-        console.warn('⚠️ Service key client not available on client. Using server API.');
+        // Use server API
         try {
           const sessionToken = localStorage.getItem('session_token');
           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -227,10 +209,9 @@ class AdminNotificationService {
           });
           if (!resp.ok) throw new Error(`API ${resp.status}`);
           globalCache.clear();
-          console.log('🧹 Cache cleared after marking as read via API');
           return;
         } catch (apiErr) {
-          console.error('❌ API mark-read failed, attempting direct client (may fail with RLS)...', apiErr);
+          // Fallback to direct client if API fails
           if (supabase) {
             const updatePayload = { is_read: true, updated_at: new Date().toISOString() };
             const { error } = await supabase
@@ -245,94 +226,31 @@ class AdminNotificationService {
         }
       }
       
-      console.log(`🔧 Using Admin client (Service Key) - required for admin operations`);
-      
-      // First, let's verify the notification exists
-      const { data: existingNotification, error: selectError } = await supabaseAdmin
+      // Use Admin client (Service Key)
+      const { error } = await supabaseAdmin
         .from('admin_notifications')
-        .select('id, is_read, title')
-        .eq('id', notificationId)
-        .single();
-        
-      if (selectError) {
-        console.error('❌ Error finding notification:', selectError);
-        throw selectError;
-      }
-      
-      if (!existingNotification) {
-        throw new Error(`Notification ${notificationId} not found`);
-      }
-      
-      console.log(`📋 Found notification:`, existingNotification);
-      
-      // Now perform the update with service key (bypasses RLS)
-      const updatePayload = { 
-        is_read: true, 
-        updated_at: new Date().toISOString() 
-      };
-      
-      console.log(`📝 Update payload:`, updatePayload);
-      
-      const { data, error } = await supabaseAdmin
-        .from('admin_notifications')
-        .update(updatePayload)
-        .eq('id', notificationId)
-        .select();
+        .update({ is_read: true, updated_at: new Date().toISOString() })
+        .eq('id', notificationId);
 
-      if (error) {
-        console.error('❌ Database error when marking as read:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
-        throw error;
-      }
-      
-      if (!data || data.length === 0) {
-        console.warn('⚠️ Update completed but no rows returned');
-      } else {
-        console.log('✅ Successfully updated notification in database:', data[0]);
-        console.log(`✅ Confirmed: is_read = ${data[0].is_read}`);
-      }
-      
-      // Verify the update by reading it back
-      const { data: verifyData, error: verifyError } = await supabaseAdmin
-        .from('admin_notifications')
-        .select('id, is_read, updated_at')
-        .eq('id', notificationId)
-        .single();
-        
-      if (verifyError) {
-        console.error('❌ Error verifying update:', verifyError);
-      } else {
-        console.log('🔍 Verification result:', verifyData);
-        if (verifyData.is_read === true) {
-          console.log('✅ Database update confirmed - is_read is now true');
-        } else {
-          console.error('❌ Database update failed - is_read is still false');
-        }
-      }
-      
+      if (error) throw error;
       this.invalidateCache();
-      console.log('✅ Cache invalidated after mark as read');
     } catch (error) {
-      console.error('❌ Failed to mark notification as read:', error);
-      throw error; // Re-throw so calling code can handle it
+      console.error('Failed to mark notification as read:', error);
+      throw error;
     }
   }
 
   // Mark all as read - MUST use admin client for write operations  
   async markAllAsRead(): Promise<void> {
     try {
-      console.log('🔄 Marking all notifications as read...');
-      
       // Prefer service-role client if available, else fallback to API
       if (supabaseAdmin) {
-        console.log('🔧 Using Admin client (Service Key) for mark all as read');
         const { error } = await supabaseAdmin
           .from('admin_notifications')
           .update({ is_read: true, updated_at: new Date().toISOString() })
           .eq('is_read', false);
         if (error) throw error;
         this.invalidateCache();
-        console.log('✅ Cache invalidated after mark all as read');
         return;
       }
 
@@ -349,9 +267,8 @@ class AdminNotificationService {
       });
       if (!resp.ok) throw new Error(`API ${resp.status}`);
       this.invalidateCache();
-      console.log('✅ Cache invalidated after mark all (API)');
     } catch (error) {
-      console.error('❌ Failed to mark all notifications as read:', error);
+      console.error('Failed to mark all notifications as read:', error);
       throw error;
     }
   }

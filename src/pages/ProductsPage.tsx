@@ -40,10 +40,8 @@ const ProductsPage: React.FC = () => {
   fetchData,
   handleFilterChange,
   handlePageChange,
-  resetFilters,
   clearFilter,
-  clearAllFilters,
-  setLayoutDensity
+  clearAllFilters
   } = useProductsData();
 
   // Show loading skeleton
@@ -93,7 +91,7 @@ const ProductsPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <ProductsGrid
             products={currentProducts}
-            onResetFilters={resetFilters}
+            onResetFilters={clearAllFilters}
             density={layoutDensity}
             loading={loading}
           />

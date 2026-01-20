@@ -9,8 +9,6 @@ import Footer from './components/Footer';
 import PNFooter from './components/public/layout/PNFooter';
 import './App.css';
 import './styles/global-design-system.css';
-import './styles/admin-design-system.css';
-import './styles/admin-readability-enhancement.css';
 import './styles/public-pages.css';
 import './styles/bottom-navigation.css';
 import { forceFixedPositioning } from './utils/forceFixedPositioning';

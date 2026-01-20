@@ -14,21 +14,39 @@ export interface AuthResult {
 
 /**
  * Get Supabase client with service role (server-side only)
+ * Lazy initialization with connection pooling
  */
+let supabaseAdminClient: any = null;
+
 function getSupabaseAdmin() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  // Return cached client if exists
+  if (supabaseAdminClient) {
+    return supabaseAdminClient;
+  }
+  
+  const supabaseUrl = (process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '').replace(/[\r\n]/g, '');
+  const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '').replace(/[\r\n]/g, '');
   
   if (!supabaseUrl || !supabaseServiceKey) {
     return null;
   }
   
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  supabaseAdminClient = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    global: {
+      headers: {
+        'x-client-info': 'jbalwikobra-admin-middleware'
+      }
+    },
+    db: {
+      schema: 'public'
     }
   });
+  
+  return supabaseAdminClient;
 }
 
 /**
@@ -98,75 +116,34 @@ export async function validateAdminAuth(req: VercelRequest): Promise<AuthResult>
       };
     }
 
-    // 3. Validate session token in database
-    const { data: sessions, error: sessionError } = await supabase
-      .from('user_sessions')
-      .select(`
-        id,
-        user_id,
-        session_token,
-        expires_at,
-        is_active,
-        users!inner (
-          id,
-          email,
-          name,
-          is_admin,
-          is_active
-        )
-      `)
-      .eq('session_token', sessionToken)
-      .eq('is_active', true)
-      .maybeSingle();
+    // 3. Validate session using optimized database function
+    // This function does validation + auto-cleanup in a single call
+    const { data: validationResult, error: validationError } = await supabase
+      .rpc('validate_session', { p_session_token: sessionToken });
 
-    if (sessionError) {
-      console.error('[authMiddleware] Session query error:', sessionError);
+    if (validationError) {
+      console.error('[authMiddleware] Session validation error:', validationError);
       return { 
         valid: false, 
         error: 'Database error during authentication' 
       };
     }
 
-    if (!sessions) {
+    // Handle result (function returns array or single object)
+    const result = Array.isArray(validationResult) ? validationResult[0] : validationResult;
+
+    if (!result || !result.valid) {
       return { 
         valid: false, 
         error: 'Invalid or inactive session' 
       };
     }
 
-    // 4. Check session expiration
-    const expiresAt = new Date(sessions.expires_at);
-    const now = new Date();
-    
-    if (expiresAt < now) {
-      // Mark session as inactive
-      await supabase
-        .from('user_sessions')
-        .update({ is_active: false })
-        .eq('id', sessions.id);
-      
-      return { 
-        valid: false, 
-        error: 'Session expired' 
-      };
-    }
-
-    // 5. Verify user data exists
-    const user = sessions.users as any;
-    
-    if (!user) {
-      console.error('[authMiddleware] User data missing for session:', sessions.id);
-      return { 
-        valid: false, 
-        error: 'User not found' 
-      };
-    }
-
-    // 6. Verify user is admin
-    if (!user.is_admin) {
+    // Verify user is admin
+    if (!result.is_admin) {
       console.warn('[authMiddleware] Non-admin user attempted admin access:', {
-        userId: user.id,
-        email: user.email
+        userId: result.user_id,
+        email: result.user_email
       });
       return { 
         valid: false, 
@@ -174,29 +151,11 @@ export async function validateAdminAuth(req: VercelRequest): Promise<AuthResult>
       };
     }
 
-    // 7. Verify user account is active
-    if (!user.is_active) {
-      console.warn('[authMiddleware] Inactive admin attempted access:', {
-        userId: user.id,
-        email: user.email
-      });
-      return { 
-        valid: false, 
-        error: 'Account is inactive' 
-      };
-    }
-
-    // 8. Update last activity timestamp
-    await supabase
-      .from('user_sessions')
-      .update({ last_activity: now.toISOString() })
-      .eq('id', sessions.id);
-
     // Success - return user details
     return {
       valid: true,
-      userId: user.id,
-      userEmail: user.email || undefined,
+      userId: result.user_id,
+      userEmail: result.user_email || undefined,
       isAdmin: true
     };
 

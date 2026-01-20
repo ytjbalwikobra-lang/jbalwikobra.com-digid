@@ -3,6 +3,14 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
+import { 
+  isValidEmail, 
+  isValidPhone, 
+  isValidPassword, 
+  sanitizeString, 
+  isValidName,
+  isValidVerificationCode 
+} from './_utils/validation.js';
 // Remove unused imports to prevent module resolution issues in production
 // import { DynamicWhatsAppService } from './_utils/dynamicWhatsAppService';
 // Remove adminNotificationService import to avoid module resolution issues
@@ -58,24 +66,54 @@ function getClientIP(req: VercelRequest): string {
 
 // Turnstile verification removed - no longer used
 
-// In-memory rate limiter
-const rateLimit = new Map<string, { count: number; lastAttempt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 5; // 5 requests per minute
+// Enhanced rate limiter with per-action tracking
+// ISO 27001 compliance: Prevent brute force and DDoS attacks
+interface RateLimitEntry {
+  count: number;
+  lastAttempt: number;
+  firstAttempt: number;
+}
 
-function checkRateLimit(ip: string): boolean {
+const rateLimit = new Map<string, RateLimitEntry>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// Per-action rate limits (requests per minute)
+const RATE_LIMITS: Record<string, number> = {
+  'login': 5,
+  'signup': 3,
+  'verify-phone': 5,
+  'validate-session': 20,
+  'logout': 10,
+  'default': 10
+};
+
+// Cleanup old entries periodically to prevent memory leaks
+setInterval(() => {
   const now = Date.now();
-  const entry = rateLimit.get(ip);
+  for (const [key, entry] of rateLimit.entries()) {
+    if (now - entry.lastAttempt > RATE_LIMIT_WINDOW_MS) {
+      rateLimit.delete(key);
+    }
+  }
+}, RATE_LIMIT_CLEANUP_INTERVAL);
+
+function checkRateLimit(ip: string, action: string = 'default'): boolean {
+  const key = `${ip}:${action}`;
+  const limit = RATE_LIMITS[action] || RATE_LIMITS['default'];
+  const now = Date.now();
+  const entry = rateLimit.get(key);
 
   if (!entry || (now - entry.lastAttempt > RATE_LIMIT_WINDOW_MS)) {
-    rateLimit.set(ip, { count: 1, lastAttempt: now });
+    rateLimit.set(key, { count: 1, lastAttempt: now, firstAttempt: now });
     return true;
-  } else {
-    entry.count++;
-    entry.lastAttempt = now; // Update last attempt time
-    rateLimit.set(ip, entry);
-    return entry.count <= MAX_REQUESTS_PER_WINDOW;
   }
+  
+  entry.count++;
+  entry.lastAttempt = now;
+  rateLimit.set(key, entry);
+  
+  return entry.count <= limit;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -83,10 +121,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(req, res);
   if (handleCorsPreFlight(req, res)) return;
   
-  // Set cache headers - no caching for auth endpoints (sensitive data)
+  // Security headers (ISO 27001 / OWASP best practices)
   res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   try {
     // Early environment check to prevent framework HTML 500s
@@ -98,13 +140,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { action } = req.query;
+    const actionStr = String(action || '');
     const clientIp = getClientIP(req);
 
-    // Apply rate limit to specific actions
-    if (action === 'signup' || action === 'verify-phone') {
-      if (!checkRateLimit(clientIp)) {
-        return res.status(429).json({ error: 'Too many requests. Please try again later.' });
-      }
+    // Apply rate limiting to all actions for better security
+    if (!checkRateLimit(clientIp, actionStr)) {
+      console.warn(`[Security] Rate limit exceeded for IP ${clientIp}, action: ${actionStr}`);
+      return res.status(429).json({ 
+        error: 'Too many requests. Please try again later.',
+        retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)
+      });
     }
 
     switch (action) {
@@ -156,11 +201,11 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Database connection error' });
     }
 
-    // Find user by phone or email
+    // Find user by phone or email - optimized query (select only needed fields)
     console.log('Attempting to find user in database...');
     const { data: users, error: userError } = await supabaseClient
       .from('users')
-      .select('id, email, phone, name, password_hash, is_admin, is_active, created_at, profile_completed')
+      .select('id, email, phone, name, password_hash, is_admin, is_active, profile_completed')
       .or(`phone.eq.${identifier},email.eq.${identifier}`);
 
     if (userError) {
@@ -223,13 +268,14 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Failed to create session' });
     }
 
-    // Update last login
+    // Update last login timestamp
     await supabaseClient
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id);
 
-    const { password_hash, login_attempts, locked_until, ...safeUser } = user;
+    // Return only safe user data (exclude sensitive fields)
+    const { password_hash, ...safeUser } = user;
 
     // Ensure profile_completed is included (default to true if not set)
     const userResponse = {
@@ -260,21 +306,27 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
   try {
     const { phone, password, name } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ error: 'Phone number is required' });
+    // Validate phone
+    if (!phone || !isValidPhone(phone)) {
+      return res.status(400).json({ error: 'Valid phone number is required' });
     }
 
-    if (!password) {
-      return res.status(400).json({ error: 'Password is required' });
+    // Validate password
+    const passwordValidation = isValidPassword(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ 
+        error: passwordValidation.errors[0] || 'Invalid password' 
+      });
     }
 
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Name is required' });
+    // Validate name
+    if (!name || !isValidName(name)) {
+      return res.status(400).json({ 
+        error: 'Valid name is required (2-100 characters, letters only)' 
+      });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
+    const sanitizedName = sanitizeString(name.trim(), 100);
 
     // Check if user already exists
     const { data: existingUsers } = await getSupabase()
@@ -300,7 +352,7 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
         .insert({
           phone,
           password_hash: passwordHash,
-          name: name.trim(),
+          name: sanitizedName,
           is_active: true,
           phone_verified: false,
           profile_completed: false
@@ -320,7 +372,7 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
         .from('users')
         .update({ 
           password_hash: passwordHash,
-          name: name.trim()
+          name: sanitizedName
         })
         .eq('id', existingUser.id);
 
@@ -416,6 +468,11 @@ async function handleVerifyPhone(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'User ID and verification code are required' });
     }
 
+    // Validate verification code format
+    if (!isValidVerificationCode(verification_code)) {
+      return res.status(400).json({ error: 'Invalid verification code format' });
+    }
+
     // Find verification record
     const { data: verifications, error: verificationError } = await getSupabase()
       .from('phone_verifications')
@@ -452,7 +509,7 @@ async function handleVerifyPhone(req: VercelRequest, res: VercelResponse) {
         phone_verified_at: new Date().toISOString()
       })
       .eq('id', user_id)
-      .select()
+      .select('id, phone, email, name, is_admin, is_active, phone_verified, profile_completed')
       .single();
 
     if (userError) {
@@ -473,12 +530,10 @@ async function handleVerifyPhone(req: VercelRequest, res: VercelResponse) {
         user_agent: req.headers['user-agent']
       });
 
-    const { password_hash, login_attempts, locked_until, ...safeUser } = user;
-
     return res.status(200).json({
       success: true,
       message: 'Phone verified successfully',
-      user: safeUser,
+      user: user,
       session_token: sessionToken,
       expires_at: expiresAt.toISOString(),
       next_step: 'complete_profile'
@@ -501,24 +556,32 @@ async function handleCompleteProfile(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'User ID, name, and email are required' });
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validate email format
+    if (!isValidEmail(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
+
+    // Validate name
+    if (!isValidName(name)) {
+      return res.status(400).json({ 
+        error: 'Invalid name format (2-100 characters, letters only)' 
+      });
+    }
+
+    const sanitizedName = sanitizeString(name.trim(), 100);
 
     // Update user profile (NO password update - already set during signup)
     const { data: user, error: userError } = await getSupabase()
       .from('users')
       .update({
-        name: name.trim(),
+        name: sanitizedName,
         email: email.trim().toLowerCase(),
         profile_completed: true,
         profile_completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', user_id)
-      .select()
+      .select('id, phone, email, name, is_admin, is_active, phone_verified, profile_completed')
       .single();
 
     if (userError) {
@@ -552,12 +615,10 @@ async function handleCompleteProfile(req: VercelRequest, res: VercelResponse) {
       console.error('[Admin] Failed to update user signup notification:', notificationError);
     }
 
-    const { password_hash, login_attempts, locked_until, ...safeUser } = user;
-
     return res.status(200).json({
       success: true,
       message: 'Profile completed successfully',
-      user: safeUser
+      user: user
     });
   } catch (error) {
     console.error('Complete profile error:', error);
@@ -671,32 +732,30 @@ async function handleValidateSession(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Session token is required' });
     }
 
-    const { data: sessions, error: sessionError } = await getSupabase()
-      .from('user_sessions')
-      .select(`
-        *,
-        users (
-          id, phone, email, name, is_admin, is_active, 
-          phone_verified, profile_completed
-        )
-      `)
-      .eq('session_token', session_token)
-      .eq('is_active', true);
+    // Use database function for optimized validation (single query + auto-cleanup)
+    const { data, error } = await getSupabase()
+      .rpc('validate_session', { p_session_token: session_token });
 
-    if (sessionError || !sessions || sessions.length === 0) {
-      return res.status(401).json({ error: 'Invalid session' });
+    if (error) {
+      console.error('Session validation error:', error);
+      return res.status(500).json({ error: 'Session validation failed' });
     }
 
-    const session = sessions[0];
+    // data is an array with single result
+    const result = Array.isArray(data) ? data[0] : data;
 
-    // Check if session is expired
-    if (new Date(session.expires_at) < new Date()) {
-      return res.status(401).json({ error: 'Session expired' });
+    if (!result || !result.valid) {
+      return res.status(401).json({ error: 'Invalid or expired session' });
     }
 
     return res.status(200).json({
       success: true,
-      user: session.users
+      user: {
+        id: result.user_id,
+        email: result.user_email,
+        name: result.user_name,
+        is_admin: result.is_admin
+      }
     });
   } catch (error) {
     console.error('Validate session error:', error);
@@ -710,18 +769,46 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { session_token } = req.body;
+    const { session_token, logout_all } = req.body;
+    const authHeader = req.headers.authorization;
+    const token = session_token || authHeader?.replace('Bearer ', '');
 
-    if (session_token) {
+    if (!token) {
+      return res.status(400).json({ error: 'Session token is required' });
+    }
+
+    // Get user_id from session before invalidating
+    const { data: sessionData } = await getSupabase()
+      .from('user_sessions')
+      .select('user_id')
+      .eq('session_token', token)
+      .maybeSingle();
+
+    if (logout_all && sessionData?.user_id) {
+      // Invalidate all sessions for this user
       await getSupabase()
         .from('user_sessions')
-        .update({ is_active: false })
-        .eq('session_token', session_token);
+        .update({ 
+          is_active: false,
+          invalidated_at: new Date().toISOString()
+        })
+        .eq('user_id', sessionData.user_id);
+      
+      console.log(`[Auth] Logged out user ${sessionData.user_id} from all devices`);
+    } else {
+      // Invalidate only current session
+      await getSupabase()
+        .from('user_sessions')
+        .update({ 
+          is_active: false,
+          invalidated_at: new Date().toISOString()
+        })
+        .eq('session_token', token);
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Logged out successfully'
+      message: logout_all ? 'Logged out from all devices' : 'Logged out successfully'
     });
   } catch (error) {
     console.error('Logout error:', error);

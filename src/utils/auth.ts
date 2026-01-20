@@ -1,12 +1,23 @@
-export type UserRole = 'guest' | 'admin' | 'super_admin';
+/**
+ * Auth utilities - Consolidated from multiple sources
+ * Use authService.ts for all auth operations to maintain single source of truth
+ */
+import { getUserRole as getRole, isAdmin as checkAdmin } from '../services/authService';
 
-export function getUserRole(): UserRole {
-  const stored = localStorage.getItem('user_role');
-  if (stored === 'admin' || stored === 'super_admin') return stored;
-  return 'guest';
+export type UserRole = 'guest' | 'user' | 'admin' | 'super_admin';
+
+/**
+ * @deprecated Use authService.getUserRole() instead
+ * This is kept for backward compatibility only
+ */
+export async function getUserRole(): Promise<string> {
+  return await getRole();
 }
 
-export function isAdmin(): boolean {
-  const role = getUserRole();
-  return role === 'admin' || role === 'super_admin';
+/**
+ * @deprecated Use authService.isAdmin() instead
+ * This is kept for backward compatibility only
+ */
+export async function isAdmin(): Promise<boolean> {
+  return await checkAdmin();
 }

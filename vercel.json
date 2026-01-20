@@ -5,6 +5,12 @@
       "destination": "/api/xendit/webhook"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-auth",
+      "schedule": "0 * * * *"
+    }
+  ],
   "functions": {
     "api/xendit/webhook.ts": {
       "maxDuration": 30
@@ -14,6 +20,9 @@
     },
     "api/admin-whatsapp.ts": {
       "maxDuration": 30
+    },
+    "api/cron/cleanup-auth.ts": {
+      "maxDuration": 10
     }
   },
   "headers": [

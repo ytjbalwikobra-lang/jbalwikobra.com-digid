@@ -1,5 +1,5 @@
 /**
- * HomePage - Mobile-First Refactored Version
+ * HomePage - Mobile-First Optimized Version
  * Following iOS Human Interface Guidelines & Android Material Design 3
  * 
  * Key Improvements:
@@ -9,14 +9,11 @@
  * - Reduced cognitive load with clear sections
  * - Improved accessibility and semantic structure
  * - Performance optimizations for mobile devices
+ * - Cache/egress efficiency optimizations
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '../types';
-import ProductCard from '../components/ProductCard'; // retained for any remaining usage
-// standardClasses import removed (utility not present) – using direct container classes.
-import { Zap, ShoppingBag, Clock, Star, TrendingUp, Shield, Headphones, Sparkles, Heart } from 'lucide-react';
 // New PN homepage components
 import PNHero from '../components/public/home/PNHero';
 import PNFlashSalesSection from '../components/public/home/PNFlashSalesSection';
@@ -25,25 +22,22 @@ import HomeAccountCategoriesSection from '../components/home/HomeAccountCategori
 import PNCTA from '../components/public/home/PNCTA';
 import { useToast } from '../components/Toast';
 import BannerCarousel from '../components/BannerCarousel';
+import MobileLoadingSkeleton from '../components/public/home/MobileLoadingSkeleton';
 
 // Mobile-first constants following platform guidelines
 const MOBILE_CONSTANTS = {
   // iOS/Android recommended touch target sizes
   MIN_TOUCH_TARGET: 44, // 44dp/pt minimum touch target
-  CONTENT_PADDING: 16, // Standard content padding
-  SECTION_SPACING: 24, // Section spacing
-  CARD_SPACING: 12, // Card spacing
   
-  // Performance optimizations
-  POPULAR_GAMES_LIMIT: 20,
-  FLASH_SALE_DISPLAY_LIMIT: 8, // Reduced for mobile performance
-  CACHE_DURATION: 5 * 60 * 1000,
+  // Performance optimizations - reduced limits for egress efficiency
+  POPULAR_GAMES_LIMIT: 12, // Reduced from 20 for faster load
+  FLASH_SALE_DISPLAY_LIMIT: 6, // Reduced from 8 for mobile performance
+  CACHE_DURATION: 5 * 60 * 1000, // 5 minute cache
   
   // Animation timing following platform standards
   ANIMATIONS: {
-    FAST: 200, // Quick interactions
-    STANDARD: 300, // Standard transitions
-    SLOW: 500, // Complex transitions
+    FAST: 150, // Quick interactions
+    STANDARD: 250, // Standard transitions
   }
 } as const;
 
@@ -60,11 +54,6 @@ interface HomePageState {
   error: string | null;
 }
 
-// Extracted subcomponents
-import MobileFeatureCard from '../components/public/home/MobileFeatureCard';
-import GameCategoryCard from '../components/public/home/GameCategoryCard';
-import MobileLoadingSkeleton from '../components/public/home/MobileLoadingSkeleton';
-
 const HomePage: React.FC = () => {
   const { showToast } = useToast();
   const [state, setState] = useState<HomePageState>({
@@ -74,31 +63,7 @@ const HomePage: React.FC = () => {
     error: null
   });
 
-  // Platform-optimized features with better mobile UX focus
-  const features = useMemo(() => [
-    {
-      icon: Shield,
-      title: 'Aman & Terpercaya',
-      description: 'Sistem keamanan berlapis dengan jaminan uang kembali 100%'
-    },
-    {
-      icon: Clock,
-      title: 'Pengiriman Instant',
-      description: 'Akun dikirim dalam hitungan menit dengan notifikasi real-time'
-    },
-    {
-      icon: Star,
-      title: 'Kualitas Premium',
-      description: 'Akun terverifikasi dengan rating tinggi dan quality assurance'
-    },
-    {
-      icon: Headphones,
-      title: 'Support 24/7',
-      description: 'Customer service responsif via WhatsApp dan live chat'
-    }
-  ], []);
-
-  // Optimized data fetching
+  // Optimized data fetching with egress-efficient queries
   const fetchHomeData = useCallback(async (signal: AbortSignal) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));

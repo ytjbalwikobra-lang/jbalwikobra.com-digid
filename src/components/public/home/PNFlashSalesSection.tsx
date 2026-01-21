@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
-import { PNSection, PNContainer, PNSectionHeader } from '../../ui/PinkNeonDesignSystem';
+import { ChevronRight, Zap } from 'lucide-react';
+import { PNSection, PNSectionHeader } from '../../ui/PinkNeonDesignSystem';
 import { Product } from '../../../types';
 import FlashSaleCard from '../../shared/FlashSaleCard';
 
@@ -11,29 +11,38 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
   if (!products || products.length === 0) return null;
   const list = products.slice(0, limit);
   return (
-    <PNSection padding="md">
-      <PNContainer>
-        <PNSectionHeader
-          title="Flash Sale"
-          subtitle="Diskon hingga 70% - Terbatas!"
-          action={
-            <Link to="/flash-sales" className="text-sm text-pink-300 hover:text-pink-200 transition-colors flex items-center gap-1">
-              Lihat Semua <ChevronRight size={16} />
-            </Link>
-          }
-        />
-        {/* Unified responsive container: horizontal grid on mobile, columns on md+ */}
-        <PNContainer>
-          <div className="grid gap-3 px-1 pb-2 auto-cols-[190px] grid-flow-col overflow-x-auto snap-x snap-mandatory scrollbar-hide md:auto-cols-auto md:grid-flow-row md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-x-visible md:px-0">
-            {list.map((p) => (
-              <FlashSaleCard
-                key={p.id}
-                product={p}
-              />
-            ))}
-          </div>
-        </PNContainer>
-      </PNContainer>
+    <PNSection padding="md" aria-label="Flash sale produk">
+      <PNSectionHeader
+        title={
+          <span className="flex items-center gap-2">
+            <Zap size={20} className="text-yellow-400" aria-hidden="true" />
+            Flash Sale
+          </span>
+        }
+        subtitle="Diskon hingga 70% - Terbatas!"
+        action={
+          <Link 
+            to="/flash-sales" 
+            className="text-sm text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md"
+            aria-label="Lihat semua flash sale"
+          >
+            Lihat Semua <ChevronRight size={16} aria-hidden="true" />
+          </Link>
+        }
+      />
+      {/* Responsive grid: horizontal scroll on mobile, columns on md+ */}
+      <div 
+        className="grid gap-3 px-1 pb-2 auto-cols-[180px] grid-flow-col overflow-x-auto snap-x snap-mandatory scrollbar-hide md:auto-cols-auto md:grid-flow-row md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-x-visible md:px-0"
+        role="list"
+        aria-label="Daftar produk flash sale"
+      >
+        {list.map((p) => (
+          <FlashSaleCard
+            key={p.id}
+            product={p}
+          />
+        ))}
+      </div>
     </PNSection>
   );
 };

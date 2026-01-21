@@ -347,6 +347,14 @@ export const PaymentMethods = React.memo(({
       available: true
     },
     {
+      id: 'bss',
+      name: 'BSS Virtual Account',
+      description: 'Transfer melalui Virtual Account Bank Sahabat Sampoerna',
+      icon: <Building2 className="text-yellow-400" size={20} />,
+      badges: ['Instant'],
+      available: true
+    },
+    {
       id: 'cimb',
       name: 'CIMB Niaga Virtual Account',
       description: 'Transfer melalui Virtual Account CIMB Niaga',

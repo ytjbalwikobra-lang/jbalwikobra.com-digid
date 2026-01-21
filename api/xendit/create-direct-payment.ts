@@ -37,23 +37,31 @@ interface PaymentRequest {
 // Payment method mapping for Xendit Invoice API v2
 // Reference: https://developers.xendit.co/api-reference/#create-invoice
 // IMPORTANT: Only include payment methods activated on your Xendit account
+// Last synced with Xendit Dashboard: 2026-01-21
 const PAYMENT_METHODS: Record<string, string> = {
-  // QRIS - Activated
+  // QRIS - Activated ✅
   'qris': 'QRIS',
-  // Virtual Accounts - Activated on your account
+  // Virtual Accounts - All Activated ✅
   'bjb': 'BJB',
   'bni': 'BNI',
   'bri': 'BRI',
   'bsi': 'BSI',
+  'bss': 'BSS', // Bank Sahabat Sampoerna
   'cimb': 'CIMB',
   'mandiri': 'MANDIRI',
   'permata': 'PERMATA',
-  // E-Wallets - Only ASTRAPAY is activated
+  // E-Wallets - Only ASTRAPAY is activated ✅
   'astrapay': 'ASTRAPAY',
-  // Retail - Activated
-  'indomaret': 'INDOMARET'
-  // NOTE: Other e-wallets (SHOPEEPAY, GOPAY, DANA, LINKAJA, OVO) are NOT activated
-  // Activate them in Xendit dashboard first before adding here
+  // Over-The-Counter - Activated ✅
+  'indomaret': 'INDOMARET',
+  // PayLater - Only AKULAKU is activated ✅
+  'akulaku': 'AKULAKU'
+  // NOT ACTIVATED on your Xendit Dashboard:
+  // - BCA Virtual Account
+  // - Credit/Debit Card (CREDIT_CARD)
+  // - OVO, DANA, GOPAY, SHOPEEPAY, LINKAJA (E-Wallets)
+  // - Alfamart (Retail)
+  // - Kredivo, Atome, Indodana (PayLater)
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

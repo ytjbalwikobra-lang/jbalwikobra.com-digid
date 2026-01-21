@@ -8,7 +8,7 @@ import { PaymentMethodUtils, PAYMENT_METHOD_CONFIGS, type PaymentMethodConfig } 
 export interface XenditPaymentMethod {
   id: string;
   name: string;
-  type: 'EWALLET' | 'BANK' | 'CREDIT_CARD' | 'QRIS' | 'VIRTUAL_ACCOUNT' | 'RETAIL_OUTLET';
+  type: 'EWALLET' | 'BANK' | 'CREDIT_CARD' | 'QRIS' | 'VIRTUAL_ACCOUNT' | 'RETAIL_OUTLET' | 'PAYLATER';
   description: string;
   icon: string;
   available: boolean;

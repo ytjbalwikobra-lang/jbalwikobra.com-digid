@@ -1,9 +1,23 @@
 /**
  * Server-only Payment Channel Configuration for Xendit V3 (ESM-safe)
  * Do NOT import from src/ in serverless functions to avoid ESM/CJS issues on Vercel.
+ * 
+ * ACTIVATED CHANNELS (synced with Xendit Dashboard: 2026-01-21):
+ * - QRIS ✅
+ * - AstraPay (E-Wallet) ✅
+ * - Virtual Accounts: BJB, BNI, BRI, BSI, BSS, CIMB, Mandiri, Permata ✅
+ * - Indomaret (Over-The-Counter) ✅
+ * - Akulaku (PayLater) ✅
+ * 
+ * NOT ACTIVATED:
+ * - BCA Virtual Account ❌
+ * - Credit/Debit Card ❌
+ * - OVO, DANA, GOPAY, SHOPEEPAY, LINKAJA ❌
+ * - Alfamart ❌
+ * - Kredivo, Atome, Indodana ❌
  */
 
-export type ChannelType = 'EWALLET' | 'VIRTUAL_ACCOUNT' | 'QRIS' | 'CREDIT_CARD' | 'OVER_THE_COUNTER'
+export type ChannelType = 'EWALLET' | 'VIRTUAL_ACCOUNT' | 'QRIS' | 'OVER_THE_COUNTER' | 'PAYLATER'
 
 export interface ActivatedPaymentChannel {
   id: string;
@@ -18,9 +32,10 @@ export interface ActivatedPaymentChannel {
   max_amount: number;
 }
 
-// Keep this list minimal and aligned with actual activated channels on Xendit
+// Keep this list aligned with actual activated channels on Xendit dashboard
+// NO DUPLICATES - each channel appears exactly once
 export const ACTIVATED_PAYMENT_CHANNELS: ActivatedPaymentChannel[] = [
-  // QRIS - typically active
+  // QRIS - Activated ✅
   {
     id: 'qris',
     name: 'QRIS',
@@ -32,7 +47,8 @@ export const ACTIVATED_PAYMENT_CHANNELS: ActivatedPaymentChannel[] = [
     max_amount: 10_000_000,
     popular: true,
   },
-  // E-Wallets (only those you actually activated)
+  
+  // E-Wallets - Only AstraPay is activated ✅
   {
     id: 'astrapay',
     name: 'AstraPay',
@@ -41,26 +57,25 @@ export const ACTIVATED_PAYMENT_CHANNELS: ActivatedPaymentChannel[] = [
     available: true,
     processing_time: 'Instant',
     min_amount: 10_000,
-    max_amount: 1_000_000,
+    max_amount: 10_000_000,
     popular: true,
   },
-  // Virtual Accounts - Using exact Xendit channel codes
-  { id: 'bca', name: 'BCA VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BCA', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: true },
-  { id: 'bni', name: 'BNI VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BNI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: true },
-  { id: 'bri', name: 'BRI VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BRI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 1_000_000_000, popular: true },
-  { id: 'mandiri', name: 'Mandiri VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'MANDIRI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: true },
-  { id: 'bsi', name: 'BSI VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BSI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 200_000_000, popular: false },
-  { id: 'cimb', name: 'CIMB VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'CIMB', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: false },
-  { id: 'permata', name: 'Permata VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'PERMATA', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: false },
-  { id: 'bjb', name: 'BJB VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BJB', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000, popular: false },
-  { id: 'bca', name: 'BCA VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BCA', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 50_000_000, popular: true },
-  { id: 'bsi', name: 'BSI VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BSI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000 },
-  { id: 'permata', name: 'Permata VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'PERMATA', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000 },
-  { id: 'cimb', name: 'CIMB Niaga VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'CIMB', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000 },
-  { id: 'bjb', name: 'BJB VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'BJB', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000 },
-  { id: 'muamalat', name: 'Muamalat VA', type: 'VIRTUAL_ACCOUNT', channel_code: 'MUAMALAT', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000 },
-  // Over the counter
+  
+  // Virtual Accounts - Activated channels only (BCA NOT activated)
+  { id: 'bjb', name: 'BJB Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'BJB', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: false },
+  { id: 'bni', name: 'BNI Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'BNI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 500_000_000, popular: true },
+  { id: 'bri', name: 'BRI Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'BRI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 1_000_000_000, popular: true },
+  { id: 'bsi', name: 'BSI Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'BSI', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000, popular: false },
+  { id: 'bss', name: 'BSS Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'BSS', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000, popular: false, description: 'Bank Sahabat Sampoerna' },
+  { id: 'cimb', name: 'CIMB Niaga Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'CIMB', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000, popular: false },
+  { id: 'mandiri', name: 'Mandiri Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'MANDIRI', available: true, processing_time: '1-15 menit', min_amount: 1000, max_amount: 500_000_000, popular: true },
+  { id: 'permata', name: 'Permata Virtual Account', type: 'VIRTUAL_ACCOUNT', channel_code: 'PERMATA', available: true, processing_time: 'Instant', min_amount: 1000, max_amount: 100_000_000, popular: false },
+  
+  // Over the counter - Activated ✅
   { id: 'indomaret', name: 'Indomaret', type: 'OVER_THE_COUNTER', channel_code: 'INDOMARET', available: true, processing_time: 'Instant setelah bayar', min_amount: 10_000, max_amount: 2_500_000, popular: true },
+  
+  // PayLater - Only Akulaku is activated ✅
+  { id: 'akulaku', name: 'Akulaku', type: 'PAYLATER', channel_code: 'AKULAKU', available: true, processing_time: 'Instant', min_amount: 50_000, max_amount: 10_000_000, popular: false },
 ];
 
 export function getActivatedPaymentChannels(): ActivatedPaymentChannel[] {

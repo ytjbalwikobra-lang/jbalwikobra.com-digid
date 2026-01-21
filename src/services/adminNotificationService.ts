@@ -3,6 +3,64 @@ import { supabaseAdmin } from './supabaseAdmin';
 import { globalCache } from './globalCacheManager';
 import { formatCurrency } from '../utils/helpers';
 
+// Development mode detection
+const isDev = process.env.NODE_ENV === 'development';
+
+/**
+ * Retry helper for admin notification API calls with exponential backoff
+ * Handles 401 errors that may occur due to race conditions after login
+ * In development mode, allows requests without session token (API handles dev auth)
+ */
+async function fetchNotificationsWithRetry(
+  url: string,
+  maxRetries = 3,
+  baseDelay = 500
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Get session token (optional in dev mode)
+    const sessionToken = localStorage.getItem('session_token');
+    
+    // In production, require session token
+    if (!isDev && !sessionToken) {
+      // Wait for session token to be set
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+        continue;
+      }
+      throw new Error('No session token available');
+    }
+    
+    const headers: Record<string, string> = {};
+    
+    // Add auth header if token exists
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
+    }
+    
+    try {
+      const response = await fetch(url, { headers });
+      
+      // If 401 and we have retries left (and not in dev mode), wait and retry
+      if (response.status === 401 && !isDev && attempt < maxRetries - 1) {
+        console.warn(`[adminNotificationService] 401 received, retrying in ${baseDelay * Math.pow(2, attempt)}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Failed after max retries');
+}
+
 export interface AdminNotification {
   id: string;
   type: 'new_order' | 'paid_order' | 'new_user' | 'order_cancelled' | 'new_review' | 'system' | 'new_rent' | 'paid_rent';
@@ -28,13 +86,10 @@ class AdminNotificationService {
       // Always use API proxy for admin notifications to ensure proper authentication
       // Direct DB access may be blocked by RLS policies
       try {
-        const sessionToken = localStorage.getItem('session_token');
-        const headers: Record<string, string> = {};
-        if (sessionToken) {
-          headers['Authorization'] = `Bearer ${sessionToken}`;
-        }
-        
-        const resp = await fetch(`/api/admin-notifications?action=recent&limit=${encodeURIComponent(String(limit))}`, { headers });
+        // Use retry helper to handle 401 race conditions after login
+        const resp = await fetchNotificationsWithRetry(
+          `/api/admin-notifications?action=recent&limit=${encodeURIComponent(String(limit))}`
+        );
         if (!resp.ok) {
           throw new Error(`API ${resp.status}`);
         }

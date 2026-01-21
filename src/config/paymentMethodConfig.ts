@@ -1,9 +1,15 @@
 /**
  * 🔧 Payment Method Configuration
  * Centralized configuration for payment methods to eliminate duplication
+ * 
+ * ACTIVATED ON XENDIT DASHBOARD:
+ * ✅ QRIS, AstraPay, Virtual Accounts (BJB/BNI/BRI/BSI/BSS/CIMB/Mandiri/Permata), Indomaret, Akulaku
+ * 
+ * NOT ACTIVATED:
+ * ❌ Credit Card, BCA VA, OVO, DANA, GoPay, ShopeePay, LinkAja, Alfamart, Kredivo, Atome, Indodana
  */
 
-export type PaymentMethodType = 'EWALLET' | 'VIRTUAL_ACCOUNT' | 'QRIS' | 'RETAIL_OUTLET' | 'CREDIT_CARD';
+export type PaymentMethodType = 'EWALLET' | 'VIRTUAL_ACCOUNT' | 'QRIS' | 'RETAIL_OUTLET' | 'PAYLATER';
 
 export interface PaymentMethodConfig {
   id: string;
@@ -21,55 +27,21 @@ export interface PaymentMethodConfig {
 
 // Activated payment channels based on Xendit dashboard
 export const PAYMENT_METHOD_CONFIGS: Record<string, PaymentMethodConfig> = {
-  // E-Wallets
-  shopeepay: {
-    id: 'shopeepay',
-    name: 'ShopeePay',
+  // E-Wallets - Only AstraPay is activated ✅
+  astrapay: {
+    id: 'astrapay',
+    name: 'AstraPay',
     type: 'EWALLET',
-    xenditCode: 'SHOPEEPAY',
+    xenditCode: 'ASTRAPAY',
     apiEndpoint: '/payment_requests',
     requiresRedirectUrls: true,
     minAmount: 1000,
-    maxAmount: 2000000,
+    maxAmount: 10000000,
     processingTime: 'Instant',
     popular: true
-  },
-  gopay: {
-    id: 'gopay',
-    name: 'GoPay',
-    type: 'EWALLET',
-    xenditCode: 'GOPAY',
-    apiEndpoint: '/payment_requests',
-    requiresRedirectUrls: true,
-    minAmount: 10000,
-    maxAmount: 2000000,
-    processingTime: 'Instant',
-    popular: true
-  },
-  dana: {
-    id: 'dana',
-    name: 'DANA',
-    type: 'EWALLET',
-    xenditCode: 'DANA',
-    apiEndpoint: '/payment_requests',
-    requiresRedirectUrls: true,
-    minAmount: 10000,
-    maxAmount: 10000000,
-    processingTime: 'Instant'
-  },
-  linkaja: {
-    id: 'linkaja',
-    name: 'LinkAja',
-    type: 'EWALLET',
-    xenditCode: 'LINKAJA',
-    apiEndpoint: '/payment_requests',
-    requiresRedirectUrls: true,
-    minAmount: 10000,
-    maxAmount: 10000000,
-    processingTime: 'Instant'
   },
 
-  // Virtual Accounts
+  // Virtual Accounts - Activated channels ✅
   bjb: {
     id: 'bjb',
     name: 'BJB Virtual Account',
@@ -109,6 +81,16 @@ export const PAYMENT_METHOD_CONFIGS: Record<string, PaymentMethodConfig> = {
     apiEndpoint: '/payment_requests',
     minAmount: 10000,
     maxAmount: 1000000000, // BSI VA limit: 1 billion (already correct)
+    processingTime: '1-15 menit'
+  },
+  bss: {
+    id: 'bss',
+    name: 'BSS Virtual Account',
+    type: 'VIRTUAL_ACCOUNT',
+    xenditCode: 'BSS',
+    apiEndpoint: '/payment_requests',
+    minAmount: 10000,
+    maxAmount: 100000000, // BSS VA limit: 100 million
     processingTime: '1-15 menit'
   },
   cimb: {
@@ -155,7 +137,7 @@ export const PAYMENT_METHOD_CONFIGS: Record<string, PaymentMethodConfig> = {
     processingTime: '1-24 jam'
   },
 
-  // QRIS
+  // QRIS - Activated ✅
   qris: {
     id: 'qris',
     name: 'QRIS',
@@ -166,6 +148,19 @@ export const PAYMENT_METHOD_CONFIGS: Record<string, PaymentMethodConfig> = {
     maxAmount: 10000000,
     processingTime: 'Instant',
     popular: true
+  },
+
+  // PayLater - Only Akulaku is activated ✅
+  akulaku: {
+    id: 'akulaku',
+    name: 'Akulaku',
+    type: 'PAYLATER',
+    xenditCode: 'AKULAKU',
+    apiEndpoint: '/invoices',
+    minAmount: 50000,
+    maxAmount: 10000000,
+    processingTime: 'Instant',
+    popular: false
   }
 };
 

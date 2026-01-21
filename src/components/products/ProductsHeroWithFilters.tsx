@@ -99,11 +99,13 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
   }, [debouncedSearchTerm, searchTerm, onSearchChange]);
   
   // Sync local state when parent changes (e.g., clear filters)
+  // NOTE: Only depend on searchTerm, not localSearchTerm, to avoid race conditions
   useEffect(() => {
-    if (searchTerm !== localSearchTerm && searchTerm === '') {
+    if (searchTerm === '') {
       setLocalSearchTerm('');
     }
-  }, [searchTerm, localSearchTerm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
   
   // Handle search input change
   const handleSearchInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

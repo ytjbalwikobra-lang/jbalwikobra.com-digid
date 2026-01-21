@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Rocket } from 'lucide-react';
+import { ShoppingBag, Clock } from 'lucide-react';
 
 interface RecentPurchase {
   id: string;
@@ -17,6 +17,25 @@ interface RecentPurchase {
     background_gradient?: string;
   };
 }
+
+// Extract first name from full name
+const getFirstName = (fullName: string): string => {
+  if (!fullName) return 'Pelanggan';
+  const firstName = fullName.trim().split(/\s+/)[0];
+  // Capitalize first letter, lowercase rest
+  return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+};
+
+// Format price in Indonesian Rupiah (compact)
+const formatPrice = (amount: number): string => {
+  if (amount >= 1000000) {
+    return `Rp${(amount / 1000000).toFixed(1)}jt`;
+  }
+  if (amount >= 1000) {
+    return `Rp${(amount / 1000).toFixed(0)}rb`;
+  }
+  return `Rp${amount.toLocaleString('id-ID')}`;
+};
 
 const PurchaseNotificationTicker: React.FC = () => {
   const [purchases, setPurchases] = useState<RecentPurchase[]>([]);
@@ -105,7 +124,7 @@ const PurchaseNotificationTicker: React.FC = () => {
 
   if (purchases.length === 0) return null;
 
-  // Get time ago
+  // Get time ago in compact format
   const getTimeAgo = (dateString: string): string => {
     const now = new Date();
     const date = new Date(dateString);
@@ -115,15 +134,23 @@ const PurchaseNotificationTicker: React.FC = () => {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffMins < 1) return 'baru saja';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}j`;
-    return `${diffDays}h`;
+    if (diffMins < 60) return `${diffMins} menit`;
+    if (diffHours < 24) return `${diffHours} jam`;
+    return `${diffDays} hari`;
   };
 
   const currentPurchase = purchases[displayIndex];
-  const transactionType = currentPurchase.order_type === 'rental' ? 'menyewa' : 'membeli';
+  const firstName = getFirstName(currentPurchase.customer_name);
+  const purchaseType = currentPurchase.order_type === 'rental' ? 'Sewa' : 'Beli';
+  const productName = currentPurchase.product_name || 'Produk';
+  const price = formatPrice(currentPurchase.amount);
   const timeAgo = getTimeAgo(currentPurchase.created_at);
   const backgroundGradient = getBackgroundGradient(currentPurchase);
+  
+  // Additional info: rental duration or tier name
+  const additionalInfo = currentPurchase.order_type === 'rental' && currentPurchase.rental_duration
+    ? currentPurchase.rental_duration
+    : currentPurchase.tier?.name || null;
   
   // Next purchase for smooth background transition
   const nextIndex = (displayIndex + 1) % purchases.length;
@@ -141,46 +168,71 @@ const PurchaseNotificationTicker: React.FC = () => {
     : 'opacity-100 transform translate-x-0';
 
   return (
-    <div className={`fixed left-0 right-0 z-[45] overflow-hidden transition-all duration-300 ${positionClass}`}>
+    <div 
+      className={`fixed left-0 right-0 z-[45] overflow-hidden transition-all duration-300 ${positionClass}`}
+      role="status"
+      aria-live="polite"
+      aria-label="Notifikasi pembelian terbaru"
+    >
       {/* Background layer with smooth color transition */}
       <div 
         className="absolute inset-0 transition-all duration-500 ease-in-out"
         style={{ 
           background: isTransitioning ? nextBackgroundGradient : backgroundGradient,
         }}
+        aria-hidden="true"
       />
       
       {/* Content layer with slide animation */}
       <div className="relative">
         <div 
-          className={`flex items-center justify-between gap-2 px-4 py-2.5 text-white text-sm transition-all duration-400 ease-out ${contentTransitionClass}`}
+          className={`flex items-center justify-between gap-3 px-4 py-2 text-white text-sm transition-all duration-400 ease-out ${contentTransitionClass}`}
         >
-          <div className="flex items-center gap-2">
-            <Rocket className="w-4 h-4 flex-shrink-0 animate-pulse-slow" />
-            <span className="font-medium truncate max-w-[100px] sm:max-w-none">{currentPurchase.customer_name}</span>
-            <span className="hidden xs:inline">{transactionType}</span>
-            <span className="font-bold truncate max-w-[120px] sm:max-w-none">{currentPurchase.product_name}</span>
-            {currentPurchase.order_type === 'rental' && currentPurchase.rental_duration && (
-              <span className="text-xs opacity-90 hidden sm:inline">({currentPurchase.rental_duration})</span>
+          {/* Left side: Purchase info */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+            <ShoppingBag className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+            
+            {/* First Name */}
+            <span className="font-semibold text-white truncate max-w-[60px] sm:max-w-[100px]">
+              {firstName}
+            </span>
+            
+            <span className="text-white/60" aria-hidden="true">•</span>
+            
+            {/* Purchase Type */}
+            <span className="font-medium px-1.5 py-0.5 rounded text-xs bg-white/20 text-white flex-shrink-0">
+              {purchaseType}
+            </span>
+            
+            <span className="text-white/60" aria-hidden="true">•</span>
+            
+            {/* Product Name */}
+            <span className="font-medium text-white truncate max-w-[80px] sm:max-w-[150px] md:max-w-[200px]">
+              {productName}
+            </span>
+            
+            <span className="text-white/60" aria-hidden="true">•</span>
+            
+            {/* Price */}
+            <span className="font-bold text-white flex-shrink-0">
+              {price}
+            </span>
+            
+            {/* Additional Info (Rental Duration or Tier) - hidden on very small screens */}
+            {additionalInfo && (
+              <>
+                <span className="text-white/60 hidden sm:inline" aria-hidden="true">•</span>
+                <span className="text-white/80 text-xs hidden sm:inline truncate max-w-[80px]">
+                  {additionalInfo}
+                </span>
+              </>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Progress indicator dots */}
-            {purchases.length > 1 && (
-              <div className="hidden sm:flex items-center gap-1">
-                {purchases.map((_, idx) => (
-                  <span 
-                    key={idx}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                      idx === displayIndex 
-                        ? 'bg-white scale-125' 
-                        : 'bg-white/40'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-            <span className="text-xs opacity-80">{timeAgo}</span>
+          
+          {/* Right side: Timestamp */}
+          <div className="flex items-center gap-1 flex-shrink-0 text-white/90">
+            <Clock className="w-3 h-3" aria-hidden="true" />
+            <span className="text-xs font-medium">{timeAgo}</span>
           </div>
         </div>
       </div>
@@ -190,47 +242,12 @@ const PurchaseNotificationTicker: React.FC = () => {
 
 export default PurchaseNotificationTicker;
 
-// Add custom styles for seamless slideshow animation
+// Add custom styles for smooth transitions
 const style = document.createElement('style');
 style.textContent = `
-  @keyframes pulse-slow {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.1);
-    }
-  }
-  .animate-pulse-slow {
-    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
   /* Smooth transition timing */
   .duration-400 {
     transition-duration: 400ms;
-  }
-  
-  /* Shimmer effect for active state */
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
-  }
-  
-  .ticker-shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255,255,255,0.1) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
   }
 `;
 if (typeof document !== 'undefined' && !document.querySelector('style[data-ticker-animations]')) {

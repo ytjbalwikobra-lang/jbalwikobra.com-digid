@@ -50,7 +50,6 @@ const FlashSalesProductGrid: React.FC<FlashSalesProductGridProps> = ({
             key={flashSale.id}
             product={flashSale.product}
             flashSale={flashSaleData}
-            variant="page"
             className="w-full"
           />
         );

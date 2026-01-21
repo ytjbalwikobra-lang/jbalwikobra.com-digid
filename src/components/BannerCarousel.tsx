@@ -114,23 +114,34 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   if (loading) {
     return (
-      <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
-           <div className="w-full aspect-[3/2] flex items-center justify-center">
-             <div className="ios-skeleton w-[92%] h-[85%] rounded-xl"></div>
-           </div>
+      <div 
+        className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40"
+        role="status"
+        aria-busy="true"
+        aria-label="Memuat banner"
+      >
+        <div className="w-full aspect-[3/2] flex items-center justify-center">
+          <span className="sr-only">Memuat banner promosi...</span>
+          <div className="ios-skeleton w-[92%] h-[85%] rounded-xl" aria-hidden="true"></div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="relative rounded-2xl overflow-hidden shadow-md border border-red-500/40">
+      <div 
+        className="relative rounded-2xl overflow-hidden shadow-md border border-red-500/40"
+        role="alert"
+        aria-live="assertive"
+      >
         <div className="w-full aspect-[3/2] bg-red-900/20 flex items-center justify-center">
-          <div className="text-red-400 text-center p-4">
+          <div className="text-red-300 text-center p-4">
             <p>{error}</p>
             <button 
               onClick={() => window.location.reload()}
-              className="mt-2 text-sm text-red-300 hover:text-red-200 underline"
+              className="mt-2 text-sm text-red-200 hover:text-red-100 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md px-2 py-1"
+              aria-label="Muat ulang halaman untuk mencoba lagi"
             >
               Coba Lagi
             </button>
@@ -142,70 +153,65 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   if (count === 0) return null;
 
-  const active = resolvedSlides[index];
-
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
-      {/* iOS-compatible aspect ratio container */}
-      <div className="relative w-full aspect-[3/2]">
-        <img
-          src={active.image}
-          alt={active.title || 'Banner'}
-          className="absolute inset-0 w-full h-full object-cover ios-image"
-          onError={(e) => {
-            console.error('Banner image failed to load:', active.image);
-            // Fallback to a default image
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200&h=800&fit=crop';
-          }}
-        />
+    <div 
+      className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Banner promosi"
+    >
+      {/* Sliding container */}
+      <div className="relative w-full aspect-[3/2] overflow-hidden" aria-live="polite">
+        <div 
+          className="flex transition-transform duration-500 ease-in-out h-full"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {resolvedSlides.slice(0, count).map((slide, i) => (
+            <div key={slide.id} className="relative w-full flex-shrink-0 h-full">
+              <img
+                src={slide.image}
+                alt={slide.title || 'Banner promosi'}
+                className="absolute inset-0 w-full h-full object-cover ios-image"
+                onError={(e) => {
+                  console.error('Banner image failed to load:', slide.image);
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200&h=800&fit=crop';
+                }}
+              />
 
-        {/* iOS-compatible gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+              {/* iOS-compatible gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" aria-hidden="true" />
 
-        {/* Content with iOS safe area support */}
-        <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end ios-safe-area">
-          {(active.title || active.subtitle) && (
-            <div className="text-white max-w-full sm:max-w-md lg:max-w-xl">
-              {active.title && (
-                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 leading-tight drop-shadow-lg">
-                  {active.title}
-                </h3>
-              )}
-              {active.subtitle && (
-                <p className="text-white/95 mb-2 sm:mb-3 md:mb-4 text-sm sm:text-base leading-snug drop-shadow-md">
-                  {active.subtitle}
-                </p>
-              )}
-              {active.ctaText && active.ctaLink && (
-                <a 
-                  href={active.ctaLink} 
-                  className="inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 sm:px-5 md:px-6 py-2.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 border-2 border-pink-500"
-                >
-                  {active.ctaText}
-                </a>
-              )}
+              {/* Content with iOS safe area support */}
+              <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end ios-safe-area">
+                {(slide.title || slide.subtitle) && (
+                  <div className="text-white max-w-full sm:max-w-md lg:max-w-xl">
+                    {slide.title && (
+                      <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 leading-tight drop-shadow-lg">
+                        {slide.title}
+                      </h3>
+                    )}
+                    {slide.subtitle && (
+                      <p className="text-white/95 mb-2 sm:mb-3 md:mb-4 text-sm sm:text-base leading-snug drop-shadow-md">
+                        {slide.subtitle}
+                      </p>
+                    )}
+                    {slide.ctaText && slide.ctaLink && (
+                      <a 
+                        href={slide.ctaLink} 
+                        className="inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 sm:px-5 md:px-6 py-2.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 border-2 border-pink-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 min-h-[44px]"
+                        aria-label={`${slide.ctaText} - ${slide.title || 'banner'}`}
+                        tabIndex={i === index ? 0 : -1}
+                      >
+                        {slide.ctaText}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* iOS-optimized dots indicator */}
-      {count > 1 && (
-        <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 sm:space-x-2">
-          {Array.from({ length: count }).map((_, i) => (
-            <button
-              key={i}
-              aria-label={`Slide ${i + 1}`}
-              onClick={() => setIndex(i)}
-              className={`h-2 sm:h-2.5 rounded-full transition-all duration-200 ios-touch-target ${
-                i === index 
-                  ? 'w-4 sm:w-6 bg-black shadow-lg' 
-                  : 'w-2 sm:w-2.5 bg-gray-900/70 hover:bg-gray-900/90'
-              }`}
-            />
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };

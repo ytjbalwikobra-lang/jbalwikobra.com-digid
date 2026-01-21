@@ -1,0 +1,23 @@
+# Supabase CLI Docker Image
+FROM alpine:3.19
+
+# Install dependencies
+RUN apk add --no-cache curl bash git unzip
+
+# Download and install Supabase CLI binary directly
+RUN SUPABASE_VERSION=$(curl -s https://api.github.com/repos/supabase/cli/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    curl -L "https://github.com/supabase/cli/releases/download/v${SUPABASE_VERSION}/supabase_linux_amd64.tar.gz" -o supabase.tar.gz && \
+    tar -xzf supabase.tar.gz && \
+    mv supabase /usr/local/bin/supabase && \
+    chmod +x /usr/local/bin/supabase && \
+    rm supabase.tar.gz
+
+# Verify installation
+RUN /usr/local/bin/supabase --version
+
+# Set working directory
+WORKDIR /app
+
+# Default command
+ENTRYPOINT ["supabase"]
+CMD ["--help"]

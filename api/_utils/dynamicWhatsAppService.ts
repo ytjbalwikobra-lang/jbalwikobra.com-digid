@@ -83,10 +83,10 @@ export class DynamicWhatsAppService {
           if (!keys || keys.length === 0) return null;
           const keyRow: any = keys[0];
 
-          // 2) Get provider config
+          // 2) Get provider config - Optimized: Select only required fields
           const { data: provider } = await sb
             .from('whatsapp_providers')
-            .select('*')
+            .select('id, name, base_url, is_active, settings, key_field_name, send_message_endpoint')
             .eq('id', keyRow.provider_id)
             .maybeSingle();
 
@@ -693,9 +693,10 @@ Ada pertanyaan? Balas pesan ini! 💬`;
     try {
   const sb = getSupabase();
   if (!sb) return [];
+  // Optimized: Select only required fields to reduce egress
   const { data, error } = await sb
         .from('whatsapp_providers')
-        .select('*')
+        .select('id, name, display_name, base_url, is_active, settings, key_field_name, send_message_endpoint')
         .eq('is_active', true)
         .order('name');
 

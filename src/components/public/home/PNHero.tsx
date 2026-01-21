@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, ShoppingBag, TrendingUp, Rocket, MessageCircle, Star } from 'lucide-react';
+import { ShoppingBag, Rocket, MessageCircle, Sparkles, DollarSign, Handshake } from 'lucide-react';
 import { PNSection, PNContainer, PNHeading, PNText, PNButton } from '../../ui/PinkNeonDesignSystem';
 import { SettingsService } from '../../../services/settingsService';
 import { ensureUrlProtocol } from '../../../utils/helpers';
@@ -33,58 +33,57 @@ const PNHero: React.FC = () => {
   return (
     <PNSection padding="lg">
       <PNContainer>
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-black via-black to-black px-6 py-10">
-          {/* Glow background accents */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-fuchsia-600/20 rounded-full blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-black via-gray-900/50 to-black px-5 py-8 sm:px-8 sm:py-10">
+          {/* Animated glow background */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+            <div className="absolute -top-32 -left-32 w-80 h-80 bg-pink-500/25 rounded-full blur-[100px] animate-pulse" />
+            <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-fuchsia-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
           </div>
-          <div className="relative z-10 text-center max-w-xl mx-auto">
+          
+          <div className="relative z-10 text-center max-w-lg mx-auto">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-1.5 bg-pink-500/20 border border-pink-500/30 rounded-full px-3 py-1.5 mb-4" role="status">
+              <Sparkles size={14} className="text-pink-400" aria-hidden="true" />
+              <span className="text-xs font-medium text-pink-300">Trusted by 10K+ Gamers</span>
+            </div>
+            
             <PNHeading level={1} gradient className="mb-3">{heroTitle}</PNHeading>
-            <PNText className="mb-6">{heroSubtitle}</PNText>
+            <PNText color="secondary" className="mb-6 text-base leading-relaxed">{heroSubtitle}</PNText>
 
-            <div className="space-y-3">
-              {/* Top Up Game button */}
-              <div>
-                <a href={topupGameUrl} target="_blank" rel="noopener noreferrer">
-                  <PNButton variant="primary" size="lg" fullWidth className="flex items-center justify-center gap-2">
-                    <Rocket size={18} />
-                    Top Up Semua Game, Murah! Klik Disini!
-                  </PNButton>
-                </a>
-              </div>
-              {/* Jual Akun Button - uses jual_akun_whatsapp_url from website_settings */}
-              <div>
-                <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <PNButton variant="secondary" size="lg" fullWidth className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                    <Star size={18} />
-                    JUAL AKUN DAN NOMER ADMIN DI SINI
-                  </PNButton>
-                </a>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Link to="/products">
-                  <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
-                    <ShoppingBag size={16} />
-                    Stok Akun Disini!
-                  </PNButton>
-                </Link>
-                <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer">
-                  <PNButton variant="ghost" size="md" fullWidth className="flex items-center justify-center gap-2">
-                    <TrendingUp size={16} />
-                    REKBER KLIK DI SINI
-                  </PNButton>
-                </a>
-              </div>
-              {/* WhatsApp Channel button */}
-              <div>
-                <a href={whatsappChannelUrl} target="_blank" rel="noopener noreferrer">
-                  <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
-                    <MessageCircle size={16} />
-                    Join WhatsApp Channel
-                  </PNButton>
-                </a>
-              </div>
+            {/* Primary CTA - Top Up Game (most important) */}
+            <a href={topupGameUrl} target="_blank" rel="noopener noreferrer" className="block mb-3" aria-label="Top Up Semua Game - Murah! (membuka di tab baru)">
+              <PNButton variant="primary" size="lg" fullWidth className="flex items-center justify-center gap-2">
+                <Rocket size={18} aria-hidden="true" />
+                <span>Top Up Semua Game - Murah!</span>
+              </PNButton>
+            </a>
+            
+            {/* Secondary CTAs - 2x2 grid */}
+            <div className="grid grid-cols-2 gap-2 mb-3" role="navigation" aria-label="Menu utama">
+              <Link to="/products" className="block">
+                <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
+                  <ShoppingBag size={16} aria-hidden="true" />
+                  <span>Lihat Stok</span>
+                </PNButton>
+              </Link>
+              <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Jual Akun - Hubungi Admin (membuka di tab baru)">
+                <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
+                  <DollarSign size={16} aria-hidden="true" />
+                  <span>Jual Akun</span>
+                </PNButton>
+              </a>
+              <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Rekber Aman - Layanan Rekening Bersama (membuka di tab baru)">
+                <PNButton variant="ghost" size="md" fullWidth className="flex items-center justify-center gap-2">
+                  <Handshake size={16} aria-hidden="true" />
+                  <span>Rekber Aman</span>
+                </PNButton>
+              </a>
+              <a href={whatsappChannelUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Join WhatsApp Channel (membuka di tab baru)">
+                <PNButton variant="ghost" size="md" fullWidth className="flex items-center justify-center gap-2">
+                  <MessageCircle size={16} aria-hidden="true" />
+                  <span>WA Channel</span>
+                </PNButton>
+              </a>
             </div>
           </div>
         </div>

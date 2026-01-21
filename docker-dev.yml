@@ -1,0 +1,45 @@
+# Docker Compose for Development with Node.js
+# Alternative option if you want to use Docker for Node.js
+
+version: '3.8'
+
+services:
+  # Node.js development container
+  node-dev:
+    image: node:20-alpine
+    container_name: jbalwikobra-node-dev
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+    command: sh -c "npm install && npm start"
+    networks:
+      - dev-network
+
+  # Supabase local stack (optional - if using local Supabase)
+  # Uncomment the section below if you want to run Supabase locally
+  # supabase-db:
+  #   image: supabase/postgres:15.1.0.147
+  #   container_name: jbalwikobra-supabase-db
+  #   ports:
+  #     - "54322:5432"
+  #   environment:
+  #     POSTGRES_PASSWORD: your-super-secret-password
+  #     POSTGRES_DB: postgres
+  #   volumes:
+  #     - supabase-db:/var/lib/postgresql/data
+  #   networks:
+  #     - dev-network
+
+volumes:
+  node_modules:
+  # supabase-db:
+
+networks:
+  dev-network:
+    driver: bridge

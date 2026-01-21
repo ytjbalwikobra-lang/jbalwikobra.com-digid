@@ -71,9 +71,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // Get active provider - use same query as admin-whatsapp.ts that works
+    // Optimized: Select only required fields to reduce egress
     const { data: provider, error: providerError } = await supabase
       .from('whatsapp_providers')
-      .select('*')
+      .select('id, name, base_url, is_active, settings, key_field_name')
       .eq('is_active', true)
       .order('name')
       .limit(1)
@@ -95,10 +96,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Get API key
+    // Get API key - Optimized: Select only required fields
     const { data: apiKeyData, error: keyError } = await supabase
       .from('whatsapp_api_keys')
-      .select('*')
+      .select('id, api_key, provider_id, is_active, is_primary')
       .eq('provider_id', provider.id)
       .eq('is_active', true)
       .order('is_primary', { ascending: false })

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Calendar } from 'lucide-react';
 import { adminService } from '../../../services/adminService';
+import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { formatCurrency } from '../../../utils/helpers';
 import { formatAnalyticsValue } from '../../../utils/adminUtils';
 
@@ -43,10 +44,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loading }) => {
+  const { user, loading: authLoading } = useAuth();
   const [chartData, setChartData] = useState<OrderChartData[]>([]);
   const [chartLoading, setChartLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [actualTotalRevenue, setActualTotalRevenue] = useState<number>(0);
+  
+  // Development mode bypass - API already handles dev auth
+  const isDev = process.env.NODE_ENV === 'development';
 
   // Generate mock data for fallback
   const generateMockData = useCallback((range: '7d' | '30d' | '90d'): OrderChartData[] => {
@@ -76,29 +81,47 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
   }, []);
 
   const loadChartData = useCallback(async () => {
+    // In production: Don't load if auth is still loading or no user
+    // In development: Allow loading (API handles dev auth bypass)
+    if (!isDev && (authLoading || !user)) {
+      return;
+    }
+    
     try {
       setChartLoading(true);
       
-      // Get the actual total revenue from adminService
+      // Get the actual total revenue from adminService (uses retry logic)
       const dashboardStats = await adminService.getDashboardStats();
       setActualTotalRevenue(dashboardStats.totalRevenue);
       
-      // Get real data from API
+      // Get real data from API with retry logic for 401
       const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-      const sessionToken = localStorage.getItem('session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
       
-      if (sessionToken) {
-        headers['Authorization'] = `Bearer ${sessionToken}`;
+      // Retry logic for time-series API
+      let response: Response | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const sessionToken = localStorage.getItem('session_token');
+        if (!sessionToken) {
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+          continue;
+        }
+        
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        };
+        
+        response = await fetch(`/api/admin?action=time-series&days=${days}`, { headers });
+        
+        if (response.status === 401 && attempt < 2) {
+          console.warn(`[OrderAnalyticsChart] 401 received, retrying (attempt ${attempt + 1}/3)`);
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+          continue;
+        }
+        break;
       }
       
-      const response = await fetch(`/api/admin?action=time-series&days=${days}`, {
-        headers
-      });
-      
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error('Failed to fetch chart data');
       }
       
@@ -131,11 +154,15 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
     } finally {
       setChartLoading(false);
     }
-  }, [timeRange, generateMockData]);
+  }, [timeRange, generateMockData, authLoading, user, isDev]);
 
   useEffect(() => {
-    loadChartData();
-  }, [loadChartData]);
+    // In production: Only load when auth is ready and user exists
+    // In development: Load immediately (API handles dev auth bypass)
+    if (isDev || (!authLoading && user)) {
+      loadChartData();
+    }
+  }, [loadChartData, authLoading, user, isDev]);
 
   const timeRangeOptions = [
     { value: '7d', label: '7 Days' },
@@ -143,7 +170,10 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
     { value: '90d', label: '90 Days' }
   ];
 
-  if (loading || chartLoading) {
+  // Show loading state when auth is loading (production only)
+  const isLoading = (!isDev && authLoading) || chartLoading;
+
+  if (loading || isLoading) {
     return (
       <div className="bg-black border border-gray-800 rounded-2xl p-6">
         <div className="animate-pulse">

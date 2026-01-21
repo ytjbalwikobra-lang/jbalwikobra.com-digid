@@ -89,10 +89,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get existing payment
+    // Get existing payment - Optimized: Select only required fields
     const { data: existingPayment, error: fetchError } = await supabase
       .from('payments')
-      .select('*')
+      .select('id, xendit_id, payment_data, status')
       .eq('xendit_id', paymentId)
       .single();
 

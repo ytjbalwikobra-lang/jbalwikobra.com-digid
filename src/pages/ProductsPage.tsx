@@ -11,7 +11,7 @@
  * - Native-like product browsing experience  
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useProductsData } from '../hooks/useProductsData';
 import {
   ProductsLoadingSkeleton,
@@ -37,12 +37,37 @@ const ProductsPage: React.FC = () => {
     activeFilters,
     
     // Actions
-  fetchData,
-  handleFilterChange,
-  handlePageChange,
-  clearFilter,
-  clearAllFilters
+    fetchData,
+    handleFilterChange,
+    handlePageChange,
+    clearFilter,
+    clearAllFilters
   } = useProductsData();
+
+  // Stable callbacks to prevent unnecessary re-renders (ISO 9241-210 performance optimization)
+  const handleSearchChange = useCallback((term: string) => {
+    handleFilterChange('searchTerm', term);
+  }, [handleFilterChange]);
+  
+  const handleSortChange = useCallback((v: string) => {
+    handleFilterChange('sortBy', v);
+  }, [handleFilterChange]);
+  
+  const handleRentalToggle = useCallback(() => {
+    handleFilterChange('rentalOnly', !filterState.rentalOnly);
+  }, [handleFilterChange, filterState.rentalOnly]);
+  
+  const handleTierChange = useCallback((slug: string) => {
+    handleFilterChange('selectedTier', slug);
+  }, [handleFilterChange]);
+  
+  const handleGameChange = useCallback((name: string) => {
+    handleFilterChange('selectedGame', name);
+  }, [handleFilterChange]);
+  
+  const handleCategoryChange = useCallback((name: string) => {
+    handleFilterChange('selectedCategory', name);
+  }, [handleFilterChange]);
 
   // Show loading skeleton
   if (loading) {
@@ -64,26 +89,26 @@ const ProductsPage: React.FC = () => {
       {/* Integrated Hero with Filters */}
       <ProductsHeroWithFilters
         searchTerm={filterState.searchTerm}
-        onSearchChange={(term) => handleFilterChange('searchTerm', term)}
+        onSearchChange={handleSearchChange}
         totalProducts={filteredProducts.length}
         currentPage={currentPage}
         totalPages={totalPages}
         showBackNav={true}
         sortBy={filterState.sortBy}
-        onSortChange={(v) => handleFilterChange('sortBy', v)}
+        onSortChange={handleSortChange}
         activeFilters={activeFilters}
         onRemoveFilter={clearFilter}
         onClearAllFilters={clearAllFilters}
         rentalOnly={filterState.rentalOnly}
-        onToggleRental={() => handleFilterChange('rentalOnly', !filterState.rentalOnly)}
+        onToggleRental={handleRentalToggle}
         tiers={tiers}
         selectedTier={filterState.selectedTier}
-        onTierChange={(slug) => handleFilterChange('selectedTier', slug)}
+        onTierChange={handleTierChange}
         gameTitles={gameTitles}
         selectedGame={filterState.selectedGame}
-        onGameChange={(name) => handleFilterChange('selectedGame', name)}
-  selectedCategory={filterState.selectedCategory}
-  onCategoryChange={(name) => handleFilterChange('selectedCategory', name)}
+        onGameChange={handleGameChange}
+        selectedCategory={filterState.selectedCategory}
+        onCategoryChange={handleCategoryChange}
       />
 
       {/* Products Grid */}

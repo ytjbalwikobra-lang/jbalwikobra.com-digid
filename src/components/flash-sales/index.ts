@@ -8,7 +8,3 @@ export { FlashSalesGrid } from './FlashSalesGrid';
 export { default as FlashSalesPageHeader } from './FlashSalesPageHeader';
 export { default as FlashSalesProductGrid } from './FlashSalesProductGrid';
 export { default as FlashSalesEmptyState } from './FlashSalesEmptyState';
-
-// Product card components
-export { default as FlashSalePageCard } from './FlashSalePageCard';
-export { default as FlashSaleProductCard } from './FlashSaleProductCard';

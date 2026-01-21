@@ -66,7 +66,6 @@ export { default as AdminFlashSalesManagement } from '../../../pages/admin/compo
 export { FlashSaleStatsComponent } from './FlashSaleStatsComponent';
 export { FlashSaleFiltersComponent } from './FlashSaleFiltersComponent';
 export { FlashSaleTable } from './FlashSaleTable';
-export { FlashSaleCard } from './FlashSaleCard';
 export { FlashSaleForm } from './FlashSaleForm';
 
 // Type definitions

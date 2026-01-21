@@ -4,6 +4,68 @@ import { dbRowToDomainProduct } from './mappers/productMapper';
 import { supabase } from './supabase';
 import { supabaseAdmin } from './supabaseAdmin';
 
+// Development mode detection
+const isDev = process.env.NODE_ENV === 'development';
+
+/**
+ * Retry helper for admin API calls with exponential backoff
+ * Handles 401 errors that may occur due to race conditions after login
+ * In development mode, allows requests without session token (API handles dev auth)
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+  baseDelay = 500
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Get session token (optional in dev mode)
+    const sessionToken = localStorage.getItem('session_token');
+    
+    // In production, require session token
+    if (!isDev && !sessionToken) {
+      // Wait for session token to be set
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+        continue;
+      }
+      throw new Error('No session token available');
+    }
+    
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string>),
+      'Content-Type': 'application/json'
+    };
+    
+    // Add auth header if token exists
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
+    }
+    
+    try {
+      const response = await fetch(url, { ...options, headers });
+      
+      // If 401 and we have retries left (and not in dev mode), wait and retry
+      if (response.status === 401 && !isDev && attempt < maxRetries - 1) {
+        console.warn(`[adminService] 401 received, retrying in ${baseDelay * Math.pow(2, attempt)}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Failed after max retries');
+}
+
 // Use the shared authenticated Supabase client
 // This ensures RLS policies work correctly with the user's session
 try {
@@ -1697,19 +1759,9 @@ export const adminService = {
     // Use the admin API endpoint instead of direct Supabase queries
     // This ensures we use service_role key for proper data access
     try {
-      
-      const sessionToken = localStorage.getItem('session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (sessionToken) {
-        headers['Authorization'] = `Bearer ${sessionToken}`;
-      }
-      
-      const response = await fetch('/api/admin?action=dashboard-stats', {
-        method: 'GET',
-        headers
+      // Use fetchWithRetry to handle 401 race conditions after login
+      const response = await fetchWithRetry('/api/admin?action=dashboard-stats', {
+        method: 'GET'
       });
 
       if (!response.ok) {

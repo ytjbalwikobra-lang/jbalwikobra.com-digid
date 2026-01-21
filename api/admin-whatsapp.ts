@@ -184,9 +184,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       // Return active provider and settings WITH API key info
+      // Optimized: Select only required fields to reduce egress
       const { data: provider, error: pErr } = await sb
         .from('whatsapp_providers')
-        .select('*')
+        .select('id, name, display_name, base_url, is_active, settings')
         .eq('is_active', true)
         .order('name')
         .limit(1)
@@ -223,9 +224,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
       const { default_group_id, group_configurations, settings: newSettings, api_key: newApiKey } = body;
       
+      // Optimized: Select only required fields for update operation
       const { data: provider, error: pErr } = await sb
         .from('whatsapp_providers')
-        .select('*')
+        .select('id, name, settings')
         .eq('is_active', true)
         .order('name')
         .limit(1)

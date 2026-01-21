@@ -59,14 +59,14 @@ export const PNButton: React.FC<ButtonProps> = ({
 }) => (
   <button
   className={cn(
-      'rounded-2xl font-semibold transition-all duration-200',
-      'focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60',
+      'rounded-2xl font-semibold transition-all duration-200 active:scale-[0.98]',
+      'focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
       fullWidth && 'w-full',
-      size === 'lg' && 'px-5 py-3 text-base',
-      size === 'md' && 'px-4 py-2.5 text-sm',
-      size === 'sm' && 'px-3 py-2 text-xs',
+      size === 'lg' && 'px-6 py-3.5 text-base min-h-[48px]',
+      size === 'md' && 'px-5 py-3 text-sm min-h-[44px]',
+      size === 'sm' && 'px-4 py-2.5 text-xs min-h-[36px]',
       variant === 'primary' && 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white hover:from-pink-600 hover:to-fuchsia-700 shadow-lg shadow-pink-500/25',
-      variant === 'secondary' && 'bg-black text-white hover:bg-gray-900 border border-white/20',
+      variant === 'secondary' && 'bg-white/10 text-white hover:bg-white/15 border border-white/20',
       variant === 'ghost' && 'bg-transparent text-white hover:bg-white/10 border border-white/30',
       className
     )}
@@ -96,8 +96,8 @@ export const PNText: React.FC<DivProps & { color?: 'muted' | 'secondary' }>
   = ({ className, children, color = 'secondary', ...rest }) => (
   <p
     className={cn(
-      color === 'secondary' && 'text-gray-300',
-      color === 'muted' && 'text-gray-400',
+      color === 'secondary' && 'text-gray-200',
+      color === 'muted' && 'text-gray-300',
       className
     )}
     {...rest}
@@ -122,15 +122,18 @@ export const PNPill: React.FC<DivProps & { active?: boolean }>
   </div>
 );
 
-export const PNSectionHeader: React.FC<{ title: string; subtitle?: string; action?: React.ReactNode; padX?: boolean }>
+export const PNSectionHeader: React.FC<{ title: React.ReactNode; subtitle?: string; action?: React.ReactNode; padX?: boolean }>
   = ({ title, subtitle, action, padX = true }) => (
-  <div className={cn('mb-4 flex items-end justify-between', padX ? 'px-1' : '')}>
-    <div>
-      <div className="text-sm text-pink-300/80 tracking-wide">JBalwikobra</div>
-      <PNHeading level={2} gradient className="mt-1">{title}</PNHeading>
-      {subtitle && <PNText className="mt-1">{subtitle}</PNText>}
+  <div className={cn('mb-5 flex items-end justify-between gap-4', padX ? 'px-1' : '')}>
+    <div className="flex-1 min-w-0">
+      {typeof title === 'string' ? (
+        <PNHeading level={2} gradient>{title}</PNHeading>
+      ) : (
+        <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-400 via-fuchsia-400 to-pink-600 bg-clip-text text-transparent">{title}</div>
+      )}
+      {subtitle && <PNText color="muted" className="mt-1 text-sm">{subtitle}</PNText>}
     </div>
-    {action}
+    {action && <div className="flex-shrink-0">{action}</div>}
   </div>
 );
 

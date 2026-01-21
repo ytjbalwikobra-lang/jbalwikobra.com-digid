@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../../../services/adminService';
+import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { RotateCcw, AlertCircle } from 'lucide-react';
 import { MetricsGrid, defaultStats } from './metrics/index';
 import { AdminButton } from './ui/AdminButton';
@@ -12,12 +13,22 @@ import { AdminButton } from './ui/AdminButton';
 const cn = (...c: (string | boolean | undefined)[]) => c.filter(Boolean).join(' ');
 
 export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState(() => ({ ...defaultStats }));
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Development mode bypass - API already handles dev auth
+  const isDev = process.env.NODE_ENV === 'development';
 
   const load = useCallback(async () => {
+    // In production: Don't load if auth is still loading or no user
+    // In development: Allow loading (API handles dev auth bypass)
+    if (!isDev && (authLoading || !user)) {
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
@@ -36,11 +47,15 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authLoading, user, isDev]);
 
   useEffect(() => { 
-    load(); 
-  }, [load]);
+    // In production: Only load when auth is ready and user exists
+    // In development: Load immediately (API handles dev auth bypass)
+    if (isDev || (!authLoading && user)) {
+      load();
+    }
+  }, [load, authLoading, user, isDev]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -53,6 +68,9 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
     }
   };
 
+  // Show loading state when auth is still loading (production only)
+  const isLoading = (!isDev && authLoading) || loading;
+
   return (
     <section className="space-y-6" aria-label="Store performance metrics">
       <div className="flex items-center justify-between">
@@ -64,15 +82,15 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
           variant="secondary"
           size="sm"
           onClick={handleRefresh} 
-          disabled={refreshing || loading}
+          disabled={refreshing || isLoading}
           aria-label={refreshing ? 'Refreshing data...' : 'Refresh dashboard data'}
         >
-          <RotateCcw className={cn('w-4 h-4', (refreshing || loading) && 'animate-spin')} />
+          <RotateCcw className={cn('w-4 h-4', (refreshing || isLoading) && 'animate-spin')} />
           <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
         </AdminButton>
       </div>
       
-      {error && (
+      {error && !isLoading && (
         <div 
           className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3"
           role="alert"
@@ -88,7 +106,7 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
       
       <MetricsGrid 
         stats={stats} 
-        loading={loading} 
+        loading={isLoading} 
       />
     </section>
   );

@@ -1,20 +1,27 @@
 /**
  * Payment Channel Configuration
  * Only include payment methods that are activated on your Xendit account
- * Update this configuration based on your actual X    channel_code: 'BCA_VIRTUAL_ACCOUNT',
-    available: true, // ACTIVATED ✅
-    processing_time: 'Instant',
-    popular: true,
-    min_amount: 1000,
-    max_amount: 500000000, // BCA VA limit: 500 million
-    icon: '🔵'
-  },shboard activation status
+ * Update this configuration based on your actual Xendit dashboard activation status
+ * 
+ * ACTIVATED CHANNELS (from Xendit Dashboard):
+ * - ✅ QRIS
+ * - ✅ AstraPay (E-Wallet)
+ * - ✅ Virtual Accounts: BJB, BNI, BRI, BSI, BSS, CIMB, Mandiri, Permata
+ * - ✅ Indomaret (OTC)
+ * - ✅ Akulaku (PayLater)
+ * 
+ * NOT ACTIVATED:
+ * - ❌ Credit Card / Debit Card
+ * - ❌ BCA Virtual Account
+ * - ❌ OVO, DANA, GoPay, ShopeePay, LinkAja (E-Wallets)
+ * - ❌ Alfamart (Retail)
+ * - ❌ Kredivo, Atome, Indodana (PayLater)
  */
 
 export interface ActivatedPaymentChannel {
   id: string;
   name: string;
-  type: 'EWALLET' | 'VIRTUAL_ACCOUNT' | 'QRIS' | 'CREDIT_CARD' | 'OVER_THE_COUNTER';
+  type: 'EWALLET' | 'VIRTUAL_ACCOUNT' | 'QRIS' | 'OVER_THE_COUNTER' | 'PAYLATER';
   description: string;
   channel_code?: string; // Xendit channel code for API calls
   available: boolean;
@@ -115,6 +122,19 @@ export const ACTIVATED_PAYMENT_CHANNELS: ActivatedPaymentChannel[] = [
     icon: '🟢'
   },
   {
+    id: 'bss',
+    name: 'BSS Virtual Account',
+    type: 'VIRTUAL_ACCOUNT',
+    description: 'Transfer melalui Virtual Account Bank Sahabat Sampoerna',
+    channel_code: 'BSS_VIRTUAL_ACCOUNT',
+    available: true, // ACTIVATED ✅
+    processing_time: 'Instant',
+    popular: false,
+    min_amount: 1000,
+    max_amount: 100000000, // BSS VA limit: 100 million
+    icon: '🟡'
+  },
+  {
     id: 'cimb',
     name: 'CIMB Niaga Virtual Account',
     type: 'VIRTUAL_ACCOUNT',
@@ -169,48 +189,35 @@ export const ACTIVATED_PAYMENT_CHANNELS: ActivatedPaymentChannel[] = [
   //   icon: '🔵'
   // },
 
-  // Over-The-Counter - NEEDS FULL XENDIT ACTIVATION
+  // Over-The-Counter - ACTIVATED ✅
   {
     id: 'indomaret',
     name: 'Indomaret',
     type: 'OVER_THE_COUNTER',
     description: 'Bayar di Indomaret terdekat',
     channel_code: 'INDOMARET',
-    available: false, // NEEDS XENDIT SUPPORT ACTIVATION ⚠️
+    available: true, // ACTIVATED ✅
     processing_time: 'Instant setelah bayar',
     popular: true,
     min_amount: 10000,
-    max_amount: 5000000,
+    max_amount: 2500000, // Indomaret limit: 2.5 million
     icon: '🏪'
   },
 
-  // PayLater - NEEDS FULL XENDIT ACTIVATION
+  // PayLater - Akulaku ACTIVATED ✅
   {
     id: 'akulaku',
     name: 'Akulaku',
-    type: 'OVER_THE_COUNTER', // PayLater treated as OTC for API
+    type: 'PAYLATER',
     description: 'Bayar nanti dengan Akulaku',
     channel_code: 'AKULAKU',
-    available: false, // NEEDS XENDIT SUPPORT ACTIVATION ⚠️
+    available: true, // ACTIVATED ✅
     processing_time: 'Instant',
     popular: false,
     min_amount: 50000,
     max_amount: 10000000,
     icon: '💳'
   },
-
-  // Credit Card - Usually activated by default
-  {
-    id: 'credit_card',
-    name: 'Kartu Kredit/Debit',
-    type: 'CREDIT_CARD',
-    description: 'Visa, Mastercard, JCB',
-    available: true, // Usually activated by default
-    processing_time: 'Instant',
-    min_amount: 10000,
-    max_amount: 1000000000, // Updated to support high-value transactions
-    icon: '💳'
-  }
 ];
 
 /**
@@ -261,24 +268,22 @@ export function validateAmountForChannel(channelId: string, amount: number): boo
 }
 
 /**
- * IMPORTANT CONFIGURATION NOTES:
+ * PAYMENT CHANNEL CONFIGURATION NOTES:
  * 
- * 1. UPDATE CHANNEL AVAILABILITY: 
- *    Set available: false for channels not activated on your Xendit account
+ * ACTIVATED ON YOUR XENDIT DASHBOARD:
+ * ✅ QRIS
+ * ✅ AstraPay (E-Wallet, One-Time Payment)
+ * ✅ Virtual Accounts: BJB, BNI, BRI, BSI, BSS, CIMB, Mandiri, Permata
+ * ✅ Indomaret (Over-The-Counter)
+ * ✅ Akulaku (PayLater)
  * 
- * 2. CHECK YOUR XENDIT DASHBOARD:
- *    Go to Settings > Payment Methods to see which channels are activated
+ * NOT ACTIVATED ON YOUR XENDIT DASHBOARD:
+ * ❌ Credit Card / Debit Card
+ * ❌ BCA Virtual Account
+ * ❌ OVO, DANA, GoPay, ShopeePay, LinkAja
+ * ❌ Alfamart
+ * ❌ Kredivo, Atome, Indodana
  * 
- * 3. COMMON ACTIVATED CHANNELS:
- *    - QRIS (usually activated by default)
- *    - Credit Cards (usually activated by default)
- *    - OVO, DANA, ShopeePay (common e-wallets)
- *    - BCA, BNI, Mandiri VAs (common virtual accounts)
- * 
- * 4. LESS COMMON CHANNELS:
- *    - LinkAja, GoPay (may require special approval)
- *    - BRI, Permata, CIMB VAs (may not be activated by default)
- * 
- * 5. TO ACTIVATE MORE CHANNELS:
- *    Contact Xendit support or check your dashboard
+ * TO ACTIVATE MORE CHANNELS:
+ * Contact Xendit support or check your dashboard at Settings > Payment Methods
  */

@@ -14,6 +14,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '../types';
+import { sortByFlashSaleEndTime } from '../utils/flashSaleUtils';
 // New PN homepage components
 import PNHero from '../components/public/home/PNHero';
 import PNFlashSalesSection from '../components/public/home/PNFlashSalesSection';
@@ -80,20 +81,15 @@ const HomePage: React.FC = () => {
       if (signal.aborted) return;
 
       const flashSaleProducts = flashSalesResult.status === 'fulfilled' 
-        ? flashSalesResult.value
-            .map(sale => ({
+        ? sortByFlashSaleEndTime(
+            flashSalesResult.value.map(sale => ({
               ...sale.product,
               isFlashSale: true, // Ensure isFlashSale is set for routing
               flashSaleEndTime: sale.endTime || sale.product.flashSaleEndTime,
               price: sale.salePrice || sale.product.price,
               originalPrice: sale.originalPrice || sale.product.originalPrice
             }))
-            .sort((a, b) => {
-              // Sort by nearest countdown end time first
-              const endTimeA = a.flashSaleEndTime ? new Date(a.flashSaleEndTime).getTime() : Infinity;
-              const endTimeB = b.flashSaleEndTime ? new Date(b.flashSaleEndTime).getTime() : Infinity;
-              return endTimeA - endTimeB;
-            })
+          )
         : [];
       
       const popularGames = popularGamesResult.status === 'fulfilled'

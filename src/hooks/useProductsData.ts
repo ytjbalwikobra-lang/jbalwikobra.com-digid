@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Product, Tier, GameTitle } from '../types';
 import { scrollToPaginationContent } from '../utils/scrollUtils';
+import { excludeActiveFlashSales } from '../utils/flashSaleUtils';
 
 // Mobile-first constants
 const MOBILE_CONSTANTS = {
@@ -179,7 +180,8 @@ export const useProductsData = () => {
 
   // Memoized filtered and sorted products
   const filteredProducts = useMemo(() => {
-    let filtered = [...state.products];
+    // Exclude products with active flash sales (they should only appear in flash sales section)
+    let filtered = excludeActiveFlashSales(state.products);
 
     // Search filter
     if (filterState.searchTerm) {

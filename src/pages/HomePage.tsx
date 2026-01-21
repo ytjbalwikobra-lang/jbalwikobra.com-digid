@@ -81,7 +81,13 @@ const HomePage: React.FC = () => {
 
       const flashSaleProducts = flashSalesResult.status === 'fulfilled' 
         ? flashSalesResult.value
-            .map(sale => sale.product)
+            .map(sale => ({
+              ...sale.product,
+              isFlashSale: true, // Ensure isFlashSale is set for routing
+              flashSaleEndTime: sale.endTime || sale.product.flashSaleEndTime,
+              price: sale.salePrice || sale.product.price,
+              originalPrice: sale.originalPrice || sale.product.originalPrice
+            }))
             .sort((a, b) => {
               // Sort by nearest countdown end time first
               const endTimeA = a.flashSaleEndTime ? new Date(a.flashSaleEndTime).getTime() : Infinity;

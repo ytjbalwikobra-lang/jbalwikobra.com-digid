@@ -38,10 +38,11 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
   return (
     <article 
       onClick={onClick} 
-      className={`group rounded-2xl bg-white/5 border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-pink-500/30 hover:bg-white/[0.07] ${className}`}
+      className={`group rounded-2xl bg-white/5 border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-pink-500/30 hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${className}`}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      aria-label={`Lihat detail ${title}`}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onClick?.())}
     >
       {/* Image Container - 4:5 ratio */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-pink-900/30 to-fuchsia-900/30">
@@ -108,4 +109,4 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
   );
 };
 
-export default PNProductCard;
+export default React.memo(PNProductCard);

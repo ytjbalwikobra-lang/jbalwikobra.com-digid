@@ -3,7 +3,7 @@
  * Handles flash sale specific logic, product data fetching, and enhanced checkout flow
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Product, Customer, RentalOption } from '../types';
 import { ProductService } from '../services/productService';
@@ -99,6 +99,11 @@ export const useFlashSaleProductDetail = () => {
   const [whatsappNumber, setWhatsappNumber] = useState<string>(
     process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890'
   );
+
+  // Race condition prevention for checkout submissions
+  const submissionInProgress = useRef(false);
+  const lastSubmissionTime = useRef(0);
+  const SUBMISSION_COOLDOWN = 3000; // 3 seconds between submissions
 
   // Debug logging
   useEffect(() => {
@@ -266,9 +271,19 @@ export const useFlashSaleProductDetail = () => {
     }));
   }, []);
 
-  // Checkout handler
+  // Checkout handler with race condition protection
   const handleCheckout = useCallback(async (paymentMethod?: string) => {
     if (!state.product) return;
+    
+    // Prevent duplicate submissions
+    const now = Date.now();
+    if (submissionInProgress.current || (now - lastSubmissionTime.current) < SUBMISSION_COOLDOWN) {
+      console.warn('⚠️ Checkout submission blocked - already in progress or cooldown active');
+      return;
+    }
+    
+    submissionInProgress.current = true;
+    lastSubmissionTime.current = now;
     
     try {
       setCheckoutState(prev => ({ ...prev, creatingInvoice: true }));
@@ -321,6 +336,8 @@ export const useFlashSaleProductDetail = () => {
         creatingInvoice: false, 
         error: error instanceof Error ? error.message : 'Gagal membuat invoice pembayaran' 
       }));
+    } finally {
+      submissionInProgress.current = false;
     }
   }, [state.product, effectivePrice, checkoutState.customer, checkoutState.checkoutType, rentalState.selectedRental]);
 

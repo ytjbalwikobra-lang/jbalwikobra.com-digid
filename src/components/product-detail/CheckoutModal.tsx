@@ -88,13 +88,40 @@ const CheckoutModal: React.FC<Props> = ({
     onCheckout(selectedPaymentMethod);
   };
 
-  // Close on escape key
+  // Close on escape key and implement focus trap
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && visible) onClose();
+    if (!visible || !modalRef.current) return;
+    
+    const modal = modalRef.current;
+    const focusableElements = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstEl = focusableElements[0];
+    const lastEl = focusableElements[focusableElements.length - 1];
+    
+    // Focus first element on open
+    firstEl?.focus();
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      
+      // Focus trap
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl?.focus();
+        }
+      }
     };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [visible, onClose]);
 
   if (!visible) return null;
@@ -121,6 +148,10 @@ const CheckoutModal: React.FC<Props> = ({
       {/* Modal Container */}
       <div 
         ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="checkout-modal-title"
+        aria-describedby="checkout-modal-price"
         className="relative w-full sm:max-w-md bg-gray-950 sm:rounded-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slide-up sm:animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
@@ -128,7 +159,7 @@ const CheckoutModal: React.FC<Props> = ({
         <div className="sticky top-0 z-10 bg-gray-950 border-b border-white/10 px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-bold text-white truncate">
+              <h2 id="checkout-modal-title" className="text-lg font-bold text-white truncate">
                 {isPurchase ? 'Checkout' : 'Rental Checkout'}
               </h2>
               <p className="text-sm text-gray-400 truncate">{productName}</p>
@@ -143,7 +174,7 @@ const CheckoutModal: React.FC<Props> = ({
           </div>
           
           {/* Price Badge */}
-          <div className="mt-3 flex items-center justify-between p-3 bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl">
+          <div id="checkout-modal-price" className="mt-3 flex items-center justify-between p-3 bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl">
             <span className="text-sm text-gray-300">Total Pembayaran</span>
             <span className="text-xl font-bold text-pink-400">{formatCurrency(price)}</span>
           </div>

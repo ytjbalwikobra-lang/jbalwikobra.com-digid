@@ -440,21 +440,34 @@ export const PaymentMethods = React.memo(({
         <div className="mb-4">
           <div className="flex items-center space-x-2 mb-2 px-1">
             <Star className="text-pink-400" size={16} />
-            <PNText className="font-semibold text-pink-400 text-sm tracking-wide">METODE POPULER</PNText>
+            <PNText id="popular-methods-label" className="font-semibold text-pink-400 text-sm tracking-wide">METODE POPULER</PNText>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div 
+            className="grid grid-cols-2 lg:grid-cols-3 gap-3"
+            role="radiogroup"
+            aria-labelledby="popular-methods-label"
+          >
             {popularMethods.map((method) => {
               const isSelected = selectedMethod === method.id;
               return (
                 <div
                   key={method.id}
+                  role="radio"
+                  aria-checked={isSelected}
+                  tabIndex={0}
                   onClick={() => {
                     onMethodSelect?.(method.id);
                     if (onDirectPayment && showSelection) {
                       setTimeout(() => onDirectPayment(method.id), 100);
                     }
                   }}
-                  className={`cursor-pointer group relative overflow-hidden transition-all duration-300 p-3 rounded-xl border flex flex-col items-center text-center space-y-2 ${
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onMethodSelect?.(method.id);
+                    }
+                  }}
+                  className={`cursor-pointer group relative overflow-hidden transition-all duration-300 p-3 rounded-xl border flex flex-col items-center text-center space-y-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
                     isSelected 
                       ? 'border-pink-500 bg-gradient-to-br from-pink-500/20 to-purple-600/10 shadow-[0_0_15px_-5px_rgba(236,72,153,0.5)] scale-[1.02]' 
                       : 'border-white/10 bg-white/5 hover:border-pink-400/50 hover:bg-white/10 hover:-translate-y-0.5'
@@ -497,24 +510,37 @@ export const PaymentMethods = React.memo(({
                   {getGroupIcon(group.icon)}
                 </div>
                 <div className="flex-1">
-                  <PNText className="font-semibold text-sm text-gray-200">{group.name}</PNText>
+                  <PNText id={`group-${group.type}-label`} className="font-semibold text-sm text-gray-200">{group.name}</PNText>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <div 
+                className="grid grid-cols-2 lg:grid-cols-3 gap-3"
+                role="radiogroup"
+                aria-labelledby={`group-${group.type}-label`}
+              >
                 {group.methods.map((method) => {
                   const isSelected = selectedMethod === method.id;
                   
                   return (
                     <div
                       key={method.id}
+                      role="radio"
+                      aria-checked={isSelected}
+                      tabIndex={0}
                       onClick={() => {
                         onMethodSelect?.(method.id);
                         if (onDirectPayment && showSelection) {
                           setTimeout(() => onDirectPayment(method.id), 100);
                         }
                       }}
-                      className={`relative cursor-pointer group overflow-hidden transition-all duration-300 p-3 rounded-xl border flex flex-col justify-between min-h-[100px] ${
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onMethodSelect?.(method.id);
+                        }
+                      }}
+                      className={`relative cursor-pointer group overflow-hidden transition-all duration-300 p-3 rounded-xl border flex flex-col justify-between min-h-[100px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
                         isSelected 
                           ? 'border-pink-500 bg-gradient-to-br from-pink-500/10 to-transparent shadow-lg shadow-pink-500/10 z-10' 
                           : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'

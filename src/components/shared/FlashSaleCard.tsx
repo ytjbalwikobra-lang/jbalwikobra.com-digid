@@ -32,11 +32,13 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
     ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
     : 0;
 
-  // Navigation handlers
+  // Navigation handlers - route to flash-sales if product is a flash sale or has flashSale prop
+  const shouldUseFlashSaleRoute = !!flashSale || isFlashSale;
+  
   const handleClick = () => {
     if (!product.id) return;
     
-    const path = flashSale ? `/flash-sales/${product.id}` : `/products/${product.id}`;
+    const path = shouldUseFlashSaleRoute ? `/flash-sales/${product.id}` : `/products/${product.id}`;
     navigate(path, {
       state: { 
         fromFlashSaleCard: true, 
@@ -49,7 +51,7 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
     e.stopPropagation();
     if (!product.id) return;
     
-    const path = flashSale ? `/flash-sales/${product.id}` : `/products/${product.id}`;
+    const path = shouldUseFlashSaleRoute ? `/flash-sales/${product.id}` : `/products/${product.id}`;
     navigate(path, {
       state: { 
         fromFlashSaleCard: true,

@@ -248,6 +248,8 @@ class OptimizedProductService {
       isActive: product.is_active ?? product.isActive,
       archivedAt: product.archived_at ?? product.archivedAt,
       originalPrice: product.original_price ?? product.originalPrice,
+      isFlashSale: product.is_flash_sale ?? product.isFlashSale ?? false,
+      flashSaleEndTime: product.flash_sale_end_time ?? product.flashSaleEndTime,
   // accountLevel removed
   // accountDetails removed (column dropped)
       tierData: product.tiers,

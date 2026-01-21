@@ -65,6 +65,7 @@ class OptimizedProductService {
               id, name, description, price, original_price,
               images, is_active, archived_at, created_at,
               game_title_id, tier_id, has_rental, category_id,
+              is_flash_sale, flash_sale_end_time,
               tiers (
                 id, name, slug, color, background_gradient, icon
               ),

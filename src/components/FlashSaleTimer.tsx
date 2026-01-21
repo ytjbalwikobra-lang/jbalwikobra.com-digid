@@ -33,7 +33,7 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
   if (timeRemaining.isExpired) {
     if (variant === 'card') {
       return (
-        <div className={`w-full flex items-center justify-center gap-1.5 text-pink-600 bg-white rounded-lg py-1.5 text-[10px] font-semibold tracking-wide ${className}`}>
+        <div className={`w-full flex items-center justify-center gap-1.5 bg-gray-700 text-gray-300 rounded-lg py-1.5 text-[10px] font-bold tracking-wide ${className}`}>
           <Clock className="w-3 h-3" />
           <span>Berakhir</span>
         </div>
@@ -50,30 +50,30 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
 
   if (variant === 'detail') {
     return (
-      <div className={`flex space-x-3 ${className}`}>
+      <div className={`flex justify-center space-x-3 ${className}`}>
         <div className="text-center">
-          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm">
+          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm flex items-center justify-center min-w-[50px]">
             {timeRemaining.days.toString().padStart(2, '0')}
           </div>
-          <span className="text-xs text-red-300 mt-1 block">Hari</span>
+          <span className="text-xs text-red-300 mt-1 block font-medium">Hari</span>
         </div>
         <div className="text-center">
-          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm">
+          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm flex items-center justify-center min-w-[50px]">
             {timeRemaining.hours.toString().padStart(2, '0')}
           </div>
-          <span className="text-xs text-red-300 mt-1 block">Jam</span>
+          <span className="text-xs text-red-300 mt-1 block font-medium">Jam</span>
         </div>
         <div className="text-center">
-          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm">
+          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm flex items-center justify-center min-w-[50px]">
             {timeRemaining.minutes.toString().padStart(2, '0')}
           </div>
-          <span className="text-xs text-red-300 mt-1 block">Menit</span>
+          <span className="text-xs text-red-300 mt-1 block font-medium">Menit</span>
         </div>
         <div className="text-center">
-          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm">
+          <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-2 rounded-lg font-bold text-lg font-mono tracking-wide shadow-sm flex items-center justify-center min-w-[50px]">
             {timeRemaining.seconds.toString().padStart(2, '0')}
           </div>
-          <span className="text-xs text-red-300 mt-1 block">Detik</span>
+          <span className="text-xs text-red-300 mt-1 block font-medium">Detik</span>
         </div>
       </div>
     );
@@ -81,7 +81,7 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
 
   if (variant === 'card') {
     return (
-      <div className={`w-full flex items-center justify-center gap-1.5 text-pink-600 bg-white rounded-lg py-1.5 text-[10px] font-semibold tracking-wide ${className}`}>
+      <div className={`w-full flex items-center justify-center gap-1.5 bg-amber-600 text-white rounded-lg py-1.5 text-[10px] font-bold tracking-wide shadow-md ${className}`}>
         <Clock className="w-3 h-3" />
         <span className="truncate">
           {timeRemaining.days > 0 && `${timeRemaining.days}h `}

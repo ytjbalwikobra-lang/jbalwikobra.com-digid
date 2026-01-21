@@ -1,50 +1,24 @@
 /**
- * ProductsHeroWithFilters - Integrated hero section with filters
- * Matches Flash Sales design with embedded filter controls
- * 
- * Features:
- * - Page title with animated icons  
- * - Search functionality
- * - Integrated filter controls in hero style
- * - Results statistics
- * - Back navigation link
+ * ProductsHeroWithFilters - Mobile-first header with filters
+ * WCAG 2.1 AA compliant with 44px touch targets
+ * PinkNeonDesignSystem consistent styling
  */
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Search, Package, Gamepad2, ChevronDown, Filter } from 'lucide-react';
-import { PNContainer, PNHeading, PNText } from '../ui/PinkNeonDesignSystem';
-import { IOSButton } from '../ios/IOSDesignSystemV2';
+import { ChevronLeft, Search, X, ChevronDown } from 'lucide-react';
+import { PNContainer } from '../ui/PinkNeonDesignSystem';
 import { Tier, GameTitle } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
 import { useDebounce } from '../../hooks/useDebounce';
-import { FilterDropdown } from './FilterDropdown';
-
-// Sort options
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Terbaru' },
-  { value: 'oldest', label: 'Terlama' },
-  { value: 'price-low', label: 'Harga Terendah' },
-  { value: 'price-high', label: 'Harga Tertinggi' },
-  { value: 'name-az', label: 'Nama A-Z' },
-  { value: 'name-za', label: 'Nama Z-A' }
-];
 
 interface ProductsHeroWithFiltersProps {
-  /** Current search term */
   searchTerm: string;
-  /** Search change handler */
   onSearchChange: (term: string) => void;
-  /** Total number of filtered products */
   totalProducts: number;
-  /** Current page number */
   currentPage?: number;
-  /** Total number of pages */
   totalPages?: number;
-  /** Show back navigation */
   showBackNav?: boolean;
-  
-  // Filter props
   sortBy: string;
   onSortChange: (v: string) => void;
   activeFilters: Array<{ key: string; label: string; value: string }>;
@@ -79,257 +53,173 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
   tiers,
   selectedTier,
   onTierChange,
-  gameTitles,
-  selectedGame,
-  onGameChange,
   selectedCategory,
   onCategoryChange
 }) => {
-  const [showFilters, setShowFilters] = useState(false);
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-  
-  // Debounce search input (300ms delay for better UX)
   const debouncedSearchTerm = useDebounce(localSearchTerm, 300);
+  const { categories, loading: categoriesLoading } = useCategories();
   
-  // Sync debounced search term to parent
   useEffect(() => {
     if (debouncedSearchTerm !== searchTerm) {
       onSearchChange(debouncedSearchTerm);
     }
   }, [debouncedSearchTerm, searchTerm, onSearchChange]);
   
-  // Sync local state when parent changes (e.g., clear filters)
-  // NOTE: Only depend on searchTerm, not localSearchTerm, to avoid race conditions
   useEffect(() => {
-    if (searchTerm === '') {
-      setLocalSearchTerm('');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (searchTerm === '') setLocalSearchTerm('');
   }, [searchTerm]);
   
-  // Handle search input change
   const handleSearchInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearchTerm(e.target.value);
   }, []);
+
+  const hasActiveFilters = activeFilters.length > 0;
+
+  // Shared select styles - 44px min touch target, WCAG compliant
+  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3 pr-9 rounded-xl bg-white/5 border border-white/10 text-xs sm:text-sm text-white hover:bg-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
   
-  // Categories data
-  const { categories, loading: categoriesLoading } = useCategories();
-
-  // Memoize dropdown options
-  const gameOptions = useMemo(() => [
-    { value: '', label: 'Semua Game' },
-    ...(gameTitles?.map(g => ({ value: g.name, label: g.name })) || [])
-  ], [gameTitles]);
-
-  const tierOptions = useMemo(() => [
-    { value: '', label: 'Semua Tier' },
-    ...(tiers?.map(t => ({ value: t.slug, label: t.name })) || [])
-  ], [tiers]);
-
-  const sortOptions = useMemo(() => 
-    SORT_OPTIONS.map(opt => ({ value: opt.value, label: opt.label })),
-    []
-  );
+  // Active select styling for filters with values
+  const getSelectClass = (hasValue: boolean) => 
+    `${selectClass} ${hasValue ? 'border-pink-500/50 bg-pink-500/10' : ''}`;
 
   return (
-    <>
-      {/* Back Navigation */}
-      {showBackNav && (
-        <div className="px-4 pt-4 pb-2">
-          <PNContainer>
-            <Link 
-              to="/" 
-              className="inline-flex items-center gap-2 text-pink-300 hover:text-pink-200 transition-colors text-sm"
-            >
-              <ChevronLeft size={16} />
-              Kembali ke Beranda
-            </Link>
-          </PNContainer>
+    <div className="sticky top-0 z-20 bg-black/95 backdrop-blur-md border-b border-white/5">
+      <PNContainer className="py-3 space-y-3">
+        {/* Row 1: Back + Title + Count */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {showBackNav && (
+              <Link 
+                to="/" 
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 transition-colors"
+                aria-label="Kembali ke beranda"
+              >
+                <ChevronLeft size={20} />
+              </Link>
+            )}
+            <h1 className="text-lg font-bold text-white">Katalog</h1>
+          </div>
+          <p className="text-xs text-gray-400">
+            {totalProducts} produk
+            {currentPage && totalPages && totalPages > 1 && ` • ${currentPage}/${totalPages}`}
+          </p>
         </div>
-      )}
 
-      <div className="px-4 pb-6">
-        <PNContainer>
-          {/* Hero Section */}
-          <div className="text-center py-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Gamepad2 className="text-pink-400 animate-pulse" size={32} />
-              <PNHeading level={1} gradient className="!mb-0">
-                Catalog Akun Game
-              </PNHeading>
-              <Package className="text-pink-400 animate-pulse" size={32} />
-            </div>
-            <PNText className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-              🎮 Jelajahi koleksi akun game kami yang terkurasi dengan kualitas terbaik 🎮
-            </PNText>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="max-w-md mx-auto relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Cari akun game..."
-                value={localSearchTerm}
-                onChange={handleSearchInput}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent backdrop-blur-sm"
-              />
-            </div>
-          </div>
-
-          {/* Categories Filter */}
-          <div className="mb-6">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <h3 className="text-sm font-medium text-white">Kategori</h3>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {categoriesLoading ? (
-                // Loading skeleton
-                Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-8 w-16 rounded-lg bg-white/5 border border-white/10 animate-pulse" />
-                ))
-              ) : (
-                <>
-                  <IOSButton
-                    onClick={() => onCategoryChange?.('')}
-                    variant={selectedCategory === '' || !selectedCategory ? 'primary' : 'ghost'}
-                    size="sm"
-                    className="h-8 px-3 rounded-lg font-medium text-xs whitespace-nowrap"
-                  >
-                    Semua
-                  </IOSButton>
-                  {categories.slice(0, 5).map((category) => (
-                    <IOSButton
-                      key={category.id}
-                      onClick={() => onCategoryChange?.(category.name)}
-                      variant={selectedCategory === category.name ? 'primary' : 'ghost'}
-                      size="sm"
-                      className="h-8 px-3 rounded-lg font-medium text-xs whitespace-nowrap"
-                    >
-                      {category.name}
-                    </IOSButton>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Advanced Filters Toggle */}
-          <div className="text-center mb-4">
-            <IOSButton
-              onClick={() => setShowFilters(!showFilters)}
-              variant="ghost"
-              size="sm"
-              className="inline-flex items-center gap-2 text-pink-300 hover:text-pink-200"
+        {/* Row 2: Full-width Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Cari produk..."
+            value={localSearchTerm}
+            onChange={handleSearchInput}
+            className="w-full h-11 min-h-[44px] pl-10 pr-10 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+          />
+          {localSearchTerm && (
+            <button 
+              onClick={() => setLocalSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-white/10"
+              aria-label="Hapus pencarian"
             >
-              <Filter size={16} />
-              {showFilters ? 'Sembunyikan Filter' : 'Filter Lanjutan'}
-              <ChevronDown className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} size={16} />
-            </IOSButton>
-          </div>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Game Selection */}
-                {gameOptions.length > 1 && (
-                  <FilterDropdown
-                    id="game-filter"
-                    label="Game"
-                    value={selectedGame || ''}
-                    options={gameOptions}
-                    placeholder="Semua Game"
-                    onChange={(v) => onGameChange?.(v)}
-                  />
-                )}
-
-                {/* Tier Selection */}
-                {tierOptions.length > 1 && (
-                  <FilterDropdown
-                    id="tier-filter"
-                    label="Tier"
-                    value={selectedTier || ''}
-                    options={tierOptions}
-                    placeholder="Semua Tier"
-                    onChange={(v) => onTierChange?.(v)}
-                  />
-                )}
-
-                {/* Sort Selection */}
-                <FilterDropdown
-                  id="sort-filter"
-                  label="Urutkan"
-                  value={sortBy}
-                  options={sortOptions}
-                  placeholder="Terbaru"
-                  onChange={onSortChange}
-                />
-              </div>
-
-              {/* Rental Toggle */}
-              <div className="mt-4 flex items-center justify-center">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rentalOnly}
-                    onChange={onToggleRental}
-                    className="w-4 h-4 text-pink-500 bg-white/5 border-white/20 rounded focus:ring-pink-500"
-                  />
-                  <span className="text-sm text-white">Hanya akun rental</span>
-                </label>
-              </div>
-
-              {/* Active Filters */}
-              {activeFilters.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-white">Filter Aktif:</span>
-                    <IOSButton
-                      onClick={onClearAllFilters}
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-pink-300 hover:text-pink-200"
-                    >
-                      Hapus Semua
-                    </IOSButton>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {activeFilters.map((filter) => (
-                      <span
-                        key={filter.key}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-pink-500/20 text-pink-300 rounded-md text-xs"
-                      >
-                        {filter.label}: {filter.value}
-                        <button
-                          onClick={() => onRemoveFilter(filter.key)}
-                          className="hover:text-pink-200"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+              <X size={14} />
+            </button>
           )}
+        </div>
 
-          {/* Results Stats */}
-          <div className="text-center">
-            <PNText className="text-sm text-gray-500 dark:text-gray-400">
-              {totalProducts} akun game ditemukan
-              {currentPage && totalPages && totalPages > 1 && (
-                <span className="ml-2">• Halaman {currentPage} dari {totalPages}</span>
-              )}
-            </PNText>
+        {/* Row 3: Filters - 2x2 grid on mobile, inline on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {/* Category Select */}
+          <div className="relative">
+            <select
+              value={selectedCategory || ''}
+              onChange={(e) => onCategoryChange?.(e.target.value)}
+              className={getSelectClass(!!selectedCategory)}
+              disabled={categoriesLoading}
+              aria-label="Pilih kategori produk"
+            >
+              <option value="" className="bg-gray-900">Kategori</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name} className="bg-gray-900">
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-colors" />
           </div>
-        </PNContainer>
-      </div>
-    </>
+
+          {/* Tier Select */}
+          <div className="relative">
+            <select
+              value={selectedTier || ''}
+              onChange={(e) => onTierChange?.(e.target.value)}
+              className={getSelectClass(!!selectedTier)}
+              aria-label="Pilih tier produk"
+            >
+              <option value="" className="bg-gray-900">Tier</option>
+              {(tiers || []).map((tier) => (
+                <option key={tier.id} value={tier.slug} className="bg-gray-900">
+                  {tier.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-colors" />
+          </div>
+
+          {/* Sort Select */}
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              className={selectClass}
+              aria-label="Urutkan produk"
+            >
+              <option value="newest" className="bg-gray-900">Terbaru</option>
+              <option value="price-low" className="bg-gray-900">Termurah</option>
+              <option value="price-high" className="bg-gray-900">Termahal</option>
+            </select>
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-colors" />
+          </div>
+
+          {/* Rental Toggle Button */}
+          <button
+            onClick={onToggleRental}
+            className={`h-11 min-h-[44px] px-3 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${rentalOnly ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/25' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'}`}
+          >
+            <span className="text-base">🏠</span>
+            <span>Lihat Akun Rental</span>
+          </button>
+        </div>
+
+        {/* Active Filters Tags - WCAG 2.1 AA Compliant */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
+            {activeFilters.map((filter) => (
+              <div
+                key={filter.key}
+                className="inline-flex items-center gap-1.5 h-8 min-h-[32px] pl-3 pr-1.5 bg-pink-500/15 text-pink-300 rounded-full text-xs font-medium"
+              >
+                <span>{filter.value}</span>
+                <button 
+                  onClick={() => onRemoveFilter(filter.key)} 
+                  className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-pink-500/30 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                  aria-label={`Hapus filter ${filter.label}`}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={onClearAllFilters}
+              className="h-8 min-h-[32px] px-3 text-xs font-medium text-gray-400 hover:text-pink-300 underline underline-offset-2 hover:no-underline transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded"
+              aria-label="Hapus semua filter"
+            >
+              Hapus semua
+            </button>
+          </div>
+        )}
+      </PNContainer>
+    </div>
   );
 };
 

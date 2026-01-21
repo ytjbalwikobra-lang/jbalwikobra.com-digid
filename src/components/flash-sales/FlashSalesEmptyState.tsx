@@ -8,9 +8,9 @@
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
-import { PNHeading, PNText, PNButton } from '../ui/PinkNeonDesignSystem';
+import { PNCard, PNButton } from '../ui/PinkNeonDesignSystem';
 
 interface FlashSalesEmptyStateProps {
   /** Current search term - if provided, shows search-specific empty state */
@@ -23,50 +23,54 @@ const FlashSalesEmptyState: React.FC<FlashSalesEmptyStateProps> = ({
   searchTerm,
   onResetSearch
 }) => {
+  const navigate = useNavigate();
   const isSearchEmpty = !!searchTerm;
 
   return (
-    <div className="text-center py-16">
-      <div className="max-w-md mx-auto">
+    <div className="py-8" role="status" aria-live="polite">
+      <PNCard className="text-center p-8 max-w-md mx-auto">
         {/* Icon */}
-        <div className="mb-4">
-          <Zap className="mx-auto h-16 w-16 text-gray-400" />
+        <div className="w-16 h-16 bg-pink-500/10 rounded-2xl mx-auto mb-4 flex items-center justify-center" aria-hidden="true">
+          <Zap className="text-pink-400" size={32} />
         </div>
         
         {/* Title */}
-        <PNHeading level={3} className="mb-2 text-gray-600 dark:text-gray-300">
+        <h3 className="text-lg font-semibold text-white mb-2">
           {isSearchEmpty ? 
             'Tidak ada flash sale yang cocok' : 
             'Belum ada flash sale tersedia'
           }
-        </PNHeading>
+        </h3>
         
         {/* Description */}
-        <PNText className="text-gray-500 dark:text-gray-400 mb-6">
+        <p className="text-gray-300 mb-6 text-sm">
           {isSearchEmpty ? 
             'Coba gunakan kata kunci lain atau lihat semua produk.' : 
-            'Flash sale akan segera hadir. Pantai terus untuk penawaran terbaik!'
+            'Flash sale akan segera hadir. Pantau terus untuk penawaran terbaik!'
           }
-        </PNText>
+        </p>
         
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+        {/* Action Buttons - WCAG Compliant */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {isSearchEmpty && onResetSearch && (
             <PNButton
               variant="secondary"
               onClick={onResetSearch}
+              aria-label="Reset pencarian flash sale"
             >
               Reset Pencarian
             </PNButton>
           )}
           
-          <Link to="/products">
-            <PNButton variant="primary">
-              Lihat Semua Produk
-            </PNButton>
-          </Link>
+          <PNButton 
+            variant="primary" 
+            onClick={() => navigate('/products')}
+            aria-label="Lihat semua produk tersedia"
+          >
+            Lihat Semua Produk
+          </PNButton>
         </div>
-      </div>
+      </PNCard>
     </div>
   );
 };

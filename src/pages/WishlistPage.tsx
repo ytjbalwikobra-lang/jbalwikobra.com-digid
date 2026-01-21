@@ -29,23 +29,21 @@ const WishlistPage: React.FC = () => {
           <PNSection padding="lg">
             {/* Shared Header */}
             <PublicPageHeader
-              backLabel="Beranda"
+              title="Wishlist Saya"
               onBack={handleBackToHome}
+              backAriaLabel="Kembali ke Beranda"
               showWishlist={false}
               showShare={false}
             />
 
-            {/* Wishlist Header */}
+            {/* Subheader with count and clear button */}
             <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center">
-                  <Heart size={24} className="text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-white">Wishlist Saya</h1>
-                  <p className="text-gray-400">Produk yang Anda sukai</p>
-                </div>
-              </div>
+              <p className="text-gray-400">
+                {wishlistItems.length > 0 
+                  ? `${wishlistItems.length} produk yang Anda sukai`
+                  : 'Produk yang Anda sukai'
+                }
+              </p>
               {wishlistItems.length > 0 && (
                 <button
                   onClick={handleClearWishlist}

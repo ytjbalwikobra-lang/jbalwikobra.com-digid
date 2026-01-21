@@ -6,30 +6,24 @@
  * - PN Design System components (PNSection, PNContainer, etc.)
  * - Consistent styling with homepage and catalog
  * - Mobile-first responsive design
- * - Flash sale specific UI enhancements
+ * - Flash sale specific UI enhancements via shared ProductInfo
  * - Professional Pink Neon aesthetic
  */
 
 import React from 'react';
-import { Clock, Tag, Zap } from 'lucide-react';
 import { useFlashSaleProductDetail } from '../hooks/useFlashSaleProductDetail';
 import {
   ProductImageGallery,
-  ProductDescription
+  ProductInfo,
+  ProductActions,
+  CheckoutModal,
+  FlashSaleProductDetailLoadingSkeleton
 } from '../components/product-detail';
-import { FlashSaleProductDetailLoadingSkeleton } from '../components/product-detail/FlashSaleProductDetailLoadingSkeleton';
-import CheckoutModal from '../components/public/product-detail/CheckoutModal';
-import FlashSaleTimer from '../components/FlashSaleTimer';
 import PublicPageHeader from '../components/shared/PublicPageHeader';
 import { 
-  PNHeading, 
-  PNText,
   PNButton,
-  PNCard,
-  PNSection,
   PNContainer
 } from '../components/ui/PinkNeonDesignSystem';
-import { formatCurrency } from '../utils/helpers';
 
 const FlashSaleProductDetailPage: React.FC = () => {
   const {
@@ -38,10 +32,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
     loading,
     error,
     effectivePrice,
-    originalPrice,
-    discountPercentage,
     isFlashSaleActive,
-    timeRemaining,
     
     // Gallery state
     galleryState,
@@ -51,6 +42,10 @@ const FlashSaleProductDetailPage: React.FC = () => {
     handleBackToFlashSales,
     handleBackToCatalog,
     
+    // Rental state - typically null for pure flash sales but good to support
+    rentalState,
+    handleRentalSelect,
+    
     // Checkout state
     checkoutState,
     closeCheckout,
@@ -58,6 +53,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
     
     // Actions
     handlePurchase,
+    handleRental,
     handleCheckout,
     handleWishlistToggle,
     handleShare,
@@ -65,8 +61,6 @@ const FlashSaleProductDetailPage: React.FC = () => {
     // Wishlist
     isInWishlist
   } = useFlashSaleProductDetail();
-
-  // Debug logging
 
   // Loading state
   if (loading || !product) {
@@ -76,38 +70,40 @@ const FlashSaleProductDetailPage: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <PNSection padding="lg" className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center py-8 px-4">
         <PNContainer>
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-white">Produk Flash Sale Tidak Ditemukan</h1>
             <p className="text-gray-300 mb-6">{error}</p>
-            <PNButton
-              onClick={handleBackToFlashSales}
-              variant="primary"
-              className="mr-4"
-            >
-              Kembali ke Flash Sales
-            </PNButton>
-            <PNButton
-              onClick={handleBackToCatalog}
-              variant="secondary"
-            >
-              Kembali ke Katalog
-            </PNButton>
+            <div className="flex gap-4 justify-center">
+              <PNButton
+                onClick={handleBackToFlashSales}
+                variant="primary"
+              >
+                Kembali ke Flash Sales
+              </PNButton>
+              <PNButton
+                onClick={handleBackToCatalog}
+                variant="secondary"
+              >
+                Kembali ke Katalog
+              </PNButton>
+            </div>
           </div>
         </PNContainer>
-      </PNSection>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
       <PNContainer>
-        <PNSection padding="lg">
+        <section className="py-8">
           {/* Shared Header */}
           <PublicPageHeader
-            backLabel="Flash Sales"
+            title={product.name}
             onBack={handleBackToFlashSales}
+            backAriaLabel="Kembali ke Flash Sales"
             showWishlist={true}
             onWishlistToggle={handleWishlistToggle}
             isInWishlist={isInWishlist(product.id)}
@@ -128,115 +124,32 @@ const FlashSaleProductDetailPage: React.FC = () => {
             </div>
 
             {/* Product Information */}
-            <div className="space-y-6 mt-6 lg:mt-0">
-              {/* Flash Sale Timer - Redesigned */}
-              {isFlashSaleActive && product.flashSaleEndTime && (
-                <PNCard className="bg-gradient-to-r from-pink-600 via-red-500 to-pink-600 border-pink-400 shadow-lg shadow-pink-500/20">
-                  <div className="p-6">
-                    <div className="text-center mb-4">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
-                        <Clock className="w-5 h-5 text-white animate-pulse" />
-                        <span className="text-white font-semibold text-lg">Flash Sale Berakhir Dalam</span>
-                      </div>
-                    </div>
-                    
-                    {/* Custom Countdown Display */}
-                    <div className="bg-black/30 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                      <FlashSaleTimer
-                        endTime={product.flashSaleEndTime}
-                        variant="detail"
-                        className="text-white text-center w-full"
-                      />
-                    </div>
-                    
-                    {/* Flash Sale Badge */}
-                    <div className="text-center mt-4">
-                      <div className="inline-flex items-center gap-2 px-6 py-2 bg-yellow-400 text-black rounded-full font-bold text-sm">
-                        <Zap className="w-4 h-4" />
-                        FLASH SALE AKTIF
-                      </div>
-                    </div>
-                  </div>
-                </PNCard>
-              )}
+            <div className="mt-6 lg:mt-0">
+              <ProductInfo
+                product={product}
+                effectivePrice={effectivePrice}
+                isFlashSaleActive={isFlashSaleActive}
+                description={product.description || 'Tidak ada deskripsi tersedia.'}
+                variant="flash-sale-hero"
+              />
 
-              {/* Product Name */}
-              <div>
-                <PNHeading level={1} className="text-white text-2xl lg:text-3xl font-bold mb-2">
-                  {product.name}
-                </PNHeading>
+              {/* Actions */}
+              <div className="mt-8">
+                <ProductActions
+                  stock={product.stock}
+                  isActive={(product as any).isActive !== false}
+                  // Flash sales usually sold via web unless specified
+                  soldChannel={product.stock === 0 ? 'web' : null} 
+                  cameFromFlashSaleCard={true}
+                  hasRental={product.hasRental}
+                  selectedRental={rentalState.selectedRental}
+                  onPurchase={handlePurchase}
+                  onRental={handleRental}
+                />
               </div>
-
-              {/* Price Section */}
-              <PNCard className="bg-gray-900 border-gray-700">
-                <div className="p-4 sm:p-6">
-                  {isFlashSaleActive && originalPrice && originalPrice > effectivePrice ? (
-                    <div className="space-y-4">
-                      {/* Original Price with Discount Percentage */}
-                      <div className="flex items-center justify-between gap-4">
-                        <PNText className="text-gray-400 line-through text-lg">
-                          {formatCurrency(originalPrice)}
-                        </PNText>
-                        <div className="bg-red-500 text-white px-3 py-2 rounded-full text-sm font-bold flex items-center gap-1">
-                          <Zap className="w-4 h-4" />
-                          -{discountPercentage}%
-                        </div>
-                      </div>
-                      
-                      {/* Sales Price with Savings */}
-                      <div className="flex items-center justify-between gap-4">
-                        <PNHeading level={2} className="text-pink-400 text-3xl lg:text-4xl font-bold">
-                          {formatCurrency(effectivePrice)}
-                        </PNHeading>
-                        <div className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-                          <Tag className="w-4 h-4" />
-                          <span>Hemat {formatCurrency(originalPrice - effectivePrice)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <PNHeading level={2} className="text-white text-3xl lg:text-4xl font-bold">
-                      {formatCurrency(effectivePrice)}
-                    </PNHeading>
-                  )}
-                </div>
-              </PNCard>
-
-              {/* Product Description */}
-              {product.description && (
-                <PNCard className="bg-gray-900 border-gray-700">
-                  <div className="p-4 sm:p-6">
-                    <PNHeading level={3} className="text-white text-lg font-semibold mb-3">
-                      Deskripsi Produk
-                    </PNHeading>
-                    <ProductDescription description={product.description} />
-                  </div>
-                </PNCard>
-              )}
-
-              {/* Purchase Actions */}
-              <PNCard className="bg-gray-900 border-gray-700">
-                <div className="p-4 sm:p-6 space-y-4">
-                  <PNButton
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    onClick={handlePurchase}
-                    className="text-lg font-semibold py-4"
-                  >
-                    Beli Sekarang - {formatCurrency(effectivePrice)}
-                  </PNButton>
-                  
-                  <div className="text-center">
-                    <PNText className="text-gray-400 text-sm">
-                      ⚡ Flash sale terbatas! Jangan sampai terlewat
-                    </PNText>
-                  </div>
-                </div>
-              </PNCard>
             </div>
           </div>
-        </PNSection>
+        </section>
       </PNContainer>
 
       {/* Checkout Modal */}
@@ -247,7 +160,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
           checkoutType={checkoutState.checkoutType}
           productName={product.name}
           effectivePrice={effectivePrice}
-          selectedRental={null}
+          selectedRental={rentalState.selectedRental}
           customer={checkoutState.customer}
           setCustomer={(customer) => setCheckoutState(prev => ({ ...prev, customer }))}
           isPhoneValid={checkoutState.isPhoneValid}
@@ -256,7 +169,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
           setAcceptedTerms={(acceptedTerms) => setCheckoutState(prev => ({ ...prev, acceptedTerms }))}
           creatingInvoice={checkoutState.creatingInvoice}
           onCheckout={handleCheckout}
-          onWhatsAppRental={() => {}}
+          onWhatsAppRental={() => {}} // Not usually used in flash sale context
         />
       )}
     </div>

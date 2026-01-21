@@ -438,11 +438,11 @@ export const PaymentMethods = React.memo(({
       
       return (
         <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <Star className="text-pink-400" size={14} />
-            <PNText className="font-medium text-pink-400 text-sm">Metode Populer</PNText>
+          <div className="flex items-center space-x-2 mb-2 px-1">
+            <Star className="text-pink-400" size={16} />
+            <PNText className="font-semibold text-pink-400 text-sm tracking-wide">METODE POPULER</PNText>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {popularMethods.map((method) => {
               const isSelected = selectedMethod === method.id;
               return (
@@ -454,19 +454,29 @@ export const PaymentMethods = React.memo(({
                       setTimeout(() => onDirectPayment(method.id), 100);
                     }
                   }}
-                  className={`cursor-pointer transition-all duration-200 p-2.5 rounded-lg border flex flex-col items-center text-center space-y-1.5 ${
+                  className={`cursor-pointer group relative overflow-hidden transition-all duration-300 p-3 rounded-xl border flex flex-col items-center text-center space-y-2 ${
                     isSelected 
-                      ? 'border-pink-500 bg-pink-500/10 shadow-md shadow-pink-500/20' 
-                      : 'border-white/10 bg-black/40 hover:border-pink-500/30 hover:bg-white/5'
+                      ? 'border-pink-500 bg-gradient-to-br from-pink-500/20 to-purple-600/10 shadow-[0_0_15px_-5px_rgba(236,72,153,0.5)] scale-[1.02]' 
+                      : 'border-white/10 bg-white/5 hover:border-pink-400/50 hover:bg-white/10 hover:-translate-y-0.5'
                   } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <div className="text-2xl">{method.icon}</div>
-                  <PNText className="font-medium text-xs leading-tight">{method.name}</PNText>
-                  <PNText className="text-[10px] text-gray-400 leading-tight">{method.description}</PNText>
+                  <div className={`p-2 rounded-full transition-colors duration-300 ${isSelected ? 'bg-pink-500/20' : 'bg-black/30 group-hover:bg-white/10'}`}>
+                    <div className="text-2xl transform transition-transform group-hover:scale-110 duration-300">{method.icon}</div>
+                  </div>
+                  <div className="space-y-0.5">
+                    <PNText className={`font-semibold text-xs leading-tight ${isSelected ? 'text-white' : 'text-gray-200'}`}>{method.name}</PNText>
+                    <PNText className="text-[10px] text-gray-500 leading-tight line-clamp-2">{method.description}</PNText>
+                  </div>
                   {isSelected && (
-                    <div className="absolute top-1 right-1">
-                      <Check size={14} className="text-pink-400" />
+                    <div className="absolute top-2 right-2 animate-scale-in">
+                      <div className="bg-pink-500 rounded-full p-0.5">
+                        <Check size={10} className="text-white" />
+                      </div>
                     </div>
+                  )}
+                   {/* Selection Ring Animation */}
+                   {isSelected && (
+                    <div className="absolute inset-0 border-2 border-pink-500 rounded-xl pointer-events-none animate-pulse-slow" />
                   )}
                 </div>
               );
@@ -479,18 +489,19 @@ export const PaymentMethods = React.memo(({
     // Render grouped methods section in grid layout
     const renderGroupedMethods = () => {
       return (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {groupedMethods.map((group) => (
-            <div key={group.type}>
-              <div className="flex items-center space-x-2 mb-2">
-                {getGroupIcon(group.icon)}
+            <div key={group.type} className="animate-fade-in">
+              <div className="flex items-center space-x-2 mb-2.5 px-1 pb-1 border-b border-white/5">
+                <div className="p-1.5 bg-gray-800/50 rounded-lg">
+                  {getGroupIcon(group.icon)}
+                </div>
                 <div className="flex-1">
-                  <PNText className="font-medium text-sm">{group.name}</PNText>
-                  <PNText className="text-[10px] text-gray-400">{group.description}</PNText>
+                  <PNText className="font-semibold text-sm text-gray-200">{group.name}</PNText>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {group.methods.map((method) => {
                   const isSelected = selectedMethod === method.id;
                   
@@ -503,24 +514,36 @@ export const PaymentMethods = React.memo(({
                           setTimeout(() => onDirectPayment(method.id), 100);
                         }
                       }}
-                      className={`relative cursor-pointer transition-all duration-200 p-2.5 rounded-lg border flex flex-col items-center text-center space-y-1.5 ${
+                      className={`relative cursor-pointer group overflow-hidden transition-all duration-300 p-3 rounded-xl border flex flex-col justify-between min-h-[100px] ${
                         isSelected 
-                          ? 'border-pink-500 bg-pink-500/10 shadow-md shadow-pink-500/20' 
-                          : 'border-white/10 bg-white/5 hover:border-pink-500/30'
+                          ? 'border-pink-500 bg-gradient-to-br from-pink-500/10 to-transparent shadow-lg shadow-pink-500/10 z-10' 
+                          : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                       } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <div className="text-xl">{method.icon}</div>
-                      <div className="flex-1 w-full">
-                        <PNText className="font-medium text-xs leading-tight mb-0.5">{method.name}</PNText>
-                        {method.processing_time && (
-                          <PNText className="text-[9px] text-green-400 leading-tight">{method.processing_time}</PNText>
+                      <div className="flex justify-between items-start mb-2">
+                         <div className={`p-1.5 rounded-lg transition-colors ${isSelected ? 'bg-pink-500/20' : 'bg-black/20'}`}>
+                            <div className="text-xl">{method.icon}</div>
+                         </div>
+                        {isSelected && (
+                          <div className="bg-pink-500 rounded-full p-0.5 animate-scale-in">
+                            <Check size={10} className="text-white" />
+                          </div>
                         )}
                       </div>
-                      {isSelected && (
-                        <div className="absolute top-1 right-1">
-                          <Check size={14} className="text-pink-400" />
-                        </div>
-                      )}
+                      
+                      <div className="space-y-1">
+                        <PNText className={`font-semibold text-xs leading-tight ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                          {method.name}
+                        </PNText>
+                        {method.processing_time && (
+                          <div className="flex items-center gap-1">
+                            <div className={`w-1.5 h-1.5 rounded-full ${method.processing_time.includes('Instant') ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                            <PNText className="text-[9px] text-gray-400 leading-tight">
+                              {method.processing_time}
+                            </PNText>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

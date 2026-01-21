@@ -23,7 +23,6 @@ import {
 
 const ProductsPage: React.FC = () => {
   const {
-    // State
     loading,
     error,
     filterState,
@@ -33,10 +32,7 @@ const ProductsPage: React.FC = () => {
     filteredProducts,
     tiers,
     gameTitles,
-    layoutDensity,
     activeFilters,
-    
-    // Actions
     fetchData,
     handleFilterChange,
     handlePageChange,
@@ -112,20 +108,19 @@ const ProductsPage: React.FC = () => {
       />
 
       {/* Products Grid */}
-      <div className="px-4">
-        <div className="max-w-7xl mx-auto">
-          <ProductsGrid
-            products={currentProducts}
-            onResetFilters={clearAllFilters}
-            density={layoutDensity}
-            loading={loading}
-          />
-          <PaginationBar
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
+      <ProductsGrid
+        products={currentProducts}
+        onResetFilters={clearAllFilters}
+        loading={loading}
+      />
+      
+      {/* Pagination */}
+      <div className="max-w-7xl mx-auto px-4">
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
 
       <div className="h-6" />

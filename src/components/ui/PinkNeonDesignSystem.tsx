@@ -33,7 +33,7 @@ export const PNSection: React.FC<DivProps & { padding?: 'sm' | 'md' | 'lg' }>
 );
 
 export const PNContainer: React.FC<DivProps> = ({ className, children, ...rest }) => (
-  <div className={cn('max-w-7xl mx-auto', className)} {...rest}>{children}</div>
+  <div className={cn('max-w-7xl mx-auto px-4', className)} {...rest}>{children}</div>
 );
 
 export const PNCard: React.FC<DivProps> = ({ className, children, ...rest }) => (

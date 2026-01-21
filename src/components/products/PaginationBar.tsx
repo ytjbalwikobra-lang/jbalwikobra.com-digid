@@ -1,6 +1,10 @@
+/**
+ * PaginationBar - Compact pagination component
+ * Uses PinkNeonDesignSystem for consistent styling
+ */
+
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { IOSButton } from '../ios/IOSDesignSystemV2';
 
 interface PaginationBarProps {
   currentPage: number;
@@ -9,7 +13,12 @@ interface PaginationBarProps {
   className?: string;
 }
 
-export const PaginationBar: React.FC<PaginationBarProps> = ({ currentPage, totalPages, onPageChange, className = '' }) => {
+export const PaginationBar: React.FC<PaginationBarProps> = ({ 
+  currentPage, 
+  totalPages, 
+  onPageChange, 
+  className = '' 
+}) => {
   if (totalPages <= 1) return null;
 
   const go = (p: number) => {
@@ -19,56 +28,61 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({ currentPage, total
 
   const buildPages = () => {
     const pages: (number | string)[] = [];
-    const delta = 1;
-    const left = Math.max(2, currentPage - delta);
-    const right = Math.min(totalPages - 1, currentPage + delta);
+    const left = Math.max(2, currentPage - 1);
+    const right = Math.min(totalPages - 1, currentPage + 1);
+    
     pages.push(1);
     if (left > 2) pages.push('...');
     for (let i = left; i <= right; i++) pages.push(i);
     if (right < totalPages - 1) pages.push('...');
     if (totalPages > 1) pages.push(totalPages);
+    
     return pages;
   };
 
+  const buttonBase = "w-10 h-10 flex items-center justify-center rounded-xl transition-colors";
+  const buttonActive = "bg-pink-600 text-white";
+  const buttonInactive = "bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10";
+  const buttonDisabled = "opacity-50 cursor-not-allowed";
+
   return (
-    <nav className={`flex items-center justify-center gap-2 py-8 ${className}`} aria-label="Paginasi katalog">
-      <IOSButton
-        variant="tertiary"
-        size="sm"
-        disabled={currentPage === 1}
+    <nav 
+      className={`flex items-center justify-center gap-2 py-8 ${className}`} 
+      aria-label="Paginasi katalog"
+    >
+      <button
         onClick={() => go(currentPage - 1)}
-        className="w-10 h-10 p-0"
+        disabled={currentPage === 1}
+        className={`${buttonBase} ${buttonInactive} ${currentPage === 1 ? buttonDisabled : ''}`}
         aria-label="Halaman sebelumnya"
       >
         <ChevronLeft size={16} />
-      </IOSButton>
+      </button>
+      
       <div className="flex items-center gap-1">
         {buildPages().map((p, i) => p === '...' ? (
-          <span key={`dots-${i}`} className="px-2 text-zinc-500">...</span>
+          <span key={`dots-${i}`} className="px-2 text-gray-500">...</span>
         ) : (
-          <IOSButton
+          <button
             key={p}
-            variant={p === currentPage ? 'primary' : 'tertiary'}
-            size="sm"
             onClick={() => go(p as number)}
-            className="w-9 h-9 p-0"
+            className={`${buttonBase} ${p === currentPage ? buttonActive : buttonInactive}`}
             aria-current={p === currentPage ? 'page' : undefined}
             aria-label={p === currentPage ? `Halaman ${p}, saat ini` : `Ke halaman ${p}`}
           >
             {p}
-          </IOSButton>
+          </button>
         ))}
       </div>
-      <IOSButton
-        variant="tertiary"
-        size="sm"
-        disabled={currentPage === totalPages}
+      
+      <button
         onClick={() => go(currentPage + 1)}
-        className="w-10 h-10 p-0"
+        disabled={currentPage === totalPages}
+        className={`${buttonBase} ${buttonInactive} ${currentPage === totalPages ? buttonDisabled : ''}`}
         aria-label="Halaman berikutnya"
       >
         <ChevronRight size={16} />
-      </IOSButton>
+      </button>
     </nav>
   );
 };

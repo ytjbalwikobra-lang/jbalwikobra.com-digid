@@ -145,14 +145,14 @@ const HomePage: React.FC = () => {
   if (state.error && state.flashSaleProducts.length === 0 && state.popularGames.length === 0) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center px-4">
-  <div className="bg-surface-alt backdrop-blur-sm border-subtle rounded-2xl p-8 text-center max-w-md w-full">
-          <div className="text-6xl mb-4">😔</div>
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center max-w-md w-full">
+          <div className="text-6xl mb-4" aria-hidden="true">😔</div>
           <h2 className="text-xl font-bold text-white mb-2">Oops! Terjadi Kesalahan</h2>
-          <p className="text-tertiary mb-6 text-sm">{state.error}</p>
+          <p className="text-gray-300 mb-6 text-sm">{state.error}</p>
           <button
             onClick={handleRetry}
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white font-medium py-3 px-6 rounded-xl transition-colors duration-200"
-            style={{ minHeight: MOBILE_CONSTANTS.MIN_TOUCH_TARGET }}
+            className="w-full h-11 min-h-[44px] bg-pink-600 hover:bg-pink-700 text-white font-medium px-6 rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            aria-label="Coba muat ulang halaman"
           >
             Coba Lagi
           </button>
@@ -165,20 +165,18 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-black">
       {/* Error banner for partial failures */}
       {state.error && (state.flashSaleProducts.length > 0 || state.popularGames.length > 0) && (
-        <div className="mx-4 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4">
+        <div className="mx-4 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4" role="alert">
           <p className="text-amber-200 text-sm">{state.error}</p>
         </div>
       )}
 
-      {/* New PN Hero */}
+      {/* Hero Section */}
       <PNHero />
 
-      {/* Banner placed above Flash Sale */}
-      <div className="px-4 mt-4">
-        <BannerCarousel />
-      </div>
+      {/* Banner Carousel - Integrated after hero */}
+      <BannerCarousel />
 
-      {/* PN Sections */}
+      {/* Content Sections */}
       <PNFlashSalesSection products={state.flashSaleProducts} limit={MOBILE_CONSTANTS.FLASH_SALE_DISPLAY_LIMIT} />
       <HomeAccountCategoriesSection />
       <PNPopularGamesSection games={state.popularGames} limit={12} />

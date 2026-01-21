@@ -15,7 +15,7 @@ import {
   ProductsErrorState,
   PaginationBar
 } from '../components/products';
-import { PNSection, PNContainer } from '../components/ui/PinkNeonDesignSystem';
+import { PNContainer } from '../components/ui/PinkNeonDesignSystem';
 import FlashSalesPageHeader from '../components/flash-sales/FlashSalesPageHeader';
 import FlashSalesProductGrid from '../components/flash-sales/FlashSalesProductGrid';
 import FlashSalesEmptyState from '../components/flash-sales/FlashSalesEmptyState';
@@ -62,7 +62,7 @@ const FlashSalesPage: React.FC = () => {
         totalPages={totalPages}
       />
 
-      <PNSection padding="md">
+      <section className="py-6">
         <PNContainer>
           {/* Products Grid or Empty State */}
           {currentProducts.length > 0 ? (
@@ -85,7 +85,7 @@ const FlashSalesPage: React.FC = () => {
             </div>
           )}
         </PNContainer>
-      </PNSection>
+      </section>
     </div>
   );
 };

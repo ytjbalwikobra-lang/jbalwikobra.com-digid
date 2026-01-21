@@ -77,9 +77,14 @@ export function getTierWrapperClass(tierSlug: TierSlug): string {
   return getTierStyles(tierSlug).wrapper;
 }
 
+
 /**
- * Get tier accent bar class
+ * Simple dot color mapping for compact badges
+ * Used in PNProductCard and FlashSaleCard
  */
-export function getTierAccentClass(tierSlug: TierSlug): string {
-  return getTierStyles(tierSlug).accent;
-}
+export const TIER_DOT_COLORS: Record<string, string> = {
+  pelajar: 'bg-blue-600',
+  reguler: 'bg-gray-600',
+  premium: 'bg-amber-500',
+};
+

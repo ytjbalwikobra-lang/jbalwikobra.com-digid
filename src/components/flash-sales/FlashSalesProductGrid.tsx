@@ -29,8 +29,9 @@ const FlashSalesProductGrid: React.FC<FlashSalesProductGridProps> = ({
 }) => {
   return (
     <div 
-      className={`grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${className}`}
-      style={{ pointerEvents: 'auto' }}
+      className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 ${className}`}
+      role="list"
+      aria-label="Daftar produk flash sale"
     >
       {products.map(flashSale => {
         // Convert flash sale data to FlashSale type for the card

@@ -153,15 +153,25 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   if (count === 0) return null;
 
+  const handlePrevious = () => setIndex((i) => (i - 1 + count) % count);
+  const handleNext = () => setIndex((i) => (i + 1) % count);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') handlePrevious();
+    if (e.key === 'ArrowRight') handleNext();
+  };
+
   return (
-    <div 
-      className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40"
-      role="region"
-      aria-roledescription="carousel"
-      aria-label="Banner promosi"
-    >
-      {/* Sliding container */}
-      <div className="relative w-full aspect-[3/2] overflow-hidden" aria-live="polite">
+    <div className="px-4 mt-4">
+      <div 
+        className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Banner promosi"
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+      >
+        {/* Sliding container */}
+        <div className="relative w-full aspect-[3/2] overflow-hidden" aria-live="polite" aria-atomic="true">
         <div 
           className="flex transition-transform duration-500 ease-in-out h-full"
           style={{ transform: `translateX(-${index * 100}%)` }}
@@ -212,7 +222,27 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
           ))}
         </div>
       </div>
+
+      {/* Navigation Indicators */}
+      {count > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10" role="group" aria-label="Navigasi banner">
+          {Array.from({ length: count }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              className={`w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
+                i === index 
+                  ? 'bg-pink-500 w-6' 
+                  : 'bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Lihat banner ${i + 1}`}
+              aria-current={i === index ? 'true' : 'false'}
+            />
+          ))}
+        </div>
+      )}
     </div>
+  </div>
   );
 };
 

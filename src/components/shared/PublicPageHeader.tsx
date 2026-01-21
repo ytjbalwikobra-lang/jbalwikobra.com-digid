@@ -1,23 +1,25 @@
 /**
  * PublicPageHeader - Consistent header component for all public pages
- * Based on FlashSaleProductDetailPage header design
+ * Matches ProductsHeroWithFilters styling exactly for visual consistency
  * 
  * Features:
- * - Back navigation button
- * - Wishlist and share actions
+ * - Back navigation button (circle icon matching catalog)
+ * - Product title next to back button (truncates on overflow)
+ * - Wishlist and share actions (circle icons, fixed right)
  * - Consistent PN styling
  * - Responsive design
  */
 
 import React from 'react';
-import { ArrowLeft, Heart, Share2 } from 'lucide-react';
-import { PNButton } from '../ui/PinkNeonDesignSystem';
+import { ChevronLeft, Heart, Share2 } from 'lucide-react';
 
 interface PublicPageHeaderProps {
-  /** Back button label */
-  backLabel: string;
+  /** Page/product title displayed next to back button */
+  title: string;
   /** Back button click handler */
   onBack: () => void;
+  /** Aria label for back button (e.g., "Kembali ke Katalog") */
+  backAriaLabel?: string;
   /** Show wishlist button */
   showWishlist?: boolean;
   /** Wishlist click handler */
@@ -33,8 +35,9 @@ interface PublicPageHeaderProps {
 }
 
 export const PublicPageHeader: React.FC<PublicPageHeaderProps> = ({
-  backLabel,
+  title,
   onBack,
+  backAriaLabel = "Kembali",
   showWishlist = false,
   onWishlistToggle,
   isInWishlist = false,
@@ -43,42 +46,43 @@ export const PublicPageHeader: React.FC<PublicPageHeaderProps> = ({
   className = ""
 }) => {
   return (
-    <div className={`flex items-center justify-between mb-6 ${className}`}>
-      {/* Back Navigation */}
-      <div className="flex items-center gap-4">
-        <PNButton
-          variant="secondary"
-          size="sm"
+    <div className={`flex items-center justify-between gap-3 mb-6 ${className}`}>
+      {/* Left: Back + Title (truncates if needed) */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <button
           onClick={onBack}
-          className="flex items-center gap-2"
+          className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 transition-colors"
+          aria-label={backAriaLabel}
         >
-          <ArrowLeft className="w-4 h-4" />
-          {backLabel}
-        </PNButton>
+          <ChevronLeft size={20} />
+        </button>
+        <h1 className="text-lg font-bold text-white truncate">{title}</h1>
       </div>
       
-      {/* Action Buttons */}
+      {/* Right: Action Buttons (fixed width, never pushed off) */}
       {(showWishlist || showShare) && (
-        <div className="flex items-center gap-3">
+        <div className="flex-shrink-0 flex items-center gap-2">
           {showWishlist && onWishlistToggle && (
-            <PNButton
-              variant="ghost"
-              size="sm"
+            <button
               onClick={onWishlistToggle}
-              className={`p-2 ${isInWishlist ? 'text-pink-400 border-pink-400' : ''}`}
+              className={`flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border transition-colors ${
+                isInWishlist 
+                  ? 'border-pink-500/50 text-pink-400 bg-pink-500/10' 
+                  : 'border-white/10 text-gray-400 hover:bg-white/10 hover:text-pink-300'
+              }`}
+              aria-label={isInWishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist'}
             >
-              <Heart className={`w-4 h-4 ${isInWishlist ? 'fill-current' : ''}`} />
-            </PNButton>
+              <Heart size={18} className={isInWishlist ? 'fill-current' : ''} />
+            </button>
           )}
           {showShare && onShare && (
-            <PNButton
-              variant="ghost"
-              size="sm"
+            <button
               onClick={onShare}
-              className="p-2"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-pink-300 transition-colors"
+              aria-label="Bagikan produk"
             >
-              <Share2 className="w-4 h-4" />
-            </PNButton>
+              <Share2 size={18} />
+            </button>
           )}
         </div>
       )}

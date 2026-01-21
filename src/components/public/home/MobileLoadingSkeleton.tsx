@@ -4,6 +4,7 @@ const MobileLoadingSkeleton: React.FC = () => (
   <div 
     className="min-h-screen bg-black" 
     role="status" 
+    aria-live="polite"
     aria-busy="true" 
     aria-label="Memuat halaman..."
   >

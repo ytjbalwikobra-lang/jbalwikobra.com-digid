@@ -4,15 +4,16 @@
  * Features:
  * - Page title with animated icons
  * - Subtitle text
- * - Search functionality
+ * - Search functionality with debounce
  * - Results statistics
  * - Back navigation link
  */
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Search, Zap } from 'lucide-react';
-import { PNContainer, PNHeading, PNText } from '../ui/PinkNeonDesignSystem';
+import { ChevronLeft, Search, Zap, X } from 'lucide-react';
+import { PNContainer } from '../ui/PinkNeonDesignSystem';
+import { useDebounce } from '../../hooks/useDebounce';
 
 interface FlashSalesPageHeaderProps {
   /** Current search term */
@@ -37,67 +38,79 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
   totalPages,
   showBackNav = true
 }) => {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  const debouncedSearchTerm = useDebounce(localSearchTerm, 300);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) {
+      onSearchChange(debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm, searchTerm, onSearchChange]);
+
+  useEffect(() => {
+    if (searchTerm === '') setLocalSearchTerm('');
+  }, [searchTerm]);
+
+  const handleSearchInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearchTerm(e.target.value);
+  }, []);
+
   return (
-    <>
-      {/* Back Navigation */}
-      {showBackNav && (
-        <div className="px-4 pt-4 pb-2">
-          <PNContainer>
-            <Link 
-              to="/" 
-              className="inline-flex items-center gap-2 text-pink-300 hover:text-pink-200 transition-colors text-sm"
-            >
-              <ChevronLeft size={16} />
-              Kembali ke Beranda
-            </Link>
-          </PNContainer>
+    <div className="sticky top-0 z-20 bg-black/95 backdrop-blur-md border-b border-white/5">
+      <PNContainer className="py-3 space-y-4">
+        {/* Row 1: Back Navigation + Title */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {showBackNav && (
+              <Link 
+                to="/" 
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                aria-label="Kembali ke beranda"
+              >
+                <ChevronLeft size={20} />
+              </Link>
+            )}
+            <div className="flex items-center gap-2">
+              <Zap className="text-yellow-400 animate-pulse" size={20} aria-hidden="true" />
+              <h1 className="text-lg font-bold text-white">Flash Sales</h1>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400">
+            {totalProducts} produk
+            {currentPage && totalPages && totalPages > 1 && ` • ${currentPage}/${totalPages}`}
+          </p>
         </div>
-      )}
 
-      <div className="px-4">
-        <PNContainer>
-          {/* Flash Sales Title - Homepage Style */}
-          <div className="text-center py-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Zap className="text-pink-400 animate-pulse" size={32} />
-              <PNHeading level={1} gradient className="!mb-0">
-                Flash Sales
-              </PNHeading>
-              <Zap className="text-pink-400 animate-pulse" size={32} />
-            </div>
-            <PNText className="text-lg text-gray-600 dark:text-gray-300">
-              ⚡ Deals berkualitas dengan harga terbaik - Terbatas! ⚡
-            </PNText>
+        <div>
+          {/* Row 2: Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+            <input
+              type="text"
+              placeholder="Cari flash sale..."
+              value={localSearchTerm}
+              onChange={handleSearchInput}
+              className="w-full h-11 min-h-[44px] pl-10 pr-10 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-all duration-200"
+              aria-label="Cari produk flash sale"
+            />
+            {localSearchTerm && (
+              <button 
+                onClick={() => setLocalSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                aria-label="Hapus pencarian"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          {/* Enhanced Search Bar */}
-          <div className="mb-8">
-            <div className="max-w-md mx-auto relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Cari flash sale..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent backdrop-blur-sm"
-              />
-            </div>
-          </div>
-
-          {/* Results Stats */}
-          <div className="mb-6 text-center">
-            <PNText className="text-sm text-gray-500 dark:text-gray-400">
-              {totalProducts} flash sale tersedia
-              {currentPage && totalPages && totalPages > 1 && (
-                <span className="ml-2">• Halaman {currentPage} dari {totalPages}</span>
-              )}
-            </PNText>
-          </div>
-        </PNContainer>
-      </div>
-    </>
+          {/* Subtitle hint */}
+          <p className="text-xs text-center text-gray-400 mt-2">
+            ⚡ Diskon hingga 70% - Stok dan waktu terbatas! ⚡
+          </p>
+        </div>
+      </PNContainer>
+    </div>
   );
 };
 

@@ -17,11 +17,11 @@ import {
   ProductImageGallery,
   ProductInfo,
   ProductRentalOptions,
-  ProductActions
+  ProductActions,
+  CheckoutModal
 } from '../components/product-detail';
-import CheckoutModal from '../components/public/product-detail/CheckoutModal';
 import PublicPageHeader from '../components/shared/PublicPageHeader';
-import { PNSection, PNContainer } from '../components/ui/PinkNeonDesignSystem';
+import { PNButton, PNContainer } from '../components/ui/PinkNeonDesignSystem';
 
 const ProductDetailPage: React.FC = () => {
   const {
@@ -31,7 +31,6 @@ const ProductDetailPage: React.FC = () => {
     error,
     effectivePrice,
     isFlashSaleActive,
-    timeRemaining,
     
     // Gallery state
     galleryState,
@@ -73,31 +72,32 @@ const ProductDetailPage: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <PNSection padding="lg" className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center py-8 px-4">
         <PNContainer>
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-white">Produk Tidak Ditemukan</h1>
             <p className="text-gray-300 mb-6">{error}</p>
-            <button
+            <PNButton
               onClick={handleBackToCatalog}
-              className="bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white px-6 py-3 rounded-xl hover:from-pink-600 hover:to-fuchsia-700 transition-all"
+              variant="primary"
             >
               Kembali ke Katalog
-            </button>
+            </PNButton>
           </div>
         </PNContainer>
-      </PNSection>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
       <PNContainer>
-        <PNSection padding="lg">
+        <section className="py-8">
           {/* Shared Header */}
           <PublicPageHeader
-            backLabel="Katalog"
+            title={product.name}
             onBack={handleBackToCatalog}
+            backAriaLabel="Kembali ke Katalog"
             showWishlist={true}
             onWishlistToggle={handleWishlistToggle}
             isInWishlist={isInWishlist}
@@ -123,7 +123,6 @@ const ProductDetailPage: React.FC = () => {
                 product={product}
                 effectivePrice={effectivePrice}
                 isFlashSaleActive={isFlashSaleActive}
-                timeRemaining={timeRemaining}
                 description={product.description || 'Tidak ada deskripsi tersedia.'}
               />
 
@@ -150,7 +149,7 @@ const ProductDetailPage: React.FC = () => {
               />
             </div>
           </div>
-        </PNSection>
+        </section>
       </PNContainer>
 
       {/* Checkout Modal */}

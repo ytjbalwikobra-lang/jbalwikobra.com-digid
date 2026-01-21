@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
-import { IOSCard, IOSButton } from '../ios/IOSDesignSystemV2';
+import { PNCard, PNButton } from '../ui/PinkNeonDesignSystem';
 
 interface EmptyStateProps {
   title?: string;
@@ -15,18 +15,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <div role="status" aria-live="polite">
-      <IOSCard padding="lg" className="text-center">
-      <div className="w-16 h-16 bg-zinc-800 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-        <Search className="text-zinc-500" size={24} />
-      </div>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-zinc-400 mb-6 text-sm">{message}</p>
-      {onReset && (
-        <IOSButton variant="primary" size="md" onClick={onReset}>
-          Reset Filter
-        </IOSButton>
-      )}
-      </IOSCard>
+      <PNCard className="text-center p-8">
+        <div className="w-16 h-16 bg-pink-500/10 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <Search className="text-pink-400" size={24} />
+        </div>
+        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+        <p className="text-gray-300 mb-6 text-sm">{message}</p>
+        {onReset && (
+          <PNButton variant="primary" size="md" onClick={onReset}>
+            Reset Filter
+          </PNButton>
+        )}
+      </PNCard>
     </div>
   );
 };

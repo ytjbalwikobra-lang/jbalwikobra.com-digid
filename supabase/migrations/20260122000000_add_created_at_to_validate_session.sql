@@ -2,8 +2,8 @@
 -- Date: 2026-01-22
 -- Description: Include user's created_at in validate_session response for "Member Since" display
 
--- Drop existing function first (exact signature: text parameter)
-DROP FUNCTION IF EXISTS public.validate_session(text);
+-- Drop existing function first (signature changed)
+DROP FUNCTION IF EXISTS public.validate_session(VARCHAR(64));
 
 CREATE OR REPLACE FUNCTION public.validate_session(
     p_session_token VARCHAR(64)

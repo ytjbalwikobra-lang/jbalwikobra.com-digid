@@ -428,16 +428,14 @@ export class DynamicWhatsAppService {
   async sendVerificationCode(phone: string, code: string): Promise<SendMessageResult> {
     const message = `🔐 *Kode Verifikasi JB Alwikobra*
 
-Kode verifikasi Anda: *${code}*
+Kode Anda: *${code}*
 
-⏰ Kode ini berlaku selama 15 menit
-🔒 Jangan bagikan kode ini kepada siapapun
+⏰ Berlaku 15 menit
+🔒 Jangan bagikan kode ini
 
-Setelah verifikasi, Anda akan diminta melengkapi profil dengan email dan nama.
+Masukkan kode di halaman verifikasi untuk mengaktifkan akun Anda.
 
----
-🎮 *JB Alwikobra E-commerce*
-Premium Game Accounts & Services`;
+_JB Alwikobra - Game Accounts & Services_`;
 
     return this.sendMessage({
       phone,

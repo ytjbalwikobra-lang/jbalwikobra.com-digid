@@ -97,17 +97,6 @@ const FlashSaleProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Flash Sale Banner - Visual distinction from regular product page */}
-      {isFlashSaleActive && (
-        <div className="bg-gradient-to-r from-pink-600 via-fuchsia-600 to-pink-600 py-2 px-4 text-center animate-pulse">
-          <p className="text-white text-sm font-bold flex items-center justify-center gap-2">
-            <span className="text-yellow-300">⚡</span>
-            FLASH SALE - Diskon Spesial Terbatas!
-            <span className="text-yellow-300">⚡</span>
-          </p>
-        </div>
-      )}
-      
       <section className="py-4">
         <PNContainer className="px-4 sm:px-6">
           {/* Shared Header */}

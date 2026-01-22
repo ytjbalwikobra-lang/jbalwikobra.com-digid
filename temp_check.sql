@@ -1,0 +1,1 @@
+SELECT * FROM validate_session('ed5a319f59deb52b39e8cd05ee06ee87cb587b86de2538a670620b4ee6257ea1');

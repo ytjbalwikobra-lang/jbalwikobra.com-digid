@@ -86,7 +86,7 @@ export class DynamicWhatsAppService {
           // 2) Get provider config - Optimized: Select only required fields
           const { data: provider } = await sb
             .from('whatsapp_providers')
-            .select('id, name, base_url, is_active, settings, key_field_name, send_message_endpoint')
+            .select('id, name, base_url, is_active, settings, key_field_name, phone_field_name, message_field_name, send_message_endpoint')
             .eq('id', keyRow.provider_id)
             .maybeSingle();
 

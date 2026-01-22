@@ -16,7 +16,7 @@ interface ProductActionsProps {
   soldChannel?: 'web' | 'wa' | null;
   
   // Rental
-  cameFromFlashSaleCard: boolean;
+  cameFromFlashSaleCard?: boolean; // Deprecated: no longer affects rental visibility
   hasRental: boolean;
   selectedRental: RentalOption | null;
   
@@ -29,7 +29,7 @@ export const ProductActions = React.memo(({
   stock,
   isActive = true,
   soldChannel,
-  cameFromFlashSaleCard,
+  // cameFromFlashSaleCard is kept for backward compat but no longer used
   hasRental,
   selectedRental,
   onPurchase,
@@ -76,8 +76,8 @@ export const ProductActions = React.memo(({
           <span>{getButtonText()}</span>
         </PNButton>
 
-        {/* Rental Button - hidden if user came from flash sale card */}
-        {!cameFromFlashSaleCard && hasRental && selectedRental && (
+        {/* Rental Button - show if product has rental options */}
+        {hasRental && selectedRental && (
           <PNButton
             variant={isUnavailable ? "secondary" : "ghost"}
             size="lg"

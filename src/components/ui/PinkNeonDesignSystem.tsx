@@ -138,6 +138,119 @@ export const PNSectionHeader: React.FC<{ title: React.ReactNode; subtitle?: stri
   </div>
 );
 
+// Form Input Component - consistent styling for auth forms
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  label?: string;
+  error?: string;
+  icon?: React.ReactNode;
+};
+
+export const PNInput: React.FC<InputProps> = ({ 
+  label, 
+  error, 
+  icon,
+  className, 
+  ...rest 
+}) => (
+  <div className="space-y-2">
+    {label && (
+      <label className="block text-sm font-medium text-white/80">
+        {label}
+      </label>
+    )}
+    <div className="relative">
+      {icon && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+          {icon}
+        </div>
+      )}
+      <input
+        className={cn(
+          'w-full px-4 py-3.5 min-h-[48px]',
+          'bg-white/5 border border-white/10 rounded-xl',
+          'text-white placeholder:text-white/40',
+          'focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50',
+          'transition-all duration-200',
+          icon ? 'pl-12' : '',
+          error ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' : '',
+          className
+        )}
+        {...rest}
+      />
+    </div>
+    {error && (
+      <p className="text-sm text-red-400">{error}</p>
+    )}
+  </div>
+);
+
+// Tab Switcher Component - for login/signup mode switching
+type TabItem = { key: string; label: string };
+type TabSwitcherProps = {
+  tabs: TabItem[];
+  activeTab: string;
+  onTabChange: (key: string) => void;
+  className?: string;
+};
+
+export const PNTabSwitcher: React.FC<TabSwitcherProps> = ({ 
+  tabs, 
+  activeTab, 
+  onTabChange,
+  className 
+}) => (
+  <div className={cn(
+    'flex bg-white/5 rounded-xl p-1 border border-white/10',
+    className
+  )}>
+    {tabs.map((tab) => (
+      <button
+        key={tab.key}
+        type="button"
+        onClick={() => onTabChange(tab.key)}
+        className={cn(
+          'flex-1 py-3 px-4 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-200',
+          activeTab === tab.key
+            ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/25'
+            : 'text-white/60 hover:text-white hover:bg-white/5'
+        )}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+);
+
+// Divider with text
+export const PNDivider: React.FC<{ text?: string; className?: string }> = ({ text, className }) => (
+  <div className={cn('flex items-center gap-4', className)}>
+    <div className="flex-1 h-px bg-white/10" />
+    {text && <span className="text-sm text-white/40">{text}</span>}
+    <div className="flex-1 h-px bg-white/10" />
+  </div>
+);
+
+// Link button - for "Already have account?" etc
+export const PNLinkButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'muted' }> = ({ 
+  children, 
+  variant = 'primary',
+  className, 
+  ...rest 
+}) => (
+  <button
+    type="button"
+    className={cn(
+      'text-sm font-medium transition-colors',
+      variant === 'primary' && 'text-pink-400 hover:text-pink-300',
+      variant === 'muted' && 'text-white/60 hover:text-white/80',
+      className
+    )}
+    {...rest}
+  >
+    {children}
+  </button>
+);
+
 export default {
   PNSection,
   PNContainer,
@@ -147,4 +260,8 @@ export default {
   PNText,
   PNPill,
   PNSectionHeader,
+  PNInput,
+  PNTabSwitcher,
+  PNDivider,
+  PNLinkButton,
 };

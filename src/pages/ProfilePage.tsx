@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   User, 
   Mail, 
-  Phone, 
-  ShoppingBag, 
   Heart, 
   Settings, 
   LogOut, 
@@ -15,7 +13,6 @@ import {
   Trophy,
   Crown,
   Shield,
-  Zap,
   Check,
   X
 } from 'lucide-react';
@@ -26,7 +23,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useConfirmation } from '../components/ConfirmationModal';
 import { useToast } from '../components/Toast';
 import { supabase } from '../services/supabase';
-import { PNSection, PNContainer, PNCard, PNHeading, PNText, PNButton } from '../components/ui/PinkNeonDesignSystem';
+import { PNSection, PNContainer, PNCard, PNHeading, PNText, PNButton, PNInput } from '../components/ui/PinkNeonDesignSystem';
 import { getCurrentUserProfile } from '../services/authService';
 
 interface UserProfile {
@@ -415,37 +412,26 @@ const ProfilePage: React.FC = () => {
               <PNCard className="p-6 sm:p-8">
                 <PNHeading level={2} className="mb-6">Edit Informasi Profil</PNHeading>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      <User size={16} className="inline mr-2" />
-                      Nama Lengkap
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.name}
-                      onChange={(e) => setProfile({...profile, name: e.target.value})}
-                      className="w-full px-5 py-4 min-h-[52px] border-2 border-white/10 bg-black/50 text-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
-                      placeholder="Masukkan nama lengkap"
-                    />
-                  </div>
+                  <PNInput
+                    type="text"
+                    label="Nama Lengkap"
+                    value={profile.name}
+                    onChange={(e) => setProfile({...profile, name: e.target.value})}
+                    placeholder="Masukkan nama lengkap"
+                    icon={<User size={18} />}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      <Mail size={16} className="inline mr-2" />
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={profile.email}
-                      onChange={(e) => setProfile({...profile, email: e.target.value})}
-                      className="w-full px-5 py-4 min-h-[52px] border-2 border-white/10 bg-black/50 text-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
-                      placeholder="Masukkan email"
-                    />
-                  </div>
+                  <PNInput
+                    type="email"
+                    label="Email"
+                    value={profile.email}
+                    onChange={(e) => setProfile({...profile, email: e.target.value})}
+                    placeholder="Masukkan email"
+                    icon={<Mail size={18} />}
+                  />
 
-                  <div className="lg:col-span-2">
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      <Phone size={16} className="inline mr-2" />
+                  <div className="lg:col-span-2 space-y-2">
+                    <label className="block text-sm font-medium text-white/80">
                       Nomor WhatsApp
                     </label>
                     <PhoneInput

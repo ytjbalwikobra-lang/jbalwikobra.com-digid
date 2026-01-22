@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Phone, User, Lock, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useToast } from '../components/Toast';
 import PhoneInput from '../components/PhoneInput';
 import PasswordInput from '../components/PasswordInput';
-import { IOSButton, IOSCard } from '../components/ios/IOSDesignSystem';
 import { useTracking } from '../hooks/useTracking';
+import {
+  PNContainer,
+  PNCard,
+  PNButton,
+  PNHeading,
+  PNText,
+  PNInput,
+  PNTabSwitcher,
+  PNLinkButton,
+} from '../components/ui/PinkNeonDesignSystem';
 
-// Mobile-first constants
-const MIN_TOUCH_TARGET = 44;
+/**
+ * TraditionalAuthPage - Unified Login/Signup page
+ * Uses PinkNeonDesignSystem for consistent styling with ProfilePage
+ * 
+ * Design System Tokens:
+ * - Spacing: 16px (md), 24px (lg), 32px (xl)
+ * - Border Radius: 12px (inputs), 16px (cards), 20px (containers)
+ * - Min Touch Target: 48px
+ * - Colors: Pink accent (#ec4899), White text, Dark backgrounds
+ */
 
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'complete'>('login');
@@ -21,12 +39,6 @@ const AuthPage: React.FC = () => {
 
   // Login tab state
   const [loginTab, setLoginTab] = useState<'email' | 'phone'>('email');
-
-  // Login form state
-  const [loginData, setLoginData] = useState({
-    identifier: '', // phone or email
-    password: ''
-  });
 
   // Email login state
   const [emailLoginData, setEmailLoginData] = useState({
@@ -57,18 +69,14 @@ const AuthPage: React.FC = () => {
   // Profile completion state
   const [profileData, setProfileData] = useState({
     email: '',
-    name: '',
-    password: '',
-    confirmPassword: ''
+    name: ''
   });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
-      // Use the appropriate identifier based on login tab
       const identifier = loginTab === 'email' ? emailLoginData.email : phoneLoginData.phone;
       const password = loginTab === 'email' ? emailLoginData.password : phoneLoginData.password;
       
@@ -83,16 +91,14 @@ const AuthPage: React.FC = () => {
       try {
         trackLogin(loginTab === 'email' ? 'email' : 'phone');
       } catch (error) {
-        console.warn('Failed to track login via service:', error);
+        console.warn('Failed to track login:', error);
       }
       
-      // Check if profile is completed
       if (!result.profileCompleted) {
         setMode('complete');
         return;
       }
 
-      // Redirect to intended page or home
       const redirect = searchParams.get('redirect');
       const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
       navigate(decodedRedirect, { replace: true });
@@ -143,7 +149,7 @@ const AuthPage: React.FC = () => {
       try {
         trackSignUp('phone');
       } catch (error) {
-        console.warn('Failed to track signup via service:', error);
+        console.warn('Failed to track signup:', error);
       }
       
     } catch (error) {
@@ -178,7 +184,6 @@ const AuthPage: React.FC = () => {
   const handleProfileCompletion = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate email and name
     if (!profileData.email.trim()) {
       showToast('Email wajib diisi', 'error');
       return;
@@ -192,7 +197,6 @@ const AuthPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // Note: Password already set during signup, no need to send again
       const result = await completeProfile(profileData.email, profileData.name);
       
       if (result.error) {
@@ -202,7 +206,6 @@ const AuthPage: React.FC = () => {
 
       showToast('Profil berhasil dilengkapi! Selamat datang!', 'success');
       
-      // Redirect to intended page or home
       const redirect = searchParams.get('redirect');
       const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
       navigate(decodedRedirect, { replace: true });
@@ -214,90 +217,83 @@ const AuthPage: React.FC = () => {
     }
   };
 
+  // Page titles and subtitles
+  const pageContent = {
+    login: {
+      title: 'Masuk ke Akun',
+      subtitle: 'Pilih metode masuk yang Anda inginkan'
+    },
+    signup: {
+      title: 'Daftar Akun Baru',
+      subtitle: 'Buat akun dengan nomor WhatsApp'
+    },
+    verify: {
+      title: 'Verifikasi WhatsApp',
+      subtitle: 'Masukkan kode yang dikirim ke WhatsApp'
+    },
+    complete: {
+      title: 'Lengkapi Profil',
+      subtitle: 'Tambahkan email dan nama lengkap'
+    }
+  };
+
   return (
-  <div className="min-h-screen bg-black text-white flex items-center justify-center px-4 py-8 with-bottom-nav">
-      <div className="max-w-md w-full">
-        <div className="bg-black border border-gray-700 rounded-2xl p-8 shadow-lg">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4 py-8 sm:py-12 with-bottom-nav">
+      <PNContainer className="max-w-md w-full">
+        <PNCard className="p-6 sm:p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">
-              {mode === 'login' && 'Masuk ke Akun'}
-              {mode === 'signup' && 'Daftar Akun Baru'}
-              {mode === 'verify' && 'Verifikasi WhatsApp'}
-              {mode === 'complete' && 'Lengkapi Profil'}
-            </h1>
-            <p className="text-white/70 text-sm">
-              {mode === 'login' && 'Pilih metode masuk yang Anda inginkan'}
-              {mode === 'signup' && 'Buat akun dengan nomor WhatsApp'}
-              {mode === 'verify' && 'Masukkan kode yang dikirim ke WhatsApp'}
-              {mode === 'complete' && 'Tambahkan email dan nama lengkap'}
-            </p>
+            {/* Logo/Icon */}
+            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/25">
+              {mode === 'login' && <Lock size={28} className="text-white" />}
+              {mode === 'signup' && <User size={28} className="text-white" />}
+              {mode === 'verify' && <Phone size={28} className="text-white" />}
+              {mode === 'complete' && <Shield size={28} className="text-white" />}
+            </div>
+            
+            <PNHeading level={1} className="mb-2">
+              {pageContent[mode].title}
+            </PNHeading>
+            <PNText color="muted" className="text-sm">
+              {pageContent[mode].subtitle}
+            </PNText>
           </div>
 
           {/* Login Form */}
           {mode === 'login' && (
             <div className="space-y-6">
-              {/* Login Tabs */}
-        <div className="flex bg-black rounded-xl p-1 border border-gray-700">
-                <button
-                  type="button"
-                  onClick={() => setLoginTab('email')}
-                  className={`flex-1 py-3 px-4 min-h-[${MIN_TOUCH_TARGET}px] rounded-lg text-sm font-medium transition-all ${
-                    loginTab === 'email'
-                      ? 'bg-pink-500 text-white shadow-sm'
-                      : 'text-white/70 hover:bg-black/5'
-                  }`}
-                >
-                  Email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginTab('phone')}
-                  className={`flex-1 py-3 px-4 min-h-[${MIN_TOUCH_TARGET}px] rounded-lg text-sm font-medium transition-all ${
-                    loginTab === 'phone'
-                      ? 'bg-pink-500 text-white shadow-sm'
-                      : 'text-white/70 hover:bg-black/5'
-                  }`}
-                >
-                  Nomor HP
-                </button>
-              </div>
+              <PNTabSwitcher
+                tabs={[
+                  { key: 'email', label: 'Email' },
+                  { key: 'phone', label: 'Nomor HP' }
+                ]}
+                activeTab={loginTab}
+                onTabChange={(key) => setLoginTab(key as 'email' | 'phone')}
+              />
 
-              {/* Login Form */}
-              <form onSubmit={handleLogin} className="space-y-6">
-                {/* Email Login Tab */}
-                {loginTab === 'email' && (
+              <form onSubmit={handleLogin} className="space-y-5">
+                {loginTab === 'email' ? (
                   <>
-                    <div>
-                      <label className="block text-sm font-medium text-white/70 mb-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value={emailLoginData.email}
-                        onChange={(e) => setEmailLoginData({ ...emailLoginData, email: e.target.value })}
-                        className="w-full px-4 py-3 min-h-[44px] bg-black border border-gray-700 rounded-xl text-white placeholder:text-white/70 focus:ring-2 focus:ring-ios-accent focus:border-ios-accent text-base"
-                        placeholder="email@example.com"
-                        required
-                      />
-                    </div>
-
-                    <div>
+                    <PNInput
+                      type="email"
+                      label="Email"
+                      value={emailLoginData.email}
+                      onChange={(e) => setEmailLoginData({ ...emailLoginData, email: e.target.value })}
+                      placeholder="email@example.com"
+                      icon={<Mail size={18} />}
+                      required
+                    />
                     <PasswordInput
                       value={emailLoginData.password}
                       onChange={(value) => setEmailLoginData({ ...emailLoginData, password: value })}
                       placeholder="Masukkan password"
                       required
                     />
-                    </div>
                   </>
-                )}
-
-                {/* Phone Login Tab */}
-                {loginTab === 'phone' && (
+                ) : (
                   <>
-                    <div>
-                      <label className="block text-sm font-medium text-white/70 mb-2">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-white/80">
                         Nomor HP
                       </label>
                       <PhoneInput
@@ -308,7 +304,6 @@ const AuthPage: React.FC = () => {
                         disableAutoDetection={true}
                       />
                     </div>
-
                     <PasswordInput
                       value={phoneLoginData.password}
                       onChange={(value) => setPhoneLoginData({ ...phoneLoginData, password: value })}
@@ -318,18 +313,20 @@ const AuthPage: React.FC = () => {
                   </>
                 )}
 
-                <button type="submit" disabled={loading} className="w-full bg-pink-600 text-white py-3 min-h-[44px] rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                <PNButton
+                  type="submit"
+                  fullWidth
+                  size="lg"
+                  disabled={loading}
+                  className="mt-6"
+                >
                   {loading ? 'Masuk...' : `Masuk dengan ${loginTab === 'email' ? 'Email' : 'Nomor HP'}`}
-                </button>
+                </PNButton>
 
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setMode('signup')}
-                    className="text-pink-500 hover:opacity-90 text-sm font-medium"
-                  >
+                <div className="text-center pt-2">
+                  <PNLinkButton onClick={() => setMode('signup')}>
                     Belum punya akun? Daftar di sini
-                  </button>
+                  </PNLinkButton>
                 </div>
               </form>
             </div>
@@ -337,40 +334,30 @@ const AuthPage: React.FC = () => {
 
           {/* Signup Form */}
           {mode === 'signup' && (
-            <form onSubmit={handleSignup} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">
-                  Nama Lengkap
-                </label>
-                <input
-                  type="text"
-                  value={signupData.name}
-                  onChange={(e) => setSignupData({ 
-                    ...signupData, 
-                    name: e.target.value
-                  })}
-                  className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-white/70 focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
-                  placeholder="Masukkan nama lengkap"
-                  required
-                />
-              </div>
+            <form onSubmit={handleSignup} className="space-y-5">
+              <PNInput
+                type="text"
+                label="Nama Lengkap"
+                value={signupData.name}
+                onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                placeholder="Masukkan nama lengkap"
+                icon={<User size={18} />}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-white/80">
                   Nomor WhatsApp
                 </label>
                 <PhoneInput
                   value={signupData.phone}
-                  onChange={(value) => setSignupData({ 
-                    ...signupData, 
-                    phone: value
-                  })}
+                  onChange={(value) => setSignupData({ ...signupData, phone: value })}
                   placeholder="Masukkan Nomor WhatsApp"
                   required
                   disableAutoDetection={true}
                 />
-                <p className="text-xs text-white/70 mt-1">
-                  Verification code will be sent to this number (Supports Asian countries)
+                <p className="text-xs text-white/50">
+                  Kode verifikasi akan dikirim ke nomor ini
                 </p>
               </div>
 
@@ -389,18 +376,20 @@ const AuthPage: React.FC = () => {
                 required
               />
 
-              <button type="submit" disabled={loading} className="w-full bg-pink-600 text-white py-3 min-h-[44px] rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+              <PNButton
+                type="submit"
+                fullWidth
+                size="lg"
+                disabled={loading}
+                className="mt-6"
+              >
                 {loading ? 'Mendaftar...' : 'Daftar'}
-              </button>
+              </PNButton>
 
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => setMode('login')}
-                  className="text-pink-500 hover:opacity-90 text-sm font-medium"
-                >
+              <div className="text-center pt-2">
+                <PNLinkButton onClick={() => setMode('login')}>
                   Sudah punya akun? Masuk di sini
-                </button>
+                </PNLinkButton>
               </div>
             </form>
           )}
@@ -409,18 +398,16 @@ const AuthPage: React.FC = () => {
           {mode === 'verify' && (
             <form onSubmit={handleVerification} className="space-y-6">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-black border border-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
+                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Phone size={28} className="text-green-400" />
                 </div>
-                <p className="text-white/70 text-sm">
+                <PNText color="muted" className="text-sm">
                   Kode verifikasi telah dikirim ke WhatsApp Anda
-                </p>
+                </PNText>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-white/80">
                   Kode Verifikasi (6 digit)
                 </label>
                 <input
@@ -430,84 +417,82 @@ const AuthPage: React.FC = () => {
                     ...verificationData, 
                     code: e.target.value.replace(/\D/g, '').slice(0, 6)
                   })}
-                  className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-white/70 focus:ring-2 focus:ring-ios-accent focus:border-ios-accent text-center text-2xl tracking-widest"
+                  className="w-full px-4 py-4 min-h-[56px] bg-white/5 border border-white/10 rounded-xl text-white text-center text-2xl tracking-[0.5em] font-mono placeholder:text-white/30 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50"
                   placeholder="123456"
                   maxLength={6}
                   required
                 />
               </div>
 
-              <button type="submit" disabled={loading || verificationData.code.length !== 6} className="ios-button w-full disabled:opacity-50">
+              <PNButton
+                type="submit"
+                fullWidth
+                size="lg"
+                disabled={loading || verificationData.code.length !== 6}
+              >
                 {loading ? 'Memverifikasi...' : 'Verifikasi'}
-              </button>
+              </PNButton>
 
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => setMode('signup')}
-                  className="text-pink-500 hover:opacity-90 text-sm font-medium"
-                >
+              <div className="text-center pt-2">
+                <PNLinkButton onClick={() => setMode('signup')}>
                   Kembali ke pendaftaran
-                </button>
+                </PNLinkButton>
               </div>
             </form>
           )}
 
           {/* Profile Completion Form */}
           {mode === 'complete' && (
-            <form onSubmit={handleProfileCompletion} className="space-y-6">
+            <form onSubmit={handleProfileCompletion} className="space-y-5">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-black border border-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <User size={28} className="text-pink-400" />
                 </div>
-                <p className="text-white/70 text-sm">
+                <PNText color="muted" className="text-sm">
                   Lengkapi profil Anda untuk menyelesaikan pendaftaran
+                </PNText>
+              </div>
+
+              <PNInput
+                type="email"
+                label="Email"
+                value={profileData.email}
+                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                placeholder="email@example.com"
+                icon={<Mail size={18} />}
+                required
+              />
+
+              <PNInput
+                type="text"
+                label="Nama Lengkap"
+                value={profileData.name}
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                placeholder="Nama lengkap Anda"
+                icon={<User size={18} />}
+                required
+              />
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-sm text-white/60 flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  Password sudah diatur saat pendaftaran
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-white/70 focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
-                  placeholder="email@example.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">
-                  Nama Lengkap
-                </label>
-                <input
-                  type="text"
-                  value={profileData.name}
-                  onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-black border border-gray-700 rounded-xl text-white placeholder:text-white/70 focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
-                  placeholder="Nama lengkap Anda"
-                  required
-                />
-              </div>
-
-              <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4">
-                <p className="text-sm text-white/60">
-                  <span className="text-green-400">✓</span> Password sudah diatur saat pendaftaran
-                </p>
-              </div>
-
-              <button type="submit" disabled={loading} className="ios-button w-full disabled:opacity-50">
+              <PNButton
+                type="submit"
+                fullWidth
+                size="lg"
+                disabled={loading}
+                className="mt-6"
+              >
                 {loading ? 'Menyelesaikan...' : 'Selesaikan Pendaftaran'}
-              </button>
+              </PNButton>
             </form>
           )}
-        </div>
-      </div>
+        </PNCard>
+      </PNContainer>
     </div>
   );
 };

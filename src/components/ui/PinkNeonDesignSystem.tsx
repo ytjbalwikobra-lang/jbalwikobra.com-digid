@@ -139,6 +139,7 @@ export const PNSectionHeader: React.FC<{ title: React.ReactNode; subtitle?: stri
 );
 
 // Form Input Component - consistent styling for auth forms
+// ISO/WCAG Accessibility: proper label association, error announcements
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   error?: string;
@@ -149,64 +150,89 @@ export const PNInput: React.FC<InputProps> = ({
   label, 
   error, 
   icon,
-  className, 
+  className,
+  id,
   ...rest 
-}) => (
-  <div className="space-y-2">
-    {label && (
-      <label className="block text-sm font-medium text-white/80">
-        {label}
-      </label>
-    )}
-    <div className="relative">
-      {icon && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
-          {icon}
-        </div>
+}) => {
+  // Generate unique ID for label association if not provided
+  const inputId = id || `pn-input-${label?.toLowerCase().replace(/\s+/g, '-') || Math.random().toString(36).slice(2)}`;
+  
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label 
+          htmlFor={inputId}
+          className="block text-sm font-medium text-white/80"
+        >
+          {label}
+        </label>
       )}
-      <input
-        className={cn(
-          'w-full px-4 py-3.5 min-h-[48px]',
-          'bg-white/5 border border-white/10 rounded-xl',
-          'text-white placeholder:text-white/40',
-          'focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50',
-          'transition-all duration-200',
-          icon ? 'pl-12' : '',
-          error ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' : '',
-          className
+      <div className="relative">
+        {icon && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" aria-hidden="true">
+            {icon}
+          </div>
         )}
-        {...rest}
-      />
+        <input
+          id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : undefined}
+          className={cn(
+            'w-full px-4 py-3.5 min-h-[48px]',
+            'bg-white/5 border border-white/10 rounded-xl',
+            'text-white placeholder:text-white/40',
+            'focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50',
+            'transition-all duration-200',
+            icon ? 'pl-12' : '',
+            error ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50' : '',
+            className
+          )}
+          {...rest}
+        />
+      </div>
+      {error && (
+        <p id={`${inputId}-error`} className="text-sm text-red-400" role="alert">
+          {error}
+        </p>
+      )}
     </div>
-    {error && (
-      <p className="text-sm text-red-400">{error}</p>
-    )}
-  </div>
-);
+  );
+};
 
 // Tab Switcher Component - for login/signup mode switching
+// ISO/WCAG Accessibility: proper ARIA roles for tab navigation
 type TabItem = { key: string; label: string };
 type TabSwitcherProps = {
   tabs: TabItem[];
   activeTab: string;
   onTabChange: (key: string) => void;
   className?: string;
+  ariaLabel?: string;
 };
 
 export const PNTabSwitcher: React.FC<TabSwitcherProps> = ({ 
   tabs, 
   activeTab, 
   onTabChange,
-  className 
+  className,
+  ariaLabel = "Login method"
 }) => (
-  <div className={cn(
-    'flex bg-white/5 rounded-xl p-1 border border-white/10',
-    className
-  )}>
+  <div 
+    role="tablist"
+    aria-label={ariaLabel}
+    className={cn(
+      'flex bg-white/5 rounded-xl p-1 border border-white/10',
+      className
+    )}
+  >
     {tabs.map((tab) => (
       <button
         key={tab.key}
         type="button"
+        role="tab"
+        aria-selected={activeTab === tab.key}
+        aria-controls={`tabpanel-${tab.key}`}
+        id={`tab-${tab.key}`}
         onClick={() => onTabChange(tab.key)}
         className={cn(
           'flex-1 py-3 px-4 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-200',

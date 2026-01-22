@@ -32,7 +32,7 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
       />
       {/* Responsive grid: horizontal scroll on mobile, columns on md+ */}
       <div 
-        className="grid gap-3 px-1 pb-2 auto-cols-[180px] grid-flow-col overflow-x-auto snap-x snap-mandatory scrollbar-hide md:auto-cols-auto md:grid-flow-row md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-x-visible md:px-0"
+        className="grid gap-4 px-1 pb-2 auto-cols-[180px] grid-flow-col overflow-x-auto snap-x snap-mandatory scrollbar-hide md:auto-cols-auto md:grid-flow-row md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-x-visible md:px-0"
         role="list"
         aria-label="Daftar produk flash sale"
       >

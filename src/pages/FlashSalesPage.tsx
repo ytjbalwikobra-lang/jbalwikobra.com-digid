@@ -62,8 +62,8 @@ const FlashSalesPage: React.FC = () => {
         totalPages={totalPages}
       />
 
-      <section className="py-6">
-        <PNContainer>
+      <section className="py-8">
+        <PNContainer className="px-4 sm:px-6">
           {/* Products Grid or Empty State */}
           {currentProducts.length > 0 ? (
             <FlashSalesProductGrid products={currentProducts} />
@@ -76,7 +76,7 @@ const FlashSalesPage: React.FC = () => {
           
           {/* Pagination */}
           {currentProducts.length > 0 && totalPages > 1 && (
-            <div className="mt-8">
+            <div className="mt-12">
               <PaginationBar
                 currentPage={currentPage}
                 totalPages={totalPages}

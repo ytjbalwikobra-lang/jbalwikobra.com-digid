@@ -26,7 +26,7 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
       />
       {/* Responsive grid: horizontal scroll on mobile, columns on md+ */}
       <div 
-        className="grid gap-3 px-1 pb-2 auto-cols-[130px] grid-flow-col overflow-x-auto snap-x snap-mandatory scrollbar-hide md:auto-cols-auto md:grid-flow-row md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 md:overflow-x-visible md:px-0"
+        className="grid gap-4 px-1 pb-2 auto-cols-[140px] grid-flow-col overflow-x-auto snap-x snap-mandatory scrollbar-hide md:auto-cols-auto md:grid-flow-row md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 md:overflow-x-visible md:px-0"
         role="list"
         aria-label="Daftar game populer"
       >
@@ -34,20 +34,20 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
           <Link 
             key={g.id} 
             to={`/products?game=${encodeURIComponent(g.name)}`} 
-            className="block min-w-[130px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-2xl"
+            className="block min-w-[140px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-2xl"
             role="listitem"
             aria-label={`${g.name}, ${g.count} akun tersedia`}
           >
-            <PNCard className="p-3 hover:bg-white/10 hover:border-pink-500/30 transition-all h-full">
-              <div className="aspect-square rounded-xl mb-2 flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 group-hover:border-pink-500/30 transition-colors" aria-hidden="true">
+            <PNCard className="p-3.5 hover:bg-white/10 hover:border-pink-500/30 transition-all h-full">
+              <div className="aspect-square rounded-xl mb-2.5 flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 group-hover:border-pink-500/30 transition-colors" aria-hidden="true">
                 {g.logoUrl ? (
                   <img src={g.logoUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <Gamepad2 className="text-gray-400" size={28} aria-hidden="true" />
                 )}
               </div>
-              <div className="text-sm font-medium text-white line-clamp-2 mb-0.5 group-hover:text-pink-300 transition-colors">{g.name}</div>
-              <div className="text-xs text-gray-300">{g.count} akun</div>
+              <div className="text-sm font-medium text-white line-clamp-2 mb-1 group-hover:text-pink-300 transition-colors">{g.name}</div>
+              <div className="text-xs text-gray-400">{g.count} akun</div>
             </PNCard>
           </Link>
         ))}

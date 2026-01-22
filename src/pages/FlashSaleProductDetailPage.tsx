@@ -97,8 +97,8 @@ const FlashSaleProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <PNContainer>
-        <section className="py-8">
+      <section className="py-4">
+        <PNContainer className="px-4 sm:px-6">
           {/* Shared Header */}
           <PublicPageHeader
             title={product.name}
@@ -120,11 +120,13 @@ const FlashSaleProductDetailPage: React.FC = () => {
                 onImageSelect={handleImageSelect}
                 productName={product.name}
                 isFlashSaleActive={isFlashSaleActive}
+                soldChannel={(product as any).soldChannel || (product as any).sold_channel || null}
+                stock={product.stock}
               />
             </div>
 
             {/* Product Information */}
-            <div className="mt-6 lg:mt-0">
+            <div className="mt-8 lg:mt-0">
               <ProductInfo
                 product={product}
                 effectivePrice={effectivePrice}
@@ -134,12 +136,11 @@ const FlashSaleProductDetailPage: React.FC = () => {
               />
 
               {/* Actions */}
-              <div className="mt-8">
+              <div className="mt-10">
                 <ProductActions
                   stock={product.stock}
-                  isActive={(product as any).isActive !== false}
-                  // Flash sales usually sold via web unless specified
-                  soldChannel={product.stock === 0 ? 'web' : null} 
+                  isActive={(product as any).isActive !== false && (product as any).is_active !== false}
+                  soldChannel={(product as any).soldChannel || (product as any).sold_channel || null}
                   cameFromFlashSaleCard={true}
                   hasRental={product.hasRental}
                   selectedRental={rentalState.selectedRental}
@@ -149,8 +150,8 @@ const FlashSaleProductDetailPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
-      </PNContainer>
+        </PNContainer>
+      </section>
 
       {/* Checkout Modal */}
       {checkoutState.showCheckoutForm && (

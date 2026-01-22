@@ -91,8 +91,8 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <PNContainer>
-        <section className="py-8">
+      <section className="py-4">
+        <PNContainer className="px-4 sm:px-6">
           {/* Shared Header */}
           <PublicPageHeader
             title={product.name}
@@ -114,11 +114,13 @@ const ProductDetailPage: React.FC = () => {
                 selectedImage={galleryState.selectedImage}
                 onImageSelect={handleImageSelect}
                 isFlashSaleActive={isFlashSaleActive}
+                soldChannel={(product as any).soldChannel || (product as any).sold_channel || null}
+                stock={product.stock}
               />
             </div>
 
             {/* Product Information */}
-            <div>
+            <div className="mt-8 lg:mt-0 space-y-6">
               <ProductInfo
                 product={product}
                 effectivePrice={effectivePrice}
@@ -140,7 +142,7 @@ const ProductDetailPage: React.FC = () => {
               <ProductActions
                 stock={product.stock}
                 isActive={(product as any).isActive !== false && (product as any).is_active !== false}
-                soldChannel={(product as any).sold_channel}
+                soldChannel={(product as any).soldChannel || (product as any).sold_channel || null}
                 cameFromFlashSaleCard={cameFromFlashSaleCard}
                 hasRental={product.hasRental || false}
                 selectedRental={rentalState.selectedRental}
@@ -149,8 +151,8 @@ const ProductDetailPage: React.FC = () => {
               />
             </div>
           </div>
-        </section>
-      </PNContainer>
+        </PNContainer>
+      </section>
 
       {/* Checkout Modal */}
       {checkoutState.showCheckoutForm && (

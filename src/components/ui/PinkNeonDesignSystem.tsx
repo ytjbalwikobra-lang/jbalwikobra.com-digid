@@ -21,9 +21,10 @@ export const PNSection: React.FC<DivProps & { padding?: 'sm' | 'md' | 'lg' }>
   = ({ className, children, padding = 'md', ...rest }) => (
   <section
     className={cn(
-      padding === 'lg' && 'px-4 py-8',
-      padding === 'md' && 'px-4 py-6',
-      padding === 'sm' && 'px-4 py-4',
+      'px-4 sm:px-6 lg:px-8',
+      padding === 'lg' && 'py-8 sm:py-10 lg:py-12',
+      padding === 'md' && 'py-6 sm:py-8',
+      padding === 'sm' && 'py-4 sm:py-5',
       className
     )}
     {...rest}
@@ -33,7 +34,7 @@ export const PNSection: React.FC<DivProps & { padding?: 'sm' | 'md' | 'lg' }>
 );
 
 export const PNContainer: React.FC<DivProps> = ({ className, children, ...rest }) => (
-  <div className={cn('max-w-7xl mx-auto px-4', className)} {...rest}>{children}</div>
+  <div className={cn('max-w-7xl mx-auto', className)} {...rest}>{children}</div>
 );
 
 export const PNCard: React.FC<DivProps> = ({ className, children, ...rest }) => (
@@ -124,14 +125,14 @@ export const PNPill: React.FC<DivProps & { active?: boolean }>
 
 export const PNSectionHeader: React.FC<{ title: React.ReactNode; subtitle?: string; action?: React.ReactNode; padX?: boolean }>
   = ({ title, subtitle, action, padX = true }) => (
-  <div className={cn('mb-5 flex items-end justify-between gap-4', padX ? 'px-1' : '')}>
+  <div className={cn('mb-6 flex items-end justify-between gap-4', padX ? 'px-1' : '')}>
     <div className="flex-1 min-w-0">
       {typeof title === 'string' ? (
         <PNHeading level={2} gradient>{title}</PNHeading>
       ) : (
         <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-400 via-fuchsia-400 to-pink-600 bg-clip-text text-transparent">{title}</div>
       )}
-      {subtitle && <PNText color="muted" className="mt-1 text-sm">{subtitle}</PNText>}
+      {subtitle && <PNText color="muted" className="mt-1.5 text-sm">{subtitle}</PNText>}
     </div>
     {action && <div className="flex-shrink-0">{action}</div>}
   </div>

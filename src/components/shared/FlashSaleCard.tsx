@@ -27,19 +27,25 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
   const originalPrice = flashSale?.originalPrice || product.originalPrice;
   const currentPrice = flashSale?.salePrice || product.price;
   const endTime = flashSale?.endTime || product.flashSaleEndTime;
-  const isFlashSale = !!flashSale || product.isFlashSale;
+  // FlashSaleCard is ALWAYS used for flash sale products - route to /flash-sales
+  const isFlashSale = true; // This component is specifically for flash sales
   const discountPercentage = originalPrice && originalPrice > currentPrice
     ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
     : 0;
 
-  // Navigation handlers - route to flash-sales if product is a flash sale or has flashSale prop
-  const shouldUseFlashSaleRoute = !!flashSale || isFlashSale;
-  
+  // Check sold status
+  const soldChannel = (product as any).soldChannel || (product as any).sold_channel || null;
+  const isSold = !!soldChannel || product.stock === 0;
+  const soldLabel = soldChannel === 'web' ? 'Terjual via Web' 
+    : soldChannel === 'wa' ? 'Terjual via WA' 
+    : product.stock === 0 ? 'Stok Habis' : null;
+
+  // Navigation handlers - ALWAYS route to flash-sales for this component
   const handleClick = () => {
     if (!product.id) return;
     
-    const path = shouldUseFlashSaleRoute ? `/flash-sales/${product.id}` : `/products/${product.id}`;
-    navigate(path, {
+    // FlashSaleCard always navigates to flash sale detail page
+    navigate(`/flash-sales/${product.id}`, {
       state: { 
         fromFlashSaleCard: true, 
         ...(flashSale && { flashSaleData: flashSale })
@@ -51,8 +57,8 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
     e.stopPropagation();
     if (!product.id) return;
     
-    const path = shouldUseFlashSaleRoute ? `/flash-sales/${product.id}` : `/products/${product.id}`;
-    navigate(path, {
+    // FlashSaleCard always navigates to flash sale detail page
+    navigate(`/flash-sales/${product.id}`, {
       state: { 
         fromFlashSaleCard: true,
         openCheckoutModal: true,
@@ -63,25 +69,30 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
 
   return (
     <article
-      className={`group rounded-2xl bg-white/5 border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-pink-500/30 hover:bg-white/[0.07] h-full flex flex-col ${className}`}
+      className={`group rounded-2xl bg-white/5 border border-white/10 overflow-hidden transition-all h-full flex flex-col ${
+        isSold 
+          ? 'cursor-not-allowed opacity-75' 
+          : 'cursor-pointer hover:border-pink-500/30 hover:bg-white/[0.07]'
+      } ${className}`}
       role="button"
-      tabIndex={0}
-      onClick={handleClick}
+      tabIndex={isSold ? -1 : 0}
+      onClick={isSold ? undefined : handleClick}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (!isSold && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           handleClick();
         }
       }}
-      aria-label={`Flash sale: ${product.name} - Rp ${currentPrice.toLocaleString('id-ID')}`}
+      aria-label={isSold ? `Flash sale: ${product.name} - ${soldLabel}` : `Flash sale: ${product.name} - Rp ${currentPrice.toLocaleString('id-ID')}`}
+      aria-disabled={isSold}
     >
       {/* Product Image - 4:5 ratio (Edge-to-Edge) */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-pink-900/30 to-fuchsia-900/30">
+      <div className={`relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-pink-900/30 to-fuchsia-900/30 ${isSold ? 'grayscale' : ''}`}>
         {product.image ? (
           <img 
             src={product.image} 
             alt={product.name} 
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+            className={`w-full h-full object-cover transition-transform duration-300 ${isSold ? '' : 'group-hover:scale-105'}`} 
             loading="lazy"
           />
         ) : (
@@ -90,15 +101,24 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
           </div>
         )}
         
-        {/* Discount Badge - Top Right */}
-        {discountPercentage > 0 && (
+        {/* SOLD Banner - Full width overlay */}
+        {isSold && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="bg-red-600 text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg transform -rotate-12">
+              {soldLabel}
+            </div>
+          </div>
+        )}
+        
+        {/* Discount Badge - Top Right (hide when sold) */}
+        {!isSold && discountPercentage > 0 && (
           <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-pink-600 text-white text-xs font-bold shadow-lg">
             -{discountPercentage}%
           </div>
         )}
 
-        {/* Rental Badge - Top Left */}
-        {product.hasRental && (
+        {/* Rental Badge - Top Left (hide when sold) */}
+        {!isSold && product.hasRental && (
           <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
             Rental
           </div>
@@ -148,11 +168,16 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
 
         {/* Buy Button */}
         <button
-          onClick={handleBuyClick}
-          className="w-full h-9 min-h-[36px] mt-auto bg-pink-600 hover:bg-pink-700 text-white text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 focus:ring-offset-gray-900"
-          aria-label={`Beli ${product.name} sekarang`}
+          onClick={isSold ? undefined : handleBuyClick}
+          disabled={isSold}
+          className={`w-full h-9 min-h-[36px] mt-auto text-white text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+            isSold 
+              ? 'bg-gray-600 cursor-not-allowed opacity-50' 
+              : 'bg-pink-600 hover:bg-pink-700'
+          }`}
+          aria-label={isSold ? `${product.name} tidak tersedia` : `Beli ${product.name} sekarang`}
         >
-          Beli Sekarang
+          {isSold ? 'Tidak Tersedia' : 'Beli Sekarang'}
         </button>
       </div>
     </article>

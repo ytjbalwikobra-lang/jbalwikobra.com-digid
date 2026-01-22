@@ -284,8 +284,9 @@ export class ProductService {
           )
         `);
       if (!opts?.includeArchived) {
-        // Hide archived/inactive products from public lists
-        query = (query as any).eq('is_active', true).is('archived_at', null);
+        // Show all products including sold, only hide archived ones
+        // Sold items will be displayed with visual indicators
+        query = (query as any).is('archived_at', null);
       }
       const { data, error } = await (query as any).order('created_at', { ascending: false });
 
@@ -296,6 +297,7 @@ export class ProductService {
           return {
             ...product,
             isActive: product.is_active ?? product.isActive,
+            soldChannel: product.sold_channel ?? null,
             archivedAt: product.archived_at ?? product.archivedAt,
             rentalOptions: product.rental_options || [],
             hasRental: product.has_rental ?? product.hasRental ?? ((product.rental_options || []).length > 0),
@@ -321,9 +323,10 @@ export class ProductService {
       if (error && (error as any).message !== 'REL_SKIP') {
         console.warn('Products relational select failed, trying basic select');
       }
-      let q2: any = supabase.from('products').select('id, name, description, price, original_price, image, images, category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, stock, is_active, archived_at, created_at, updated_at');
+      let q2: any = supabase.from('products').select('id, name, description, price, original_price, image, images, category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, stock, is_active, sold_channel, archived_at, created_at, updated_at');
       if (!opts?.includeArchived) {
-        q2 = q2.eq('is_active', true).is('archived_at', null);
+        // Show all products including sold, only hide archived ones
+        q2 = q2.is('archived_at', null);
       }
       const { data: basic, error: err2 } = await q2.order('created_at', { ascending: false });
       if (err2) {

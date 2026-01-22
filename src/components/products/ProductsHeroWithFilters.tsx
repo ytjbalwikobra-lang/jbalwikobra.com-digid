@@ -21,9 +21,6 @@ interface ProductsHeroWithFiltersProps {
   showBackNav?: boolean;
   sortBy: string;
   onSortChange: (v: string) => void;
-  activeFilters: Array<{ key: string; label: string; value: string }>;
-  onRemoveFilter: (k: string) => void;
-  onClearAllFilters: () => void;
   rentalOnly: boolean;
   onToggleRental: () => void;
   tiers?: Tier[];
@@ -45,14 +42,14 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
   showBackNav = true,
   sortBy,
   onSortChange,
-  activeFilters,
-  onRemoveFilter,
-  onClearAllFilters,
   rentalOnly,
   onToggleRental,
   tiers,
   selectedTier,
   onTierChange,
+  gameTitles,
+  selectedGame,
+  onGameChange,
   selectedCategory,
   onCategoryChange
 }) => {
@@ -74,33 +71,31 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
     setLocalSearchTerm(e.target.value);
   }, []);
 
-  const hasActiveFilters = activeFilters.length > 0;
-
   // Shared select styles - 44px min touch target, WCAG compliant
-  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3 pr-9 rounded-xl bg-white/5 border border-white/10 text-xs sm:text-sm text-white hover:bg-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
+  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3.5 pr-9 rounded-xl bg-white/5 border border-white/10 text-sm text-white hover:bg-white/[0.07] hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:border-pink-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
   
   // Active select styling for filters with values
   const getSelectClass = (hasValue: boolean) => 
-    `${selectClass} ${hasValue ? 'border-pink-500/50 bg-pink-500/10' : ''}`;
+    `${selectClass} ${hasValue ? 'border-pink-500/40 bg-pink-500/10 text-white' : ''}`;
 
   return (
-    <div className="sticky top-0 z-20 bg-black/95 backdrop-blur-md border-b border-white/5">
-      <PNContainer className="py-3 space-y-3">
+    <div className="sticky top-0 z-20 bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
+      <PNContainer className="px-4 sm:px-6 py-4 space-y-4">
         {/* Row 1: Back + Title + Count */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {showBackNav && (
               <Link 
                 to="/" 
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 transition-colors"
+                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
                 aria-label="Kembali ke beranda"
               >
                 <ChevronLeft size={20} />
               </Link>
             )}
-            <h1 className="text-lg font-bold text-white">Katalog</h1>
+            <h1 className="text-xl font-bold text-white">Katalog</h1>
           </div>
-          <p className="text-xs text-gray-400">
+          <p className="text-sm text-gray-400 font-medium">
             {totalProducts} produk
             {currentPage && totalPages && totalPages > 1 && ` • ${currentPage}/${totalPages}`}
           </p>
@@ -108,27 +103,50 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
 
         {/* Row 2: Full-width Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Cari produk..."
+            placeholder="Cari produk, game, atau kategori..."
             value={localSearchTerm}
             onChange={handleSearchInput}
-            className="w-full h-11 min-h-[44px] pl-10 pr-10 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+            className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/30 hover:bg-white/[0.07] transition-all duration-200"
           />
           {localSearchTerm && (
             <button 
               onClick={() => setLocalSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-white/10"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
               aria-label="Hapus pencarian"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           )}
         </div>
 
-        {/* Row 3: Filters - 2x2 grid on mobile, inline on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {/* Row 3: Game Filter - Horizontal Scroll */}
+        {gameTitles && gameTitles.length > 0 && (
+          <div className="relative -mx-4 sm:-mx-6 px-4 sm:px-6">
+            <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
+              <button
+                onClick={() => onGameChange?.('')}
+                className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-xl text-sm font-semibold transition-all duration-200 snap-start ${!selectedGame ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/30' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'}`}
+              >
+                Semua Game
+              </button>
+              {gameTitles.map((game) => (
+                <button
+                  key={game.id}
+                  onClick={() => onGameChange?.(game.name)}
+                  className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap snap-start ${selectedGame === game.name ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/30' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'}`}
+                >
+                  {game.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Row 4: Filters - 2 columns on mobile, 4 on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           {/* Category Select */}
           <div className="relative">
             <select
@@ -184,40 +202,12 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
           {/* Rental Toggle Button */}
           <button
             onClick={onToggleRental}
-            className={`h-11 min-h-[44px] px-3 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${rentalOnly ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/25' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'}`}
+            className={`h-11 min-h-[44px] px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${rentalOnly ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/25' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/[0.07] hover:border-white/20'}`}
           >
             <span className="text-base">🏠</span>
-            <span>Lihat Akun Rental</span>
+            <span>Rental</span>
           </button>
         </div>
-
-        {/* Active Filters Tags - WCAG 2.1 AA Compliant */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
-            {activeFilters.map((filter) => (
-              <div
-                key={filter.key}
-                className="inline-flex items-center gap-1.5 h-8 min-h-[32px] pl-3 pr-1.5 bg-pink-500/15 text-pink-300 rounded-full text-xs font-medium"
-              >
-                <span>{filter.value}</span>
-                <button 
-                  onClick={() => onRemoveFilter(filter.key)} 
-                  className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-pink-500/30 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-                  aria-label={`Hapus filter ${filter.label}`}
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={onClearAllFilters}
-              className="h-8 min-h-[32px] px-3 text-xs font-medium text-gray-400 hover:text-pink-300 underline underline-offset-2 hover:no-underline transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded"
-              aria-label="Hapus semua filter"
-            >
-              Hapus semua
-            </button>
-          </div>
-        )}
       </PNContainer>
     </div>
   );

@@ -5,7 +5,6 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import PNHeader from './components/public/layout/PNHeader';
 import MobileNavigation from './components/MobileNavigation';
 import ScrollToTop from './components/ScrollToTop';
-import Footer from './components/Footer';
 import PNFooter from './components/public/layout/PNFooter';
 import './App.css';
 import './styles/global-design-system.css';

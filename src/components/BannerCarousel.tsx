@@ -114,15 +114,17 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   if (loading) {
     return (
-      <div 
-        className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40"
-        role="status"
-        aria-busy="true"
-        aria-label="Memuat banner"
-      >
-        <div className="w-full aspect-[3/2] flex items-center justify-center">
-          <span className="sr-only">Memuat banner promosi...</span>
-          <div className="ios-skeleton w-[92%] h-[85%] rounded-xl" aria-hidden="true"></div>
+      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div 
+          className="relative rounded-2xl overflow-hidden shadow-xl border border-pink-500/30"
+          role="status"
+          aria-busy="true"
+          aria-label="Memuat banner"
+        >
+          <div className="w-full aspect-[3/2] flex items-center justify-center">
+            <span className="sr-only">Memuat banner promosi...</span>
+            <div className="ios-skeleton w-[92%] h-[85%] rounded-xl" aria-hidden="true"></div>
+          </div>
         </div>
       </div>
     );
@@ -130,21 +132,23 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   if (error) {
     return (
-      <div 
-        className="relative rounded-2xl overflow-hidden shadow-md border border-red-500/40"
-        role="alert"
-        aria-live="assertive"
-      >
-        <div className="w-full aspect-[3/2] bg-red-900/20 flex items-center justify-center">
-          <div className="text-red-300 text-center p-4">
-            <p>{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="mt-2 text-sm text-red-200 hover:text-red-100 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md px-2 py-1"
-              aria-label="Muat ulang halaman untuk mencoba lagi"
-            >
-              Coba Lagi
-            </button>
+      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div 
+          className="relative rounded-2xl overflow-hidden shadow-xl border border-red-500/30"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="w-full aspect-[3/2] bg-red-900/20 flex items-center justify-center">
+            <div className="text-red-300 text-center p-4">
+              <p>{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-2 text-sm text-red-200 hover:text-red-100 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md px-2 py-1"
+                aria-label="Muat ulang halaman untuk mencoba lagi"
+              >
+                Coba Lagi
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -161,9 +165,9 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
   };
 
   return (
-    <div className="px-4 mt-4">
+    <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div 
-        className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40"
+        className="relative rounded-2xl overflow-hidden shadow-xl border border-pink-500/30 ring-1 ring-black/5"
         role="region"
         aria-roledescription="carousel"
         aria-label="Banner promosi"

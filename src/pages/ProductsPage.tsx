@@ -92,9 +92,6 @@ const ProductsPage: React.FC = () => {
         showBackNav={true}
         sortBy={filterState.sortBy}
         onSortChange={handleSortChange}
-        activeFilters={activeFilters}
-        onRemoveFilter={clearFilter}
-        onClearAllFilters={clearAllFilters}
         rentalOnly={filterState.rentalOnly}
         onToggleRental={handleRentalToggle}
         tiers={tiers}

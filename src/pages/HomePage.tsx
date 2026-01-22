@@ -167,25 +167,33 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-black">
       {/* Error banner for partial failures */}
       {state.error && (state.flashSaleProducts.length > 0 || state.popularGames.length > 0) && (
-        <div className="mx-4 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4" role="alert">
+        <div className="mx-4 sm:mx-6 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4" role="alert">
           <p className="text-amber-200 text-sm">{state.error}</p>
         </div>
       )}
 
-      {/* Hero Section */}
+      {/* Hero Section - Full bleed */}
       <PNHero />
 
-      {/* Banner Carousel - Integrated after hero */}
-      <BannerCarousel />
+      {/* Banner Carousel - Consistent horizontal padding */}
+      <div className="mt-6 sm:mt-8">
+        <BannerCarousel />
+      </div>
 
-      {/* Content Sections */}
-      <PNFlashSalesSection products={state.flashSaleProducts} limit={MOBILE_CONSTANTS.FLASH_SALE_DISPLAY_LIMIT} />
-      <HomeAccountCategoriesSection />
-      <PNPopularGamesSection games={state.popularGames} limit={12} />
-      <PNCTA />
+      {/* Content Sections - Unified spacing system */}
+      <div className="mt-8 sm:mt-10 space-y-8 sm:space-y-10 lg:space-y-12">
+        <PNFlashSalesSection products={state.flashSaleProducts} limit={MOBILE_CONSTANTS.FLASH_SALE_DISPLAY_LIMIT} />
+        <HomeAccountCategoriesSection />
+        <PNPopularGamesSection games={state.popularGames} limit={12} />
+      </div>
+
+      {/* CTA Section - Separate spacing for visual break */}
+      <div className="mt-12 sm:mt-16">
+        <PNCTA />
+      </div>
 
       {/* Bottom spacing for mobile navigation */}
-      <div className="h-6" />
+      <div className="h-8 sm:h-10" />
     </div>
   );
 };

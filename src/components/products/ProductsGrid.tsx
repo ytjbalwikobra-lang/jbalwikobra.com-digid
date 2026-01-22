@@ -27,9 +27,19 @@ export const ProductsGrid = React.memo(({
 }: ProductsGridProps) => {
   const navigate = useNavigate();
 
-  const handleNavigate = (productId: string) => {
-    if (!productId) return;
-    navigate(`/products/${productId}`, { state: { fromCatalogPage: true } });
+  const handleNavigate = (product: Product) => {
+    if (!product.id) return;
+    
+    // If product has active flash sale, route to flash sales page
+    const hasActiveFlashSale = product.isFlashSale && 
+      product.flashSaleEndTime && 
+      new Date(product.flashSaleEndTime).getTime() > Date.now();
+    
+    const path = hasActiveFlashSale 
+      ? `/flash-sales/${product.id}` 
+      : `/products/${product.id}`;
+    
+    navigate(path, { state: { fromCatalogPage: true } });
   };
 
   return (
@@ -49,6 +59,10 @@ export const ProductsGrid = React.memo(({
               const discountPercent = hasDiscount && product.originalPrice
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
                 : null;
+              
+              // Check sold status
+              const soldChannel = (product as any).soldChannel || (product as any).sold_channel || null;
+              const isSold = !!soldChannel || product.stock === 0;
 
               return (
                 <PNProductCard
@@ -57,23 +71,27 @@ export const ProductsGrid = React.memo(({
                   title={product.name}
                   image={mainImage}
                   price={formatCurrency(product.price)}
-                  onClick={() => handleNavigate(product.id)}
+                  onClick={() => handleNavigate(product)}
                   rentalAvailable={Boolean(product.hasRental || product.rentalOptions?.length)}
                   discountPercent={discountPercent}
                   gameName={product.gameTitleData?.name}
                   tierName={product.tierData?.name}
                   tierSlug={product.tierData?.slug}
+                  soldChannel={soldChannel}
+                  stock={product.stock}
                 >
                   <PNButton 
-                    variant="primary" 
+                    variant={isSold ? "secondary" : "primary"} 
                     size="sm" 
                     fullWidth
+                    disabled={isSold}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleNavigate(product.id);
+                      if (!isSold) handleNavigate(product);
                     }}
+                    className={isSold ? 'opacity-50 cursor-not-allowed' : ''}
                   >
-                    Beli Sekarang
+                    {isSold ? 'Tidak Tersedia' : 'Beli Sekarang'}
                   </PNButton>
                 </PNProductCard>
               );

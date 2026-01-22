@@ -15,6 +15,10 @@ interface ProductImageGalleryProps {
   selectedImage: number;
   onImageSelect: (index: number) => void;
   isFlashSaleActive?: boolean;
+  /** Product sold status - 'web' | 'wa' | null */
+  soldChannel?: 'web' | 'wa' | null;
+  /** Product stock count */
+  stock?: number;
 }
 
 export const ProductImageGallery = React.memo(({
@@ -22,12 +26,20 @@ export const ProductImageGallery = React.memo(({
   productName,
   selectedImage,
   onImageSelect,
-  isFlashSaleActive = false
+  isFlashSaleActive = false,
+  soldChannel,
+  stock
 }: ProductImageGalleryProps) => {
+  // Check sold status
+  const isSold = !!soldChannel || stock === 0;
+  const soldLabel = soldChannel === 'web' ? 'Telah Terjual' 
+    : soldChannel === 'wa' ? 'Telah Terjual' 
+    : stock === 0 ? 'Stok Habis' : null;
+
   return (
     <div>
       {/* Main Image */}
-      <PNCard className="aspect-[4/5] mb-4 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center overflow-hidden relative p-0">
+      <PNCard className={`aspect-[4/5] mb-4 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center overflow-hidden relative p-0 ${isSold ? 'grayscale' : ''}`}>
         <ResponsiveImage
           src={images[selectedImage]}
           alt={productName}
@@ -38,8 +50,17 @@ export const ProductImageGallery = React.memo(({
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
 
-        {/* Flash Sale Badge */}
-        {isFlashSaleActive && (
+        {/* SOLD Banner - Priority over flash sale badge */}
+        {isSold && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="bg-red-600 text-white text-lg sm:text-xl font-bold px-6 py-2.5 rounded-xl shadow-lg transform -rotate-12">
+              {soldLabel}
+            </div>
+          </div>
+        )}
+
+        {/* Flash Sale Badge (hide when sold) */}
+        {!isSold && isFlashSaleActive && (
           <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1 shadow-lg backdrop-blur-sm">
             <Zap size={14} />
             <span>Flash Sale</span>

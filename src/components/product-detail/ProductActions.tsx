@@ -84,7 +84,7 @@ export const ProductActions = React.memo(({
             onClick={() => onRental(selectedRental)}
             disabled={isUnavailable}
             fullWidth
-            className={`flex items-center justify-center space-x-2 border-2 border-pink-500/50 text-pink-400 hover:bg-pink-500/5 ${isUnavailable ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'}`}
+            className={`flex items-center justify-center space-x-2 border-2 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/5 ${isUnavailable ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'}`}
           >
             <Calendar size={20} />
             <span>📅 Sewa Akun ({selectedRental.duration}) - {formatCurrency(selectedRental.price)}</span>

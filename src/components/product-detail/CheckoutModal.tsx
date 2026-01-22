@@ -156,17 +156,17 @@ const CheckoutModal: React.FC<Props> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
-        <div className="sticky top-0 z-10 bg-gray-950 border-b border-white/10 px-4 py-4">
+        <div className="sticky top-0 z-10 bg-gray-950 border-b border-white/10 px-5 py-5">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h2 id="checkout-modal-title" className="text-lg font-bold text-white truncate">
+              <h2 id="checkout-modal-title" className="text-xl font-bold text-white truncate">
                 {isPurchase ? 'Checkout' : 'Rental Checkout'}
               </h2>
               <p className="text-sm text-gray-400 truncate">{productName}</p>
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 ml-3 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="flex-shrink-0 ml-3 w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200"
               aria-label="Tutup"
             >
               <X size={20} />
@@ -174,24 +174,24 @@ const CheckoutModal: React.FC<Props> = ({
           </div>
           
           {/* Price Badge */}
-          <div id="checkout-modal-price" className="mt-3 flex items-center justify-between p-3 bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl">
-            <span className="text-sm text-gray-300">Total Pembayaran</span>
+          <div id="checkout-modal-price" className="mt-4 flex items-center justify-between p-4 bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl">
+            <span className="text-sm text-gray-300 font-medium">Total Pembayaran</span>
             <span className="text-xl font-bold text-pink-400">{formatCurrency(price)}</span>
           </div>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6">
           {/* Section 1: Customer Information */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center">
-                <User size={14} className="text-pink-400" />
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-7 h-7 rounded-full bg-pink-500/20 flex items-center justify-center">
+                <User size={16} className="text-pink-400" />
               </div>
-              <h3 className="text-sm font-semibold text-white">Informasi Pembeli</h3>
+              <h3 className="text-base font-semibold text-white">Informasi Pembeli</h3>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Name */}
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -338,10 +338,10 @@ const CheckoutModal: React.FC<Props> = ({
         </div>
 
         {/* Fixed Footer */}
-        <div className="sticky bottom-0 bg-gray-950 border-t border-white/10 px-4 py-4 space-y-3">
+        <div className="sticky bottom-0 bg-gray-950 border-t border-white/10 px-5 py-5 space-y-4">
           {/* Security Badge */}
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
-            <Shield size={14} className="text-green-400" />
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+            <Shield size={16} className="text-green-400" />
             <span>Transaksi aman & terenkripsi</span>
           </div>
 
@@ -349,7 +349,7 @@ const CheckoutModal: React.FC<Props> = ({
           <button
             onClick={handleSubmit}
             disabled={!isFormComplete || creatingInvoice}
-            className={`w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${
+            className={`w-full h-12 min-h-[48px] rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${
               isFormComplete && !creatingInvoice
                 ? 'bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40'
                 : 'bg-gray-800 text-gray-500 cursor-not-allowed'

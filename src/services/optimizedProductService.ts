@@ -17,7 +17,7 @@ interface ProductFilters {
   search?: string;
   gameTitle?: string;
   tier?: string;
-  status?: 'active' | 'archived' | 'all';
+  status?: 'active' | 'archived' | 'all' | 'public';
   includeArchived?: boolean;
 }
 
@@ -63,8 +63,8 @@ class OptimizedProductService {
             .from('products')
             .select(`
               id, name, description, price, original_price,
-              images, is_active, archived_at, created_at,
-              game_title_id, tier_id, has_rental, category_id,
+              images, is_active, sold_channel, archived_at, created_at,
+              game_title_id, tier_id, has_rental, category_id, stock,
               is_flash_sale, flash_sale_end_time,
               tiers (
                 id, name, slug, color, background_gradient, icon
@@ -79,7 +79,11 @@ class OptimizedProductService {
 
           // Apply filters at database level
           if (status === 'active') {
-            query = query.eq('is_active', true).is('archived_at', null);
+            // Only truly active products (not sold, not archived)
+            query = query.eq('is_active', true).is('archived_at', null).is('sold_channel', null);
+          } else if (status === 'public') {
+            // All non-archived products (including sold ones for public display)
+            query = query.is('archived_at', null);
           } else if (status === 'archived') {
             query = query.or('is_active.eq.false,archived_at.not.is.null');
           }
@@ -247,6 +251,8 @@ class OptimizedProductService {
     return {
       ...product,
       isActive: product.is_active ?? product.isActive,
+      soldChannel: product.sold_channel ?? null,
+      stock: product.stock ?? 0,
       archivedAt: product.archived_at ?? product.archivedAt,
       originalPrice: product.original_price ?? product.originalPrice,
       isFlashSale: product.is_flash_sale ?? product.isFlashSale ?? false,

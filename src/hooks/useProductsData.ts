@@ -138,9 +138,12 @@ export const useProductsData = () => {
         import('../services/optimizedProductService')
       ]);
 
+      // Clear cache to ensure fresh data
+      OptimizedProductService.clearProductsCache();
+
       const [productsResponse, tiersData, gameTitlesData] = await Promise.all([
         OptimizedProductService.getProductsPaginated({
-          status: 'active'
+          status: 'public' // Show all non-archived products including sold ones
         }, {
           page: 1,
           limit: 200 // Increased to get all products
@@ -219,7 +222,7 @@ export const useProductsData = () => {
 
     // Rental filter
     if (filterState.rentalOnly) {
-      filtered = filtered.filter(p => Boolean(p.hasRental || p.rentalOptions?.length));
+      filtered = filtered.filter(p => p.hasRental === true);
     }
 
     // Price range filter

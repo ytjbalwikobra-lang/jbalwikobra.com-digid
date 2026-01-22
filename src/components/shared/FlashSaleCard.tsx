@@ -42,12 +42,7 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
 
   // Navigation handlers - ALWAYS route to flash-sales for this component
   const handleClick = () => {
-    if (!product.id) {
-      console.error('[FlashSaleCard] Missing product.id!', product);
-      return;
-    }
-    
-    console.log('[FlashSaleCard] Navigating to:', `/flash-sales/${product.id}`);
+    if (!product.id) return;
     
     // FlashSaleCard always navigates to flash sale detail page
     navigate(`/flash-sales/${product.id}`, {

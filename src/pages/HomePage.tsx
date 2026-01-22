@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Product } from '../types';
+import { Product, FlashSale } from '../types';
 import { sortByFlashSaleEndTime } from '../utils/flashSaleUtils';
 // New PN homepage components
 import PNHero from '../components/public/home/PNHero';
@@ -42,8 +42,12 @@ const MOBILE_CONSTANTS = {
   }
 } as const;
 
+interface FlashSaleWithProduct extends FlashSale {
+  product: Product;
+}
+
 interface HomePageState {
-  flashSaleProducts: Product[];
+  flashSales: FlashSaleWithProduct[];
   popularGames: Array<{ 
     id: string; 
     name: string; 
@@ -58,7 +62,7 @@ interface HomePageState {
 const HomePage: React.FC = () => {
   const { showToast } = useToast();
   const [state, setState] = useState<HomePageState>({
-    flashSaleProducts: [],
+    flashSales: [],
     popularGames: [],
     loading: true,
     error: null
@@ -80,14 +84,18 @@ const HomePage: React.FC = () => {
 
       if (signal.aborted) return;
 
-      const flashSaleProducts = flashSalesResult.status === 'fulfilled' 
+      // Keep raw flash sale data (same structure as FlashSalesPage)
+      const flashSales = flashSalesResult.status === 'fulfilled' 
         ? sortByFlashSaleEndTime(
             flashSalesResult.value.map(sale => ({
-              ...sale.product,
-              isFlashSale: true, // Ensure isFlashSale is set for routing
-              flashSaleEndTime: sale.endTime || sale.product.flashSaleEndTime,
-              price: sale.salePrice || sale.product.price,
-              originalPrice: sale.originalPrice || sale.product.originalPrice
+              ...sale,
+              product: {
+                ...sale.product,
+                isFlashSale: true,
+                flashSaleEndTime: sale.endTime || sale.product.flashSaleEndTime,
+                price: sale.salePrice || sale.product.price,
+                originalPrice: sale.originalPrice || sale.product.originalPrice
+              }
             }))
           )
         : [];
@@ -99,7 +107,7 @@ const HomePage: React.FC = () => {
       const hasErrors = flashSalesResult.status === 'rejected' || popularGamesResult.status === 'rejected';
       
       setState({
-        flashSaleProducts,
+        flashSales,
         popularGames,
         loading: false,
         error: hasErrors ? 'Beberapa data gagal dimuat' : null
@@ -144,7 +152,7 @@ const HomePage: React.FC = () => {
     return <MobileLoadingSkeleton />;
   }
 
-  if (state.error && state.flashSaleProducts.length === 0 && state.popularGames.length === 0) {
+  if (state.error && state.flashSales.length === 0 && state.popularGames.length === 0) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center px-4">
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center max-w-md w-full">
@@ -166,7 +174,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-black">
       {/* Error banner for partial failures */}
-      {state.error && (state.flashSaleProducts.length > 0 || state.popularGames.length > 0) && (
+      {state.error && (state.flashSales.length > 0 || state.popularGames.length > 0) && (
         <div className="mx-4 sm:mx-6 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4" role="alert">
           <p className="text-amber-200 text-sm">{state.error}</p>
         </div>
@@ -182,7 +190,7 @@ const HomePage: React.FC = () => {
 
       {/* Content Sections - Unified spacing system (ISO 8pt grid) */}
       <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8 lg:space-y-10">
-        <PNFlashSalesSection products={state.flashSaleProducts} limit={MOBILE_CONSTANTS.FLASH_SALE_DISPLAY_LIMIT} />
+        <PNFlashSalesSection products={state.flashSales} limit={MOBILE_CONSTANTS.FLASH_SALE_DISPLAY_LIMIT} />
         <HomeAccountCategoriesSection />
         <PNPopularGamesSection games={state.popularGames} limit={12} />
       </div>

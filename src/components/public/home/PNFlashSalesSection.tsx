@@ -2,10 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Zap } from 'lucide-react';
 import { PNSection, PNSectionHeader } from '../../ui/PinkNeonDesignSystem';
-import { Product } from '../../../types';
+import { Product, FlashSale } from '../../../types';
 import FlashSaleCard from '../../shared/FlashSaleCard';
 
-interface Props { products: Product[]; limit?: number }
+interface FlashSaleWithProduct extends FlashSale {
+  product: Product;
+}
+
+interface Props { 
+  products: FlashSaleWithProduct[]; 
+  limit?: number;
+}
 
 const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
   if (!products || products.length === 0) return null;
@@ -36,12 +43,27 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
         role="list"
         aria-label="Daftar produk flash sale"
       >
-        {list.map((p) => (
-          <FlashSaleCard
-            key={p.id}
-            product={p}
-          />
-        ))}
+        {list.map((flashSale) => {
+          // Convert flash sale data to FlashSale type for the card (same as FlashSalesProductGrid)
+          const flashSaleData: FlashSale = {
+            id: flashSale.id,
+            productId: flashSale.productId,
+            originalPrice: flashSale.originalPrice,
+            salePrice: flashSale.salePrice,
+            endTime: flashSale.endTime,
+            startTime: flashSale.startTime,
+            isActive: flashSale.isActive,
+            stock: flashSale.stock
+          };
+
+          return (
+            <FlashSaleCard
+              key={flashSale.id}
+              product={flashSale.product}
+              flashSale={flashSaleData}
+            />
+          );
+        })}
       </div>
     </PNSection>
   );

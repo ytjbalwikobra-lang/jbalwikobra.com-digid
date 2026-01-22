@@ -189,15 +189,10 @@ const AuthPage: React.FC = () => {
       return;
     }
 
-    if (!profileData.name.trim()) {
-      showToast('Nama wajib diisi', 'error');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const result = await completeProfile(profileData.email, profileData.name);
+      const result = await completeProfile(profileData.email, profileData.name || '');
       
       if (result.error) {
         showToast(result.error, 'error');
@@ -449,7 +444,7 @@ const AuthPage: React.FC = () => {
                   <User size={28} className="text-pink-400" />
                 </div>
                 <PNText color="muted" className="text-sm">
-                  Lengkapi profil Anda untuk menyelesaikan pendaftaran
+                  Tambahkan email untuk notifikasi dan pemulihan akun
                 </PNText>
               </div>
 
@@ -463,20 +458,14 @@ const AuthPage: React.FC = () => {
                 required
               />
 
-              <PNInput
-                type="text"
-                label="Nama Lengkap"
-                value={profileData.name}
-                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                placeholder="Nama lengkap Anda"
-                icon={<User size={18} />}
-                required
-              />
-
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
                 <p className="text-sm text-white/60 flex items-center gap-2">
                   <span className="text-green-400">✓</span>
-                  Password sudah diatur saat pendaftaran
+                  Nama dan password sudah diatur saat pendaftaran
+                </p>
+                <p className="text-sm text-white/60 flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  Nomor WhatsApp terverifikasi
                 </p>
               </div>
 

@@ -558,30 +558,31 @@ async function handleCompleteProfile(req: VercelRequest, res: VercelResponse) {
   try {
     const { user_id, name, email } = req.body;
 
-    // Validation
-    if (!user_id || !name || !email) {
-      return res.status(400).json({ error: 'User ID, name, and email required' });
+    // Validation - email required, name optional (already set during signup)
+    if (!user_id || !email) {
+      return res.status(400).json({ error: 'User ID and email required' });
     }
 
     if (!isValidEmail(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    if (!isValidName(name)) {
-      return res.status(400).json({ error: 'Invalid name (2-100 chars, letters only)' });
-    }
+    // Build update object
+    const updateData: Record<string, any> = {
+      email: email.trim().toLowerCase(),
+      profile_completed: true,
+      profile_completed_at: new Date().toISOString()
+    };
 
-    const sanitizedName = sanitizeString(name.trim(), 100);
+    // Only update name if provided (allows override if needed)
+    if (name && isValidName(name)) {
+      updateData.name = sanitizeString(name.trim(), 100);
+    }
 
     // Update profile
     const { data: user, error: userError } = await getSupabase()
       .from('users')
-      .update({
-        name: sanitizedName,
-        email: email.trim().toLowerCase(),
-        profile_completed: true,
-        profile_completed_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', user_id)
       .select(USER_SAFE_FIELDS)
       .single();

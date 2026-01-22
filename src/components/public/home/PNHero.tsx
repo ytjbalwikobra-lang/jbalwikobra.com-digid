@@ -75,7 +75,7 @@ const PNHero: React.FC = () => {
               <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Rekber Aman - Layanan Rekening Bersama (membuka di tab baru)">
                 <PNButton variant="ghost" size="md" fullWidth className="flex items-center justify-center gap-2">
                   <Handshake size={16} aria-hidden="true" />
-                  <span>Rekber Aman</span>
+                  <span>Nomor Resmi</span>
                 </PNButton>
               </a>
               <a href={whatsappChannelUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Join WhatsApp Channel (membuka di tab baru)">

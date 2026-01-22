@@ -22,9 +22,9 @@ export const PNSection: React.FC<DivProps & { padding?: 'sm' | 'md' | 'lg' }>
   <section
     className={cn(
       'px-4 sm:px-6 lg:px-8',
-      padding === 'lg' && 'py-8 sm:py-10 lg:py-12',
-      padding === 'md' && 'py-6 sm:py-8',
-      padding === 'sm' && 'py-4 sm:py-5',
+      padding === 'lg' && 'py-6 sm:py-8 lg:py-10',
+      padding === 'md' && 'py-5 sm:py-6',
+      padding === 'sm' && 'py-3 sm:py-4',
       className
     )}
     {...rest}

@@ -33,7 +33,7 @@ const PNHero: React.FC = () => {
   return (
     <PNSection padding="lg">
       <PNContainer>
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-gradient-to-br from-black via-gray-900/50 to-black px-5 py-8 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-gradient-to-br from-black via-gray-900/50 to-black px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
           {/* Animated glow background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
             <div className="absolute -top-32 -left-32 w-80 h-80 bg-pink-500/20 rounded-full blur-[120px] animate-pulse" />

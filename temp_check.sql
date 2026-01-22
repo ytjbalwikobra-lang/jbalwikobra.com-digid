@@ -1,1 +1,4 @@
-SELECT * FROM validate_session('ed5a319f59deb52b39e8cd05ee06ee87cb587b86de2538a670620b4ee6257ea1');
+SELECT id, phone, message_type, context_type, success, error_message, created_at 
+FROM whatsapp_message_logs 
+ORDER BY created_at DESC 
+LIMIT 10;

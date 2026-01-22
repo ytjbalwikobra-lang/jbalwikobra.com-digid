@@ -176,19 +176,19 @@ const HomePage: React.FC = () => {
       <PNHero />
 
       {/* Banner Carousel - Consistent horizontal padding */}
-      <div className="mt-6 sm:mt-8">
+      <div className="mt-4 sm:mt-6">
         <BannerCarousel />
       </div>
 
-      {/* Content Sections - Unified spacing system */}
-      <div className="mt-8 sm:mt-10 space-y-8 sm:space-y-10 lg:space-y-12">
+      {/* Content Sections - Unified spacing system (ISO 8pt grid) */}
+      <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8 lg:space-y-10">
         <PNFlashSalesSection products={state.flashSaleProducts} limit={MOBILE_CONSTANTS.FLASH_SALE_DISPLAY_LIMIT} />
         <HomeAccountCategoriesSection />
         <PNPopularGamesSection games={state.popularGames} limit={12} />
       </div>
 
       {/* CTA Section - Separate spacing for visual break */}
-      <div className="mt-12 sm:mt-16">
+      <div className="mt-10 sm:mt-12">
         <PNCTA />
       </div>
 

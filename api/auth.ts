@@ -11,6 +11,7 @@ import {
   isValidName,
   isValidVerificationCode 
 } from './_utils/validation.js';
+import { DynamicWhatsAppService } from './_utils/dynamicWhatsAppService.js';
 
 /**
  * AUTH API - OPTIMIZED VERSION
@@ -398,7 +399,6 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
     // Send WhatsApp (async, don't wait)
     (async () => {
       try {
-        const { DynamicWhatsAppService } = await import('./_utils/dynamicWhatsAppService');
         const whatsappService = new DynamicWhatsAppService();
         await whatsappService.sendVerificationCode(phone, verificationCode);
       } catch (err) {

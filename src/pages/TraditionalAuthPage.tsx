@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Phone, User, Lock, Shield } from 'lucide-react';
+import { Mail, Phone, User, Lock, Shield, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useToast } from '../components/Toast';
 import PhoneInput from '../components/PhoneInput';
 import PasswordInput from '../components/PasswordInput';
 import { useTracking } from '../hooks/useTracking';
+import { SettingsService } from '../services/settingsService';
+import { ensureUrlProtocol } from '../utils/helpers';
+import type { WebsiteSettings } from '../types';
 import {
   PNContainer,
   PNCard,
@@ -36,6 +39,26 @@ const AuthPage: React.FC = () => {
   const { login, signup, verifyPhone, completeProfile } = useAuth();
   const { showToast } = useToast();
   const { trackLogin, trackSignUp } = useTracking();
+  const [settings, setSettings] = useState<WebsiteSettings | null>(null);
+
+  // Fetch settings for admin WhatsApp URL
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await SettingsService.get();
+        if (mounted) setSettings(data);
+      } catch {
+        // silent fail – use default WhatsApp URL
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Get admin WhatsApp URL from settings
+  const adminWhatsAppUrl = ensureUrlProtocol(
+    settings?.jualAkunWhatsappUrl || 'https://wa.me/6282242417788?text=Halo,%20saya%20lupa%20password%20akun%20saya'
+  );
 
   // Login tab state
   const [loginTab, setLoginTab] = useState<'email' | 'phone'>('email');
@@ -317,6 +340,29 @@ const AuthPage: React.FC = () => {
                 >
                   {loading ? 'Masuk...' : `Masuk dengan ${loginTab === 'email' ? 'Email' : 'Nomor HP'}`}
                 </PNButton>
+
+                {/* Forgot Password Button */}
+                <div className="pt-4">
+                  <a 
+                    href={adminWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <PNButton
+                      variant="secondary"
+                      fullWidth
+                      size="md"
+                      type="button"
+                      className="group"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <MessageCircle size={18} className="group-hover:scale-110 transition-transform" />
+                        Lupa Password? Hubungi Admin
+                      </span>
+                    </PNButton>
+                  </a>
+                </div>
 
                 <div className="text-center pt-2">
                   <PNLinkButton onClick={() => setMode('signup')}>

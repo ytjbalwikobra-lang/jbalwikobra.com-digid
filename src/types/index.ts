@@ -62,6 +62,7 @@ export interface Product {
   hasRental: boolean;
   rentalOptions?: RentalOption[];
   stock: number;
+  soldChannel?: 'web' | 'wa' | null; // Sold channel indicator
   // Archiving
   isActive?: boolean;
   archivedAt?: string | null;

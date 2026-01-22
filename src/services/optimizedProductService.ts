@@ -15,10 +15,15 @@ interface PaginatedResponse<T> {
 
 interface ProductFilters {
   search?: string;
-  gameTitle?: string;
-  tier?: string;
+  gameTitle?: string; // Filter by game_title_id (UUID)
+  gameTitleSlug?: string; // Filter by game_titles.slug (for URL-based filtering)
+  tier?: string; // Filter by tier_id (UUID)
+  tierSlug?: string; // Filter by tiers.slug (for URL-based filtering)
+  category?: string; // Filter by category_id (UUID)
+  categorySlug?: string; // Filter by categories.slug (for URL-based filtering)
   status?: 'active' | 'archived' | 'all' | 'public';
   includeArchived?: boolean;
+  hasRental?: boolean; // Server-side rental filter for egress optimization
 }
 
 interface PaginationOptions {
@@ -47,7 +52,10 @@ class OptimizedProductService {
     pagination: PaginationOptions = {}
   ): Promise<PaginatedResponse<Product>> {
     const { page = 1, limit = 20 } = pagination;
-    const { search, gameTitle, tier, status = 'active' } = filters;
+    const { 
+      search, gameTitle, gameTitleSlug, tier, tierSlug, 
+      category, categorySlug, status = 'active', hasRental 
+    } = filters;
     
     const cacheKey = this.getCacheKey('products_paginated', { filters, pagination });
     
@@ -92,12 +100,30 @@ class OptimizedProductService {
             query = query.or(`name.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%`);
           }
 
+          // Game filter - by ID or slug (slug uses relation filtering)
           if (gameTitle && gameTitle !== 'all') {
             query = query.eq('game_title_id', gameTitle);
+          } else if (gameTitleSlug && gameTitleSlug !== 'all') {
+            query = query.eq('game_titles.slug', gameTitleSlug);
           }
 
+          // Tier filter - by ID or slug
           if (tier && tier !== 'all') {
             query = query.eq('tier_id', tier);
+          } else if (tierSlug && tierSlug !== 'all') {
+            query = query.eq('tiers.slug', tierSlug);
+          }
+
+          // Category filter - by ID or slug
+          if (category && category !== 'all') {
+            query = query.eq('category_id', category);
+          } else if (categorySlug && categorySlug !== 'all') {
+            query = query.eq('categories.slug', categorySlug);
+          }
+
+          // Server-side rental filter - reduces egress significantly
+          if (hasRental === true) {
+            query = query.eq('has_rental', true).is('sold_channel', null);
           }
 
           // Apply pagination at database level
@@ -129,7 +155,7 @@ class OptimizedProductService {
           };
         }
       },
-      { ttl: cacheUtils.TTL.SHORT, tags: [CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_LIST] }
+      { ttl: cacheUtils.TTL.MEDIUM, tags: [CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_LIST] }
     );
   }
 
@@ -248,6 +274,10 @@ class OptimizedProductService {
   }
 
   private static mapDatabaseProduct(product: any): Product {
+    // Handle different formats: boolean true, string "true", number 1
+    const rawHasRental = product.has_rental;
+    const hasRentalValue = rawHasRental === true || rawHasRental === 'true' || rawHasRental === 1 || rawHasRental === '1';
+    
     return {
       ...product,
       isActive: product.is_active ?? product.isActive,
@@ -271,7 +301,7 @@ class OptimizedProductService {
         sortOrder: product.categories.sort_order ?? 0,
       } : undefined,
       categoryId: product.category_id ?? product.categoryId ?? product.categories?.id,
-      hasRental: product.has_rental ?? false,
+      hasRental: hasRentalValue,
       rentalOptions: [] // Load separately if needed
     };
   }

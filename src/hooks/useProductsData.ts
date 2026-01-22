@@ -7,7 +7,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Product, Tier, GameTitle } from '../types';
 import { scrollToPaginationContent } from '../utils/scrollUtils';
-import { excludeActiveFlashSales } from '../utils/flashSaleUtils';
 
 // Mobile-first constants
 const MOBILE_CONSTANTS = {
@@ -125,7 +124,7 @@ export const useProductsData = () => {
     ? MOBILE_CONSTANTS.PRODUCTS_PER_PAGE_MOBILE 
     : MOBILE_CONSTANTS.PRODUCTS_PER_PAGE;
 
-  // Optimized data fetching
+  // Optimized data fetching - uses server-side filtering when URL filters are set
   const fetchData = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
@@ -138,15 +137,42 @@ export const useProductsData = () => {
         import('../services/optimizedProductService')
       ]);
 
-      // Clear cache to ensure fresh data
-      OptimizedProductService.clearProductsCache();
-
+      // Check for URL-based filters to enable server-side filtering
+      // This reduces egress when users navigate from homepage category/game cards
+      const urlGame = searchParams.get('game');
+      const urlCategory = searchParams.get('category');
+      const urlTier = searchParams.get('tier');
+      const urlRental = searchParams.get('rental');
+      
+      // Build server-side filter options
+      const serverFilters: Record<string, any> = {
+        status: 'public' as const // Show all non-archived products including sold ones
+      };
+      
+      // Add URL filters for server-side filtering (reduces egress significantly)
+      // Using slug-based filtering for URL-friendly values
+      if (urlGame && urlGame.toLowerCase() !== 'all') {
+        // Convert name to slug format (lowercase, replace spaces with hyphens)
+        serverFilters.gameTitleSlug = urlGame.toLowerCase().replace(/\\s+/g, '-');
+      }
+      if (urlCategory && urlCategory.toLowerCase() !== 'all') {
+        serverFilters.categorySlug = urlCategory.toLowerCase().replace(/\\s+/g, '-');
+      }
+      if (urlTier && urlTier.toLowerCase() !== 'all') {
+        serverFilters.tierSlug = urlTier.toLowerCase();
+      }
+      if (urlRental === '1' || urlRental === 'true') {
+        serverFilters.hasRental = true;
+      }
+      
+      // Server-side filtering reduces database egress significantly
+      // Each filter combination is cached separately for 5 minutes (TTL.MEDIUM)
+      // When filters are set, server returns only matching products
+      
       const [productsResponse, tiersData, gameTitlesData] = await Promise.all([
-        OptimizedProductService.getProductsPaginated({
-          status: 'public' // Show all non-archived products including sold ones
-        }, {
+        OptimizedProductService.getProductsPaginated(serverFilters, {
           page: 1,
-          limit: 200 // Increased to get all products
+          limit: 600 // Get all matching products (server filters reduce this)
         }),
         ProductService.getTiers(),
         ProductService.getGameTitles()
@@ -175,6 +201,9 @@ export const useProductsData = () => {
         error: 'Gagal memuat produk. Silakan coba lagi.'
       }));
     }
+  // Initial load with URL-based server-side filters
+  // Subsequent filter changes use client-side filtering from cached products
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -183,8 +212,8 @@ export const useProductsData = () => {
 
   // Memoized filtered and sorted products
   const filteredProducts = useMemo(() => {
-    // Exclude products with active flash sales (they should only appear in flash sales section)
-    let filtered = excludeActiveFlashSales(state.products);
+    // Show all products including flash sales (no longer excluding them from catalog)
+    let filtered = [...state.products];
 
     // Search filter
     if (filterState.searchTerm) {
@@ -220,9 +249,9 @@ export const useProductsData = () => {
       filtered = filtered.filter(p => p.tierData?.slug?.toLowerCase() === tierLower);
     }
 
-    // Rental filter
+    // Rental filter - only show unsold products with rental active
     if (filterState.rentalOnly) {
-      filtered = filtered.filter(p => p.hasRental === true);
+      filtered = filtered.filter(p => p.hasRental === true && !p.soldChannel);
     }
 
     // Price range filter

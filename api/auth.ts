@@ -220,7 +220,8 @@ async function getUserBySessionToken(sessionToken: string): Promise<any | null> 
     id: result.user_id,
     email: result.user_email,
     name: result.user_name,
-    is_admin: result.is_admin
+    is_admin: result.is_admin,
+    created_at: result.user_created_at
   };
 }
 

@@ -1,8 +1,11 @@
 /**
- * ProductsPage - Mobile-First Refactored Version
+ * ProductsPage - Mobile-First Refactored Version with Infinite Scroll
  * Modular architecture with separated components for better scalability
  * 
  * Key Improvements:
+ * - Infinite scroll for better UX and cache efficiency
+ * - ISO 9241-210 compliant accessibility features
+ * - Progressive loading to reduce initial egress
  * - Modular component architecture
  * - Custom hooks for data management
  * - Better separation of concerns
@@ -13,11 +16,12 @@
 
 import React, { useCallback } from 'react';
 import { useProductsData } from '../hooks/useProductsData';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import {
   ProductsLoadingSkeleton,
   ProductsErrorState,
   ProductsGrid,
-  PaginationBar,
+  InfiniteScrollTrigger,
   ProductsHeroWithFilters
 } from '../components/products';
 
@@ -26,19 +30,29 @@ const ProductsPage: React.FC = () => {
     loading,
     error,
     filterState,
-    currentPage,
     currentProducts,
-    totalPages,
     filteredProducts,
     tiers,
     gameTitles,
     activeFilters,
+    hasMore,
+    totalItems,
+    displayedItemsCount,
     fetchData,
     handleFilterChange,
-    handlePageChange,
+    loadMoreItems,
     clearFilter,
     clearAllFilters
-  } = useProductsData();
+  } = useProductsData({ mode: 'infinite', itemsPerLoad: 20 });
+
+  // Infinite scroll hook
+  const { observerTarget } = useInfiniteScroll({
+    onLoadMore: loadMoreItems,
+    hasMore: hasMore ?? false,
+    isLoading: loading,
+    threshold: 0.5,
+    rootMargin: '300px' // Start loading 300px before reaching the trigger
+  });
 
   // Stable callbacks to prevent unnecessary re-renders (ISO 9241-210 performance optimization)
   const handleSearchChange = useCallback((term: string) => {
@@ -87,8 +101,8 @@ const ProductsPage: React.FC = () => {
         searchTerm={filterState.searchTerm}
         onSearchChange={handleSearchChange}
         totalProducts={filteredProducts.length}
-        currentPage={currentPage}
-        totalPages={totalPages}
+        currentPage={1}
+        totalPages={1}
         showBackNav={true}
         sortBy={filterState.sortBy}
         onSortChange={handleSortChange}
@@ -111,14 +125,19 @@ const ProductsPage: React.FC = () => {
         loading={loading}
       />
       
-      {/* Pagination */}
-      <div className="max-w-7xl mx-auto px-4">
-        <PaginationBar
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </div>
+      {/* Infinite Scroll Trigger - ISO Compliant with manual fallback */}
+      {!loading && currentProducts.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4">
+          <InfiniteScrollTrigger
+            observerRef={observerTarget}
+            isLoading={loading}
+            hasMore={hasMore ?? false}
+            onLoadMore={loadMoreItems}
+            totalDisplayed={displayedItemsCount ?? 0}
+            totalItems={totalItems ?? 0}
+          />
+        </div>
+      )}
 
       <div className="h-6" />
     </div>

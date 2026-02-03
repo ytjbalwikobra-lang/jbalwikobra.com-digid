@@ -16,6 +16,7 @@ import {
   ProductImageGallery,
   ProductInfo,
   ProductActions,
+  ProductRentalOptions,
   CheckoutModal,
   FlashSaleProductDetailLoadingSkeleton
 } from '../components/product-detail';
@@ -25,6 +26,7 @@ import {
   PNContainer
 } from '../components/ui/PinkNeonDesignSystem';
 import { SEOHead, Breadcrumb, ProductSchema } from '../components/seo';
+import { GEOAIHints } from '../components/seo/GEOSchemas';
 
 const FlashSaleProductDetailPage: React.FC = () => {
   const {
@@ -106,12 +108,6 @@ const FlashSaleProductDetailPage: React.FC = () => {
         image={product.image}
         type="product"
       />
-      <Breadcrumb
-        items={[
-          { label: 'Flash Sale', href: '/flash-sales' },
-          { label: product.name, href: `/flash-sales/${product.id}` }
-        ]}
-      />
       <ProductSchema
         name={product.name}
         description={product.description || 'Produk flash sale dengan diskon spesial'}
@@ -121,9 +117,31 @@ const FlashSaleProductDetailPage: React.FC = () => {
         availability={product.stock > 0 ? 'InStock' : 'OutOfStock'}
         url={`https://jbalwikobra.com/flash-sales/${product.id}`}
       />
+      {/* GEO AI Hints for AI assistants (Perplexity, Gemini, ChatGPT) */}
+      <GEOAIHints
+        productName={product.name}
+        price={effectivePrice}
+        category="Flash Sale"
+        inStock={product.stock > 0}
+        keywords={[
+          product.name,
+          'flash sale',
+          'diskon game',
+          'promo terbatas',
+          product.gameTitleData?.name || '',
+        ].filter(Boolean)}
+      />
 
       <section className="py-4">
         <PNContainer className="px-4 sm:px-6">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { label: 'Flash Sale', href: '/flash-sales' },
+              { label: product.name, href: `/flash-sales/${product.id}` }
+            ]}
+            className="mb-4"
+          />
           {/* Shared Header */}
           <PublicPageHeader
             title={product.name}
@@ -151,7 +169,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
             </div>
 
             {/* Product Information */}
-            <div className="mt-8 lg:mt-0">
+            <div className="mt-8 lg:mt-0 space-y-6">
               <ProductInfo
                 product={product}
                 effectivePrice={effectivePrice}
@@ -160,19 +178,27 @@ const FlashSaleProductDetailPage: React.FC = () => {
                 variant="flash-sale-hero"
               />
 
+              {/* Rental Options (if applicable for flash sale) */}
+              <ProductRentalOptions
+                rentalOptions={product.rentalOptions || []}
+                selectedRental={rentalState.selectedRental}
+                onRentalSelect={handleRentalSelect}
+                cameFromFlashSaleCard={true}
+                hasRental={product.hasRental || false}
+                isFlashSaleActive={isFlashSaleActive}
+              />
+
               {/* Actions */}
-              <div className="mt-10">
-                <ProductActions
-                  stock={product.stock}
-                  isActive={(product as any).isActive !== false && (product as any).is_active !== false}
-                  soldChannel={(product as any).soldChannel || (product as any).sold_channel || null}
-                  cameFromFlashSaleCard={true}
-                  hasRental={product.hasRental}
-                  selectedRental={rentalState.selectedRental}
-                  onPurchase={handlePurchase}
-                  onRental={handleRental}
-                />
-              </div>
+              <ProductActions
+                stock={product.stock}
+                isActive={(product as any).isActive !== false && (product as any).is_active !== false}
+                soldChannel={(product as any).soldChannel || (product as any).sold_channel || null}
+                cameFromFlashSaleCard={true}
+                hasRental={product.hasRental || false}
+                selectedRental={rentalState.selectedRental}
+                onPurchase={handlePurchase}
+                onRental={handleRental}
+              />
             </div>
           </div>
         </PNContainer>

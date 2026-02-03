@@ -56,7 +56,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Fetch dynamic product data from database
+    if (!supabase) {
+      console.warn('[Sitemap] Supabase not initialized - check SUPABASE_URL and SUPABASE_ANON_KEY environment variables');
+    }
+    
     if (supabase) {
+      console.log('[Sitemap] Supabase connected, fetching products...');
+      
       // Fetch active products
       const { data: products, error: productsError } = await supabase
         .from('products')
@@ -64,6 +70,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq('is_active', true)
         .order('updated_at', { ascending: false })
         .limit(500);
+
+      console.log(`[Sitemap] Products: ${products?.length || 0}, Error: ${productsError?.message || 'none'}`);
 
       if (!productsError && products) {
         for (const product of products) {

@@ -74,30 +74,35 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   // Generate unique ID
   const generateId = () => `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Sync external images to local state
+  // Sync external images to local state - preserve order from prop
   useEffect(() => {
     setLocalImages((prev) => {
-      const existingUrls = new Set(prev.filter((li) => li.status === 'success').map((li) => li.url));
-      const newItems: ImageItem[] = [];
-
-      images.forEach((url) => {
-        if (!existingUrls.has(url)) {
-          newItems.push({
-            id: generateId(),
-            url,
-            status: 'success',
-            progress: 100,
-          });
+      // Get currently uploading/pending/error items (keep these as-is)
+      const inProgressItems = prev.filter((li) => 
+        li.status === 'uploading' || li.status === 'pending' || li.status === 'error'
+      );
+      
+      // Build a map of existing URL -> ImageItem for reuse
+      const existingByUrl = new Map(
+        prev.filter((li) => li.status === 'success').map((li) => [li.url, li])
+      );
+      
+      // Create items in the ORDER of the images prop
+      const orderedSuccessItems: ImageItem[] = images.map((url) => {
+        const existing = existingByUrl.get(url);
+        if (existing) {
+          return existing;
         }
+        // New image, create item
+        return {
+          id: generateId(),
+          url,
+          status: 'success' as const,
+          progress: 100,
+        };
       });
 
-      // Keep existing successful + any uploading, filter out removed
-      const kept = prev.filter((li) => {
-        if (li.status === 'uploading' || li.status === 'pending' || li.status === 'error') return true;
-        return images.includes(li.url);
-      });
-
-      return [...kept, ...newItems];
+      return [...orderedSuccessItems, ...inProgressItems];
     });
   }, [images]);
 

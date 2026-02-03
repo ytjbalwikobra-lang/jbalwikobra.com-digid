@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Heart, Bell, Menu, X, User, Receipt } from 'lucide-react';
 import { useAuth } from '../../../contexts/TraditionalAuthContext';
@@ -7,6 +7,7 @@ import type { WebsiteSettings } from '../../../types';
 import { PNContainer } from '../../ui/PinkNeonDesignSystem';
 import { notificationService } from '../../../services/notificationService';
 import { getAuthUserId } from '../../../services/authService';
+import { prefetchRoute } from '../../../utils/linkPrefetch';
 
 const cx = (...c: Array<string | false | null | undefined>) => c.filter(Boolean).join(' ');
 
@@ -118,6 +119,8 @@ const PNHeader: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onMouseEnter={() => prefetchRoute(item.path)}
+                  onFocus={() => prefetchRoute(item.path)}
                   className={cx(
                     'px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
                     'hover:bg-white/10 text-white/80 hover:text-white',

@@ -24,6 +24,7 @@ import PNCTA from '../components/public/home/PNCTA';
 import { useToast } from '../components/Toast';
 import BannerCarousel from '../components/BannerCarousel';
 import MobileLoadingSkeleton from '../components/public/home/MobileLoadingSkeleton';
+import { SEOHead, WebSiteSchema, OrganizationSchema, LocalBusinessSchema } from '../components/seo';
 
 // Mobile-first constants following platform guidelines
 const MOBILE_CONSTANTS = {
@@ -173,6 +174,18 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* SEO Head with Homepage-specific meta tags and schemas */}
+      <SEOHead
+        title="Gaming Marketplace #1 Indonesia"
+        description="Platform jual beli dan rental akun game terpercaya di Indonesia. Mobile Legends, PUBG Mobile, Free Fire, Genshin Impact dengan harga terbaik dan garansi 100%."
+        keywords="jual beli akun game, rental akun game, mobile legends, pubg mobile, free fire, genshin impact, akun game murah, indonesia, terpercaya"
+        url="/"
+        type="website"
+      />
+      <WebSiteSchema />
+      <OrganizationSchema />
+      <LocalBusinessSchema />
+
       {/* Error banner for partial failures */}
       {state.error && (state.flashSales.length > 0 || state.popularGames.length > 0) && (
         <div className="mx-4 sm:mx-6 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4" role="alert">

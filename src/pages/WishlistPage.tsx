@@ -83,6 +83,7 @@ const WishlistPage: React.FC = () => {
                     src={item.image}
                     alt={item.name}
                     className="w-20 h-20 rounded-lg object-cover"
+                    loading="lazy"
                   />
                   
                   <div className="flex-1">

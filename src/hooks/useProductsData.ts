@@ -172,10 +172,10 @@ export const useProductsData = (options: UseProductsDataOptions = {}) => {
       // Combined with infinite scroll: Only 20 products (~90KB) displayed initially
       if (urlGame && urlGame.toLowerCase() !== 'all') {
         // Convert name to slug format (lowercase, replace spaces with hyphens)
-        serverFilters.gameTitleSlug = urlGame.toLowerCase().replace(/\\s+/g, '-');
+        serverFilters.gameTitleSlug = urlGame.toLowerCase().replace(/\s+/g, '-');
       }
       if (urlCategory && urlCategory.toLowerCase() !== 'all') {
-        serverFilters.categorySlug = urlCategory.toLowerCase().replace(/\\s+/g, '-');
+        serverFilters.categorySlug = urlCategory.toLowerCase().replace(/\s+/g, '-');
       }
       if (urlTier && urlTier.toLowerCase() !== 'all') {
         serverFilters.tierSlug = urlTier.toLowerCase();
@@ -245,28 +245,49 @@ export const useProductsData = (options: UseProductsDataOptions = {}) => {
       );
     }
 
-    // Category filter (by name)
+    // Category filter (by name or slug for robustness)
     if (filterState.selectedCategory) {
       const target = filterState.selectedCategory.toLowerCase();
-      filtered = filtered.filter(p => p.categoryData?.name?.toLowerCase() === target);
+      // Match by name or slug for robustness
+      filtered = filtered.filter(p => 
+        p.categoryData?.name?.toLowerCase() === target ||
+        p.categoryData?.slug?.toLowerCase() === target
+      );
     }
 
     // Game filter (multi-select has priority)
+    // Support matching by name OR slug for flexibility
     if (filterState.selectedGames?.length) {
       const setGames = new Set(filterState.selectedGames.map(g => g.toLowerCase()));
-      filtered = filtered.filter(p => p.gameTitleData?.name && setGames.has(p.gameTitleData.name.toLowerCase()));
+      filtered = filtered.filter(p => {
+        const name = p.gameTitleData?.name?.toLowerCase();
+        const slug = p.gameTitleData?.slug?.toLowerCase();
+        return (name && setGames.has(name)) || (slug && setGames.has(slug));
+      });
     } else if (filterState.selectedGame) {
       const gameLower = filterState.selectedGame.toLowerCase();
-      filtered = filtered.filter(p => p.gameTitleData?.name?.toLowerCase() === gameLower);
+      // Match by name or slug for robustness
+      filtered = filtered.filter(p => 
+        p.gameTitleData?.name?.toLowerCase() === gameLower ||
+        p.gameTitleData?.slug?.toLowerCase() === gameLower
+      );
     }
 
     // Tier filter (multi-select has priority)
+    // Match by slug or name for flexibility
     if (filterState.selectedTiers?.length) {
       const setTiers = new Set(filterState.selectedTiers.map(t => t.toLowerCase()));
-      filtered = filtered.filter(p => p.tierData?.slug && setTiers.has(p.tierData.slug.toLowerCase()));
+      filtered = filtered.filter(p => {
+        const name = p.tierData?.name?.toLowerCase();
+        const slug = p.tierData?.slug?.toLowerCase();
+        return (slug && setTiers.has(slug)) || (name && setTiers.has(name));
+      });
     } else if (filterState.selectedTier) {
       const tierLower = filterState.selectedTier.toLowerCase();
-      filtered = filtered.filter(p => p.tierData?.slug?.toLowerCase() === tierLower);
+      filtered = filtered.filter(p => 
+        p.tierData?.slug?.toLowerCase() === tierLower ||
+        p.tierData?.name?.toLowerCase() === tierLower
+      );
     }
 
     // Rental filter - only show unsold products with rental active

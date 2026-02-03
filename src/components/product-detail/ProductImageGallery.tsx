@@ -91,6 +91,7 @@ export const ProductImageGallery = React.memo(({
                   src={image}
                   alt={`${productName} ${index + 1}`}
                   className="w-full h-full object-cover rounded-xl"
+                  loading="lazy"
                 />
               </div>
             </PNCard>

@@ -184,7 +184,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
                 >
                   <img
                     src={mediaUrl}
-                    alt=""
+                    alt={`Gambar ${index + 1} dari postingan`}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   

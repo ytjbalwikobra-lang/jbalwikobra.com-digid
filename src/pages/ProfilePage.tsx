@@ -25,6 +25,7 @@ import { useToast } from '../components/Toast';
 import { supabase } from '../services/supabase';
 import { PNSection, PNContainer, PNCard, PNHeading, PNText, PNButton, PNInput } from '../components/ui/PinkNeonDesignSystem';
 import { getCurrentUserProfile } from '../services/authService';
+import { SEOHead, Breadcrumb } from '../components/seo';
 
 interface UserProfile {
   name: string;
@@ -261,6 +262,16 @@ const ProfilePage: React.FC = () => {
 
   return (
     <AuthRequired>
+      <SEOHead
+        title="Profil Saya | JBal WiKobra"
+        description="Kelola profil akun Anda, lihat riwayat pesanan, dan atur preferensi akun di JBal WiKobra."
+        url="/profile"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Profil', href: '/profile' }
+        ]}
+      />
       <div className="min-h-screen bg-black text-white">
         {/* Hero header */}
         <PNSection padding="lg" className="border-b border-white/10">

@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import PNHeader from './components/public/layout/PNHeader';
@@ -23,6 +24,8 @@ import { onIdle, warmImport } from './utils/prefetch';
 import { ProductService } from './services/productService';
 import UserFloatingNotifications from './components/UserFloatingNotifications';
 import PurchaseNotificationTicker from './components/PurchaseNotificationTicker';
+import analyticsService from './services/analyticsService';
+import { initWebVitals } from './services/webVitalsService';
 
 // CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
 // This reduces initial JS bundle by 70%+
@@ -47,6 +50,7 @@ const TermsPage = React.lazy(() => import('./pages/TermsPage'));
 const FeedPage = React.lazy(() => import('./pages/FeedPage'));
 const DesignSystemShowcase = React.lazy(() => import('./pages/DesignSystemShowcase'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+const CategoryPage = React.lazy(() => import('./pages/CategoryPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const MaintenancePage = React.lazy(() => import('./pages/MaintenancePage'));
 
@@ -122,6 +126,15 @@ function App() {
     FaviconService.updatePageTitle();
   }, []);
 
+  // Initialize analytics and web vitals monitoring
+  useEffect(() => {
+    // Initialize GA4 (respects user consent)
+    analyticsService.init();
+    
+    // Initialize Core Web Vitals monitoring
+    initWebVitals();
+  }, []);
+
   // Initialize production monitoring
   useEffect(() => {
     // Production monitor is automatically initialized when imported
@@ -148,17 +161,18 @@ function App() {
   }, []);
 
   const AppContent = () => (
-    <ThemeProvider>
-      <AuthProvider>
-        <WishlistProvider>
-          <ToastProvider>
-            <ConfirmationProvider>
-              <Router
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true
-                }}
-              >
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <ToastProvider>
+              <ConfirmationProvider>
+                <Router
+                  future={{
+                    v7_startTransition: true,
+                    v7_relativeSplatPath: true
+                  }}
+                >
                 <ScrollToTop />
                 {/* Maintenance Mode - Show maintenance page for all routes */}
                 {isMaintenanceMode ? (
@@ -231,6 +245,8 @@ function App() {
                           <Route path="/payment" element={<PaymentInterface />} />
                           <Route path="/orders" element={<OrderHistoryPage />} />
                           <Route path="/notifications" element={<NotificationsPage />} />
+                          {/* Category SEO landing pages */}
+                          <Route path="/kategori/:slug" element={<CategoryPage />} />
                           {/* Hidden design system showcase - not linked in navigation */}
                           <Route path="/internal/design-system" element={<DesignSystemShowcase />} />
                           {/* 404 Not Found - Catch all routes */}
@@ -253,6 +269,7 @@ function App() {
         </WishlistProvider>
       </AuthProvider>
     </ThemeProvider>
+    </HelmetProvider>
   );
 
   return (

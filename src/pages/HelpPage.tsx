@@ -35,6 +35,7 @@ import {
   PNPill 
 } from '../components/ui/PinkNeonDesignSystem';
 import { useNavigate } from 'react-router-dom';
+import { SEOHead, Breadcrumb, FAQPageSchema } from '../components/seo';
 
 const faqs = [
   {
@@ -148,6 +149,24 @@ const HelpPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEOHead
+        title="Pusat Bantuan & FAQ | JBal WiKobra"
+        description="Temukan jawaban cepat untuk pertanyaan seputar pembelian akun game, pembayaran, keamanan, dan fitur wishlist. Panduan lengkap dan customer support 24/7."
+        keywords="bantuan, faq, cara beli akun game, pembayaran xendit, keamanan akun, customer service"
+        url="/help"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Pusat Bantuan', href: '/help' }
+        ]}
+      />
+      <FAQPageSchema
+        faqs={faqs.map(faq => ({
+          question: faq.q,
+          answer: faq.a
+        }))}
+      />
+
   {/* Pink Neon Hero Section - PN black theme */}
   <PNSection padding="lg" className="border-b border-white/10">
         <PNContainer>

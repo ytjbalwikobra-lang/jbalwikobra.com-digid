@@ -24,6 +24,7 @@ import {
   PNButton,
   PNContainer
 } from '../components/ui/PinkNeonDesignSystem';
+import { SEOHead, Breadcrumb, ProductSchema } from '../components/seo';
 
 const FlashSaleProductDetailPage: React.FC = () => {
   const {
@@ -97,6 +98,30 @@ const FlashSaleProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <SEOHead
+        title={`${product.name} - Flash Sale | JBal WiKobra`}
+        description={`FLASH SALE! ${product.name} dengan diskon spesial. ${product.description?.slice(0, 100) || 'Penawaran terbatas, segera dapatkan sebelum kehabisan!'}`}
+        keywords={`flash sale, ${product.name}, diskon game, promo terbatas`}
+        url={`/flash-sales/${product.id}`}
+        image={product.image}
+        type="product"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Flash Sale', href: '/flash-sales' },
+          { label: product.name, href: `/flash-sales/${product.id}` }
+        ]}
+      />
+      <ProductSchema
+        name={product.name}
+        description={product.description || 'Produk flash sale dengan diskon spesial'}
+        image={product.image}
+        price={effectivePrice}
+        currency="IDR"
+        availability={product.stock > 0 ? 'InStock' : 'OutOfStock'}
+        url={`https://jbalwikobra.com/flash-sales/${product.id}`}
+      />
+
       <section className="py-4">
         <PNContainer className="px-4 sm:px-6">
           {/* Shared Header */}

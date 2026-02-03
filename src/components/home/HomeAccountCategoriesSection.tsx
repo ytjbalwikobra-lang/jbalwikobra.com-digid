@@ -78,7 +78,7 @@ const HomeAccountCategoriesSection: React.FC = () => {
         {categories.map((c) => (
           <Link
             key={c.id}
-            to={`/products?category=${encodeURIComponent(c.name)}`}
+            to={`/kategori/${c.slug || c.name.toLowerCase().replace(/\s+/g, '-')}`}
             className="block min-w-[170px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-2xl"
             role="listitem"
             aria-label={`Kategori ${c.name}`}

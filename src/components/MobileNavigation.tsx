@@ -6,6 +6,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Package, User } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext';
+import { prefetchRoute } from '../utils/linkPrefetch';
 
 interface NavigationItem {
   path: string;
@@ -55,6 +56,8 @@ const MobileNavigation: React.FC = () => {
                     to={item.path}
                     aria-label={item.label}
                     aria-current={active ? 'page' : undefined}
+                    onTouchStart={() => prefetchRoute(item.path)}
+                    onMouseEnter={() => prefetchRoute(item.path)}
                     className={`flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-2xl transition-all min-h-[44px] min-w-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 ${
                       active 
                         ? 'text-white bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 border border-pink-500/40' 

@@ -19,6 +19,7 @@ import { PNContainer } from '../components/ui/PinkNeonDesignSystem';
 import FlashSalesPageHeader from '../components/flash-sales/FlashSalesPageHeader';
 import FlashSalesProductGrid from '../components/flash-sales/FlashSalesProductGrid';
 import FlashSalesEmptyState from '../components/flash-sales/FlashSalesEmptyState';
+import { SEOHead, Breadcrumb, ItemListSchema } from '../components/seo';
 
 const FlashSalesPage: React.FC = () => {
   const {
@@ -53,6 +54,29 @@ const FlashSalesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black">
+      <SEOHead
+        title="Flash Sale - Diskon Terbatas"
+        description="Promo flash sale terbatas! Dapatkan diskon hingga 70% untuk top up game, voucher digital, dan produk gaming populer. Penawaran terbatas, buruan sebelum kehabisan!"
+        keywords="flash sale, promo game, diskon top up, voucher murah, game promo, penawaran terbatas"
+        url="/flash-sales"
+        page={currentPage}
+        totalPages={totalPages}
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Flash Sale', href: '/flash-sales' }
+        ]}
+      />
+      <ItemListSchema
+        name="Flash Sale - Promo Terbatas"
+        description="Penawaran flash sale terbatas untuk produk gaming dan digital"
+        items={currentProducts.slice(0, 10).map((flashSale, index) => ({
+          position: index + 1,
+          name: flashSale.product?.name || 'Flash Sale Product',
+          url: `https://jbalwikobra.com/flash-sales/${flashSale.id}`
+        }))}
+      />
+
       {/* Header with Navigation, Title, Search, and Stats */}
       <FlashSalesPageHeader
         searchTerm={filterState.searchTerm}

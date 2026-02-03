@@ -11,6 +11,7 @@ import {
   Heart
 } from 'lucide-react';
 import { IOSButton } from '../components/ios/IOSDesignSystem';
+import { SEOHead } from '../components/seo';
 
 const NotFoundPage: React.FC = () => {
   const quickActions = [
@@ -22,6 +23,11 @@ const NotFoundPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center relative overflow-hidden">
+      <SEOHead
+        title="Halaman Tidak Ditemukan | JBal WiKobra"
+        description="Halaman yang Anda cari tidak ditemukan atau sedang dalam pengembangan. Kembali ke beranda untuk menjelajahi produk gaming kami."
+        url="/404"
+      />
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 rounded-full blur-3xl animate-pulse" />

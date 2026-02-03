@@ -22,6 +22,7 @@ import {
 } from '../components/product-detail';
 import PublicPageHeader from '../components/shared/PublicPageHeader';
 import { PNButton, PNContainer } from '../components/ui/PinkNeonDesignSystem';
+import { SEOHead, Breadcrumb, ProductSchema } from '../components/seo';
 
 const ProductDetailPage: React.FC = () => {
   const {
@@ -91,8 +92,40 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* SEO Head with Product-specific meta tags */}
+      <SEOHead
+        title={product.name}
+        description={`${product.name} - ${product.description?.slice(0, 120) || 'Akun game premium terpercaya'}. Beli sekarang dengan harga terbaik!`}
+        keywords={`${product.name}, ${product.gameTitleData?.name || 'akun game'}, jual akun, beli akun game`}
+        image={product.image || product.images?.[0]}
+        url={`/products/${product.id}`}
+        type="product"
+      />
+      <ProductSchema
+        name={product.name}
+        description={product.description || 'Akun game premium'}
+        image={product.image || product.images?.[0] || ''}
+        price={effectivePrice}
+        originalPrice={product.originalPrice}
+        availability={product.stock > 0 && !product.soldChannel ? 'InStock' : 'OutOfStock'}
+        sku={product.id}
+        brand={product.gameTitleData?.name}
+        category={product.categoryData?.name}
+        url={`/products/${product.id}`}
+      />
+      
       <section className="py-4">
         <PNContainer className="px-4 sm:px-6">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb 
+            items={[
+              { label: 'Katalog', href: '/products' },
+              ...(product.gameTitleData?.name ? [{ label: product.gameTitleData.name, href: `/products?game=${encodeURIComponent(product.gameTitleData.name)}` }] : []),
+              { label: product.name, href: `/products/${product.id}` }
+            ]} 
+            className="mb-4"
+          />
+          
           {/* Shared Header */}
           <PublicPageHeader
             title={product.name}

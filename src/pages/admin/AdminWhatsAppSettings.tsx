@@ -446,11 +446,11 @@ const AdminWhatsAppSettings: React.FC = () => {
               <li>• <strong>API key invalid:</strong> Periksa akun NotifAPI</li>
             </ul>
             <div className="mt-3 flex gap-2">
-              <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow"
                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-medium hover:opacity-90">
                 WooWA Docs
               </a>
-              <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow"
                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-medium hover:bg-gray-600">
                 NotifAPI
               </a>
@@ -538,7 +538,7 @@ const AdminWhatsAppSettings: React.FC = () => {
               placeholder="Paste API key baru disini"
             />
             <p className="text-xs mt-1.5 text-gray-500">
-              Dapatkan dari <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:underline">WooWA</a> atau <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:underline">NotifAPI</a>
+              Dapatkan dari <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-400 hover:underline">WooWA</a> atau <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-400 hover:underline">NotifAPI</a>
             </p>
           </div>
 

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { AuthRequired } from '../components/ProtectedRoute';
 import { useTheme } from '../contexts/ThemeContext';
+import { SEOHead, Breadcrumb } from '../components/seo';
 // Removed legacy standardClasses helper – using direct utility classes
 
 interface AppSettings {
@@ -82,6 +83,17 @@ const SettingsPage: React.FC = () => {
 
   return (
     <AuthRequired>
+      <SEOHead
+        title="Pengaturan | JBal WiKobra"
+        description="Atur preferensi tema, notifikasi, dan privasi akun Anda di JBal WiKobra."
+        url="/settings"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Profil', href: '/profile' },
+          { label: 'Pengaturan', href: '/settings' }
+        ]}
+      />
   <div className="min-h-screen bg-black">
         <div className="pt-20 pb-20 px-4 with-bottom-nav">
           <div className="w-full max-w-7xl mx-auto">

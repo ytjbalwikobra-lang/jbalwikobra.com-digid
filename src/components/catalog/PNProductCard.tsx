@@ -3,8 +3,9 @@
  * WCAG 2.1 AA compliant, PinkNeon design system
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TIER_DOT_COLORS } from '../../utils/tierStyles';
+import { prefetchRoute } from '../../utils/linkPrefetch';
 
 interface PNProductCardProps {
   id: string;
@@ -47,9 +48,18 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
     : soldChannel === 'wa' ? 'Telah Terjual' 
     : stock === 0 ? 'Stok Habis' : null;
 
+  // Prefetch product detail on hover
+  const handlePrefetch = useCallback(() => {
+    if (!isSold && id) {
+      prefetchRoute(`/products/${id}`);
+    }
+  }, [id, isSold]);
+
   return (
     <article 
-      onClick={isSold ? undefined : onClick} 
+      onClick={isSold ? undefined : onClick}
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
       className={`group rounded-2xl bg-white/5 border border-white/10 overflow-hidden transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
         isSold 
           ? 'cursor-not-allowed opacity-75' 

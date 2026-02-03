@@ -24,6 +24,7 @@ import {
   InfiniteScrollTrigger,
   ProductsHeroWithFilters
 } from '../components/products';
+import { SEOHead, Breadcrumb, ItemListSchema } from '../components/seo';
 
 const ProductsPage: React.FC = () => {
   const {
@@ -96,6 +97,29 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* SEO Head with Products page meta tags */}
+      <SEOHead
+        title="Katalog Akun Game"
+        description="Jelajahi koleksi akun game premium kami. Mobile Legends, PUBG Mobile, Free Fire, Genshin Impact dan banyak lagi dengan harga terbaik."
+        keywords="katalog akun game, jual akun mobile legends, akun pubg murah, akun genshin impact, akun ff"
+        url="/products"
+      />
+      <ItemListSchema
+        name="Katalog Akun Game JB Alwikobra"
+        description="Koleksi akun game premium terpercaya"
+        items={currentProducts.slice(0, 10).map((p, i) => ({
+          name: p.name,
+          url: `/products/${p.id}`,
+          image: p.image,
+          position: i + 1
+        }))}
+      />
+      
+      {/* Breadcrumb Navigation */}
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <Breadcrumb items={[{ label: 'Katalog', href: '/products' }]} />
+      </div>
+
       {/* Integrated Hero with Filters */}
       <ProductsHeroWithFilters
         searchTerm={filterState.searchTerm}

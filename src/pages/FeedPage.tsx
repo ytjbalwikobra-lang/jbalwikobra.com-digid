@@ -11,6 +11,7 @@ import { FeedTabs } from '../components/feed/FeedTabs';
 import { FeedPagination } from '../components/feed/FeedPagination';
 import { FeedSkeleton, ErrorState, EmptyState, ImageLightbox } from '../components/feed/FeedStates';
 import { ReviewCard, ReviewData } from '../components/feed/ReviewCard';
+import { SEOHead, Breadcrumb } from '../components/seo';
 // Removed legacy standardClasses & cn helper – using a minimal local cls combiner
 const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 import { scrollToPaginationContent } from '../utils/scrollUtils';
@@ -244,6 +245,17 @@ export default function FeedPage() {
 
   return (
     <>
+      <SEOHead
+        title="Feed & Pengumuman | JBal WiKobra"
+        description="Lihat pengumuman terbaru, update produk, dan ulasan dari pembeli lainnya. Tetap terupdate dengan promo dan berita terbaru dari JBal WiKobra."
+        keywords="feed, pengumuman, ulasan, review, berita game, update produk"
+        url="/feed"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Feed', href: '/feed' }
+        ]}
+      />
       <FeedHeader />
 
       <PNSection padding="md">

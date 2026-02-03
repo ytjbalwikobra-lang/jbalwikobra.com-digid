@@ -208,6 +208,7 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         <img
           src={defaultBlurDataURL}
           alt=""
+          aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover"
           style={{ 
             filter: 'blur(10px) brightness(0.8)',

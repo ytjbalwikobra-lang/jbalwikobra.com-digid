@@ -1,10 +1,22 @@
 import React from 'react';
+import { SEOHead, Breadcrumb } from '../components/seo';
 
 const TermsPage: React.FC = () => {
   const updated = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
       <div className="min-h-screen bg-black text-white">
+      <SEOHead
+        title="Syarat & Ketentuan | JBal WiKobra"
+        description="Syarat dan ketentuan penggunaan layanan marketplace akun game JBal WiKobra. Baca kebijakan pembelian, pembayaran, refund, dan privasi data."
+        keywords="syarat ketentuan, terms of service, kebijakan privasi, aturan penggunaan"
+        url="/terms"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Syarat & Ketentuan', href: '/terms' }
+        ]}
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <h1 className="text-3xl font-bold text-white mb-2">Syarat &amp; Ketentuan</h1>
           <p className="text-sm text-white/70 mb-8">Terakhir diperbarui: {updated}</p>

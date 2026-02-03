@@ -43,7 +43,7 @@ const LinkifyText: React.FC<LinkifyTextProps> = ({ text, className = '' }) => {
             key={key}
             href={matchedText}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer nofollow ugc"
             className="text-pink-500 hover:text-pink-500/80 underline transition-colors"
           >
             {matchedText}
@@ -56,7 +56,7 @@ const LinkifyText: React.FC<LinkifyTextProps> = ({ text, className = '' }) => {
             key={key}
             href={`https://${matchedText}`}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer nofollow ugc"
             className="text-pink-500 hover:text-pink-500/80 underline transition-colors"
           >
             {matchedText}

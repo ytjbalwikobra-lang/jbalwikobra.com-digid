@@ -41,7 +41,7 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
             <PNCard className="p-3.5 hover:bg-white/10 hover:border-pink-500/30 transition-all h-full">
               <div className="aspect-square rounded-xl mb-2.5 flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 group-hover:border-pink-500/30 transition-colors" aria-hidden="true">
                 {g.logoUrl ? (
-                  <img src={g.logoUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <img src={g.logoUrl} alt={`Logo ${g.name}`} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <Gamepad2 className="text-gray-400" size={28} aria-hidden="true" />
                 )}

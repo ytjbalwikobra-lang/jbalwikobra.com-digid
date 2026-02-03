@@ -120,7 +120,7 @@ const PNFooter: React.FC = () => {
               {settings?.logoUrl ? (
                 <img 
                   src={settings.logoUrl} 
-                  alt="" 
+                  alt={`Logo ${siteName}`} 
                   className="w-12 h-12 rounded-2xl ring-1 ring-white/15 group-hover:ring-pink-500/40 transition-all shadow-lg" 
                 />
               ) : (
@@ -184,7 +184,7 @@ const PNFooter: React.FC = () => {
                     key={href} 
                     href={href} 
                     target="_blank" 
-                    rel="noreferrer" 
+                    rel="noopener noreferrer nofollow" 
                     className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 active:scale-[0.95]"
                     aria-label={label}
                   >
@@ -217,7 +217,7 @@ const PNFooter: React.FC = () => {
                           <a 
                             href={link.href} 
                             target="_blank" 
-                            rel="noreferrer" 
+                            rel="noopener noreferrer nofollow" 
                             className="group inline-flex items-center gap-1.5 text-sm text-gray-300 hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/60 rounded-md"
                           >
                             <ChevronRight 

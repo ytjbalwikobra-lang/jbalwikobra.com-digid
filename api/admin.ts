@@ -496,6 +496,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // Update User (Admin only)
+    if (req.method === 'POST' && action === 'updateUser') {
+      if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+      
+      try {
+        const { id, fields } = req.body || {};
+        
+        if (!id || !fields) {
+          return respond(res, 400, { error: 'missing_parameters' });
+        }
+        
+        // Only allow specific fields to be updated
+        const allowedFields = ['name', 'phone', 'is_admin', 'is_active', 'avatar_url'];
+        const sanitizedFields: Record<string, any> = {};
+        
+        for (const key of Object.keys(fields)) {
+          if (allowedFields.includes(key)) {
+            sanitizedFields[key] = fields[key];
+          }
+        }
+        
+        if (Object.keys(sanitizedFields).length === 0) {
+          return respond(res, 400, { error: 'no_valid_fields' });
+        }
+        
+        // Add updated_at timestamp
+        sanitizedFields.updated_at = new Date().toISOString();
+        
+        // Use service role to bypass RLS
+        const { data, error } = await supabase
+          .from('users')
+          .update(sanitizedFields)
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('[Admin API] User update error:', error);
+          return respond(res, 400, { error: 'update_failed', details: error.message });
+        }
+        return respond(res, 200, { success: true, data });
+      } catch (e: any) {
+        console.error('[Admin API] Exception:', e);
+        return respond(res, 500, { error: 'internal_error', message: e.message });
+      }
+    }
+
     // Delete Flash Sale
     if (req.method === 'POST' && action === 'deleteFlashSale') {
       if (!supabase) return respond(res, 500, { error: 'database_unavailable' });

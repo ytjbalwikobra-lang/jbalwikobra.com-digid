@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Trash2, Move, Loader, ImageIcon, Save } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Loader, Save } from 'lucide-react';
 import { adminService, Product } from '../../../services/adminService';
-import { uploadFiles, deletePublicUrls, UploadResult } from '../../../services/storageService';
+import { deletePublicUrls } from '../../../services/storageService';
 import { useToast } from '../../../components/Toast';
 import { useAdminConfirm } from './ui/AdminConfirmModal';
 import { AdminModal } from './ui/AdminModal';
 import { AdminButton } from './ui/AdminButton';
+import { AdminImageUpload } from './ui/AdminImageUpload';
 import { formatNumberID, parseNumberID, formatCurrency } from '../../../utils/helpers';
 import { supabase } from '../../../services/supabase';
 import { useAdminData } from '../../../contexts/AdminDataContext';
@@ -46,15 +47,6 @@ interface DropdownData {
   tiers: Array<{ id: string; name: string }>;
 }
 
-interface ImageItem {
-  id: string;
-  url: string;
-  isUploading?: boolean;
-  error?: string;
-}
-
-const MAX_IMAGES = 15;
-
 const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
   onClose,
@@ -65,9 +57,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
   const [loading, setLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  
+  // Track original images for cleanup on save
+  const [originalImages, setOriginalImages] = useState<string[]>([]);
   
   // Use AdminDataContext instead of local state
   const { 
@@ -94,8 +87,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
     has_rental: false,
     rental_options: []
   });
-
-  const [imageItems, setImageItems] = useState<ImageItem[]>([]);
 
   // Keyboard shortcuts for power users
   useKeyboardShortcuts({
@@ -157,11 +148,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
               rental_options: existingRentalOptions
             });
             
-            // Initialize image items for display
-            setImageItems(productImages.map((url, index) => ({
-              id: `existing-${index}`,
-              url
-            })));
+            // Track original images for cleanup
+            setOriginalImages(productImages);
           } else if (mode === 'create') {
             // Reset form for new product
             setFormData({
@@ -179,7 +167,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               has_rental: false,
               rental_options: []
             });
-            setImageItems([]);
+            setOriginalImages([]);
           }
         } catch (error) {
           console.error('Error initializing modal:', error);
@@ -203,7 +191,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       push('Harga produk harus lebih dari 0', 'error');
       return;
     }
-    if (imageItems.length === 0 && !formData.image) {
+    if (formData.images.length === 0 && !formData.image) {
       push('Minimal satu gambar produk diperlukan', 'error');
       return;
     }
@@ -222,8 +210,18 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
     setLoading(true);
     try {
+      // Delete removed images from storage (cleanup)
+      const removedImages = originalImages.filter(url => !formData.images.includes(url));
+      if (removedImages.length > 0) {
+        try {
+          await deletePublicUrls(removedImages);
+        } catch (err) {
+          console.warn('Failed to delete removed images:', err);
+        }
+      }
+
       // Prepare data with current images
-      const images = imageItems.map(item => item.url);
+      const images = formData.images;
       const submitData = {
         ...formData,
         images,
@@ -289,121 +287,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
   };
 
   // Image handling functions
-  const handleFileSelect = useCallback(async (files: FileList | null) => {
-    if (!files || imageItems.length >= MAX_IMAGES) return;
-
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    
-    const filesArray = Array.from(files);
-    
-    // Validate file sizes and types
-    const invalidFiles = filesArray.filter(file => 
-      file.size > MAX_FILE_SIZE || !ALLOWED_TYPES.includes(file.type)
-    );
-    
-    if (invalidFiles.length > 0) {
-      const sizeErrors = invalidFiles.filter(f => f.size > MAX_FILE_SIZE);
-      const typeErrors = invalidFiles.filter(f => !ALLOWED_TYPES.includes(f.type));
-      
-      if (sizeErrors.length > 0) {
-        push(`${sizeErrors.length} file(s) exceed 5MB limit`, 'error');
-      }
-      if (typeErrors.length > 0) {
-        push(`Only JPEG, PNG, and WebP images are allowed`, 'error');
-      }
-      return;
-    }
-
-    const remainingSlots = MAX_IMAGES - imageItems.length;
-    const filesToUpload = filesArray.slice(0, remainingSlots);
-
-    if (filesToUpload.length === 0) {
-      push(`Maximum ${MAX_IMAGES} images allowed`, 'info');
-      return;
-    }
-
-    // Add uploading placeholders
-    const newItems: ImageItem[] = filesToUpload.map((file, index) => ({
-      id: `uploading-${Date.now()}-${index}`,
-      url: URL.createObjectURL(file),
-      isUploading: true
+  // Handle image changes from AdminImageUpload
+  const handleImagesChange = useCallback((newImages: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      images: newImages,
+      image: newImages.length > 0 ? newImages[0] : ''
     }));
-
-    setImageItems(prev => [...prev, ...newItems]);
-
-    try {
-      const results = await uploadFiles(
-        filesToUpload,
-        'products',
-        (done, total) => setUploadProgress({ done, total })
-      );
-
-      // Update the items with actual URLs
-      setImageItems(prev => 
-        prev.map(item => {
-          const uploadIndex = newItems.findIndex(newItem => newItem.id === item.id);
-          if (uploadIndex !== -1 && results[uploadIndex]) {
-            return {
-              ...item,
-              url: results[uploadIndex].url,
-              isUploading: false
-            };
-          }
-          return item;
-        })
-      );
-
-      push(`Uploaded ${results.length} image(s) successfully!`, 'success');
-    } catch (error: any) {
-      // Remove failed uploads
-      setImageItems(prev => 
-        prev.filter(item => !newItems.some(newItem => newItem.id === item.id))
-      );
-      push(`Failed to upload images: ${error.message}`, 'error');
-    } finally {
-      setUploadProgress({ done: 0, total: 0 });
-    }
-  }, [imageItems.length, push]);
-
-  const handleRemoveImage = useCallback(async (index: number) => {
-    const item = imageItems[index];
-    if (!item) return;
-
-    // If it's an uploaded image (not existing), try to delete from storage
-    if (item.id.startsWith('uploading-') && !item.isUploading) {
-      try {
-        await deletePublicUrls([item.url]);
-      } catch (error) {
-        console.warn('Failed to delete image from storage:', error);
-      }
-    }
-
-    setImageItems(prev => prev.filter((_, i) => i !== index));
-  }, [imageItems]);
-
-  const handleDragStart = useCallback((index: number) => {
-    setDraggedIndex(index);
   }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === dropIndex) return;
-
-    setImageItems(prev => {
-      const newItems = [...prev];
-      const draggedItem = newItems[draggedIndex];
-      newItems.splice(draggedIndex, 1);
-      newItems.splice(dropIndex, 0, draggedItem);
-      return newItems;
-    });
-
-    setDraggedIndex(null);
-  }, [draggedIndex]);
 
   // Helper functions for thousand separator in inputs
   const formatNumberWithSeparator = (num: number | string) => {
@@ -718,161 +609,20 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Enhanced Image Management */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-4">
-                  Product Images {isReadOnly && imageItems.length > 0 && `(${imageItems.length})`}
-                </label>
-                
-                {/* View Mode: Image Gallery */}
-                {isReadOnly && imageItems.length > 0 && (
-                  <div className="space-y-4">
-                    {/* Main image */}
-                    <div className="relative bg-gray-800 rounded-lg overflow-hidden">
-                      <img
-                        src={imageItems[0]?.url}
-                        alt="Primary product image"
-                        className="w-full h-64 object-cover"
-                      />
-                      <div className="absolute top-2 left-2 bg-pink-500 text-white text-xs px-2 py-1 rounded">
-                        Primary Image
-                      </div>
-                    </div>
-                    
-                    {/* Additional images grid - 5 columns */}
-                    {imageItems.length > 1 && (
-                      <div className="grid grid-cols-5 gap-2">
-                        {imageItems.slice(1).map((item, index) => (
-                          <div key={item.id} className="relative bg-gray-800 rounded overflow-hidden">
-                            <img
-                              src={item.url}
-                              alt={`Product image ${index + 2}`}
-                              className="w-full aspect-square object-cover"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Edit/Create Mode: Upload Interface */}
-                {!isReadOnly && (
-                  <>
-                    {/* Upload Progress */}
-                    {uploadProgress.total > 0 && (
-                      <div className="mb-4 p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center justify-between text-sm text-gray-300 mb-2">
-                          <span>Uploading images...</span>
-                          <span>{uploadProgress.done}/{uploadProgress.total}</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
-                          <div 
-                            className="bg-pink-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(uploadProgress.done / uploadProgress.total) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Image Grid - 5 columns, more compact */}
-                    <div className="grid grid-cols-5 gap-2 mb-4">
-                      {imageItems.map((item, index) => (
-                        <div
-                          key={item.id}
-                          className={`relative group bg-gray-800 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                            draggedIndex === index ? 'border-pink-500 scale-95 opacity-50' : 'border-gray-700 hover:border-pink-500'
-                          }`}
-                          draggable={!item.isUploading}
-                          onDragStart={() => handleDragStart(index)}
-                          onDragOver={handleDragOver}
-                          onDrop={(e) => handleDrop(e, index)}
-                        >
-                          <div className="aspect-square">
-                            {item.isUploading ? (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-700">
-                                <Loader className="w-8 h-8 text-pink-500 animate-spin" />
-                              </div>
-                            ) : (
-                              <img
-                                src={item.url}
-                                alt={`Product image ${index + 1}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjNEI1NTYzIi8+CjxwYXRoIGQ9Ik0xMiA4QzEzLjEgOCAxNCA4LjkgMTQgMTBDMTQgMTEuMSAxMy4xIDEyIDEyIDEyQzEwLjkgMTIgMTAgMTEuMSAxMCAxMEMxMCA4LjkgMTAuOSA4IDEyIDhaIiBmaWxsPSIjOUM5Q0E0Ii8+CjxwYXRoIGQ9Ik01IDEyTDE5IDEyTDE1IDE2TDkgMTBMNSAxMloiIGZpbGw9IiM5QzlDQTQiLz4KPC9zdmc+';
-                                }}
-                              />
-                            )}
-                          </div>
-                          
-                          {/* Image overlay controls */}
-                          {!item.isUploading && (
-                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveImage(index)}
-                                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-                                  title="Remove image"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                                <div className="p-2 bg-gray-700 text-white rounded-lg cursor-grab">
-                                  <Move className="w-4 h-4" />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Primary image indicator */}
-                          {index === 0 && (
-                            <div className="absolute top-2 left-2 bg-pink-500 text-white text-xs px-2 py-1 rounded">
-                              Primary
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                      
-                      {/* Add new image button */}
-                      {imageItems.length < MAX_IMAGES && (
-                        <div
-                          className="aspect-square border-2 border-dashed border-gray-600 hover:border-pink-500 rounded-lg flex items-center justify-center cursor-pointer transition-colors group"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <div className="text-center">
-                            <Plus className="w-8 h-8 text-gray-400 group-hover:text-pink-500 mx-auto mb-2" />
-                            <span className="text-sm text-gray-400 group-hover:text-pink-500">Add Image</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* File input */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={(e) => handleFileSelect(e.target.files)}
-                      className="hidden"
-                    />
-
-                    {/* Upload instructions */}
-                    <div className="text-sm text-gray-400 space-y-1">
-                      <p>• Upload up to {MAX_IMAGES} images (JPEG, PNG, GIF, WebP)</p>
-                      <p>• First image will be used as primary</p>
-                      <p>• Drag images to reorder them</p>
-                      <p>• Maximum file size: 10MB per image</p>
-                    </div>
-                  </>
-                )}
-                
-                {/* No images state */}
-                {imageItems.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No images uploaded</p>
-                  </div>
-                )}
+                <AdminImageUpload
+                  images={formData.images}
+                  onChange={handleImagesChange}
+                  bucket="products"
+                  maxImages={15}
+                  maxSizeMB={5}
+                  readOnly={isReadOnly}
+                  showPrimaryBadge={true}
+                  gridCols={5}
+                  label={`Product Images ${isReadOnly && formData.images.length > 0 ? `(${formData.images.length})` : ''}`}
+                  helpText="Upload up to 15 images. First image is primary. Drag to reorder."
+                  onUploadingChange={setImageUploading}
+                  disabled={loading}
+                />
               </div>
 
               {/* Active Status */}

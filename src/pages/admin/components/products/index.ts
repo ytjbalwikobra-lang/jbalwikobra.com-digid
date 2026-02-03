@@ -1,10 +1,10 @@
 // New refactored components
 export { ProductStats } from './ProductStats';
-export { ProductForm } from './ProductForm';
 export { ProductActions } from './ProductActions';
 export { ProductsTable } from './ProductsTable';
 
 // Legacy form components (kept for compatibility)
+// NOTE: ImagesSection now uses AdminImageUpload internally
 export * from './BasicInfoSection';
 export * from './TierGameSection';
 export * from './ImagesSection';

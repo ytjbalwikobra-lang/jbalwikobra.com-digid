@@ -8,7 +8,9 @@ import {
   Clock,
   RefreshCw,
   Calendar,
-  DollarSign
+  DollarSign,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { adminService, type Order as AdminOrder } from '../../services/adminService';
@@ -19,6 +21,7 @@ import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminPagination } from './components/AdminPagination';
+import { OrderDetailsModal } from '../../components/admin/OrderDetailsModal';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import '../../styles/admin-design-system-v3.css';
 
@@ -65,6 +68,10 @@ const AdminOrdersV2: React.FC = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Order details modal state
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   // Cache for instant loading between page navigations
   const [cachedData, setCachedData] = useState<{
@@ -130,6 +137,19 @@ const AdminOrdersV2: React.FC = () => {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  // View order details handler
+  const handleViewOrder = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setDetailsModalOpen(true);
+  };
+
+  // Close details modal handler
+  const handleCloseDetailsModal = () => {
+    setDetailsModalOpen(false);
+    setSelectedOrderId(null);
+  };
+
   // Pagination calculations
   const totalPages = Math.ceil(orders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -302,6 +322,13 @@ const AdminOrdersV2: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end space-x-2">
                           <button 
+                            onClick={() => handleViewOrder(order.id)}
+                            className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                            title="View order details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button 
                             onClick={() => {
                               if (order.product_id) {
                                 navigate(`/products/${order.product_id}`);
@@ -336,6 +363,13 @@ const AdminOrdersV2: React.FC = () => {
           loading={loading}
         />
       )}
+
+      {/* Order Details Modal */}
+      <OrderDetailsModal
+        isOpen={detailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        orderId={selectedOrderId}
+      />
       </div>
   );
 };

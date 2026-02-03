@@ -152,11 +152,22 @@ function urlToPath(url: string): string | null {
 }
 
 export async function deletePublicUrls(urls: string[]): Promise<void> {
-  if (!supabase || !urls.length) return;
+  if (!supabase || !urls.length) {
+    console.log('[StorageService] deletePublicUrls: skipped (no supabase or empty urls)');
+    return;
+  }
   const paths = urls.map(urlToPath).filter(Boolean) as string[];
-  if (!paths.length) return;
+  if (!paths.length) {
+    console.warn('[StorageService] deletePublicUrls: no valid paths extracted from URLs:', urls);
+    return;
+  }
+  console.log('[StorageService] deletePublicUrls: removing paths from storage:', paths);
   const { error } = await (supabase as any).storage.from(BUCKET).remove(paths);
-  if (error) console.warn('Storage delete warning:', error);
+  if (error) {
+    console.warn('[StorageService] Storage delete warning:', error);
+  } else {
+    console.log('[StorageService] Successfully deleted files from storage');
+  }
 }
 
 // Game Logo Storage Functions

@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
-import { RefreshCw, Plus, Edit, Upload } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { RefreshCw, Plus, Edit, Upload, Loader } from 'lucide-react';
 import { BannerFormProps, BannerFormData } from './types';
 import { useModalForm } from '../../../../hooks/useModalForm';
 import { useKeyboardShortcuts, createModalShortcuts } from '../../../../hooks/useKeyboardShortcuts';
 import { bannerValidation } from '../../../../utils/adminValidation';
 import { AdminModal } from '../ui/AdminModal';
 import { AdminButton } from '../ui/AdminButton';
+import { uploadFiles, deletePublicUrls } from '../../../../services/storageService';
 
 export const BannerForm: React.FC<BannerFormProps> = ({
   isOpen,
@@ -15,6 +16,20 @@ export const BannerForm: React.FC<BannerFormProps> = ({
   submitting
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Track original image URL for cleanup when replacing
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  
+  // Update original image when editing banner changes
+  useEffect(() => {
+    if (editingBanner?.image_url) {
+      setOriginalImageUrl(editingBanner.image_url);
+    } else {
+      setOriginalImageUrl(null);
+    }
+  }, [editingBanner]);
 
   // Use useModalForm hook - eliminates ~40 lines of form state management
   const { formData, updateField, validationError, validate } = useModalForm<BannerFormData>(
@@ -59,7 +74,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     })
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Use centralized validation
@@ -67,17 +82,68 @@ export const BannerForm: React.FC<BannerFormProps> = ({
       return;
     }
     
+    // If image changed and there was an original image, delete the old one from storage
+    if (originalImageUrl && formData.image_url !== originalImageUrl) {
+      console.log('[BannerForm] Image changed, deleting old image from storage:', originalImageUrl);
+      try {
+        await deletePublicUrls([originalImageUrl]);
+        console.log('[BannerForm] Successfully deleted old image from storage');
+      } catch (err) {
+        // Don't block submit on delete failure, just log
+        console.warn('[BannerForm] Failed to delete old banner image:', err);
+      }
+    }
+    
     onSubmit(formData);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // For now, just use a placeholder URL
-    // TODO: Implement actual upload using uploadFiles from storageService
-    const mockImageUrl = `https://via.placeholder.com/800x400?text=${encodeURIComponent(file.name)}`;
-    updateField('image_url', mockImageUrl);
+    setUploadError(null);
+    
+    // Validate file
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('File size exceeds 5MB limit');
+      return;
+    }
+    
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadError('Only JPEG, PNG, and WebP images are allowed');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      console.log('[BannerForm] Starting upload for:', file.name, file.type, file.size);
+      const results = await uploadFiles([file], 'banners');
+      console.log('[BannerForm] Upload results:', results);
+      
+      if (results.length > 0 && results[0].url) {
+        // Delete old image if this is a replacement (not the original)
+        const currentUrl = formData.image_url;
+        if (currentUrl && currentUrl !== originalImageUrl) {
+          try {
+            await deletePublicUrls([currentUrl]);
+          } catch (err) {
+            console.warn('Failed to delete replaced image:', err);
+          }
+        }
+        updateField('image_url', results[0].url);
+      } else {
+        setUploadError('Upload succeeded but no URL returned. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Banner image upload failed:', error);
+      setUploadError(`Upload failed: ${error.message || 'Unknown error'}`);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const title = editingBanner ? 'Edit Banner' : 'Create New Banner';
@@ -174,12 +240,28 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-all duration-200"
+                  disabled={uploading}
+                  className="inline-flex items-center gap-2 px-4 py-2 border text-gray-300 rounded-lg hover:text-white transition-all duration-200 disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--admin-primary-light)', borderColor: 'var(--admin-border)' }}
                 >
-                  <Upload className="w-4 h-4" />
-                  Upload Image
+                  {uploading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Upload Image
+                    </>
+                  )}
                 </button>
               </div>
+              {uploadError && (
+                <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/30">
+                  {uploadError}
+                </div>
+              )}
               {formData.image_url && (
                 <div className="rounded-lg overflow-hidden border border-gray-700">
                   <img

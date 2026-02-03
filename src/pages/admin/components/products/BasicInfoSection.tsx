@@ -13,9 +13,9 @@ interface BasicInfoProps {
 export const BasicInfoSection: React.FC<BasicInfoProps> = ({ values, onChange }) => {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Basic Information</h3>
+      <h3 className="text-lg font-semibold text-white border-b pb-2" style={{ borderColor: 'var(--admin-border)' }}>Basic Information</h3>
       <div>
-        <label className="block text-sm font-medium text-white mb-2">Product Name *</label>
+        <label className="admin-label">Product Name *</label>
         <input
           type="text"
           value={values.name}
@@ -59,9 +59,9 @@ export const BasicInfoSection: React.FC<BasicInfoProps> = ({ values, onChange })
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-white mb-2">Stock Quantity *</label>
+        <label className="admin-label">Stock Quantity *</label>
           <input type="number" value={values.stock} min={0} onChange={e=>onChange({ stock: Math.max(0, Number(e.target.value)) })}
-            className={cn('w-full px-4 py-3 rounded-xl border border-gray-700 bg-black','text-white placeholder:text-white/50','focus:ring-2 focus:ring-pink-500 focus:border-pink-500')} placeholder="1" />
+            className={cn(adminInputBase, 'placeholder:text-white/50')} placeholder="1" />
       </div>
     </div>
   );

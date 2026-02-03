@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Users, UserCheck, Shield, Clock, Plus, Edit, Trash2, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { Users, UserCheck, Shield, Clock, Plus, Edit, Eye, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { adminService, User } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
 import { AdminCard, AdminCardBody } from './components/ui/AdminCard';
@@ -7,6 +7,7 @@ import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminFilter } from './components/AdminFilter';
+import { AdminUserModal } from './components/AdminUserModal';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
 import { useAbortController } from '../../hooks/useAbortController';
@@ -32,6 +33,11 @@ const AdminUsersV2: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -153,13 +159,24 @@ const AdminUsersV2: React.FC = () => {
   };
 
   const handleEditUser = (user: User) => {
-    push(`Edit functionality coming soon for: ${user.name}`, 'info');
+    setSelectedUser(user);
+    setModalMode('edit');
+    setModalOpen(true);
   };
 
-  const handleDeleteUser = (user: User) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus pengguna: ${user.name}?`)) {
-      push(`Delete functionality coming soon for: ${user.name}`, 'error');
-    }
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setModalMode('view');
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleModalSuccess = () => {
+    loadUsers(true); // Force refresh to get updated data
   };
 
   // Use shared formatter from utils/helpers
@@ -167,6 +184,15 @@ const AdminUsersV2: React.FC = () => {
 
   return (
     <div className="admin-page space-y-8">
+      {/* User Edit Modal */}
+      <AdminUserModal
+        isOpen={modalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleModalSuccess}
+        user={selectedUser}
+        mode={modalMode}
+      />
+      
       {/* Dashboard-Style Header */}
       <div className="flex items-center justify-between">
           <div>
@@ -439,16 +465,18 @@ const AdminUsersV2: React.FC = () => {
                   
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleEditUser(user)}
+                      onClick={() => handleViewUser(user)}
                       className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg transition-colors"
+                      title="View user details"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDeleteUser(user)}
-                      className="p-2 bg-gray-800 hover:bg-red-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                      onClick={() => handleEditUser(user)}
+                      className="p-2 bg-gray-800 hover:bg-pink-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                      title="Edit user"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

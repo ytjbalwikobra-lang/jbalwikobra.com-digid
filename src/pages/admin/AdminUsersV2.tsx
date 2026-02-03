@@ -6,6 +6,9 @@ import { AdminCard, AdminCardBody } from './components/ui/AdminCard';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
+import { AdminPageHeader } from './components/ui/AdminPageHeader';
+import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
+import { AdminButton } from './components/ui/AdminButton';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminUserModal } from './components/AdminUserModal';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
@@ -182,6 +185,54 @@ const AdminUsersV2: React.FC = () => {
   // Use shared formatter from utils/helpers
   const formatLastLogin = (lastLogin?: string) => lastLogin ? formatDateHelper(lastLogin) : 'Never';
 
+  // Analytics stats config
+  const analyticsStats: AnalyticsStat[] = useMemo(() => [
+    {
+      label: 'Total Users',
+      value: realStats.total,
+      icon: Users,
+      iconColor: 'text-blue-400',
+      iconBgColor: 'bg-blue-500/10',
+      format: 'number'
+    },
+    {
+      label: 'Active Users',
+      value: realStats.active,
+      icon: UserCheck,
+      iconColor: 'text-green-400',
+      iconBgColor: 'bg-green-500/10',
+      format: 'number'
+    },
+    {
+      label: 'Admin Users',
+      value: realStats.admin,
+      icon: Shield,
+      iconColor: 'text-purple-400',
+      iconBgColor: 'bg-purple-500/10',
+      format: 'number'
+    },
+    {
+      label: 'New This Month',
+      value: realStats.recent,
+      icon: Clock,
+      iconColor: 'text-orange-400',
+      iconBgColor: 'bg-orange-500/10',
+      format: 'number'
+    }
+  ], [realStats]);
+
+  // Header actions
+  const headerActions = (
+    <AdminButton
+      variant="secondary"
+      onClick={handleRefresh}
+      disabled={refreshing}
+      icon={<RotateCcw className={refreshing ? 'animate-spin' : ''} size={18} />}
+    >
+      Refresh
+    </AdminButton>
+  );
+
   return (
     <div className="admin-page space-y-8">
       {/* User Edit Modal */}
@@ -193,23 +244,12 @@ const AdminUsersV2: React.FC = () => {
         mode={modalMode}
       />
       
-      {/* Dashboard-Style Header */}
-      <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-              User Management
-            </h1>
-            <p className="text-gray-400 mt-1">Manage user accounts, permissions and analytics</p>
-          </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center space-x-2 px-4 py-2 bg-pink-500/10 border border-pink-500/20 rounded-xl text-pink-400 hover:bg-pink-500/20 transition-all duration-200 disabled:opacity-50"
-          >
-            <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
-        </div>
+      {/* Dashboard-Style Header - Using AdminPageHeader */}
+      <AdminPageHeader
+        title="User Management"
+        description="Manage user accounts, permissions and analytics"
+        actions={headerActions}
+      />
 
         {/* Error Display */}
         {error && (
@@ -219,64 +259,8 @@ const AdminUsersV2: React.FC = () => {
           />
         )}
 
-        {/* Modern Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <AdminCard hover>
-            <AdminCardBody>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-400 mb-1">Total Users</p>
-                  <p className="text-3xl font-bold text-white">{loading ? "..." : realStats.total}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="text-blue-600" size={24} />
-                </div>
-              </div>
-            </AdminCardBody>
-          </AdminCard>
-
-          <AdminCard hover>
-            <AdminCardBody>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Active Users</p>
-                  <p className="text-3xl font-bold text-green-600">{loading ? "..." : realStats.active}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <UserCheck className="text-green-600" size={24} />
-                </div>
-              </div>
-            </AdminCardBody>
-          </AdminCard>
-
-          <AdminCard hover>
-            <AdminCardBody>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Admin Users</p>
-                  <p className="text-3xl font-bold text-purple-600">{loading ? "..." : realStats.admin}</p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Shield className="text-purple-600" size={24} />
-                </div>
-              </div>
-            </AdminCardBody>
-          </AdminCard>
-
-          <AdminCard hover>
-            <AdminCardBody>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">New This Month</p>
-                  <p className="text-3xl font-bold text-orange-600">{loading ? "..." : realStats.recent}</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Clock className="text-orange-600" size={24} />
-                </div>
-              </div>
-            </AdminCardBody>
-          </AdminCard>
-        </div>
+        {/* Modern Metrics Grid - Using AdminAnalyticsCards */}
+        <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
 
         {/* Quick Actions Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

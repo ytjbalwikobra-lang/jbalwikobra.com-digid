@@ -13,10 +13,11 @@ import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminPageHeader } from './components/ui/AdminPageHeader';
+import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
 import { AdminPagination } from './components/AdminPagination';
 import { BannerForm, BannerFormData } from './components/banners';
 import { adminService } from '../../services/adminService';
-import { formatAnalyticsValue } from '../../utils/adminUtils';
 import '../../styles/admin-design-system-v3.css';
 
 const AdminBanners: React.FC = () => {
@@ -124,30 +125,54 @@ const AdminBanners: React.FC = () => {
     }
   };
 
-  // Analytics cards config
-  const analyticsCards = useMemo(() => [
+  // Analytics stats config
+  const analyticsStats: AnalyticsStat[] = useMemo(() => [
     {
       label: 'Total Banners',
       value: stats.total,
       icon: ImageIcon,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-500/10'
+      iconColor: 'text-blue-400',
+      iconBgColor: 'bg-blue-500/10',
+      format: 'number'
     },
     {
       label: 'Aktif',
       value: stats.active,
       icon: Eye,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-500/10'
+      iconColor: 'text-green-400',
+      iconBgColor: 'bg-green-500/10',
+      format: 'number'
     },
     {
       label: 'Nonaktif',
       value: stats.inactive,
       icon: EyeOff,
-      color: 'from-gray-500 to-gray-600',
-      bgColor: 'bg-gray-500/10'
+      iconColor: 'text-gray-400',
+      iconBgColor: 'bg-gray-500/10',
+      format: 'number'
     }
   ], [stats]);
+
+  // Header actions
+  const headerActions = (
+    <>
+      <AdminButton
+        variant="secondary"
+        onClick={loadBanners}
+        disabled={loading}
+        icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
+      >
+        Refresh
+      </AdminButton>
+      <AdminButton
+        variant="primary"
+        onClick={handleCreate}
+        icon={<Plus size={18} />}
+      >
+        Tambah Banner
+      </AdminButton>
+    </>
+  );
 
   return (
     <div className="admin-page space-y-8">
@@ -162,64 +187,15 @@ const AdminBanners: React.FC = () => {
         submitting={submitting}
       />
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            Manajemen Banner
-          </h1>
-          <p className="text-gray-400 mt-1">
-            {stats.active} banner aktif • {stats.inactive} nonaktif
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <AdminButton
-            variant="secondary"
-            onClick={loadBanners}
-            disabled={loading}
-            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-          >
-            Refresh
-          </AdminButton>
-          <AdminButton
-            variant="primary"
-            onClick={handleCreate}
-            icon={<Plus size={18} />}
-          >
-            Tambah Banner
-          </AdminButton>
-        </div>
-      </div>
+      {/* Header - Using AdminPageHeader */}
+      <AdminPageHeader
+        title="Manajemen Banner"
+        description={`${stats.active} banner aktif • ${stats.inactive} nonaktif`}
+        actions={headerActions}
+      />
 
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        {analyticsCards.map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <div 
-              key={idx}
-              className={`${card.bgColor} rounded-xl p-4 transition-all duration-300 hover:scale-[1.02]`}
-              style={{ border: '1px solid var(--admin-border)' }}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color}`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">{card.label}</p>
-                  <p className="text-xl font-bold text-white">
-                    {loading ? (
-                      <span className="inline-block w-8 h-6 rounded animate-pulse" style={{ backgroundColor: 'var(--admin-primary-lighter)' }} />
-                    ) : (
-                      formatAnalyticsValue(card.value)
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Analytics Cards - Using AdminAnalyticsCards */}
+      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={3} />
 
       {/* Table */}
       <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-light)', border: '1px solid var(--admin-border)' }}>

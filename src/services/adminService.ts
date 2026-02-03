@@ -346,14 +346,8 @@ const adminDataCache = {
   }
 };
 
-
-export interface AdminStats {
-  totalUsers: number;
-  totalOrders: number;
-  totalRevenue: number;
-  totalProducts: number;
-  lastUpdated?: string;
-}
+// Note: AdminStats interface is defined earlier in this file (around line 137)
+// DO NOT duplicate - use the existing one
 
 export interface OrderItem {
   id: string;

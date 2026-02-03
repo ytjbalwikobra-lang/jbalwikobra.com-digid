@@ -67,11 +67,11 @@ src/pages/admin/components/banners/
 
 ## Usage
 
-```tsx
-import { AdminBannersManagement } from './components/AdminBannersManagement';
+The banner management is handled directly by the `AdminBanners.tsx` page which uses these modular components.
 
-// Komponen utama sudah menggunakan semua sub-komponen
-<AdminBannersManagement onRefresh={handleRefresh} />
+```tsx
+// In AdminBanners.tsx
+import { BannerForm, BannerFormData } from './components/banners';
 ```
 
 ## Future Improvements
@@ -81,11 +81,3 @@ import { AdminBannersManagement } from './components/AdminBannersManagement';
 3. **Add loading skeleton** untuk better UX
 4. **Implement drag & drop** untuk reorder banner
 5. **Add bulk operations** (delete multiple, toggle status multiple)
-
-## Migration Notes
-
-- Import path tetap sama: `AdminBannersManagement` dari lokasi yang sama
-- API interface tidak berubah
-- Backward compatible dengan kode existing
-
-Refactoring ini mengikuti best practices React dan memberikan foundation yang solid untuk pengembangan features banner management selanjutnya.

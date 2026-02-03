@@ -11,11 +11,12 @@ import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
+import { AdminPageHeader } from './components/ui/AdminPageHeader';
+import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
 import { AdminPagination } from './components/AdminPagination';
 import { Zap, TrendingUp, Clock, Package, Plus, RefreshCw } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { formatCurrency } from '../../utils/helpers';
-import { formatAnalyticsValue } from '../../utils/adminUtils';
 import FlashSaleModal from './components/FlashSaleModal';
 import '../../styles/admin-design-system-v3.css';
 
@@ -160,99 +161,76 @@ const AdminFlashSales: React.FC = () => {
     push(selectedFlashSale ? 'Flash sale berhasil diperbarui!' : 'Flash sale berhasil dibuat!', 'success');
   };
 
-  // Analytics cards config
-  const analyticsCards = useMemo(() => [
+  // Analytics stats config
+  const analyticsStats: AnalyticsStat[] = useMemo(() => [
     {
       label: 'Total Flash Sales',
       value: stats.total,
       icon: Package,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-500/10'
+      iconColor: 'text-blue-400',
+      iconBgColor: 'bg-blue-500/10',
+      format: 'number'
     },
     {
       label: 'Sedang Berlangsung',
       value: stats.ongoing,
       icon: Zap,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-500/10'
+      iconColor: 'text-green-400',
+      iconBgColor: 'bg-green-500/10',
+      format: 'number'
     },
     {
       label: 'Terjadwal',
       value: stats.upcoming,
       icon: Clock,
-      color: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-500/10'
+      iconColor: 'text-orange-400',
+      iconBgColor: 'bg-orange-500/10',
+      format: 'number'
     },
     {
       label: 'Berakhir',
       value: stats.expired,
       icon: TrendingUp,
-      color: 'from-gray-500 to-gray-600',
-      bgColor: 'bg-gray-500/10'
+      iconColor: 'text-gray-400',
+      iconBgColor: 'bg-gray-500/10',
+      format: 'number'
     }
   ], [stats]);
+
+  // Header actions
+  const headerActions = (
+    <>
+      <AdminButton
+        variant="secondary"
+        onClick={loadFlashSales}
+        disabled={loading}
+        icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
+      >
+        Refresh
+      </AdminButton>
+      <AdminButton
+        variant="primary"
+        icon={<Plus size={18} />}
+        onClick={handleCreate}
+      >
+        Buat Flash Sale
+      </AdminButton>
+    </>
+  );
 
   return (
     <div className="admin-page space-y-8">
       <ConfirmModal />
       
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            Manajemen Flash Sales
-          </h1>
-          <p className="text-gray-400 mt-1">
-            {stats.ongoing} sedang berlangsung • {stats.upcoming} terjadwal
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <AdminButton
-            variant="secondary"
-            onClick={loadFlashSales}
-            disabled={loading}
-            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-          >
-            Refresh
-          </AdminButton>
-          <AdminButton
-            variant="primary"
-            icon={<Plus size={18} />}
-            onClick={handleCreate}
-          >
-            Buat Flash Sale
-          </AdminButton>
-        </div>
-      </div>
+      {/* Header - Using AdminPageHeader */}
+      <AdminPageHeader
+        title="Manajemen Flash Sales"
+        description={`${stats.ongoing} sedang berlangsung • ${stats.upcoming} terjadwal`}
+        actions={headerActions}
+      />
 
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {analyticsCards.map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <div 
-              key={idx}
-              className={`${card.bgColor} rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color}`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">{card.label}</p>
-                  <p className="text-xl font-bold text-white">
-                    {loading ? (
-                      <span className="inline-block w-8 h-6 bg-gray-700 rounded animate-pulse" />
-                    ) : (
-                      formatAnalyticsValue(card.value)
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Analytics Cards - Using AdminAnalyticsCards */}
+      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
 
       {/* Table */}
       <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">

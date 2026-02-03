@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
 import { 
@@ -20,6 +20,8 @@ import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
+import { AdminPageHeader } from './components/ui/AdminPageHeader';
+import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
 import { AdminPagination } from './components/AdminPagination';
 import { OrderDetailsModal } from '../../components/admin/OrderDetailsModal';
 import { formatCurrency, formatDate } from '../../utils/helpers';
@@ -156,6 +158,54 @@ const AdminOrdersV2: React.FC = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedOrders = orders.slice(startIndex, endIndex);
 
+  // Analytics stats config
+  const analyticsStats: AnalyticsStat[] = useMemo(() => [
+    {
+      label: 'Total Orders',
+      value: realStats.total,
+      icon: ShoppingCart,
+      iconColor: 'text-blue-400',
+      iconBgColor: 'bg-blue-500/10',
+      format: 'number'
+    },
+    {
+      label: "Today's Orders",
+      value: realStats.todayOrders,
+      icon: Calendar,
+      iconColor: 'text-green-400',
+      iconBgColor: 'bg-green-500/10',
+      format: 'number'
+    },
+    {
+      label: 'Total Revenue',
+      value: realStats.totalRevenue,
+      icon: DollarSign,
+      iconColor: 'text-pink-400',
+      iconBgColor: 'bg-pink-500/10',
+      format: 'currency'
+    },
+    {
+      label: 'Pending Orders',
+      value: realStats.pending,
+      icon: Clock,
+      iconColor: 'text-orange-400',
+      iconBgColor: 'bg-orange-500/10',
+      format: 'number'
+    }
+  ], [realStats]);
+
+  // Header actions
+  const headerActions = (
+    <AdminButton
+      variant="secondary"
+      onClick={() => loadOrders()}
+      disabled={loading}
+      icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
+    >
+      Refresh
+    </AdminButton>
+  );
+
   if (error) {
     return (
       <div className="admin-page">
@@ -171,84 +221,15 @@ const AdminOrdersV2: React.FC = () => {
 
   return (
     <div className="admin-page space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            Orders (Today)
-          </h1>
-          <p className="text-gray-400 mt-1">Ringkasan pesanan hari ini saja</p>
-        </div>
-        <div className="flex gap-3">
-          <AdminButton
-            variant="secondary"
-            onClick={() => loadOrders()}
-            disabled={loading}
-            icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-          >
-            Refresh
-          </AdminButton>
-        </div>
-      </div>
+      {/* Header - Using AdminPageHeader */}
+      <AdminPageHeader
+        title="Orders (Today)"
+        description="Ringkasan pesanan hari ini saja"
+        actions={headerActions}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <AdminCard hover>
-          <AdminCardBody>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400 mb-1">Total Orders</p>
-                <p className="text-3xl font-bold text-white">{realStats.total}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ShoppingCart className="text-blue-600" size={24} />
-              </div>
-            </div>
-          </AdminCardBody>
-        </AdminCard>
-
-        <AdminCard hover>
-          <AdminCardBody>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400 mb-1">Today's Orders</p>
-                <p className="text-3xl font-bold text-green-600">{realStats.todayOrders}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Calendar className="text-green-600" size={24} />
-              </div>
-            </div>
-          </AdminCardBody>
-        </AdminCard>
-
-        <AdminCard hover>
-          <AdminCardBody>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400 mb-1">Total Revenue</p>
-                <p className="text-3xl font-bold text-pink-600">{formatCurrency(realStats.totalRevenue)}</p>
-              </div>
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="text-pink-600" size={24} />
-              </div>
-            </div>
-          </AdminCardBody>
-        </AdminCard>
-
-        <AdminCard hover>
-          <AdminCardBody>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400 mb-1">Pending Orders</p>
-                <p className="text-3xl font-bold text-orange-600">{realStats.pending}</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Clock className="text-orange-600" size={24} />
-              </div>
-            </div>
-          </AdminCardBody>
-        </AdminCard>
-      </div>
+      {/* Stats Cards - Using AdminAnalyticsCards */}
+      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
 
         {/* Orders Table */}
         <AdminCard>

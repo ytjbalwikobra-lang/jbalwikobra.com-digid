@@ -6,6 +6,8 @@ export { AdminPageHeader } from './AdminPageHeader';
 export { AdminFilterPanel } from './AdminFilterPanel';
 export { AdminStats } from './AdminStats';
 export { AdminModal, ModalActions } from './AdminModal';
+export { AdminAnalyticsCards } from './AdminAnalyticsCards';
+export type { AnalyticsStat } from './AdminAnalyticsCards';
 
 // State Components - Loading, Empty, Error
 export { AdminLoadingState } from './AdminLoadingState';

@@ -274,27 +274,54 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   };
 
   // Drag handlers for reordering
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  
   const handleDragStart = (e: React.DragEvent, index: number) => {
     dragItemIndex.current = index;
     e.dataTransfer.effectAllowed = 'move';
+    // Add drag image styling
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
-    if (dragItemIndex.current === null || dragItemIndex.current === index) return;
+    e.dataTransfer.dropEffect = 'move';
+    if (dragItemIndex.current !== null && dragItemIndex.current !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeaveImage = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    
+    if (dragItemIndex.current === null || dragItemIndex.current === dropIndex) {
+      return;
+    }
 
     const successItems = localImages.filter((li) => li.status === 'success');
     const reordered = [...successItems];
     const [moved] = reordered.splice(dragItemIndex.current, 1);
-    reordered.splice(index, 0, moved);
+    reordered.splice(dropIndex, 0, moved);
 
     const newUrls = reordered.map((li) => li.url);
     onChange(newUrls);
-    dragItemIndex.current = index;
+    dragItemIndex.current = null;
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: React.DragEvent) => {
     dragItemIndex.current = null;
+    setDragOverIndex(null);
+    // Reset opacity
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
   };
 
   // File input handler
@@ -482,10 +509,16 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
           {successfulImages.map((item, index) => (
             <div
               key={item.id}
-              className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 border border-gray-700 group cursor-move"
+              className={`
+                relative aspect-square rounded-lg overflow-hidden bg-gray-800 border group cursor-move transition-all
+                ${dragOverIndex === index ? 'border-pink-500 border-2 scale-105' : 'border-gray-700'}
+                ${dragItemIndex.current === index ? 'opacity-50' : ''}
+              `}
               draggable
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeaveImage}
+              onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
             >
               <img

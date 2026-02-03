@@ -27,6 +27,14 @@ export type CreateInvoiceInput = {
     amount: number;
     rental_duration?: string | null;
     user_id?: string | null;
+    // Cart items for multi-item orders
+    cart_items?: Array<{
+      id: string;
+      productId: string;
+      name: string;
+      price: number;
+      quantity: number;
+    }>;
   };
 };
 

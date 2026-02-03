@@ -12,13 +12,7 @@ import { calculateTimeRemaining, formatCurrency } from '../utils/helpers';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useToast } from '../components/Toast';
 import { useTracking } from './useTracking';
-
-// Mobile-first constants
-const MOBILE_CONSTANTS = {
-  MIN_TOUCH_TARGET: 44,
-  GALLERY_PLACEHOLDER_COUNT: 5,
-  MAX_GALLERY_IMAGES: 15,
-} as const;
+import { MOBILE_CONSTANTS } from '../constants/mobile';
 
 interface ProductDetailState {
   product: Product | null;

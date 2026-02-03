@@ -14,3 +14,8 @@ export {
   WebSiteSchema,
   LocalBusinessSchema
 } from './SchemaMarkup';
+export {
+  GEOAIHints,
+  GEOProductSchema,
+  GEOCatalogSchema,
+} from './GEOSchemas';

@@ -11,19 +11,8 @@ import { SettingsService } from '../services/settingsService';
 import { calculateTimeRemaining, formatCurrency } from '../utils/helpers';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useToast } from '../components/Toast';
-
-// Mobile-first constants with enhanced touch targets and spacing
-const MOBILE_CONSTANTS = {
-  MIN_TOUCH_TARGET: 48, // Increased for better mobile usability
-  GALLERY_PLACEHOLDER_COUNT: 5,
-  MAX_GALLERY_IMAGES: 15,
-  HEADER_HEIGHT: 64,
-  BOTTOM_SAFE_AREA: 140, // Account for bottom navigation + action buttons
-  CONTENT_PADDING: 16,
-  CARD_PADDING: 20,
-  SECTION_GAP: 24,
-  ELEMENT_GAP: 16,
-} as const;
+import { useTracking } from './useTracking';
+import { MOBILE_CONSTANTS } from '../constants/mobile';
 
 interface ProductDetailState {
   product: Product | null;
@@ -56,6 +45,7 @@ export const useFlashSaleProductDetail = () => {
   const navigate = useNavigate();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { showToast } = useToast();
+  const { trackProductView, trackBeginCheckout } = useTracking();
 
   // Flash sale data from navigation state
   const flashSaleData = (location as any)?.state?.flashSaleData;
@@ -162,6 +152,17 @@ export const useFlashSaleProductDetail = () => {
         loading: false
       }));
       
+      // Track flash sale product view
+      try {
+        trackProductView({
+          id: finalProduct.id,
+          name: finalProduct.name,
+          category: 'flash_sale',
+          price: finalProduct.price,
+          image: finalProduct.image
+        });
+      } catch (e) { console.warn('Failed to track flash sale product view:', e); }
+      
       // Set initial rental option
       if (finalProduct.rentalOptions && finalProduct.rentalOptions.length > 0) {
         setRentalState({ selectedRental: finalProduct.rentalOptions[0] });
@@ -184,7 +185,7 @@ export const useFlashSaleProductDetail = () => {
         error: 'Failed to load product details'
       }));
     }
-  }, [id, flashSaleData, shouldOpenCheckoutModal]);
+  }, [id, flashSaleData, shouldOpenCheckoutModal, trackProductView]);
 
   // Effect to fetch product on mount
   useEffect(() => {
@@ -251,7 +252,19 @@ export const useFlashSaleProductDetail = () => {
       showCheckoutForm: true,
       checkoutType: 'purchase'
     }));
-  }, []);
+    
+    // Track begin checkout for flash sale
+    if (state.product) {
+      try {
+        trackBeginCheckout({
+          id: state.product.id,
+          name: state.product.name,
+          category: 'flash_sale',
+          price: effectivePrice
+        }, 'purchase');
+      } catch (e) { console.warn('Failed to track flash sale checkout:', e); }
+    }
+  }, [state.product, effectivePrice, trackBeginCheckout]);
 
   const handleRental = useCallback(() => {
     setCheckoutState(prev => ({

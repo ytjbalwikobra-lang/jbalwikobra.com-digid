@@ -12,7 +12,6 @@ import PNFooter from './components/public/layout/PNFooter';
 import './App.css';
 import './styles/global-design-system.css';
 import './styles/public-pages.css';
-import './styles/bottom-navigation.css';
 import { forceFixedPositioning } from './utils/forceFixedPositioning';
 import RequireAdmin from './components/RequireAdmin';
 import { ToastProvider } from './components/Toast';

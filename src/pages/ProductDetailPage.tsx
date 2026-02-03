@@ -23,6 +23,7 @@ import {
 import PublicPageHeader from '../components/shared/PublicPageHeader';
 import { PNButton, PNContainer } from '../components/ui/PinkNeonDesignSystem';
 import { SEOHead, Breadcrumb, ProductSchema } from '../components/seo';
+import { GEOAIHints } from '../components/seo/GEOSchemas';
 
 const ProductDetailPage: React.FC = () => {
   const {
@@ -112,6 +113,20 @@ const ProductDetailPage: React.FC = () => {
         brand={product.gameTitleData?.name}
         category={product.categoryData?.name}
         url={`/products/${product.id}`}
+      />
+      {/* GEO AI Hints for AI assistants (Perplexity, Gemini, ChatGPT) */}
+      <GEOAIHints
+        productName={product.name}
+        price={effectivePrice}
+        category={product.gameTitleData?.name || product.categoryData?.name}
+        inStock={product.stock > 0 && !product.soldChannel}
+        keywords={[
+          product.name,
+          product.gameTitleData?.name || '',
+          'jual akun game',
+          'beli akun game',
+          product.tierData?.name || '',
+        ].filter(Boolean)}
       />
       
       <section className="py-4">

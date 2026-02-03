@@ -8,6 +8,7 @@
 @import './styles/public-pages.css';
 @import './styles/admin-readability-enhancement.css';
 @import './styles/bottom-navigation.css';
+@import './styles/cyber-compact.css';
 
 /* Dark mode support - Black & Pink Theme */
 :root {

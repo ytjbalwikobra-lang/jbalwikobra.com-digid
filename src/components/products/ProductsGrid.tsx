@@ -1,9 +1,9 @@
 /**
  * ProductsGrid - Product grid display component
- * Features responsive grid layout with empty state
+ * Features responsive grid layout with empty state and Quick Buy
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
 import { PNProductCard } from '../catalog';
@@ -11,6 +11,7 @@ import { PNButton } from '../ui/PinkNeonDesignSystem';
 import { formatCurrency } from '../../utils/helpers';
 import { EmptyState } from './EmptyState';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
+import { useCart } from '../../contexts/CartContext';
 
 interface ProductsGridProps {
   products: Product[];
@@ -26,6 +27,7 @@ export const ProductsGrid = React.memo(({
   skeletonCount = 8 
 }: ProductsGridProps) => {
   const navigate = useNavigate();
+  const { quickBuy } = useCart();
 
   const handleNavigate = (product: Product) => {
     if (!product.id) return;
@@ -41,6 +43,20 @@ export const ProductsGrid = React.memo(({
     
     navigate(path, { state: { fromCatalogPage: true } });
   };
+
+  // Quick Buy handler - adds to cart and opens cart sheet
+  const handleQuickBuy = useCallback((product: Product) => {
+    if (!product.id || product.stock === 0) return;
+    
+    const mainImage = product.images?.[0] || product.image;
+    quickBuy(String(product.id), {
+      name: product.name,
+      price: product.price,
+      imageUrl: mainImage,
+      slug: String(product.id),
+      stock: product.stock,
+    });
+  }, [quickBuy]);
 
   return (
     <section className="py-4">
@@ -87,11 +103,11 @@ export const ProductsGrid = React.memo(({
                     disabled={isSold}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!isSold) handleNavigate(product);
+                      if (!isSold) handleQuickBuy(product);
                     }}
                     className={isSold ? 'opacity-50 cursor-not-allowed' : ''}
                   >
-                    {isSold ? 'Tidak Tersedia' : 'Beli Sekarang'}
+                    {isSold ? 'Tidak Tersedia' : '+ Keranjang'}
                   </PNButton>
                 </PNProductCard>
               );

@@ -1,0 +1,379 @@
+/**
+ * Cyber-Compact Design System
+ * Native-App First Gaming E-commerce UI
+ * Target: Gen Z/Alpha Gamers
+ */
+
+:root {
+  /* ═══════════════════════════════════════════════════════════
+     CYBER-COMPACT COLOR PALETTE
+     Pure Black base with Neon Pink accents
+  ══════════════════════════════════════════════════════════ */
+  
+  /* Core Backgrounds */
+  --cyber-bg-pure: #000000;
+  --cyber-bg-surface: #0a0a0a;
+  --cyber-bg-elevated: #121212;
+  --cyber-bg-card: #1a1a1a;
+  --cyber-bg-overlay: rgba(0, 0, 0, 0.85);
+  
+  /* Neon Pink Spectrum */
+  --cyber-pink-glow: #ff2d92;
+  --cyber-pink-primary: #ec4899;
+  --cyber-pink-secondary: #f472b6;
+  --cyber-pink-muted: rgba(236, 72, 153, 0.3);
+  --cyber-pink-subtle: rgba(236, 72, 153, 0.15);
+  --cyber-pink-ghost: rgba(236, 72, 153, 0.08);
+  
+  /* Accent Colors */
+  --cyber-cyan: #06b6d4;
+  --cyber-purple: #a855f7;
+  --cyber-green: #10b981;
+  --cyber-orange: #f97316;
+  --cyber-red: #ef4444;
+  
+  /* Text Hierarchy */
+  --cyber-text-primary: #ffffff;
+  --cyber-text-secondary: #a1a1aa;
+  --cyber-text-muted: #71717a;
+  --cyber-text-disabled: #52525b;
+  
+  /* Borders & Dividers */
+  --cyber-border: rgba(255, 255, 255, 0.08);
+  --cyber-border-hover: rgba(255, 255, 255, 0.15);
+  --cyber-border-active: rgba(236, 72, 153, 0.5);
+  
+  /* Shadows & Glows */
+  --cyber-glow-sm: 0 0 8px rgba(236, 72, 153, 0.3);
+  --cyber-glow-md: 0 0 16px rgba(236, 72, 153, 0.4);
+  --cyber-glow-lg: 0 0 32px rgba(236, 72, 153, 0.5);
+  --cyber-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
+  
+  /* ═══════════════════════════════════════════════════════════
+     TYPOGRAPHY - High Data Density
+     Compact Sans-Serif for gaming UI feel
+  ══════════════════════════════════════════════════════════ */
+  
+  --cyber-font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --cyber-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  
+  /* Compact Font Sizes (Mobile Game UI inspired) */
+  --cyber-text-2xs: 0.625rem;   /* 10px - badges, labels */
+  --cyber-text-xs: 0.75rem;      /* 12px - captions, meta */
+  --cyber-text-sm: 0.8125rem;    /* 13px - body small */
+  --cyber-text-base: 0.875rem;   /* 14px - body default */
+  --cyber-text-md: 0.9375rem;    /* 15px - body emphasis */
+  --cyber-text-lg: 1rem;         /* 16px - subheadings */
+  --cyber-text-xl: 1.125rem;     /* 18px - headings */
+  --cyber-text-2xl: 1.25rem;     /* 20px - titles */
+  --cyber-text-3xl: 1.5rem;      /* 24px - hero text */
+  
+  /* ═══════════════════════════════════════════════════════════
+     SPACING - Tight for High Density
+  ══════════════════════════════════════════════════════════ */
+  
+  --cyber-space-2xs: 0.125rem;   /* 2px */
+  --cyber-space-xs: 0.25rem;     /* 4px */
+  --cyber-space-sm: 0.375rem;    /* 6px */
+  --cyber-space-md: 0.5rem;      /* 8px */
+  --cyber-space-base: 0.75rem;   /* 12px */
+  --cyber-space-lg: 1rem;        /* 16px */
+  --cyber-space-xl: 1.25rem;     /* 20px */
+  --cyber-space-2xl: 1.5rem;     /* 24px */
+  
+  /* ═══════════════════════════════════════════════════════════
+     RADII - Modern Rounded Corners
+  ══════════════════════════════════════════════════════════ */
+  
+  --cyber-radius-sm: 0.375rem;   /* 6px */
+  --cyber-radius-md: 0.5rem;     /* 8px */
+  --cyber-radius-lg: 0.75rem;    /* 12px */
+  --cyber-radius-xl: 1rem;       /* 16px */
+  --cyber-radius-2xl: 1.25rem;   /* 20px */
+  --cyber-radius-full: 9999px;
+  
+  /* ═══════════════════════════════════════════════════════════
+     TRANSITIONS - Snappy Haptic Feel
+  ══════════════════════════════════════════════════════════ */
+  
+  --cyber-transition-fast: 100ms cubic-bezier(0.22, 1, 0.36, 1);
+  --cyber-transition-base: 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  --cyber-transition-smooth: 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  --cyber-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITY CLASSES - Cyber-Compact
+══════════════════════════════════════════════════════════ */
+
+.cyber-bg { background-color: var(--cyber-bg-pure); }
+.cyber-surface { background-color: var(--cyber-bg-surface); }
+.cyber-elevated { background-color: var(--cyber-bg-elevated); }
+.cyber-card { background-color: var(--cyber-bg-card); }
+
+/* Haptic Feedback Glow Effects */
+.cyber-glow-tap {
+  transition: box-shadow var(--cyber-transition-fast), transform var(--cyber-transition-fast);
+}
+
+.cyber-glow-tap:active {
+  box-shadow: var(--cyber-glow-sm);
+  transform: scale(0.98);
+}
+
+/* Neon Button Styles */
+.cyber-btn-primary {
+  background: linear-gradient(135deg, var(--cyber-pink-primary), var(--cyber-pink-glow));
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--cyber-radius-lg);
+  padding: var(--cyber-space-md) var(--cyber-space-lg);
+  font-size: var(--cyber-text-sm);
+  transition: all var(--cyber-transition-base);
+  box-shadow: 0 2px 12px rgba(236, 72, 153, 0.3);
+}
+
+.cyber-btn-primary:hover {
+  box-shadow: var(--cyber-glow-md);
+  transform: translateY(-1px);
+}
+
+.cyber-btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: var(--cyber-glow-sm);
+}
+
+/* Quick Buy Icon Button */
+.cyber-quick-buy {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cyber-pink-primary);
+  border-radius: var(--cyber-radius-md);
+  border: none;
+  color: white;
+  transition: all var(--cyber-transition-fast);
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+}
+
+.cyber-quick-buy:active {
+  transform: scale(0.92);
+  box-shadow: var(--cyber-glow-sm);
+}
+
+/* Price Display */
+.cyber-price {
+  font-family: var(--cyber-font-mono);
+  font-weight: 700;
+  font-size: var(--cyber-text-sm);
+  color: var(--cyber-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.cyber-price-original {
+  font-family: var(--cyber-font-mono);
+  font-size: var(--cyber-text-xs);
+  color: var(--cyber-text-muted);
+  text-decoration: line-through;
+}
+
+/* Bento Grid */
+.cyber-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--cyber-space-md);
+  padding: var(--cyber-space-md);
+}
+
+@media (min-width: 640px) {
+  .cyber-bento-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--cyber-space-base);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cyber-bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--cyber-space-lg);
+  }
+}
+
+/* Bento Card */
+.cyber-bento-card {
+  position: relative;
+  background: var(--cyber-bg-card);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--cyber-radius-lg);
+  overflow: hidden;
+  transition: all var(--cyber-transition-base);
+}
+
+.cyber-bento-card:hover {
+  border-color: var(--cyber-border-hover);
+  box-shadow: var(--cyber-shadow-card);
+}
+
+.cyber-bento-card:active {
+  transform: scale(0.98);
+  border-color: var(--cyber-border-active);
+}
+
+/* Bottom Sheet */
+.cyber-bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--cyber-bg-elevated);
+  border-top-left-radius: var(--cyber-radius-2xl);
+  border-top-right-radius: var(--cyber-radius-2xl);
+  border: 1px solid var(--cyber-border);
+  border-bottom: none;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 100;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.cyber-bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.cyber-bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--cyber-text-muted);
+  border-radius: var(--cyber-radius-full);
+  margin: var(--cyber-space-md) auto;
+}
+
+/* Badge Styles */
+.cyber-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--cyber-space-2xs) var(--cyber-space-sm);
+  font-size: var(--cyber-text-2xs);
+  font-weight: 600;
+  border-radius: var(--cyber-radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cyber-badge-sale {
+  background: linear-gradient(135deg, var(--cyber-pink-primary), var(--cyber-orange));
+  color: white;
+}
+
+.cyber-badge-new {
+  background: var(--cyber-cyan);
+  color: black;
+}
+
+.cyber-badge-stock {
+  background: var(--cyber-green);
+  color: black;
+}
+
+.cyber-badge-out {
+  background: var(--cyber-text-muted);
+  color: var(--cyber-bg-pure);
+}
+
+/* Bottom Navigation */
+.cyber-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  background: linear-gradient(to top, var(--cyber-bg-pure) 0%, rgba(0, 0, 0, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--cyber-border);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.cyber-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--cyber-space-md) var(--cyber-space-base);
+  color: var(--cyber-text-muted);
+  font-size: var(--cyber-text-2xs);
+  font-weight: 500;
+  transition: all var(--cyber-transition-fast);
+  position: relative;
+  min-height: 56px;
+  min-width: 64px;
+}
+
+.cyber-nav-item.active {
+  color: var(--cyber-pink-primary);
+}
+
+.cyber-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background: var(--cyber-pink-primary);
+  border-radius: 0 0 2px 2px;
+  box-shadow: var(--cyber-glow-sm);
+}
+
+.cyber-nav-item:active {
+  transform: scale(0.92);
+  color: var(--cyber-pink-secondary);
+}
+
+/* Cart Badge */
+.cyber-cart-badge {
+  position: absolute;
+  top: 4px;
+  right: 50%;
+  transform: translateX(calc(50% + 8px));
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--cyber-pink-glow);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--cyber-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--cyber-glow-sm);
+}
+
+/* Scrollbar Styling */
+.cyber-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--cyber-text-muted);
+  border-radius: var(--cyber-radius-full);
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--cyber-text-secondary);
+}

@@ -56,6 +56,8 @@ export default tseslint.config(
       "react-hooks/purity": "off",
       "react-hooks/immutability": "off",
       "react-hooks/static-components": "off",
+      // TypeScript handles prop validation - disable prop-types rule
+      "react/prop-types": "off",
     },
   },
   {

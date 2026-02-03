@@ -4,8 +4,10 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import PNHeader from './components/public/layout/PNHeader';
-import MobileNavigation from './components/MobileNavigation';
 import ScrollToTop from './components/ScrollToTop';
+import { CartProvider } from './contexts/CartContext';
+import { CyberBottomNav, CheckoutBottomSheet } from './components/mobile';
+import { CartIntegration } from './components/CartIntegration';
 import PNFooter from './components/public/layout/PNFooter';
 import './App.css';
 import './styles/global-design-system.css';
@@ -164,6 +166,7 @@ function App() {
     <HelmetProvider>
       <ThemeProvider>
         <AuthProvider>
+          <CartProvider>
           <WishlistProvider>
             <ToastProvider>
               <ConfirmationProvider>
@@ -202,7 +205,7 @@ function App() {
                 
         {/* Public routes with global layout */}
                 <Route path="*" element={
-                  <div className="App min-h-screen flex flex-col bg-black text-white relative">
+                  <div className="App min-h-screen flex flex-col bg-cyber-pure text-white relative">
           {/* New PN public header; keep legacy header import for compatibility in other routes */}
           <PNHeader />
                     {/* Purchase notification ticker - shows on all pages */}
@@ -256,7 +259,10 @@ function App() {
                     </main>
                     {/* New PN public footer */}
                     <PNFooter />
-                    <MobileNavigation />
+                    {/* Cyber-Compact Bottom Navigation */}
+                    <CyberBottomNav />
+                    {/* Cart Bottom Sheet */}
+                    <CartIntegration />
                   </div>
                 } />
               </Routes>
@@ -267,6 +273,7 @@ function App() {
             </ConfirmationProvider>
           </ToastProvider>
         </WishlistProvider>
+          </CartProvider>
       </AuthProvider>
     </ThemeProvider>
     </HelmetProvider>

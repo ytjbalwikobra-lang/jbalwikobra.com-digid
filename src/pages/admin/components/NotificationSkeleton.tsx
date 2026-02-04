@@ -39,8 +39,8 @@ const SkeletonItem: React.FC<{ variant: 'panel' | 'page' }> = ({ variant }) => {
           <div className="flex-1 min-w-0 space-y-3">
             {/* Title and badge */}
             <div className="flex items-center gap-2">
-              <div className="h-5 bg-gray-700/50 rounded-lg w-48" />
-              <div className="h-5 bg-gray-700/50 rounded-lg w-20" />
+              <div className="h-5 bg-gray-700/50 rounded-xl w-48" />
+              <div className="h-5 bg-gray-700/50 rounded-xl w-20" />
             </div>
             
             {/* Time */}
@@ -54,8 +54,8 @@ const SkeletonItem: React.FC<{ variant: 'panel' | 'page' }> = ({ variant }) => {
             
             {/* Meta info */}
             <div className="flex gap-3">
-              <div className="h-7 bg-gray-700/20 rounded-lg w-28" />
-              <div className="h-7 bg-gray-700/20 rounded-lg w-24" />
+              <div className="h-7 bg-gray-700/20 rounded-xl w-28" />
+              <div className="h-7 bg-gray-700/20 rounded-xl w-24" />
             </div>
             
             {/* Button */}

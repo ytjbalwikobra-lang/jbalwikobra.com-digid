@@ -156,7 +156,7 @@ export const IOSButton: React.FC<IOSButtonProps> = ({
   const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black active:scale-95';
   
   const variantClasses = {
-    primary: 'bg-pink-600 hover:bg-pink-700 focus:ring-pink-500 text-white shadow-lg',
+    primary: 'bg-pink-500 hover:bg-pink-600 focus:ring-pink-500 text-white shadow-lg',
     secondary: 'bg-zinc-800 hover:bg-zinc-700 focus:ring-zinc-500 text-white border border-zinc-700',
     tertiary: 'bg-zinc-900/50 hover:bg-zinc-800/50 focus:ring-zinc-500 text-white border border-zinc-800',
     ghost: 'hover:bg-zinc-800/50 focus:ring-zinc-500 text-zinc-300 hover:text-white',
@@ -357,14 +357,14 @@ export const IOSSectionHeader: React.FC<IOSSectionHeaderProps> = ({
       <div>
         <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
         {subtitle && (
-          <p className="text-zinc-400 text-sm">{subtitle}</p>
+          <p className="text-gray-400 text-sm">{subtitle}</p>
         )}
       </div>
       
       {action && (
         <button
           onClick={action.onClick}
-          className="text-pink-400 hover:text-pink-300 font-medium text-sm transition-colors flex items-center space-x-1"
+          className="text-pink-500 hover:text-pink-400 font-medium text-sm transition-colors flex items-center space-x-1"
         >
           <span>{action.label}</span>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,7 +392,7 @@ export const IOSSkeleton: React.FC<IOSSkeletonProps> = ({
 }) => {
   const variantClasses = {
     text: 'rounded h-4',
-    rectangular: 'rounded-lg',
+    rectangular: 'rounded-xl',
     circular: 'rounded-full'
   };
   return (
@@ -441,24 +441,24 @@ export const IOSInputField: React.FC<IOSInputFieldProps> = ({
   };
   return (
     <div className={`${fullWidth ? 'w-full' : ''} ${className}`}>
-      {label && <label className="block mb-2 text-sm font-medium text-zinc-300">{label}</label>}
+      {label && <label className="block mb-2 text-sm font-medium text-gray-300">{label}</label>}
       <div className="relative">
         {leadingIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             {leadingIcon}
           </div>
         )}
         <input
-          className={`w-full rounded-xl outline-none focus:ring-2 focus:ring-pink-500/40 transition-all text-white placeholder-zinc-500 ${sizeClasses[inputSize]} ${variantClasses[variant]} ${paddingLeft} ${paddingRight} ${error ? 'border-red-500 focus:ring-red-500/40' : ''}`}
+          className={`w-full rounded-xl outline-none focus:ring-2 focus:ring-pink-500/40 transition-all text-white placeholder-gray-500 ${sizeClasses[inputSize]} ${variantClasses[variant]} ${paddingLeft} ${paddingRight} ${error ? 'border-red-500 focus:ring-red-500/40' : ''}`}
           {...props}
         />
         {trailingIcon && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
             {trailingIcon}
           </div>
         )}
       </div>
-      {(helperText || error) && <p className={`mt-2 text-xs ${error ? 'text-red-400' : 'text-zinc-500'}`}>{error || helperText}</p>}
+      {(helperText || error) && <p className={`mt-2 text-xs ${error ? 'text-red-400' : 'text-gray-400'}`}>{error || helperText}</p>}
     </div>
   );
 };

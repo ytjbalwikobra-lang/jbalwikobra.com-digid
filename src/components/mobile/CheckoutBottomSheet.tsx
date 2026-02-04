@@ -172,7 +172,7 @@ const CheckoutBottomSheet: React.FC<CheckoutBottomSheetProps> = memo(({
           </div>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-card)] transition-colors"
+            className="p-2 -mr-2 rounded-xl text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-card)] transition-colors"
             aria-label="Close cart"
           >
             <X size={20} />
@@ -193,9 +193,9 @@ const CheckoutBottomSheet: React.FC<CheckoutBottomSheetProps> = memo(({
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 p-2 rounded-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)]"
+                  className="flex gap-3 p-2 rounded-xl bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)]"
                 >
-                  {/* Product Image */}
+                  {/* Product Image */
                   <div className="w-16 h-16 rounded-md overflow-hidden bg-[var(--cyber-bg-surface)] flex-shrink-0">
                     {item.imageUrl ? (
                       <img

@@ -125,7 +125,7 @@ export const ProductRentalOptions: React.FC<ProductRentalOptionsProps> = ({
                 <button
                   type="button"
                   onClick={() => removeRow(row.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs text-red-200"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs text-red-200"
                 >
                   <X className="w-4 h-4" />
                 </button>

@@ -113,7 +113,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
               aria-label={`Progress pemuatan: ${totalDisplayed} dari ${totalItems} produk dimuat, ${Math.round((totalDisplayed / totalItems) * 100)}%`}
             >
               <div 
-                className="h-full bg-gradient-to-r from-pink-600 to-purple-600 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500"
                 style={{ width: `${(totalDisplayed / totalItems) * 100}%` }}
                 aria-hidden="true"
               />
@@ -138,7 +138,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
             </span>
           </PNButton>
           
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-gray-400 text-center">
             Atau scroll ke bawah untuk memuat otomatis
           </p>
         </div>

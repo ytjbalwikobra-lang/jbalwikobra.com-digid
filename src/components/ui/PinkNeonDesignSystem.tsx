@@ -235,7 +235,7 @@ export const PNTabSwitcher: React.FC<TabSwitcherProps> = ({
         id={`tab-${tab.key}`}
         onClick={() => onTabChange(tab.key)}
         className={cn(
-          'flex-1 py-3 px-4 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-200',
+          'flex-1 py-3 px-4 min-h-[44px] rounded-xl text-sm font-medium transition-all duration-200',
           activeTab === tab.key
             ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/25'
             : 'text-white/60 hover:text-white hover:bg-white/5'

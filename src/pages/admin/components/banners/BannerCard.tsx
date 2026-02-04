@@ -48,7 +48,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="w-12 h-12 text-gray-500" />
+              <ImageIcon className="w-12 h-12 text-gray-400" />
             </div>
           )}
           
@@ -91,7 +91,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             {/* Link */}
             {banner.link_url && (
               <div className="flex items-center gap-2 text-sm">
-                <ExternalLink className="w-4 h-4 text-pink-400" />
+                <ExternalLink className="w-4 h-4 text-pink-500" />
                 <span className="text-gray-300 truncate">
                   {banner.link_url}
                 </span>

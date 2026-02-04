@@ -129,12 +129,12 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
     >
       <div className="space-y-4">
         {/* Product Info */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
           {product.image && (
             <img 
               src={product.image} 
               alt={product.name}
-              className="w-12 h-12 rounded-lg object-cover"
+              className="w-12 h-12 rounded-xl object-cover"
             />
           )}
           <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
               value={displayPrice}
               onChange={handlePriceChange}
               onKeyDown={handleKeyDown}
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
               placeholder="Masukkan harga jual"
               disabled={loading}
               aria-describedby={error ? 'price-error' : undefined}
@@ -179,7 +179,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
 
         {/* Price Difference Indicator */}
         {numericSoldPrice > 0 && priceDifference !== 0 && (
-          <div className={`p-3 rounded-lg ${hasDiscount ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-green-500/10 border border-green-500/30'}`}>
+          <div className={`p-3 rounded-xl ${hasDiscount ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-green-500/10 border border-green-500/30'}`}>
             <p className={`text-sm ${hasDiscount ? 'text-yellow-300' : 'text-green-300'}`}>
               {hasDiscount ? (
                 <>
@@ -195,7 +195,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
         )}
 
         {/* Confirmation Note */}
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-400">
           Produk akan ditandai sebagai tidak aktif dan terjual via WhatsApp dengan harga yang Anda masukkan.
         </p>
       </div>

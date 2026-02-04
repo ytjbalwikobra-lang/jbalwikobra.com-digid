@@ -384,7 +384,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                 placeholder="Search countries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-pink-500/30 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-pink-500/30 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200"
               />
             </div>
           </div>

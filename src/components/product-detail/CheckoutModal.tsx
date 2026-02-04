@@ -194,7 +194,7 @@ const CheckoutModal: React.FC<Props> = ({
             <div className="space-y-4">
               {/* Name */}
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <User size={18} />
                 </div>
                 <input
@@ -214,7 +214,7 @@ const CheckoutModal: React.FC<Props> = ({
 
               {/* Email */}
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <Mail size={18} />
                 </div>
                 <input
@@ -352,7 +352,7 @@ const CheckoutModal: React.FC<Props> = ({
             className={`w-full h-12 min-h-[48px] rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${
               isFormComplete && !creatingInvoice
                 ? 'bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40'
-                : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-800 text-gray-400 cursor-not-allowed'
             }`}
           >
             {creatingInvoice ? (
@@ -367,7 +367,7 @@ const CheckoutModal: React.FC<Props> = ({
 
           {/* Validation Summary */}
           {!isFormComplete && (
-            <div className="text-center text-xs text-gray-500">
+            <div className="text-center text-xs text-gray-400">
               {!isCustomerInfoValid && 'Lengkapi data pembeli'}
               {isCustomerInfoValid && !selectedPaymentMethod && 'Pilih metode pembayaran'}
               {isCustomerInfoValid && selectedPaymentMethod && !acceptedTerms && 'Setujui syarat & ketentuan'}

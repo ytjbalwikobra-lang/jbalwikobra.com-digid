@@ -91,7 +91,7 @@ const UserFloatingNotifications: React.FC = () => {
   return (
     <div className="fixed top-4 right-4 z-[1000] space-y-2 max-w-sm" role="region" aria-live="polite" aria-label="Notifikasi baru">
       {items.map((n) => (
-        <div key={n._ts} className="bg-black text-white rounded-lg shadow-lg border-l-4 border-pink-500 overflow-hidden">
+        <div key={n._ts} className="bg-black text-white rounded-xl shadow-lg border-l-4 border-pink-500 overflow-hidden">
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-start gap-2 flex-1 min-w-0">
@@ -107,7 +107,7 @@ const UserFloatingNotifications: React.FC = () => {
                   {n.body ? (
                     <p className="text-xs text-gray-600 line-clamp-2">{n.body}</p>
                   ) : null}
-                  <p className="text-[11px] text-gray-500 mt-1">
+                  <p className="text-[11px] text-gray-400 mt-1">
                     {new Date(n.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -120,7 +120,7 @@ const UserFloatingNotifications: React.FC = () => {
         </div>
       ))}
       {items.length > 5 && (
-        <div className="bg-black text-white rounded-lg shadow-lg">
+        <div className="bg-black text-white rounded-xl shadow-lg">
           <div className="p-2 text-center">
             <p className="text-xs text-gray-600">+{items.length - 5} notifikasi lainnya</p>
           </div>

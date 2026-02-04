@@ -18,7 +18,7 @@ import { Zap, TrendingUp, Clock, Package, Plus, RefreshCw } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { formatCurrency } from '../../utils/helpers';
 import FlashSaleModal from './components/FlashSaleModal';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface FlashSaleRow {
   id: string;
@@ -277,18 +277,18 @@ const AdminFlashSales: React.FC = () => {
                             <img 
                               src={sale.products.image} 
                               alt={sale.products?.name} 
-                              className="w-10 h-10 rounded-lg object-cover" 
+                              className="w-10 h-10 rounded-xl object-cover" 
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
-                              <Package className="w-5 h-5 text-gray-500" />
+                            <div className="w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center">
+                              <Package className="w-5 h-5 text-gray-400" />
                             </div>
                           )}
                           <div>
                             <p className="font-medium text-white">
                               {sale.products?.name || 'Unknown Product'}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-400">
                               ID: {sale.product_id.slice(0, 8)}...
                             </p>
                           </div>
@@ -298,14 +298,14 @@ const AdminFlashSales: React.FC = () => {
                       {/* Price */}
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-bold text-pink-400">
+                          <p className="font-bold text-pink-500">
                             {formatCurrency(sale.sale_price)}
                           </p>
                           <p className="text-sm text-gray-400 line-through">
                             {formatCurrency(sale.original_price)}
                           </p>
                           {discount > 0 && (
-                            <span className="inline-block mt-1 px-2 py-0.5 bg-pink-500/20 text-pink-400 text-xs font-semibold rounded">
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-pink-500/20 text-pink-500 text-xs font-semibold rounded-xl">
                               -{discount}%
                             </span>
                           )}
@@ -316,14 +316,14 @@ const AdminFlashSales: React.FC = () => {
                       <td className="px-4 py-3">
                         <div className="text-sm space-y-1">
                           <p className="text-gray-300">
-                            <span className="text-gray-500">Mulai:</span>{' '}
+                            <span className="text-gray-400">Mulai:</span>{' '}
                             {new Date(sale.start_time).toLocaleString('id-ID', { 
                               dateStyle: 'short', 
                               timeStyle: 'short' 
                             })}
                           </p>
                           <p className="text-gray-300">
-                            <span className="text-gray-500">Selesai:</span>{' '}
+                            <span className="text-gray-400">Selesai:</span>{' '}
                             {new Date(sale.end_time).toLocaleString('id-ID', { 
                               dateStyle: 'short', 
                               timeStyle: 'short' 
@@ -345,13 +345,13 @@ const AdminFlashSales: React.FC = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(sale)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(sale)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
                           >
                             Hapus
                           </button>

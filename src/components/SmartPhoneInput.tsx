@@ -149,7 +149,7 @@ const SmartPhoneInput: React.FC<SmartPhoneInputProps> = ({
         placeholder={placeholder}
         disabled={disabled}
         required={required}
-        className={`w-full pl-12 ${showCountrySelector && detectedCountry ? 'pr-16' : 'pr-12'} py-3 rounded-lg border ${getBorderColor()} bg-black text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all duration-200`}
+        className={`w-full pl-12 ${showCountrySelector && detectedCountry ? 'pr-16' : 'pr-12'} py-3 rounded-xl border ${getBorderColor()} bg-black text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all duration-200`}
       />
 
       {/* Country Flag & Validation Icons */}

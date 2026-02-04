@@ -48,19 +48,19 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
       {/* Filter Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gray-800">
-            <Filter className="w-5 h-5 text-pink-400" />
+          <div className="p-2 rounded-xl bg-gray-800">
+            <Filter className="w-5 h-5 text-pink-500" />
           </div>
           <h3 className="text-lg font-semibold text-white">Search & Filters</h3>
           {hasActiveFilters && (
-            <div className="px-2 py-1 bg-pink-500/20 border border-pink-500/30 rounded-lg text-xs text-pink-400">
+            <div className="px-2 py-1 bg-pink-500/20 border border-pink-500/30 rounded-xl text-xs text-pink-500">
               Filtered
             </div>
           )}
         </div>
         <button
           onClick={onToggleFilters}
-          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
         >
           <TrendingDown className={`w-5 h-5 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
         </button>
@@ -166,18 +166,18 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
               {/* Active Filter Pills */}
               <div className="flex flex-wrap items-center gap-2">
                 {filters.searchTerm && (
-                  <div className="flex items-center gap-1 px-3 py-1 bg-pink-500/20 border border-pink-500/30 rounded-lg text-sm text-pink-400">
+                  <div className="flex items-center gap-1 px-3 py-1 bg-pink-500/20 border border-pink-500/30 rounded-xl text-sm text-pink-500">
                     <span>Search: "{filters.searchTerm}"</span>
                     <button
                       onClick={() => handleFilterChange('searchTerm', '')}
-                      className="text-pink-400 hover:text-pink-300"
+                      className="text-pink-500 hover:text-pink-400"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 )}
                 {filters.ratingFilter !== 'all' && (
-                  <div className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-lg text-sm text-blue-400">
+                  <div className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-xl text-sm text-blue-400">
                     <Star className="w-3 h-3" />
                     <span>Rating: {filters.ratingFilter}</span>
                     <button
@@ -189,7 +189,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                   </div>
                 )}
                 {filters.dateFilter !== 'all' && (
-                  <div className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-lg text-sm text-green-400">
+                  <div className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-xl text-sm text-green-400">>
                     <Calendar className="w-3 h-3" />
                     <span>Date: {filters.dateFilter}</span>
                     <button
@@ -203,7 +203,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="px-3 py-1 bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 rounded-lg text-sm transition-all duration-200"
+                    className="px-3 py-1 bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 rounded-xl text-sm transition-all duration-200"
                   >
                     Clear All
                   </button>

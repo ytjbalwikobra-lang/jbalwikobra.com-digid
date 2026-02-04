@@ -132,7 +132,7 @@ export const ProductInfo = React.memo(({
 
       {/* Like Section - Moved below description */}
       <div className="mb-6">
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-pink-500/10 bg-gradient-to-r from-pink-500/5 to-transparent">
+        <div className="flex items-start gap-3 p-3 rounded-xl border border-pink-500/10 bg-gradient-to-r from-pink-500/5 to-transparent">
           <PNButton
             variant="ghost"
             size="sm"
@@ -168,7 +168,7 @@ export const ProductInfo = React.memo(({
           <div className="space-y-4 text-center">
             {/* Original Price */}
             <div className="flex items-center justify-center gap-4 flex-wrap">
-              <span className={`line-through ${isHeroFlashSale ? 'text-gray-400 text-lg' : 'text-gray-500'}`}>
+              <span className={`line-through ${isHeroFlashSale ? 'text-gray-400 text-lg' : 'text-gray-400'}`}>
                 {formatCurrency(product.originalPrice)}
               </span>
               <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
@@ -183,7 +183,7 @@ export const ProductInfo = React.memo(({
                 {formatCurrency(effectivePrice)}
               </PNHeading>
               {isHeroFlashSale && (
-                <div className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+                <div className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
                   <Tag className="w-4 h-4" />
                   <span>Hemat {formatCurrency(product.originalPrice - effectivePrice)}</span>
                 </div>

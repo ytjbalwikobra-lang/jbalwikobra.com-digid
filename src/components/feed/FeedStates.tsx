@@ -11,15 +11,15 @@ export const FeedSkeleton: React.FC = () => (
           <div className="w-14 h-14 bg-gradient-to-r from-gray-700/50 to-gray-600/50 rounded-2xl animate-pulse"></div>
           <div className="flex-1 space-y-3">
             <div className="h-6 bg-gradient-to-r from-gray-700/50 to-gray-600/50 rounded-xl w-3/4 animate-pulse"></div>
-            <div className="h-4 bg-gradient-to-r from-gray-700/30 to-gray-600/30 rounded-lg w-1/2 animate-pulse"></div>
+            <div className="h-4 bg-gradient-to-r from-gray-700/30 to-gray-600/30 rounded-xl w-1/2 animate-pulse"></div>
           </div>
         </div>
         
         {/* Content skeleton */}
         <div className="space-y-4 mb-6">
-          <div className="h-4 bg-gradient-to-r from-gray-700/40 to-gray-600/40 rounded-lg animate-pulse"></div>
-          <div className="h-4 bg-gradient-to-r from-gray-700/40 to-gray-600/40 rounded-lg w-5/6 animate-pulse"></div>
-          <div className="h-4 bg-gradient-to-r from-gray-700/40 to-gray-600/40 rounded-lg w-3/4 animate-pulse"></div>
+          <div className="h-4 bg-gradient-to-r from-gray-700/40 to-gray-600/40 rounded-xl animate-pulse"></div>
+          <div className="h-4 bg-gradient-to-r from-gray-700/40 to-gray-600/40 rounded-xl w-5/6 animate-pulse"></div>
+          <div className="h-4 bg-gradient-to-r from-gray-700/40 to-gray-600/40 rounded-xl w-3/4 animate-pulse"></div>
         </div>
         
         {/* Image skeleton */}
@@ -56,7 +56,7 @@ export const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({
       {/* Enhanced retry button */}
       <button 
         onClick={onRetry} 
-        className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg shadow-lg shadow-red-500/30 flex items-center gap-3 mx-auto transition-all duration-200"
+        className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl shadow-lg shadow-red-500/30 flex items-center gap-3 mx-auto transition-all duration-200"
       >
         <RefreshCw className="w-5 h-5" />
         Coba Lagi

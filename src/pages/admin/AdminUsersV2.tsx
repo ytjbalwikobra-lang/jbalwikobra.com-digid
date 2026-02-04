@@ -14,7 +14,7 @@ import { AdminUserModal } from './components/AdminUserModal';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
 import { useAbortController } from '../../hooks/useAbortController';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface UserStats {
   total: number;
@@ -268,20 +268,20 @@ const AdminUsersV2: React.FC = () => {
           <div className="lg:col-span-1">
             <AdminCard>
               <div className="flex items-center space-x-2 mb-6">
-                <div className="p-2 bg-pink-500/10 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-pink-400" />
+                <div className="p-2 bg-pink-500/10 rounded-xl">
+                  <TrendingUp className="w-5 h-5 text-pink-500" />
                 </div>
                 <h3 className="text-lg font-semibold text-white">Quick Actions</h3>
               </div>
               <div className="space-y-3">
                 <button
                   onClick={() => push('Add user functionality coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gray-800/50 hover:bg-pink-500/10 hover:border-pink-500/30 border border-gray-700 text-gray-300 hover:text-pink-400 transition-all duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gray-800/50 hover:bg-pink-500/10 hover:border-pink-500/30 border border-gray-700 text-gray-300 hover:text-pink-500 transition-all duration-200"
                 >
                   <Plus className="w-5 h-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">Add New User</p>
-                    <p className="text-xs text-gray-500">Create a new user account</p>
+                    <p className="text-xs text-gray-400">Create a new user account</p>
                   </div>
                 </button>
                 <button
@@ -291,7 +291,7 @@ const AdminUsersV2: React.FC = () => {
                   <Mail className="w-5 h-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">Export Users</p>
-                    <p className="text-xs text-gray-500">Download user data</p>
+                    <p className="text-xs text-gray-400">Download user data</p>
                   </div>
                 </button>
                 <button
@@ -301,7 +301,7 @@ const AdminUsersV2: React.FC = () => {
                   <Shield className="w-5 h-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">Manage Permissions</p>
-                    <p className="text-xs text-gray-500">Bulk permission updates</p>
+                    <p className="text-xs text-gray-400">Bulk permission updates</p>
                   </div>
                 </button>
               </div>
@@ -313,12 +313,12 @@ const AdminUsersV2: React.FC = () => {
             <AdminCard>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <div className="p-2 bg-blue-500/10 rounded-xl">
                     <Users className="w-5 h-5 text-blue-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-white">User Analytics</h3>
                 </div>
-                <button className="flex items-center space-x-2 text-sm text-pink-400 hover:text-pink-300 transition-colors">
+                <button className="flex items-center space-x-2 text-sm text-pink-500 hover:text-pink-400 transition-colors">
                   <span>View Details</span>
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
@@ -374,7 +374,7 @@ const AdminUsersV2: React.FC = () => {
         />
         
         {/* Results Count & Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-lg">
+        <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-xl">
           <span className="text-slate-400 text-sm">
             Showing <span className="font-semibold text-white">{filteredUsers.length}</span> of <span className="font-semibold text-white">{totalCount.toLocaleString()}</span> users
             {totalPages > 1 && <span className="ml-2">(Page {currentPage} of {totalPages})</span>}
@@ -384,7 +384,7 @@ const AdminUsersV2: React.FC = () => {
               <button
                 onClick={() => loadUsers(true, currentPage - 1)}
                 disabled={currentPage <= 1 || loading}
-                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white transition-colors"
               >
                 Previous
               </button>
@@ -392,7 +392,7 @@ const AdminUsersV2: React.FC = () => {
               <button
                 onClick={() => loadUsers(true, currentPage + 1)}
                 disabled={currentPage >= totalPages || loading}
-                className="px-3 py-1.5 text-sm bg-pink-600 hover:bg-pink-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                className="cyber-btn cyber-btn-primary cyber-btn-sm"
               >
                 Next
               </button>
@@ -450,14 +450,14 @@ const AdminUsersV2: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleViewUser(user)}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg transition-colors"
+                      className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl transition-colors"
                       title="View user details"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleEditUser(user)}
-                      className="p-2 bg-gray-800 hover:bg-pink-600 text-gray-300 hover:text-white rounded-lg transition-colors"
+                      className="p-2 bg-gray-800 hover:bg-pink-500 text-gray-300 hover:text-white rounded-xl transition-colors"
                       title="Edit user"
                     >
                       <Edit className="h-4 w-4" />

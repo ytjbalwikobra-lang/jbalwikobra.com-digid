@@ -57,7 +57,7 @@ const ComingSoonPage: React.FC = () => {
 
           {/* Main Heading */}
           <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-400 animate-pulse">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500 animate-pulse">
               Akan Segera Hadir
             </span>
           </h1>
@@ -118,7 +118,7 @@ const ComingSoonPage: React.FC = () => {
         {/* Estimated Timeline */}
         <div className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-4">
-            <Calendar className="w-5 h-5 text-pink-400" />
+            <Calendar className="w-5 h-5 text-pink-500" />
             <h3 className="text-white font-semibold">Estimasi Peluncuran</h3>
           </div>
           <p className="text-white/70 text-sm mb-3">
@@ -135,7 +135,7 @@ const ComingSoonPage: React.FC = () => {
         {/* Footer Note */}
         <p className="text-white/50 text-sm mt-8">
           Jika Anda mengalami masalah atau memiliki pertanyaan, 
-          <Link to="/help" className="text-pink-400 hover:text-pink-300 ml-1 underline">
+          <Link to="/help" className="text-pink-500 hover:text-pink-400 ml-1 underline">
             hubungi tim support kami
           </Link>
         </p>

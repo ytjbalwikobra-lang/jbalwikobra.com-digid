@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, X, RefreshCw, GripVertical, AlertCircle } from 'lucide-react';
 import { uploadFiles, UploadResult } from '../../../../services/storageService';
-import '../../../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 export interface ImageItem {
   id: string;
@@ -371,7 +371,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
             {successfulImages.map((item, index) => (
               <div
                 key={item.id}
-                className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 border border-gray-700"
+                className="relative aspect-square rounded-xl overflow-hidden bg-gray-800 border border-gray-700"
               >
                 <img
                   src={item.url}
@@ -435,14 +435,14 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
           onChange={handleFileChange}
           disabled={disabled}
         />
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           {helpText} ({images.length}/{maxImages})
         </p>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-lg">
+        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-xl">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -452,7 +452,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       {uploadingImages.length > 0 && (
         <div className="space-y-2">
           {uploadingImages.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 bg-gray-800 p-3 rounded-lg">
+            <div key={item.id} className="flex items-center gap-3 bg-gray-800 p-3 rounded-xl">
               <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden">
                 {item.tempUrl && (
                   <img src={item.tempUrl} alt="Uploading" className="w-full h-full object-cover" />
@@ -476,7 +476,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       {errorImages.length > 0 && (
         <div className="space-y-2">
           {errorImages.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 bg-red-500/10 p-3 rounded-lg border border-red-500/30">
+            <div key={item.id} className="flex items-center gap-3 bg-red-500/10 p-3 rounded-xl border border-red-500/30">
               <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden">
                 {item.tempUrl && (
                   <img src={item.tempUrl} alt="Failed" className="w-full h-full object-cover opacity-50" />
@@ -489,7 +489,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRetry(item.id)}
-                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300"
+                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-300"
                   title="Retry"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -497,7 +497,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemove(item.id)}
-                  className="p-2 bg-gray-700 hover:bg-red-600 rounded-lg text-gray-300"
+                  className="p-2 bg-gray-700 hover:bg-red-600 rounded-xl text-gray-300"
                   title="Remove"
                 >
                   <X className="h-4 w-4" />
@@ -515,7 +515,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
             <div
               key={item.id}
               className={`
-                relative aspect-square rounded-lg overflow-hidden bg-gray-800 border group cursor-move transition-all
+                relative aspect-square rounded-xl overflow-hidden bg-gray-800 border group cursor-move transition-all
                 ${dragOverIndex === index ? 'border-pink-500 border-2 scale-105' : 'border-gray-700'}
                 ${dragItemIndex.current === index ? 'opacity-50' : ''}
               `}
@@ -537,7 +537,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemove(item.id)}
-                  className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white"
+                  className="p-2 bg-red-600 hover:bg-red-700 rounded-xl text-white"
                   title="Remove image"
                 >
                   <X className="h-4 w-4" />

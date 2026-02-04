@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import '../../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface AdminPaginationProps {
   currentPage: number;

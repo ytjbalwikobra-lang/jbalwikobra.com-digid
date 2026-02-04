@@ -84,7 +84,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       case 'success':
         return <CheckCircle className="text-green-400" size={24} />;
       default:
-        return <Info className="text-pink-400" size={24} />;
+        return <Info className="text-pink-500" size={24} />;
     }
   };
 
@@ -97,7 +97,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       case 'success':
         return 'bg-green-600 hover:bg-green-700';
       default:
-        return 'bg-pink-600 hover:bg-pink-700';
+        return 'bg-pink-500 hover:bg-pink-600';
     }
   };
 
@@ -147,7 +147,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               {state.showCancel !== false && (
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  className="px-4 py-2 text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
                 >
                   {state.cancelText || 'Batal'}
                 </button>
@@ -155,7 +155,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               
               <button
                 onClick={handleConfirm}
-                className={`px-6 py-2 text-white rounded-lg transition-colors ${getButtonColor()}`}
+                className={`px-6 py-2 text-white rounded-xl transition-colors ${getButtonColor()}`}
               >
                 {state.confirmText || 'Konfirmasi'}
               </button>

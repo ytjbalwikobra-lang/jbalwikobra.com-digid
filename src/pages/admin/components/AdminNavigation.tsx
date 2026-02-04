@@ -99,7 +99,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
                 <li key={item.path}>
                   <button
                     onClick={() => handleNavigate(item.path)}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
                     style={{
                       backgroundColor: active
                         ? AdminColors.accent.DEFAULT
@@ -172,7 +172,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
           </div>
           <button
             onClick={onMobileClose}
-            className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-xl hover:bg-gray-700 transition-colors"
             aria-label="Close menu"
           >
             <X size={24} style={{ color: AdminColors.text.primary }} />
@@ -190,7 +190,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
                 <li key={item.path}>
                   <button
                     onClick={() => handleNavigate(item.path)}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
                     style={{
                       backgroundColor: active
                         ? AdminColors.accent.DEFAULT

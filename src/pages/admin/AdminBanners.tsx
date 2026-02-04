@@ -18,7 +18,7 @@ import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyti
 import { AdminPagination } from './components/AdminPagination';
 import { BannerForm, BannerFormData } from './components/banners';
 import { adminService } from '../../services/adminService';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -232,7 +232,7 @@ const AdminBanners: React.FC = () => {
                   <tr key={banner.id} className="hover:bg-white/5 transition-colors">
                     {/* Image */}
                     <td className="px-4 py-3">
-                      <div className="w-24 h-14 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-lighter)' }}>
+                      <div className="w-24 h-14 rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-lighter)' }}>
                         {banner.image_url ? (
                           <img
                             src={banner.image_url}
@@ -255,7 +255,7 @@ const AdminBanners: React.FC = () => {
                           <p className="text-sm text-gray-400">{banner.subtitle}</p>
                         )}
                         {banner.cta_text && (
-                          <p className="text-xs text-pink-400 mt-1">{banner.cta_text}</p>
+                          <p className="text-xs text-pink-500 mt-1">{banner.cta_text}</p>
                         )}
                       </div>
                     </td>
@@ -272,7 +272,7 @@ const AdminBanners: React.FC = () => {
                           {banner.link_url}
                         </a>
                       ) : (
-                        <span className="text-gray-500">-</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
 
@@ -294,13 +294,13 @@ const AdminBanners: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(banner)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(banner)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
                         >
                           Hapus
                         </button>

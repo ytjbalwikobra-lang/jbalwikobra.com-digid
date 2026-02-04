@@ -43,7 +43,7 @@ const Stars: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({ rating
             ${starSizes[size]} transition-all duration-200
             ${i < rating 
               ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm' 
-              : 'text-gray-500 hover:text-gray-400'
+              : 'text-gray-400 hover:text-gray-400'
             }
           `} 
         />

@@ -411,7 +411,7 @@ const PaymentInterface: React.FC = () => {
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <PNContainer>
           <div className="text-center max-w-md mx-auto">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
               <AlertTriangle className="text-white" size={32} />
             </div>
             <PNHeading level={1} className="text-red-400 mb-4">Terjadi Kesalahan</PNHeading>
@@ -459,7 +459,7 @@ const PaymentInterface: React.FC = () => {
         {isTimeRunningOut() && (
           <PNSection padding="sm">
             <div className="relative overflow-hidden bg-gradient-to-r from-red-500/20 via-pink-500/20 to-red-500/20 border border-red-500/50 rounded-2xl p-6 mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-pink-600/10 animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-pink-500/10 animate-pulse"></div>
               <div className="relative flex items-center space-x-4">
                 <div className="p-3 bg-red-500 rounded-xl">
                   <AlertTriangle className="text-white" size={24} />
@@ -568,7 +568,7 @@ const PaymentInterface: React.FC = () => {
                           <div className="text-center text-gray-600">
                             <QrCode size={64} className="mx-auto mb-4 text-gray-400" />
                             <p className="text-sm">QR Code sedang dimuat...</p>
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-gray-400 mt-2">
                               Payment ID: {paymentData.id}
                             </p>
                           </div>
@@ -596,7 +596,7 @@ const PaymentInterface: React.FC = () => {
                           {index + 1}
                         </div>
                         <div className="flex items-center space-x-3 flex-1">
-                          <step.icon size={20} className="text-pink-400 flex-shrink-0" />
+                          <step.icon size={20} className="text-pink-500 flex-shrink-0" />
                           <PNText className="text-sm leading-relaxed">{step.text}</PNText>
                         </div>
                       </div>

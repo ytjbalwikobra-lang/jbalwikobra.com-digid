@@ -32,7 +32,7 @@ import {
 import { useToast } from '../../components/Toast';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 // ========================================
 // TYPES
@@ -264,11 +264,11 @@ const AdminSettings: React.FC = () => {
           <textarea
             value={form[field]}
             onChange={(e) => handleChange(field, e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 resize-none"
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 resize-none"
             placeholder={placeholder}
             rows={rows}
           />
-          {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
+          {helpText && <p className="text-xs text-gray-400">{helpText}</p>}
         </div>
       );
     }
@@ -284,10 +284,10 @@ const AdminSettings: React.FC = () => {
           type={type}
           value={form[field]}
           onChange={(e) => handleChange(field, e.target.value)}
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+          className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
           placeholder={placeholder}
         />
-        {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
+        {helpText && <p className="text-xs text-gray-400">{helpText}</p>}
       </div>
     );
   };
@@ -340,7 +340,7 @@ const AdminSettings: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-blue-500/10 rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
               <Settings className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
@@ -352,7 +352,7 @@ const AdminSettings: React.FC = () => {
 
         <div className="bg-green-500/10 rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
               <CheckCircle className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
@@ -364,7 +364,7 @@ const AdminSettings: React.FC = () => {
 
         <div className="bg-purple-500/10 rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
               <Building className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
@@ -376,7 +376,7 @@ const AdminSettings: React.FC = () => {
 
         <div className={`${hasChanges ? 'bg-amber-500/10' : 'bg-gray-500/10'} rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]`}>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg bg-gradient-to-br ${hasChanges ? 'from-amber-500 to-amber-600' : 'from-gray-500 to-gray-600'}`}>
+            <div className={`p-2 rounded-xl bg-gradient-to-br ${hasChanges ? 'from-amber-500 to-amber-600' : 'from-gray-500 to-gray-600'}`}>
               <Save className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
@@ -391,7 +391,7 @@ const AdminSettings: React.FC = () => {
 
       {/* Unsaved Changes Warning */}
       {hasChanges && (
-        <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-4 text-amber-300">
+        <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4 text-amber-300">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">Ada perubahan yang belum disimpan. Jangan lupa simpan sebelum meninggalkan halaman.</p>
@@ -405,7 +405,7 @@ const AdminSettings: React.FC = () => {
         {/* General Settings */}
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
               <Globe className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -421,7 +421,7 @@ const AdminSettings: React.FC = () => {
         {/* Contact Information */}
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
               <Phone className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -437,7 +437,7 @@ const AdminSettings: React.FC = () => {
         {/* Business Location */}
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600">
               <MapPin className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -453,7 +453,7 @@ const AdminSettings: React.FC = () => {
         {/* Hero Section */}
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
               <Image className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -469,7 +469,7 @@ const AdminSettings: React.FC = () => {
         {/* Social Media - Full Width */}
         <div className="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
               <Building className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -485,7 +485,7 @@ const AdminSettings: React.FC = () => {
         {/* Additional Links - Full Width */}
         <div className="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600">
               <Link className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -502,7 +502,7 @@ const AdminSettings: React.FC = () => {
         {(form.logoUrl || form.faviconUrl) && (
           <div className="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-gray-500 to-gray-600">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600">
                 <Image className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -517,7 +517,7 @@ const AdminSettings: React.FC = () => {
                   <img 
                     src={form.logoUrl} 
                     alt="Site Logo" 
-                    className="h-16 w-auto rounded-lg border border-gray-700"
+                    className="h-16 w-auto rounded-xl border border-gray-700"
                   />
                 </div>
               )}
@@ -527,12 +527,12 @@ const AdminSettings: React.FC = () => {
                   <img 
                     src={form.faviconUrl} 
                     alt="Site Favicon" 
-                    className="h-16 w-16 rounded-lg border border-gray-700 object-cover"
+                    className="h-16 w-16 rounded-xl border border-gray-700 object-cover"
                   />
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-sm text-gray-400 mt-4">
               Untuk mengubah logo atau favicon, gunakan halaman manajemen banner/media.
             </p>
           </div>

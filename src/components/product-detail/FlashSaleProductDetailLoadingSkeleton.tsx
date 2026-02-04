@@ -25,7 +25,7 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
           <div className="aspect-[4/5] bg-gray-800 rounded-xl mb-4"></div>
           <div className="flex space-x-2 overflow-x-auto">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-20 aspect-[4/5] bg-gray-800 rounded-lg"></div>
+              <div key={i} className="flex-shrink-0 w-20 aspect-[4/5] bg-gray-800 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -45,7 +45,7 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
               <div className="h-4 w-32 bg-gray-700 rounded mx-auto"></div>
               <div className="flex justify-center space-x-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-gray-800 rounded-lg p-3">
+                  <div key={i} className="bg-gray-800 rounded-xl p-3">
                     <div className="h-6 w-8 bg-gray-700 rounded"></div>
                     <div className="h-3 w-6 bg-gray-700 rounded mt-1"></div>
                   </div>

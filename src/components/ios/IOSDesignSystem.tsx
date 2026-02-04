@@ -122,7 +122,7 @@ export const IOSButton: React.FC<IOSButtonProps> = ({
   };
 
   const sizeClasses = {
-    small: 'px-4 py-2 text-sm rounded-lg',
+    small: 'px-4 py-2 text-sm rounded-xl',
     medium: 'px-6 py-3 text-base rounded-xl',
     large: 'px-8 py-4 text-lg rounded-2xl'
   };
@@ -372,7 +372,7 @@ export const IOSSkeleton: React.FC<IOSSkeletonProps> = ({
   const variantClasses = {
     text: 'h-4 rounded',
     circular: 'rounded-full',
-    rectangular: 'rounded-lg'
+    rectangular: 'rounded-xl'
   };
 
   return (

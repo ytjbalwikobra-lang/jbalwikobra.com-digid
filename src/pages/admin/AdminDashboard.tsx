@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { DashboardMetricsOverview } from './components/DashboardMetricsOverview';
 import { OrderAnalyticsChart } from './components/OrderAnalyticsChart';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface QuickActionProps {
   to: string;
@@ -58,7 +58,7 @@ const AdminDashboard: React.FC = () => {
     },
     {
       to: '/admin/users',
-      icon: <Users className="w-6 h-6 text-pink-400" />,
+      icon: <Users className="w-6 h-6 text-pink-500" />,
       label: 'Kelola Pengguna',
       color: 'from-pink-500 to-rose-500'
     },

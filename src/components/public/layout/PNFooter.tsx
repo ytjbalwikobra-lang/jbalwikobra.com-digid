@@ -153,7 +153,7 @@ const PNFooter: React.FC = () => {
                 className="flex items-center gap-3 text-sm text-gray-300 hover:text-pink-300 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded-md"
                 aria-label={`Email ke ${supportEmail}`}
               >
-                <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
+                <div className="w-8 h-8 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
                   <Mail className="w-4 h-4 text-pink-400" aria-hidden="true" />
                 </div>
                 <span>{supportEmail}</span>
@@ -163,13 +163,13 @@ const PNFooter: React.FC = () => {
                 className="flex items-center gap-3 text-sm text-gray-300 hover:text-green-300 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded-md"
                 aria-label={`Telepon ${contactPhone}`}
               >
-                <div className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                <div className="w-8 h-8 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
                   <Phone className="w-4 h-4 text-green-400" aria-hidden="true" />
                 </div>
                 <span>{contactPhone}</span>
               </a>
               <div className="flex items-center gap-3 text-sm text-gray-300">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                   <MapPin className="w-4 h-4 text-blue-400" aria-hidden="true" />
                 </div>
                 <span>{address}</span>
@@ -221,7 +221,7 @@ const PNFooter: React.FC = () => {
                             className="group inline-flex items-center gap-1.5 text-sm text-gray-300 hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/60 rounded-md"
                           >
                             <ChevronRight 
-                              className="w-3 h-3 text-gray-500 group-hover:text-pink-400 group-hover:translate-x-0.5 transition-all" 
+                              className="w-3 h-3 text-gray-400 group-hover:text-pink-400 group-hover:translate-x-0.5 transition-all" 
                               aria-hidden="true" 
                             />
                             <span>{link.label}</span>
@@ -232,7 +232,7 @@ const PNFooter: React.FC = () => {
                             className="group inline-flex items-center gap-1.5 text-sm text-gray-300 hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/60 rounded-md"
                           >
                             <ChevronRight 
-                              className="w-3 h-3 text-gray-500 group-hover:text-pink-400 group-hover:translate-x-0.5 transition-all" 
+                              className="w-3 h-3 text-gray-400 group-hover:text-pink-400 group-hover:translate-x-0.5 transition-all" 
                               aria-hidden="true" 
                             />
                             <span>{link.label}</span>

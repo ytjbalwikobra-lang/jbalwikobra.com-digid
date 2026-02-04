@@ -96,7 +96,7 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
+          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
             NO IMAGE
           </div>
         )}
@@ -104,7 +104,7 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
         {/* SOLD Banner - Full width overlay */}
         {isSold && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="bg-red-600 text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg transform -rotate-12">
+            <div className="bg-red-600 text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-xl shadow-lg transform -rotate-12">
               {soldLabel}
             </div>
           </div>
@@ -112,14 +112,14 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
         
         {/* Discount Badge - Top Right (hide when sold) */}
         {!isSold && discountPercentage > 0 && (
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-pink-600 text-white text-xs font-bold shadow-lg">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-xl bg-pink-500 text-white text-xs font-bold shadow-lg">
             -{discountPercentage}%
           </div>
         )}
 
         {/* Rental Badge - Top Left (hide when sold) */}
         {!isSold && product.hasRental && (
-          <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-xl bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
             Rental
           </div>
         )}
@@ -170,10 +170,10 @@ const FlashSaleCard: React.FC<FlashSaleCardProps> = ({
         <button
           onClick={isSold ? undefined : handleBuyClick}
           disabled={isSold}
-          className={`w-full h-9 min-h-[36px] mt-auto text-white text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+          className={`cyber-btn w-full h-9 min-h-[36px] mt-auto text-xs sm:text-sm ${
             isSold 
               ? 'bg-gray-600 cursor-not-allowed opacity-50' 
-              : 'bg-pink-600 hover:bg-pink-700'
+              : 'cyber-btn-primary'
           }`}
           aria-label={isSold ? `${product.name} tidak tersedia` : `Beli ${product.name} sekarang`}
         >

@@ -57,7 +57,7 @@ const WishlistPage: React.FC = () => {
           {wishlistItems.length === 0 ? (
             <div className="bg-surface-alt backdrop-blur rounded-2xl p-12 text-center border-subtle">
               <div className="w-20 h-20 bg-pink-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Heart size={40} className="text-pink-400" />
+                <Heart size={40} className="text-pink-500" />
               </div>
               <h2 className="text-2xl font-semibold text-white mb-4">Wishlist Kosong</h2>
               <p className="text-secondary mb-8 max-w-md mx-auto">
@@ -82,7 +82,7 @@ const WishlistPage: React.FC = () => {
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-20 h-20 rounded-lg object-cover"
+                    className="w-20 h-20 rounded-xl object-cover"
                     loading="lazy"
                   />
                   
@@ -91,7 +91,7 @@ const WishlistPage: React.FC = () => {
                     <p className="text-tertiary text-sm mb-2">{item.category}</p>
                     
                     <div className="flex items-center space-x-4">
-                      <div className="text-pink-400 font-bold text-lg">
+                      <div className="text-pink-500 font-bold text-lg">
                         {formatCurrency(item.price)}
                       </div>
                       
@@ -113,14 +113,14 @@ const WishlistPage: React.FC = () => {
                   <div className="flex flex-col space-y-2">
                     <Link
                       to={`/products/${item.id}`}
-                      className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg text-sm text-center transition-colors"
+                      className="cyber-btn cyber-btn-primary cyber-btn-sm w-full"
                     >
                       Lihat Detail
                     </Link>
                     
                     <button
                       onClick={() => removeFromWishlist(item.id)}
-                      className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-center space-x-1"
+                      className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl text-sm transition-colors flex items-center justify-center space-x-1"
                     >
                       <Trash2 size={14} />
                       <span>Hapus</span>
@@ -136,7 +136,7 @@ const WishlistPage: React.FC = () => {
             <div className="mt-6 bg-surface-alt backdrop-blur rounded-xl p-4 border border-pink-500/30">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-pink-400">{wishlistItems.length}</div>
+                  <div className="text-2xl font-bold text-pink-500">{wishlistItems.length}</div>
                   <div className="text-tertiary text-sm">Total Item</div>
                 </div>
                 <div>

@@ -25,7 +25,7 @@ import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyti
 import { AdminPagination } from './components/AdminPagination';
 import { OrderDetailsModal } from '../../components/admin/OrderDetailsModal';
 import { formatCurrency, formatDate } from '../../utils/helpers';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 type OrderStatus = 'pending' | 'paid' | 'completed' | 'cancelled';
 
@@ -180,7 +180,7 @@ const AdminOrdersV2: React.FC = () => {
       label: 'Total Revenue',
       value: realStats.totalRevenue,
       icon: DollarSign,
-      iconColor: 'text-pink-400',
+      iconColor: 'text-pink-500',
       iconBgColor: 'bg-pink-500/10',
       format: 'currency'
     },
@@ -264,7 +264,7 @@ const AdminOrdersV2: React.FC = () => {
                         <div className="space-y-1">
                           <div className="font-semibold text-white">{order.customer_name}</div>
                           <div className="text-sm text-gray-400">{order.customer_email}</div>
-                          <div className="text-xs text-gray-500">{formatPhoneNumber(order.customer_phone)}</div>
+                          <div className="text-xs text-gray-400">{formatPhoneNumber(order.customer_phone)}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -281,7 +281,7 @@ const AdminOrdersV2: React.FC = () => {
                               <span className="text-xs text-gray-400">⏰ {(order as any).rental_duration}</span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-500">Order ID: {order.id.slice(0, 8)}...</div>
+                          <div className="text-xs text-gray-400">Order ID: {order.id.slice(0, 8)}...</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -304,7 +304,7 @@ const AdminOrdersV2: React.FC = () => {
                         <div className="flex items-center justify-end space-x-2">
                           <button 
                             onClick={() => handleViewOrder(order.id)}
-                            className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                            className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-xl transition-colors"
                             title="View order details"
                           >
                             <Eye className="h-4 w-4" />
@@ -317,7 +317,7 @@ const AdminOrdersV2: React.FC = () => {
                                 push('Product ID tidak tersedia', 'error');
                               }
                             }}
-                            className="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                            className="cyber-btn cyber-btn-primary cyber-btn-sm"
                           >
                             Lihat Produk
                           </button>

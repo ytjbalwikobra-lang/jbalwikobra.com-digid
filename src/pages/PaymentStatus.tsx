@@ -241,7 +241,7 @@ const PaymentStatus: React.FC = () => {
                   </PNButton>
                   <div className="text-center">
                     <PNText className="text-sm text-gray-400">Butuh bantuan? Hubungi customer service:</PNText>
-                    <PNText className="text-sm text-pink-400">wa.me/6289653510125</PNText>
+                    <PNText className="text-sm text-pink-500">wa.me/6289653510125</PNText>
                   </div>
                 </div>
               </div>

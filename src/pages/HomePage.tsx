@@ -162,7 +162,7 @@ const HomePage: React.FC = () => {
           <p className="text-gray-300 mb-6 text-sm">{state.error}</p>
           <button
             onClick={handleRetry}
-            className="w-full h-11 min-h-[44px] bg-pink-600 hover:bg-pink-700 text-white font-medium px-6 rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="cyber-btn cyber-btn-primary w-full"
             aria-label="Coba muat ulang halaman"
           >
             Coba Lagi

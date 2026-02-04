@@ -7,7 +7,7 @@ export default function MaintenancePage() {
         {/* Icon */}
         <div className="mb-8">
           <svg 
-            className="w-24 h-24 mx-auto text-pink-600" 
+            className="w-24 h-24 mx-auto text-pink-500" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -39,7 +39,7 @@ export default function MaintenancePage() {
         </p>
 
         {/* Additional info */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 mb-8">
+        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mb-8">
           <p className="text-gray-400 text-sm">
             💡 Our team is working hard to bring you an enhanced experience. 
             We appreciate your patience and understanding.
@@ -49,7 +49,7 @@ export default function MaintenancePage() {
         {/* Refresh button */}
         <button 
           onClick={() => window.location.reload()}
-          className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 inline-flex items-center gap-2"
+          className="cyber-btn cyber-btn-primary px-8"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

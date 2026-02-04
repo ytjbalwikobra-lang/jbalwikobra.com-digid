@@ -25,7 +25,7 @@ export const PriceAndTimer: React.FC<Props> = ({
     <div className="space-y-6">
       {/* Flash Sale Timer */}
       {isActive && endTime && (
-        <PNCard className="bg-gradient-to-r from-pink-600 to-red-600 border-pink-500 rounded-2xl overflow-hidden">
+        <PNCard className="bg-gradient-to-r from-pink-500 to-red-500 border-pink-500 rounded-2xl overflow-hidden">
           <div className="p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="p-2 bg-white/20 rounded-full flex-shrink-0">
@@ -54,7 +54,7 @@ export const PriceAndTimer: React.FC<Props> = ({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                    <PNHeading level={2} className="text-pink-400 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold break-words">
+                    <PNHeading level={2} className="text-pink-500 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold break-words">
                       {formatCurrency(effectivePrice)}
                     </PNHeading>
                     {discountPercentage > 0 && (
@@ -71,7 +71,7 @@ export const PriceAndTimer: React.FC<Props> = ({
                   <PNText className="text-gray-400 line-through text-lg sm:text-xl lg:text-2xl break-words">
                     {formatCurrency(originalPrice)}
                   </PNText>
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm sm:text-base font-semibold inline-flex items-center gap-2 w-fit">
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm sm:text-base font-semibold inline-flex items-center gap-2 w-fit">
                     <Tag className="w-4 h-4 flex-shrink-0" />
                     <span className="break-words">Hemat {formatCurrency(originalPrice - effectivePrice)}</span>
                   </div>

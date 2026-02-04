@@ -86,14 +86,14 @@ const OrderHistoryPage: React.FC = () => {
               <button
                 onClick={handleRefresh}
                 disabled={loading}
-                className="p-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 text-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Refresh"
               >
                 <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
             {loading ? (
-              <div className="bg-black border border-gray-700 rounded-lg p-6">
+              <div className="bg-black border border-gray-700 rounded-xl p-6">
                 <div className="ios-skeleton h-5 w-48 mb-4"></div>
                 <div className="divide-y divide-ios-border/60">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -111,11 +111,11 @@ const OrderHistoryPage: React.FC = () => {
                 </div>
               </div>
             ) : orders.length === 0 ? (
-              <div className="bg-black border border-pink-500/30 rounded-lg p-6 text-center text-gray-300">
+              <div className="bg-black border border-pink-500/30 rounded-xl p-6 text-center text-gray-300">
                 Belum ada order.
               </div>
             ) : (
-              <div className="bg-black border border-pink-500/30 rounded-lg divide-y divide-pink-500/20">
+              <div className="bg-black border border-pink-500/30 rounded-xl divide-y divide-pink-500/20">
                 {orders.map(o => (
                   <div key={o.id} className="p-4 flex items-center justify-between">
                     <div>
@@ -141,7 +141,7 @@ const OrderHistoryPage: React.FC = () => {
                          'Dibatalkan'}
                       </div>
                       {o.xendit_invoice_url && o.status === 'pending' && (
-                        <a href={o.xendit_invoice_url} target="_blank" rel="noopener noreferrer" className="text-xs text-pink-400 hover:underline block mt-1">
+                        <a href={o.xendit_invoice_url} target="_blank" rel="noopener noreferrer" className="text-xs text-pink-500 hover:underline block mt-1">
                           Bayar Sekarang
                         </a>
                       )}

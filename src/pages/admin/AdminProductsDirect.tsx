@@ -16,7 +16,7 @@ import { formatNumberID, parseNumberID, formatCurrency } from '../../utils/helpe
 import { usePriceInput } from '../../hooks/usePriceInput';
 import { useAbortController } from '../../hooks/useAbortController';
 import { useKeyboardShortcuts, createListShortcuts } from '../../hooks/useKeyboardShortcuts';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface Product {
   id: string;
@@ -363,7 +363,7 @@ const AdminProductsDirect: React.FC = () => {
       label: 'Total Nilai Produk',
       value: stats.totalValue,
       icon: DollarSign,
-      iconColor: 'text-pink-400',
+      iconColor: 'text-pink-500',
       iconBgColor: 'bg-pink-500/10',
       format: 'currency'
     }
@@ -458,15 +458,15 @@ const AdminProductsDirect: React.FC = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.image ? (
-                          <img src={product.image} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
+                          <img src={product.image} alt={product.name} className="w-10 h-10 rounded-xl object-cover" />
                         ) : (
-                          <div className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
-                            <Package className="w-5 h-5 text-gray-500" />
+                          <div className="w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center">
+                            <Package className="w-5 h-5 text-gray-400" />
                           </div>
                         )}
                         <div>
                           <div className="font-medium text-white">{product.name}</div>
-                          <div className="text-xs text-gray-500 truncate max-w-[200px]">
+                          <div className="text-xs text-gray-400 truncate max-w-[200px]">
                             {product.description || 'No description'}
                           </div>
                         </div>
@@ -502,19 +502,19 @@ const AdminProductsDirect: React.FC = () => {
                                 cancelEditing();
                               }
                             }}
-                            className={`w-32 px-2 py-1 bg-gray-700 border rounded text-white text-sm transition-all ${
+                            className={`w-32 px-2 py-1 bg-gray-700 border rounded-xl text-white text-sm transition-all ${
                               saving 
-                                ? 'border-pink-400 opacity-50 cursor-not-allowed' 
-                                : 'border-pink-500 focus:border-pink-400 focus:ring-1 focus:ring-pink-400'
+                                ? 'border-pink-500 opacity-50 cursor-not-allowed' 
+                                : 'border-pink-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500'
                             }`}
                             placeholder="Rp 0"
                             autoFocus
                             disabled={saving}
                           />
                           {saving && (
-                            <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400 animate-spin" />
+                            <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-500 animate-spin" />
                           )}
-                          <div className="text-xs text-gray-500 mt-1">Enter to save, Esc to cancel</div>
+                          <div className="text-xs text-gray-400 mt-1">Enter to save, Esc to cancel</div>
                         </div>
                       ) : (
                         <div 
@@ -543,13 +543,13 @@ const AdminProductsDirect: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewProduct(product)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
                         >
                           Lihat
                         </button>
                         <button
                           onClick={() => handleEditProduct(product)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                         >
                           Edit
                         </button>
@@ -557,9 +557,9 @@ const AdminProductsDirect: React.FC = () => {
                         <button
                           onClick={() => markSoldViaWA(product)}
                           disabled={!!product.sold_channel || !product.is_active}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
                             product.sold_channel || !product.is_active
-                              ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                              ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
                               : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
                           }`}
                           title={

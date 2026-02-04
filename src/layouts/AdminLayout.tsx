@@ -26,11 +26,11 @@ const AdminLayout: React.FC = () => {
       {/* Top bar */}
   <header className="sticky top-0 z-30 bg-black/90 backdrop-blur border-b border-gray-800 pt-safe-top">
         <div className="h-16 px-4 md:px-6 flex items-center justify-between">
-          <button onClick={() => setOpen(!open)} className="md:hidden text-white p-2 rounded-lg hover:bg-white/5 transition-colors" aria-label="Menu">
+          <button onClick={() => setOpen(!open)} className="md:hidden text-white p-2 rounded-xl hover:bg-white/5 transition-colors" aria-label="Menu">
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-pink-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-pink-500 rounded-xl flex items-center justify-center">
               <span className="text-white text-sm font-bold">A</span>
             </div>
             <div className="hidden md:block">

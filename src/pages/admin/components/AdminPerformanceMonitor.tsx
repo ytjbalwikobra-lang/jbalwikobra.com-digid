@@ -169,7 +169,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
         <div className="space-y-4 text-sm">
           {/* API Metrics */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-lg p-3">
+            <div className="bg-white/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Server className="w-4 h-4 text-blue-400" />
                 <span className="text-gray-300">API Calls</span>
@@ -177,7 +177,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
               <span className="text-xl font-semibold text-blue-400">{metrics.apiCalls}</span>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-3">
+            <div className="bg-white/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Database className="w-4 h-4 text-green-400" />
                 <span className="text-gray-300">Cache Hits</span>
@@ -187,7 +187,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
           </div>
 
           {/* Cache Hit Rate */}
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-300">Cache Hit Rate</span>
               <span className={`font-semibold ${getHitRateColor(cacheMetrics.hitRate)}`}>
@@ -204,7 +204,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
 
           {/* Data Transfer */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-lg p-3">
+            <div className="bg-white/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingDown className="w-4 h-4 text-purple-400" />
                 <span className="text-gray-300">Data Transfer</span>
@@ -214,7 +214,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
               </span>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-3">
+            <div className="bg-white/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-orange-400" />
                 <span className="text-gray-300">Egress Saved</span>
@@ -226,7 +226,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
           </div>
 
           {/* Cache Details */}
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <div className="text-gray-300 mb-2">Cache Statistics</div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div>
@@ -246,7 +246,7 @@ export const AdminPerformanceMonitor: React.FC = () => {
 
           {/* Prefetch Status */}
           {prefetchStats.config.enabled && (
-            <div className="bg-white/5 rounded-lg p-3">
+            <div className="bg-white/5 rounded-xl p-3">
               <div className="text-gray-300 mb-2">Prefetch Status</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Current Page</span>
@@ -269,21 +269,21 @@ export const AdminPerformanceMonitor: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={resetStats}
-              className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+              className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 px-3 rounded-xl text-xs font-medium transition-colors"
             >
               Reset Stats
             </button>
             <button
               onClick={() => {
               }}
-              className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+              className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-xl text-xs font-medium transition-colors"
             >
               Log Details
             </button>
           </div>
 
           {/* Performance Score */}
-          <div className="bg-white/5 rounded-lg p-3">
+          <div className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-300">Performance Score</span>
               <span className="text-2xl font-bold text-green-400">

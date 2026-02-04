@@ -56,7 +56,7 @@ export const RLSDiagnosticsBanner: React.FC<RLSDiagnosticsProps> = ({
     >
       <div className="flex items-start gap-3">
         <div className={cn(
-          'p-2 rounded-lg',
+          'p-2 rounded-xl',
           variant === 'error' ? 'bg-red-500/20' : 'bg-yellow-500/20'
         )}>
           <Icon className={cn(

@@ -113,7 +113,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg flex items-center justify-center transition-all duration-200"
+            className="w-8 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl flex items-center justify-center transition-all duration-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -124,7 +124,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           {/* Customer Info */}
           <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-pink-400" />
+              <User className="w-5 h-5 text-pink-500" />
               <h3 className="text-lg font-semibold text-white">Customer Information</h3>
             </div>
             
@@ -153,7 +153,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
                   id="is_verified"
                   checked={formData.is_verified || false}
                   onChange={(e) => handleInputChange('is_verified', e.target.checked)}
-                  className="w-4 h-4 text-pink-600 bg-gray-700 border-gray-600 rounded focus:ring-pink-500"
+                  className="w-4 h-4 text-pink-500 bg-gray-700 border-gray-600 rounded focus:ring-pink-500"
                 />
                 <label htmlFor="is_verified" className="flex items-center gap-2 text-sm text-gray-300">
                   <Shield className="w-4 h-4 text-green-400" />
@@ -166,7 +166,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           {/* Product Info */}
           <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
             <div className="flex items-center gap-2 mb-4">
-              <Package className="w-5 h-5 text-pink-400" />
+              <Package className="w-5 h-5 text-pink-500" />
               <h3 className="text-lg font-semibold text-white">Product Information</h3>
             </div>
             
@@ -192,7 +192,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           {/* Review Content */}
           <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
             <div className="flex items-center gap-2 mb-4">
-              <Star className="w-5 h-5 text-pink-400" />
+              <Star className="w-5 h-5 text-pink-500" />
               <h3 className="text-lg font-semibold text-white">Review Details</h3>
             </div>
             
@@ -214,7 +214,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
                         className={`w-8 h-8 ${
                           i < (formData.rating ?? 0)
                             ? 'text-yellow-400 fill-yellow-400'
-                            : 'text-gray-600 hover:text-gray-500'
+                            : 'text-gray-600 hover:text-gray-400'
                         }`}
                       />
                     </button>
@@ -246,11 +246,11 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
                   {errors.comment ? (
                     <p className="text-red-400 text-sm">{errors.comment}</p>
                   ) : (
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-gray-400 text-sm">
                       Minimum 10 characters required
                     </p>
                   )}
-                  <span className="text-gray-500 text-sm">
+                  <span className="text-gray-400 text-sm">
                     {formData.comment?.length || 0} characters
                   </span>
                 </div>

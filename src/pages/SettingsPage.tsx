@@ -133,7 +133,7 @@ const SettingsPage: React.FC = () => {
                         setSettings((prev) => ({ ...prev, theme: next }));
                         setMode(next);
                       }}
-                      className="bg-black border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-ios-accent/40 focus:border-ios-accent"
+                      className="bg-black border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-ios-accent/40 focus:border-ios-accent"
                     >
                       <option value="dark">Gelap</option>
                       <option value="light">Terang</option>
@@ -151,7 +151,7 @@ const SettingsPage: React.FC = () => {
                           language: e.target.value as AppSettings['language'],
                         }))
                       }
-                      className="bg-black border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-ios-accent/40 focus:border-ios-accent"
+                      className="bg-black border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-ios-accent/40 focus:border-ios-accent"
                     >
                       <option value="id">Indonesia</option>
                       <option value="en">English</option>
@@ -304,7 +304,7 @@ const SettingsPage: React.FC = () => {
               {/* Save Button */}
               <button
                 onClick={saveSettings}
-                className="w-full bg-pink-500 hover:opacity-90 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20"
+                className="w-full bg-pink-500 hover:opacity-90 text-white py-3 rounded-xl font-medium transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20"
               >
                 <Save size={20} />
                 <span>Simpan Pengaturan</span>

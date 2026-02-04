@@ -175,11 +175,11 @@ export const ShortcutHints: React.FC<ShortcutHintProps> = ({ shortcuts, classNam
   };
 
   return (
-    <div className={`text-xs text-gray-500 space-y-1 ${className}`}>
+    <div className={`text-xs text-gray-400 space-y-1 ${className}`}>
       <div className="font-semibold text-gray-400 mb-2">Keyboard Shortcuts:</div>
       {shortcuts.map((shortcut, index) => (
         <div key={index} className="flex items-center justify-between gap-4">
-          <span className="text-gray-500">{shortcut.description}</span>
+          <span className="text-gray-400">{shortcut.description}</span>
           <kbd className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-gray-300 font-mono text-xs">
             {formatShortcut(shortcut)}
           </kbd>

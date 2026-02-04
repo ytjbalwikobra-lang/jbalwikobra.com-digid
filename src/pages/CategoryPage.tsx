@@ -92,7 +92,7 @@ const CategoryPage: React.FC = () => {
           <PNSection padding="lg">
             <div className="animate-pulse space-y-8">
               <div className="h-10 bg-white/10 rounded-xl w-1/3" />
-              <div className="h-6 bg-white/5 rounded-lg w-2/3" />
+              <div className="h-6 bg-white/5 rounded-xl w-2/3" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
@@ -200,7 +200,7 @@ const CategoryPage: React.FC = () => {
                     key={i}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-gray-300"
                   >
-                    <TrendingUp size={12} className="text-pink-400" />
+                    <TrendingUp size={12} className="text-pink-500" />
                     {benefit}
                   </span>
                 ))}
@@ -306,7 +306,7 @@ const CategoryPage: React.FC = () => {
                   className="group"
                 >
                   <PNCard className="p-4 text-center hover:bg-white/10 hover:border-pink-500/30 transition-all">
-                    <Grid3X3 size={24} className="mx-auto text-pink-400 mb-2 group-hover:scale-110 transition-transform" />
+                    <Grid3X3 size={24} className="mx-auto text-pink-500 mb-2 group-hover:scale-110 transition-transform" />
                     <PNText className="text-white font-medium group-hover:text-pink-300 transition-colors">
                       {cat.name}
                     </PNText>

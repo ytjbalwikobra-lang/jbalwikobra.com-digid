@@ -515,7 +515,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
 
                 {formData.has_rental && (
-                  <div className="space-y-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                  <div className="space-y-4 p-4 bg-gray-800 rounded-xl border border-gray-700">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-medium text-gray-300">Rental Options</h4>
                       {!isReadOnly && (
@@ -527,7 +527,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                               rental_options: [...prev.rental_options, { duration: '', price: 0, description: '' }]
                             }));
                           }}
-                          className="px-3 py-1 bg-pink-500 hover:bg-pink-600 text-white text-sm rounded transition-colors"
+                          className="cyber-btn cyber-btn-primary cyber-btn-sm"
                         >
                           <Plus className="w-4 h-4 inline mr-1" />
                           Add Option
@@ -632,7 +632,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                    className="w-4 h-4 text-pink-600 bg-gray-800 border-gray-700 rounded focus:ring-pink-500 focus:ring-2"
+                    className="w-4 h-4 text-pink-500 bg-gray-800 border-gray-700 rounded focus:ring-pink-500 focus:ring-2"
                     disabled={isReadOnly}
                   />
                   <span className="text-sm font-medium text-gray-300">Active Product</span>

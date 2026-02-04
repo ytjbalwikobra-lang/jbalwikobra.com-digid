@@ -96,7 +96,7 @@ export const ProductActions = React.memo(({
       <PNCard className="mt-8 bg-white/5 border border-white/10 p-5 backdrop-blur-sm">
         <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Jaminan Keamanan & Layanan</h4>
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
             <div className="p-2 bg-green-500/10 rounded-full">
               <Shield className="text-green-400" size={18} />
             </div>
@@ -106,7 +106,7 @@ export const ProductActions = React.memo(({
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
             <div className="p-2 bg-pink-500/10 rounded-full">
               <CheckCircle className="text-pink-400" size={18} />
             </div>
@@ -116,7 +116,7 @@ export const ProductActions = React.memo(({
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
             <div className="p-2 bg-orange-500/10 rounded-full">
               <Zap className="text-orange-400" size={18} />
             </div>
@@ -126,7 +126,7 @@ export const ProductActions = React.memo(({
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
             <div className="p-2 bg-blue-500/10 rounded-full">
               <MessageCircle className="text-blue-400" size={18} />
             </div>

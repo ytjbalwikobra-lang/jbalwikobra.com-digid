@@ -81,7 +81,7 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
             loading="lazy" 
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
             No Image
           </div>
         )}
@@ -89,7 +89,7 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
         {/* SOLD Banner - Full width diagonal overlay */}
         {isSold && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="bg-red-600 text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg transform -rotate-12">
+            <div className="bg-red-600 text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-xl shadow-lg transform -rotate-12">
               {soldLabel}
             </div>
           </div>
@@ -97,14 +97,14 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
         
         {/* Discount Badge - Top Right (hide when sold) */}
         {!isSold && discountPercent && discountPercent > 0 && (
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-pink-600 text-white text-xs font-bold shadow-lg">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-xl bg-pink-500 text-white text-xs font-bold shadow-lg">
             -{discountPercent}%
           </div>
         )}
         
         {/* Rental Badge - Top Left (hide when sold) */}
         {!isSold && rentalAvailable && (
-          <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-xl bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
             Rental
           </div>
         )}

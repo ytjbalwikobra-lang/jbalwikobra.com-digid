@@ -212,7 +212,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
                     {slide.ctaText && slide.ctaLink && (
                       <a 
                         href={slide.ctaLink} 
-                        className="inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 sm:px-5 md:px-6 py-2.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 border-2 border-pink-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 min-h-[44px]"
+                        className="cyber-btn cyber-btn-primary px-4 sm:px-5 md:px-6 shadow-lg hover:shadow-xl active:scale-95"
                         aria-label={`${slide.ctaText} - ${slide.title || 'banner'}`}
                         tabIndex={i === index ? 0 : -1}
                       >

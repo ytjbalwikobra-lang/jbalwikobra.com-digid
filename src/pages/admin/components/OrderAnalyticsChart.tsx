@@ -20,7 +20,7 @@ interface OrderAnalyticsChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-gray-900/95 border border-gray-700 rounded-lg p-4 shadow-xl backdrop-blur-sm">
+      <div className="bg-gray-900/95 border border-gray-700 rounded-xl p-4 shadow-xl backdrop-blur-sm">
         <p className="text-white font-medium mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center space-x-2 text-sm">
@@ -188,8 +188,8 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
     <div className="bg-black border border-gray-800 rounded-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <div className="p-2 bg-pink-500/10 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-pink-400" />
+          <div className="p-2 bg-pink-500/10 rounded-xl">
+            <TrendingUp className="w-5 h-5 text-pink-500" />
           </div>
           <h3 className="text-lg font-semibold text-white">Order Analytics</h3>
         </div>
@@ -199,7 +199,7 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d')}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1 text-sm text-white focus:border-pink-500 focus:outline-none"
+            className="bg-gray-800 border border-gray-700 rounded-xl px-3 py-1 text-sm text-white focus:border-pink-500 focus:outline-none"
           >
             {timeRangeOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -286,7 +286,7 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
           <p className="text-xs text-gray-400">Paid Orders</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-pink-400">
+          <p className="text-lg font-semibold text-pink-500">
             {formatCurrency(actualTotalRevenue)}
           </p>
           <p className="text-xs text-gray-400">Total Revenue</p>

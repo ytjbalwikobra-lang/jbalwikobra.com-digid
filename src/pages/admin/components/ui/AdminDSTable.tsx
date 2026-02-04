@@ -57,7 +57,7 @@ export interface AdminDSTableProps<T = any> {
 }
 
 function actionBtnClass(variant: DSTableAction['variant']) {
-  const base = 'p-2 rounded-lg transition-colors';
+  const base = 'p-2 rounded-xl transition-colors';
   switch (variant) {
     case 'primary':
       return `${base} bg-ds-pink text-white hover:bg-ds-pink/90`;

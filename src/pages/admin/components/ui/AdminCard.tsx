@@ -75,7 +75,7 @@ export const AdminCardHeader: React.FC<AdminCardHeaderProps> = ({
       <div className="flex items-start gap-3 flex-1">
         {icon && (
           <div 
-            className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+            className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: 'rgba(236, 72, 153, 0.2)' }}
             aria-hidden="true"
           >

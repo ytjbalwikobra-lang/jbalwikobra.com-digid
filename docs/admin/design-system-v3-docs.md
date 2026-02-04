@@ -1,4 +1,12 @@
-# Admin Design System V3 - Dokumentasi
+# ⚠️ DEPRECATED - Admin Design System V3
+
+> **NOTICE:** This document is deprecated. Please use the unified **Cyber-Compact Design System** instead.
+> 
+> See: [CYBER_COMPACT_DESIGN_SYSTEM.md](../CYBER_COMPACT_DESIGN_SYSTEM.md)
+
+---
+
+# Admin Design System V3 - Dokumentasi (LEGACY)
 
 ## 📋 Ringkasan
 
@@ -15,19 +23,14 @@ Design System V3 untuk panel admin dirancang dengan standar internasional, mengi
 - ✅ Screen reader support
 - ✅ Dukungan untuk reduced motion preferences
 
-### 2. **Color Palette Konsisten**
+### 2. **Color Palette - NOW USES CYBER-COMPACT**
 ```typescript
-// Primary Colors
-Primary: #0f172a (slate-900) - Background utama
-Primary Light: #1e293b (slate-800) - Elevated surfaces
-Primary Lighter: #334155 (slate-700) - Hover states
+// Primary: Cyber-Compact Neon Pink Spectrum
+--cyber-pink-glow: #ff2d92    // Glow effects, CTAs
+--cyber-pink-primary: #ec4899 // Primary accent
+--cyber-pink-secondary: #f472b6 // Secondary elements
 
-// Accent Colors (Pink Theme)
-Accent: #ec4899 (pink-500) - Primary actions
-Accent Hover: #db2777 (pink-600)
-Accent Light: #f9a8d4 (pink-300)
-
-// Semantic Colors
+// See cyber-compact.css for full token list
 Success: #10b981 (emerald-500)
 Warning: #f59e0b (amber-500)
 Error: #ef4444 (red-500)

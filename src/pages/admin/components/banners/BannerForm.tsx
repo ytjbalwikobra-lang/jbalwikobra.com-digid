@@ -241,7 +241,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="inline-flex items-center gap-2 px-4 py-2 border text-gray-300 rounded-lg hover:text-white transition-all duration-200 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 border text-gray-300 rounded-xl hover:text-white transition-all duration-200 disabled:opacity-50"
                   style={{ backgroundColor: 'var(--admin-primary-light)', borderColor: 'var(--admin-border)' }}
                 >
                   {uploading ? (
@@ -258,12 +258,12 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                 </button>
               </div>
               {uploadError && (
-                <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/30">
+                <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/30">
                   {uploadError}
                 </div>
               )}
               {formData.image_url && (
-                <div className="rounded-lg overflow-hidden border border-gray-700">
+                <div className="rounded-xl overflow-hidden border border-gray-700">
                   <img
                     src={formData.image_url}
                     alt="Preview"

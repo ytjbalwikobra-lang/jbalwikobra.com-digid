@@ -487,7 +487,7 @@ const AuthPage: React.FC = () => {
             <form onSubmit={handleProfileCompletion} className="space-y-5">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <User size={28} className="text-pink-400" />
+                  <User size={28} className="text-pink-500" />
                 </div>
                 <PNText color="muted" className="text-sm">
                   Tambahkan email untuk notifikasi dan pemulihan akun

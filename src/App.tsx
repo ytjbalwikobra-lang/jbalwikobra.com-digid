@@ -10,7 +10,7 @@ import { CyberBottomNav, CheckoutBottomSheet } from './components/mobile';
 import { CartIntegration } from './components/CartIntegration';
 import PNFooter from './components/public/layout/PNFooter';
 import './App.css';
-import './styles/global-design-system.css';
+// Design system: cyber-compact.css (loaded via index.css)
 import './styles/public-pages.css';
 import { forceFixedPositioning } from './utils/forceFixedPositioning';
 import RequireAdmin from './components/RequireAdmin';
@@ -66,7 +66,7 @@ const PageLoader = () => (
       <div className="ios-skeleton h-4 w-full mb-2"></div>
       <div className="ios-skeleton h-4 w-5/6 mb-2"></div>
       <div className="ios-skeleton h-4 w-2/3 mb-6"></div>
-      <div className="ios-skeleton h-10 w-32 rounded-lg"></div>
+      <div className="ios-skeleton h-10 w-32 rounded-xl"></div>
     </div>
   </div>
 );
@@ -95,7 +95,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
             <p className="text-gray-400 mb-4">Silakan refresh halaman atau coba lagi nanti.</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700"
+              className="bg-pink-500 text-white px-4 py-2 rounded-xl hover:bg-pink-600"
             >
               Refresh Halaman
             </button>
@@ -214,7 +214,7 @@ function App() {
                     <main className="flex-1 pb-4 pt-12 lg:pt-20 lg:pb-4 overflow-x-hidden min-h-screen">
                       {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
                         <div className="max-w-3xl mx-auto p-4">
-                          <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">
+                          <div className="bg-black/60 border border-yellow-500/40 rounded-xl p-4 mb-4">
                             <h2 className="text-yellow-400 font-semibold mb-2">⚙️ Setup Required</h2>
                             <p className="text-gray-300 text-sm mb-3">
                               Supabase configuration is missing. Please set up your environment variables.

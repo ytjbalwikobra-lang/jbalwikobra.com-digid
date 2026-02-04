@@ -207,7 +207,7 @@ const HelpPage: React.FC = () => {
         className="w-full bg-black/50 backdrop-blur-sm border border-white/10 rounded-2xl pl-14 pr-4 py-4 text-white placeholder:text-gray-400 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 text-base" 
                 placeholder="Cari: pembelian, pembayaran, keamanan..." 
               />
-              <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-pink-400" />
+              <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-pink-500" />
             </div>
           </div>
         </PNContainer>
@@ -227,7 +227,7 @@ const HelpPage: React.FC = () => {
                 onClick={() => setSelectedCategory('Akun & Registrasi')}
                 className="h-20 flex flex-col items-center justify-center gap-2 bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/10 group"
               >
-                <User className="text-pink-400 group-hover:scale-110 transition-transform" size={28} />
+                <User className="text-pink-500 group-hover:scale-110 transition-transform" size={28} />
                 <span className="text-sm font-medium text-white">Akun</span>
               </PNButton>
               
@@ -236,7 +236,7 @@ const HelpPage: React.FC = () => {
                 onClick={() => setSelectedCategory('Pembelian')}
                 className="h-20 flex flex-col items-center justify-center gap-2 bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/10 group"
               >
-                <ShoppingBag className="text-pink-400 group-hover:scale-110 transition-transform" size={28} />
+                <ShoppingBag className="text-pink-500 group-hover:scale-110 transition-transform" size={28} />
                 <span className="text-sm font-medium text-white">Pembelian</span>
               </PNButton>
               
@@ -245,7 +245,7 @@ const HelpPage: React.FC = () => {
                 onClick={() => setSelectedCategory('Pembayaran')}
                 className="h-20 flex flex-col items-center justify-center gap-2 bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/10 group"
               >
-                <CreditCard className="text-pink-400 group-hover:scale-110 transition-transform" size={28} />
+                <CreditCard className="text-pink-500 group-hover:scale-110 transition-transform" size={28} />
                 <span className="text-sm font-medium text-white">Pembayaran</span>
               </PNButton>
               
@@ -254,7 +254,7 @@ const HelpPage: React.FC = () => {
                 onClick={() => setSelectedCategory('Keamanan')}
                 className="h-20 flex flex-col items-center justify-center gap-2 bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/10 group"
               >
-                <ShieldCheck className="text-pink-400 group-hover:scale-110 transition-transform" size={28} />
+                <ShieldCheck className="text-pink-500 group-hover:scale-110 transition-transform" size={28} />
                 <span className="text-sm font-medium text-white">Keamanan</span>
               </PNButton>
               
@@ -263,7 +263,7 @@ const HelpPage: React.FC = () => {
                 onClick={() => setSelectedCategory('Fitur')}
                 className="h-20 flex flex-col items-center justify-center gap-2 bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/10 group"
               >
-                <Heart className="text-pink-400 group-hover:scale-110 transition-transform" size={28} />
+                <Heart className="text-pink-500 group-hover:scale-110 transition-transform" size={28} />
                 <span className="text-sm font-medium text-white">Wishlist</span>
               </PNButton>
               
@@ -272,7 +272,7 @@ const HelpPage: React.FC = () => {
                 onClick={() => setSelectedCategory('Fitur')}
                 className="h-20 flex flex-col items-center justify-center gap-2 bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/10 group"
               >
-                <Zap className="text-pink-400 group-hover:scale-110 transition-transform" size={28} />
+                <Zap className="text-pink-500 group-hover:scale-110 transition-transform" size={28} />
                 <span className="text-sm font-medium text-white">Flash Sale</span>
               </PNButton>
             </div>
@@ -311,13 +311,13 @@ const HelpPage: React.FC = () => {
                     >
                       <div className="flex items-start justify-between w-full gap-4">
                         <div className="flex-1">
-                          <span className="inline-block px-3 py-1 bg-pink-500/20 text-pink-400 text-xs rounded-full mb-3 font-medium">
+                          <span className="inline-block px-3 py-1 bg-pink-500/20 text-pink-500 text-xs rounded-full mb-3 font-medium">
                             {item.category}
                           </span>
                           <PNHeading level={3} className="text-base lg:text-lg pr-2">{item.q}</PNHeading>
                         </div>
                         <ChevronDown 
-                          className={`transition-transform text-pink-400 flex-shrink-0 mt-1 ${open === idx ? 'rotate-180' : ''}`} 
+                          className={`transition-transform text-pink-500 flex-shrink-0 mt-1 ${open === idx ? 'rotate-180' : ''}`} 
                           size={20}
                         />
                       </div>
@@ -333,10 +333,10 @@ const HelpPage: React.FC = () => {
 
               {filteredFaqs.length === 0 && (
                 <PNCard className="text-center p-12">
-                  <Search className="mx-auto text-gray-500 mb-4" size={48} />
+                  <Search className="mx-auto text-gray-400 mb-4" size={48} />
                   <PNHeading level={3} className="mb-2">Tidak Ada Hasil</PNHeading>
                   <PNText className="text-gray-400">Tidak ada FAQ yang cocok dengan pencarian Anda.</PNText>
-                  <PNText className="text-gray-500 text-sm mt-2">Coba kata kunci lain atau hubungi support.</PNText>
+                  <PNText className="text-gray-400 text-sm mt-2">Coba kata kunci lain atau hubungi support.</PNText>
                 </PNCard>
               )}
             </div>
@@ -346,7 +346,7 @@ const HelpPage: React.FC = () => {
               {/* Quick Contact */}
               <PNCard className="p-6 relative overflow-hidden">
                 <PNHeading level={3} className="mb-4 flex items-center gap-2">
-                  <MessageSquare className="text-pink-400" />
+                  <MessageSquare className="text-pink-500" />
                   Butuh Bantuan?
                 </PNHeading>
                 <PNText className="text-gray-300 mb-4">
@@ -370,7 +370,7 @@ const HelpPage: React.FC = () => {
                     <span>Respon dalam 5 menit</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-pink-400" />
+                    <Clock size={16} className="text-pink-500" />
                     <span>Online: 09:00 - 21:00 WIB</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -383,7 +383,7 @@ const HelpPage: React.FC = () => {
               {/* System Status */}
               <PNCard className="p-6">
                 <PNHeading level={3} className="mb-4 flex items-center gap-2">
-                  <Settings className="text-pink-400" />
+                  <Settings className="text-pink-500" />
                   Status Sistem
                 </PNHeading>
                 <div className="space-y-3">
@@ -409,7 +409,7 @@ const HelpPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <PNText className="text-xs text-gray-500 mt-4">
+                <PNText className="text-xs text-gray-400 mt-4">
                   Update: {new Date().toLocaleString('id-ID')}
                 </PNText>
               </PNCard>

@@ -423,7 +423,7 @@ export const PaymentMethods = React.memo(({
           <AlertCircle className="text-yellow-400" size={20} />
           <PNHeading level={3} className="!mb-0">Metode Pembayaran</PNHeading>
         </div>
-        <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+        <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
           <PNText className="text-sm text-yellow-300">{error}</PNText>
         </div>
         {renderPaymentMethods()}
@@ -478,7 +478,7 @@ export const PaymentMethods = React.memo(({
                   </div>
                   <div className="space-y-0.5">
                     <PNText className={`font-semibold text-xs leading-tight ${isSelected ? 'text-white' : 'text-gray-200'}`}>{method.name}</PNText>
-                    <PNText className="text-[10px] text-gray-500 leading-tight line-clamp-2">{method.description}</PNText>
+                    <PNText className="text-[10px] text-gray-400 leading-tight line-clamp-2">{method.description}</PNText>
                   </div>
                   {isSelected && (
                     <div className="absolute top-2 right-2 animate-scale-in">
@@ -506,7 +506,7 @@ export const PaymentMethods = React.memo(({
           {groupedMethods.map((group) => (
             <div key={group.type} className="animate-fade-in">
               <div className="flex items-center space-x-2 mb-2.5 px-1 pb-1 border-b border-white/5">
-                <div className="p-1.5 bg-gray-800/50 rounded-lg">
+                <div className="p-1.5 bg-gray-800/50 rounded-xl">
                   {getGroupIcon(group.icon)}
                 </div>
                 <div className="flex-1">
@@ -547,7 +547,7 @@ export const PaymentMethods = React.memo(({
                       } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                         <div className={`p-1.5 rounded-lg transition-colors ${isSelected ? 'bg-pink-500/20' : 'bg-black/20'}`}>
+                         <div className={`p-1.5 rounded-xl transition-colors ${isSelected ? 'bg-pink-500/20' : 'bg-black/20'}`}>
                             <div className="text-xl">{method.icon}</div>
                          </div>
                         {isSelected && (
@@ -582,7 +582,7 @@ export const PaymentMethods = React.memo(({
 
     // Render security footer - more compact
     const renderSecurityFooter = () => (
-      <div className="mt-3 p-2 bg-gray-500/10 border border-gray-500/30 rounded-lg">
+      <div className="mt-3 p-2 bg-gray-500/10 border border-gray-500/30 rounded-xl">
         <div className="flex items-center space-x-2">
           <Shield className="text-gray-300" size={14} />
           <PNText className="text-xs text-gray-300">
@@ -604,7 +604,7 @@ export const PaymentMethods = React.memo(({
 
         {/* Payment Method Validation Error */}
         {error && (
-          <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded-xl">
             <div className="flex items-center space-x-2">
               <AlertCircle className="text-red-400" size={14} />
               <PNText className="text-red-400 text-xs">{error}</PNText>

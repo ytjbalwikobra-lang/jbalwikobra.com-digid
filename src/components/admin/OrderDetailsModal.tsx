@@ -213,7 +213,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           >
             <div className="flex items-center gap-3">
               <div
-                className="p-2 rounded-lg"
+                className="p-2 rounded-xl"
                 style={{
                   background: AdminColors.primary.lighter,
                   color: AdminColors.primary.DEFAULT
@@ -231,7 +231,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="p-2 rounded-xl transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
               style={{
                 background: `${AdminColors.accent.DEFAULT}15`,
                 color: AdminColors.accent.DEFAULT,
@@ -253,7 +253,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
             {error && (
               <div
-                className="p-4 rounded-lg text-center"
+                className="p-4 rounded-xl text-center"
                 style={{
                   background: AdminColors.error.bg,
                   color: AdminColors.error.DEFAULT
@@ -272,13 +272,13 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <img
                       src={order.product_image}
                       alt={order.product_name}
-                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
                       style={{ border: `1px solid ${AdminColors.border.DEFAULT}` }}
                       loading="lazy"
                     />
                   ) : (
                     <div
-                      className="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0"
+                      className="w-24 h-24 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{
                         background: AdminColors.background.secondary,
                         border: `1px solid ${AdminColors.border.DEFAULT}`
@@ -331,7 +331,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {/* Rental Duration (if applicable) */}
                 {order.order_type === 'rental' && order.rental_duration && (
                   <div
-                    className="p-4 rounded-lg"
+                    className="p-4 rounded-xl"
                     style={{
                       background: AdminColors.info.bg,
                       border: `1px solid ${AdminColors.info.border}`
@@ -428,7 +428,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
                 {/* Order ID */}
                 <div
-                  className="p-3 rounded-lg"
+                  className="p-3 rounded-xl"
                   style={{
                     background: AdminColors.background.secondary,
                     border: `1px solid ${AdminColors.border.DEFAULT}`
@@ -444,7 +444,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <div className="flex flex-col gap-2">
                   {actionError && (
                     <div
-                      className="p-3 rounded-lg text-sm"
+                      className="p-3 rounded-xl text-sm"
                       style={{ background: AdminColors.error.bg, color: AdminColors.error.DEFAULT }}
                       role="alert"
                     >
@@ -457,7 +457,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       onClick={handleMarkComplete}
                       disabled={updating}
                       className={cn(
-                        'w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200',
+                        'w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200',
                         'focus:outline-none focus:ring-2 focus:ring-offset-2'
                       )}
                       style={{
@@ -476,7 +476,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       type="button"
                       disabled
                       className={cn(
-                        'w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200',
+                        'w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200',
                         'opacity-70 cursor-not-allowed'
                       )}
                       style={{

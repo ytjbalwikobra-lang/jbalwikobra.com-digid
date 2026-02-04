@@ -93,7 +93,7 @@ export const IOSPagination: React.FC<IOSPaginationProps> = ({
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
               className={cn(
-                'px-3 py-1.5 text-sm rounded-lg border',
+                'px-3 py-1.5 text-sm rounded-xl border',
                 'bg-black text-white border-gray-700',
                 'focus:ring-2 focus:ring-ios-accent focus:border-transparent',
                 'transition-colors duration-200'
@@ -131,7 +131,7 @@ export const IOSPagination: React.FC<IOSPaginationProps> = ({
                   <button
                     onClick={() => handlePageChange(page as number)}
                     className={cn(
-                      'px-3 py-2 text-sm rounded-lg transition-all duration-200',
+                      'px-3 py-2 text-sm rounded-xl transition-all duration-200',
                       currentPage === page
                         ? 'bg-pink-500 text-white shadow-lg'
                         : 'text-white hover:bg-black-secondary active:scale-95'

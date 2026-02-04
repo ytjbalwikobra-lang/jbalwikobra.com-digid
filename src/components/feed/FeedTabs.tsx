@@ -15,7 +15,7 @@ export const FeedTabs: React.FC<FeedTabsProps> = ({ active, onChange }) => {
       key: 'semua' as FeedFilter,
       label: 'Semua',
       icon: MessageCircle,
-      iconColor: 'text-pink-400'
+      iconColor: 'text-pink-500'
     },
     {
       key: 'pengumuman' as FeedFilter,

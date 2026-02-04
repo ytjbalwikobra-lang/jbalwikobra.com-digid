@@ -31,7 +31,7 @@ import { SettingsService } from '../../services/settingsService';
 import { copyToClipboard, maskApiKey, parseErrorMessage, formatAnalyticsValue } from '../../utils/adminUtils';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 // ========================================
 // TYPES
@@ -369,7 +369,7 @@ const AdminWhatsAppSettings: React.FC = () => {
       label: 'Last Updated',
       value: lastUpdated ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-',
       icon: Clock,
-      color: 'from-pink-500 to-pink-600',
+      color: 'from-pink-500 to-fuchsia-500',
       bgColor: 'bg-pink-500/10'
     }
   ], [apiKey, groups.length, provider, lastUpdated]);
@@ -418,7 +418,7 @@ const AdminWhatsAppSettings: React.FC = () => {
               className={`${card.bgColor} rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]`}
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color}`}>
+                <div className={`p-2 rounded-xl bg-gradient-to-br ${card.color}`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
@@ -436,7 +436,7 @@ const AdminWhatsAppSettings: React.FC = () => {
       {/* Help Card */}
       <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
             <Info className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
@@ -447,11 +447,11 @@ const AdminWhatsAppSettings: React.FC = () => {
             </ul>
             <div className="mt-3 flex gap-2">
               <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow"
-                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-medium hover:opacity-90">
+                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-medium hover:opacity-90">
                 WooWA Docs
               </a>
               <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow"
-                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-medium hover:bg-gray-600">
+                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gray-700 text-white text-xs font-medium hover:bg-gray-600">
                 NotifAPI
               </a>
             </div>
@@ -462,7 +462,7 @@ const AdminWhatsAppSettings: React.FC = () => {
       {/* Current API Key Section */}
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
             <Key className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -471,7 +471,7 @@ const AdminWhatsAppSettings: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between flex-wrap gap-4 p-4 bg-gray-800/50 rounded-lg">
+        <div className="flex items-center justify-between flex-wrap gap-4 p-4 bg-gray-800/50 rounded-xl">
           <div className="flex items-center gap-3">
             <div>
               <p className="text-xs text-gray-400">API Key</p>
@@ -501,7 +501,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                   </>
                 )}
               </div>
-              <p className="text-xs mt-1 text-gray-500">
+              <p className="text-xs mt-1 text-gray-400">
                 Penggunaan: {apiKey?.usage_count?.toLocaleString() || '0'} pesan
               </p>
             </div>
@@ -515,7 +515,7 @@ const AdminWhatsAppSettings: React.FC = () => {
       {/* Update API Key Section */}
       <div className="bg-gray-900 rounded-xl border border-pink-500/30 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
             <Key className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -532,13 +532,13 @@ const AdminWhatsAppSettings: React.FC = () => {
             <input
               id="new-api-key"
               type="text"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg font-mono text-sm text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl font-mono text-sm text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
               value={newApiKey}
               onChange={(e) => setNewApiKey(e.target.value)}
               placeholder="Paste API key baru disini"
             />
-            <p className="text-xs mt-1.5 text-gray-500">
-              Dapatkan dari <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-400 hover:underline">WooWA</a> atau <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-400 hover:underline">NotifAPI</a>
+            <p className="text-xs mt-1.5 text-gray-400">
+              Dapatkan dari <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-500 hover:underline">WooWA</a> atau <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-500 hover:underline">NotifAPI</a>
             </p>
           </div>
 
@@ -560,7 +560,7 @@ const AdminWhatsAppSettings: React.FC = () => {
           {/* Current Configuration Summary */}
           <div className="bg-gray-900 rounded-xl border border-green-500/20 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
                 <Users className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -569,7 +569,7 @@ const AdminWhatsAppSettings: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 bg-gray-800/50 rounded-lg mb-4">
+            <div className="p-4 bg-gray-800/50 rounded-xl mb-4">
               <p className="text-xs text-gray-400">Default Group</p>
               <p className="text-sm font-semibold text-white mt-0.5">
                 {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Belum diatur'}
@@ -578,8 +578,8 @@ const AdminWhatsAppSettings: React.FC = () => {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {NOTIFICATION_TYPES.map(item => (
-                <div key={item.key} className="p-3 bg-gray-800/50 rounded-lg">
-                  <p className="text-xs text-gray-500">{item.label}</p>
+                <div key={item.key} className="p-3 bg-gray-800/50 rounded-xl">
+                  <p className="text-xs text-gray-400">{item.label}</p>
                   <p className="text-xs font-medium mt-0.5 text-white truncate">
                     {groups.find(g => g.id === groupConfigurations[item.key])?.name || 'Default'}
                   </p>
@@ -594,7 +594,7 @@ const AdminWhatsAppSettings: React.FC = () => {
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -615,7 +615,7 @@ const AdminWhatsAppSettings: React.FC = () => {
               
               <div className="space-y-4">
                 <select
-                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
                   value={defaultGroupId}
                   onChange={(e) => setDefaultGroupId(e.target.value)}
                 >
@@ -625,7 +625,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                   ))}
                 </select>
                 
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-400">
                   {groups.length > 0 ? `${groups.length} grup tersedia` : 'Klik "Discover" untuk memuat'}
                 </p>
 
@@ -646,7 +646,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg font-mono text-xs text-white placeholder-gray-500 focus:border-pink-500"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl font-mono text-xs text-white placeholder-gray-500 focus:border-pink-500"
                     value={defaultGroupId}
                     onChange={(e) => setDefaultGroupId(e.target.value)}
                     placeholder="120363405729592501@g.us"
@@ -658,7 +658,7 @@ const AdminWhatsAppSettings: React.FC = () => {
             {/* Notification Routing */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -674,7 +674,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                       {item.label}
                     </label>
                     <select
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:border-pink-500"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:border-pink-500"
                       value={groupConfigurations[item.key]}
                       onChange={(e) => setGroupConfigurations(prev => ({
                         ...prev,
@@ -709,7 +709,7 @@ const AdminWhatsAppSettings: React.FC = () => {
       {/* Test Messaging */}
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
             <Send className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -725,7 +725,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                 Target Group (Opsional)
               </label>
               <select
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-pink-500"
+                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:border-pink-500"
                 value={customGroupId}
                 onChange={(e) => setCustomGroupId(e.target.value)}
               >
@@ -741,7 +741,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                 Template Pesan
               </label>
               <select
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-pink-500"
+                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:border-pink-500"
                 value={selectedTemplate}
                 onChange={(e) => {
                   const template = MESSAGE_TEMPLATES.find(t => t.id === e.target.value);
@@ -764,19 +764,19 @@ const AdminWhatsAppSettings: React.FC = () => {
               Pesan Test
             </label>
             <textarea
-              className="w-full px-3 py-2.5 h-28 bg-gray-800 border border-gray-700 rounded-lg resize-none text-white placeholder-gray-500 focus:border-pink-500 font-mono text-xs"
+              className="w-full px-3 py-2.5 h-28 bg-gray-800 border border-gray-700 rounded-xl resize-none text-white placeholder-gray-500 focus:border-pink-500 font-mono text-xs"
               value={testMessage}
               onChange={(e) => setTestMessage(e.target.value)}
               placeholder="Masukkan pesan test..."
             />
-            <p className="text-xs mt-1 text-gray-500">
+            <p className="text-xs mt-1 text-gray-400">
               Gunakan *bold*, _italic_ untuk formatting
             </p>
           </div>
         </div>
 
         <div className="flex items-center justify-between flex-wrap gap-3 mt-4 pt-4 border-t border-gray-800">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-400">
             Target: {customGroupId 
               ? groups.find(g => g.id === customGroupId)?.name || 'Custom'
               : groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Belum dipilih'
@@ -802,7 +802,7 @@ const AdminWhatsAppSettings: React.FC = () => {
           <div className={`relative w-full max-w-md bg-gray-900 rounded-xl border shadow-2xl ${resultModal.success ? 'border-green-500/30' : 'border-red-500/30'}`}>
             <button
               onClick={() => setResultModal(prev => ({ ...prev, isOpen: false }))}
-              className="absolute top-3 right-3 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
+              className="absolute top-3 right-3 p-1 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -821,7 +821,7 @@ const AdminWhatsAppSettings: React.FC = () => {
             
             {resultModal.details && (
               <div className="px-5 pb-4">
-                <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
+                <div className="bg-gray-800/50 rounded-xl p-3 space-y-2">
                   {resultModal.details.messageId && resultModal.details.messageId !== 'N/A' && (
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-400 flex items-center gap-1.5">

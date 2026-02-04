@@ -41,15 +41,15 @@ export const AdminEmptyState: React.FC<AdminEmptyStateProps> = ({
       </div>
       <h3 className="text-xl font-semibold text-gray-400 mb-2">{title}</h3>
       {description && (
-        <p className="text-gray-500 mb-4">{description}</p>
+        <p className="text-gray-400 mb-4">{description}</p>
       )}
       {hasFilters && (
-        <p className="text-gray-500 text-sm mb-4">{filterHint}</p>
+        <p className="text-gray-400 text-sm mb-4">{filterHint}</p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-lg transition-colors"
+          className="cyber-btn cyber-btn-primary px-6"
         >
           {action.icon}
           {action.label}

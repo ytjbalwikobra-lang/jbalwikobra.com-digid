@@ -29,7 +29,7 @@ export const FeedHeader: React.FC = () => {
               <PNHeading level={1} gradient className="mb-3">Feed Komunitas</PNHeading>
               <PNText className="max-w-3xl mx-auto">
                 Bergabung dalam diskusi komunitas dan dapatkan update terbaru dari 
-                <span className="text-pink-400 font-medium"> JB Alwikobra</span>
+                <span className="text-pink-500 font-medium"> JB Alwikobra</span>
               </PNText>
             </div>
           </div>

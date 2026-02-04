@@ -14,7 +14,7 @@ import AdminNotificationPanel from './components/AdminNotificationPanel';
 import AdminFloatingNotifications from './AdminFloatingNotifications';
 import { useAdminRealtimeNotifications } from '../../hooks/useAdminRealtimeNotifications';
 import { AdminDataProvider } from '../../contexts/AdminDataContext';
-import '../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -66,7 +66,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="lg:hidden p-2 rounded-xl hover:bg-gray-700 transition-colors"
               aria-label="Open menu"
             >
               <Menu size={24} style={{ color: AdminColors.text.primary }} />
@@ -81,7 +81,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               <div className="relative">
                 <button
                   onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                  className="relative p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="relative p-2 rounded-xl hover:bg-gray-700 transition-colors"
                   aria-label="Notifications"
                 >
                   <Bell size={20} style={{ color: AdminColors.text.secondary }} />
@@ -110,7 +110,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                className="p-2 rounded-xl hover:bg-gray-700 transition-colors"
                 aria-label="Logout"
                 title="Logout"
               >

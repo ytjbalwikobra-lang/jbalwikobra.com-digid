@@ -118,8 +118,8 @@ const PaymentStatusPage: React.FC = () => {
               <div className="animate-spin w-12 h-12 border-4 border-pink-500/30 border-t-pink-500 rounded-full mx-auto"></div>
               <div className="space-y-3">
                 <div className="h-6 bg-gradient-to-r from-pink-500/20 to-transparent rounded-xl animate-pulse"></div>
-                <div className="h-4 bg-gradient-to-r from-pink-500/10 to-transparent rounded-lg animate-pulse"></div>
-                <div className="h-4 w-2/3 bg-gradient-to-r from-pink-500/10 to-transparent rounded-lg animate-pulse mx-auto"></div>
+                <div className="h-4 bg-gradient-to-r from-pink-500/10 to-transparent rounded-xl animate-pulse"></div>
+                <div className="h-4 w-2/3 bg-gradient-to-r from-pink-500/10 to-transparent rounded-xl animate-pulse mx-auto"></div>
               </div>
               <PNText color="muted" className="animate-pulse">Memuat status pembayaran...</PNText>
             </div>
@@ -285,7 +285,7 @@ const PaymentStatusPage: React.FC = () => {
               {order.payment_channel && (
                 <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                   <div className="flex items-center space-x-3">
-                    <DollarSign size={20} className="text-pink-400" />
+                    <DollarSign size={20} className="text-pink-500" />
                     <PNText color="muted">Metode Pembayaran</PNText>
                   </div>
                   <PNText className="font-medium capitalize">

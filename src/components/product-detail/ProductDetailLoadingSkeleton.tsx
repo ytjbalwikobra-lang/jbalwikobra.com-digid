@@ -33,7 +33,7 @@ export const ProductDetailLoadingSkeleton = React.memo(() => {
             {/* Thumbnails */}
             <div className="flex space-x-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="w-24 aspect-[4/5] bg-gray-800 rounded-lg"></div>
+                <div key={i} className="w-24 aspect-[4/5] bg-gray-800 rounded-xl"></div>
               ))}
             </div>
           </div>

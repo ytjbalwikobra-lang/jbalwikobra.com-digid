@@ -9,7 +9,7 @@ const MobileLoadingSkeleton: React.FC = () => (
     aria-label="Memuat halaman..."
   >
     <div className="px-4 pt-6 pb-4">
-      <div className="h-8 placeholder-skeleton rounded-lg w-3/4 mb-4" aria-hidden="true"></div>
+      <div className="h-8 placeholder-skeleton rounded-xl w-3/4 mb-4" aria-hidden="true"></div>
       <div className="h-4 placeholder-skeleton rounded w-1/2" aria-hidden="true"></div>
     </div>
     <div className="px-4 mb-6">

@@ -47,7 +47,7 @@ export const getMetricAccentColor = (type: string) => {
   const colors = {
     revenue: 'from-emerald-500/30 via-emerald-600/20 to-green-500/10',
     orders: 'from-blue-500/30 via-blue-600/20 to-cyan-500/10', 
-    users: 'from-pink-500/30 via-pink-600/20 to-fuchsia-600/10',
+    users: 'from-pink-500/30 via-pink-500/20 to-fuchsia-500/10',
     products: 'from-violet-500/30 via-purple-600/20 to-indigo-500/10',
     reviews: 'from-yellow-500/30 via-amber-600/20 to-orange-500/10',
     flashSales: 'from-orange-500/30 via-red-600/20 to-pink-500/10'

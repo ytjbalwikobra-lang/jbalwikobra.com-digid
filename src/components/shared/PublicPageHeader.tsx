@@ -67,8 +67,8 @@ export const PublicPageHeader: React.FC<PublicPageHeaderProps> = ({
               onClick={onWishlistToggle}
               className={`flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border transition-all duration-200 ${
                 isInWishlist 
-                  ? 'border-pink-500/50 text-pink-400 bg-pink-500/10 hover:bg-pink-500/15' 
-                  : 'border-white/10 text-gray-400 hover:bg-white/10 hover:text-pink-300 hover:border-white/20'
+                  ? 'border-pink-500/50 text-pink-500 bg-pink-500/10 hover:bg-pink-500/15' 
+                  : 'border-white/10 text-gray-400 hover:bg-white/10 hover:text-pink-400 hover:border-white/20'
               }`}
               aria-label={isInWishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist'}
             >
@@ -78,7 +78,7 @@ export const PublicPageHeader: React.FC<PublicPageHeaderProps> = ({
           {showShare && onShare && (
             <button
               onClick={onShare}
-              className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-pink-300 hover:border-white/20 transition-all duration-200"
+              className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-pink-400 hover:border-white/20 transition-all duration-200"
               aria-label="Bagikan produk"
             >
               <Share2 size={18} />

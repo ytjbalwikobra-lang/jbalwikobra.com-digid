@@ -53,14 +53,14 @@ export const BannerTable: React.FC<BannerTableProps> = ({
                     <h3 className="text-xl font-bold text-white">
                       {banner.title}
                     </h3>
-                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg border ${
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-xl border ${
                       banner.is_active 
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
                         : 'bg-red-500/20 text-red-400 border-red-500/30'
                     }`}>
                       {banner.is_active ? 'Active' : 'Inactive'}
                     </span>
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg border bg-blue-500/20 text-blue-400 border-blue-500/30">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-xl border bg-blue-500/20 text-blue-400 border-blue-500/30">
                       Order #{banner.sort_order}
                     </span>
                   </div>
@@ -84,7 +84,7 @@ export const BannerTable: React.FC<BannerTableProps> = ({
                   <img
                     src={banner.image_url}
                     alt={banner.title}
-                    className="w-24 h-16 rounded-lg object-cover cursor-pointer border border-gray-700 hover:border-pink-500/50 transition-colors"
+                    className="w-24 h-16 rounded-xl object-cover cursor-pointer border border-gray-700 hover:border-pink-500/50 transition-colors"
                     onClick={() => onImagePreview(banner.image_url)}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = 'none';
@@ -98,7 +98,7 @@ export const BannerTable: React.FC<BannerTableProps> = ({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => onToggleStatus(banner.id, banner.is_active)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                       banner.is_active 
                         ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30' 
                         : 'bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white'
@@ -116,21 +116,21 @@ export const BannerTable: React.FC<BannerTableProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onImagePreview(banner.image_url)}
-                    className="p-2 bg-gray-800 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-700 hover:text-white transition-all duration-200"
+                    className="p-2 bg-gray-800 border border-gray-700 text-gray-400 rounded-xl hover:bg-gray-700 hover:text-white transition-all duration-200"
                     title="Preview image"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onEditBanner(banner)}
-                    className="p-2 bg-gray-800 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-700 hover:text-white transition-all duration-200"
+                    className="p-2 bg-gray-800 border border-gray-700 text-gray-400 rounded-xl hover:bg-gray-700 hover:text-white transition-all duration-200"
                     title="Edit banner"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onDeleteBanner(banner.id)}
-                    className="p-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition-all duration-200"
+                    className="p-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/30 transition-all duration-200"
                     title="Delete banner"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -146,7 +146,7 @@ export const BannerTable: React.FC<BannerTableProps> = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 mt-8">
           <button
-            className="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-700 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage <= 1}
           >
@@ -156,7 +156,7 @@ export const BannerTable: React.FC<BannerTableProps> = ({
             Page {currentPage} of {totalPages}
           </span>
           <button
-            className="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-700 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage >= totalPages}
           >

@@ -48,7 +48,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       
       {/* Tooltip for collapsed state */}
       {collapsed && (
-        <div className="absolute left-full ml-2 px-3 py-2 bg-surface-glass-dark text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 border border-surface-tint-light shadow-xl">
+        <div className="absolute left-full ml-2 px-3 py-2 bg-surface-glass-dark text-white text-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 border border-surface-tint-light shadow-xl">
           {label}
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-surface-glass-dark rotate-45 border-l border-b border-surface-tint-light"></div>
         </div>

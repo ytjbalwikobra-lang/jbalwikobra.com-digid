@@ -41,7 +41,7 @@ import {
 
 // Temporary placeholder components for future implementation
 const PlaceholderComponent: React.FC<{ name: string; description: string; children?: React.ReactNode }> = ({ name, description, children }) => (
-  <div className="border-2 border-dashed border-gray-700 rounded-lg p-4 bg-black/50">
+  <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 bg-black/50">
     <div className="text-center space-y-2">
       <h4 className="font-semibold text-white">{name}</h4>
   <p className="text-sm text-white/70">{description}</p>
@@ -62,14 +62,14 @@ const DesignSystemShowcase: React.FC = () => {
           <p className="text-white/70 text-lg">
             Complete component library and design patterns for consistent UI
           </p>
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-lg inline-block">
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-xl inline-block">
             ⚠️ This page is hidden from search engines and navigation
           </div>
         </div>
 
         {/* Navigation Tabs */}
         <IOSCard>
-          <div className="flex flex-wrap gap-2 p-2 bg-black rounded-lg">
+          <div className="flex flex-wrap gap-2 p-2 bg-black rounded-xl">
             {['overview', 'colors', 'typography', 'buttons', 'forms'].map(tab => (
               <button
                 key={tab}
@@ -138,32 +138,32 @@ const DesignSystemShowcase: React.FC = () => {
             <h2 className="text-2xl font-bold text-white mb-6">Color Palette</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <div className="w-full h-16 bg-pink-500 rounded-lg shadow-sm"></div>
+                <div className="w-full h-16 bg-pink-500 rounded-xl shadow-sm"></div>
                 <p className="text-sm font-medium text-white">ios-accent</p>
                 <p className="text-xs text-white/70">Primary brand color</p>
               </div>
               <div className="space-y-2">
-                <div className="w-full h-16 bg-black rounded-lg border border-gray-700"></div>
+                <div className="w-full h-16 bg-black rounded-xl border border-gray-700"></div>
                 <p className="text-sm font-medium text-white">ios-background</p>
                 <p className="text-xs text-white/70">Main background</p>
               </div>
               <div className="space-y-2">
-                <div className="w-full h-16 bg-black rounded-lg"></div>
+                <div className="w-full h-16 bg-black rounded-xl"></div>
                 <p className="text-sm font-medium text-white">ios-surface</p>
                 <p className="text-xs text-white/70">Card backgrounds</p>
               </div>
               <div className="space-y-2">
-                <div className="w-full h-16 border-2 border-gray-700 rounded-lg"></div>
+                <div className="w-full h-16 border-2 border-gray-700 rounded-xl"></div>
                 <p className="text-sm font-medium text-white">ios-border</p>
                 <p className="text-xs text-white/70">Border elements</p>
               </div>
               <div className="space-y-2">
-                <div className="w-full h-16 bg-ios-text rounded-lg"></div>
+                <div className="w-full h-16 bg-ios-text rounded-xl"></div>
                 <p className="text-sm font-medium text-white">ios-text</p>
                 <p className="text-xs text-white/70">Primary text</p>
               </div>
               <div className="space-y-2">
-                <div className="w-full h-16 bg-ios-text-secondary rounded-lg"></div>
+                <div className="w-full h-16 bg-ios-text-secondary rounded-xl"></div>
                 <p className="text-sm font-medium text-white">ios-text-secondary</p>
                 <p className="text-xs text-white/70">Secondary text</p>
               </div>
@@ -244,17 +244,17 @@ const DesignSystemShowcase: React.FC = () => {
             <h2 className="text-2xl font-bold text-white mb-6">Form Components (Future)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PlaceholderComponent name="IOSInput" description="Text input with iOS styling">
-                  <input className="w-full px-3 py-2 bg-black border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-ios-accent focus:border-transparent" placeholder="Text Input Preview" />
+                  <input className="w-full px-3 py-2 bg-black border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-ios-accent focus:border-transparent" placeholder="Text Input Preview" />
               </PlaceholderComponent>
 
               <PlaceholderComponent name="IOSSelect" description="Dropdown select with iOS styling">
-                  <select className="w-full px-3 py-2 bg-black border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-ios-accent focus:border-transparent">
+                  <select className="w-full px-3 py-2 bg-black border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-ios-accent focus:border-transparent">
                   <option>Select Preview</option>
                 </select>
               </PlaceholderComponent>
 
               <PlaceholderComponent name="IOSTextarea" description="Multi-line text input">
-                  <textarea className="w-full px-3 py-2 bg-black border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-ios-accent focus:border-transparent" rows={3} placeholder="Textarea Preview"></textarea>
+                  <textarea className="w-full px-3 py-2 bg-black border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-ios-accent focus:border-transparent" rows={3} placeholder="Textarea Preview"></textarea>
               </PlaceholderComponent>
 
               <PlaceholderComponent name="IOSCheckbox + IOSRadio" description="Form controls with iOS styling">
@@ -276,7 +276,7 @@ const DesignSystemShowcase: React.FC = () => {
         {/* Component Status */}
         <IOSCard>
           <h2 className="text-2xl font-bold text-white mb-4">Implementation Status</h2>
-          <div className="p-4 bg-gray-900 border border-pink-500/30 rounded-lg">
+          <div className="p-4 bg-gray-900 border border-pink-500/30 rounded-xl">
             <p className="text-sm text-pink-400">
               <strong>Note:</strong> This showcase displays both implemented components and planned future components. 
               Dashed border components are placeholders showing intended design patterns for future implementation.

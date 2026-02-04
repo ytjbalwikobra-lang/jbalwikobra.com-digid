@@ -243,14 +243,14 @@ const ProfilePage: React.FC = () => {
       label: 'Riwayat Pesanan',
       path: '/orders',
       count: profile.totalOrders,
-      color: 'text-pink-400'
+      color: 'text-pink-500'
     },
     {
       icon: Heart,
       label: 'Wishlist',
       path: '/wishlist',
       count: profile.wishlistCount,
-      color: 'text-pink-400'
+      color: 'text-pink-500'
     },
     {
       icon: Settings,
@@ -311,8 +311,8 @@ const ProfilePage: React.FC = () => {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                      <Package size={18} className="text-pink-400" />
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                      <Package size={18} className="text-pink-500" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold">{profile.totalOrders}</div>
@@ -322,8 +322,8 @@ const ProfilePage: React.FC = () => {
                 </PNCard>
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-pink-500/20 border border-pink-400/30 flex items-center justify-center">
-                      <Heart size={18} className="text-pink-400" />
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
+                      <Heart size={18} className="text-pink-500" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold">{profile.wishlistCount}</div>
@@ -333,7 +333,7 @@ const ProfilePage: React.FC = () => {
                 </PNCard>
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-400/30 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/20 border border-yellow-400/30 flex items-center justify-center">
                       <Trophy size={18} className="text-yellow-400" />
                     </div>
                     <div>
@@ -344,7 +344,7 @@ const ProfilePage: React.FC = () => {
                 </PNCard>
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center">
                       <Crown size={18} className="text-purple-400" />
                     </div>
                     <div>
@@ -365,12 +365,12 @@ const ProfilePage: React.FC = () => {
               <PNCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <PNHeading level={3} className="flex items-center gap-2">
-                    <Package size={20} className="text-pink-400" />
+                    <Package size={20} className="text-pink-500" />
                     Pesanan Terbaru
                   </PNHeading>
                   <Link 
                     to="/orders" 
-                    className="text-pink-400 hover:text-pink-300 text-sm font-medium flex items-center gap-1 transition-colors"
+                    className="text-pink-500 hover:text-pink-400 text-sm font-medium flex items-center gap-1 transition-colors"
                   >
                     Lihat Semua
                     <ChevronRight size={16} />
@@ -378,7 +378,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   {recentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                    <div key={order.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
                           <div className="text-sm font-mono text-gray-300">{order.id.slice(0, 8)}...</div>

@@ -7,7 +7,7 @@
 import React, { forwardRef } from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 import { AdminButton } from './ui/AdminButton';
-import '../../../styles/admin-design-system-v3.css';
+// Design system: cyber-compact.css (loaded via index.css)
 
 interface FilterOption {
   value: string;

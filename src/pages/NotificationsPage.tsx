@@ -196,7 +196,7 @@ const NotificationsPage: React.FC = () => {
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key as typeof filter)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                   filter === tab.key
                     ? 'bg-pink-500 text-white'
                     : 'bg-black text-white hover:bg-black-secondary'

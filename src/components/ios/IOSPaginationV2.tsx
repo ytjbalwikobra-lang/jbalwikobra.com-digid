@@ -101,7 +101,7 @@ export const IOSPaginationV2: React.FC<IOSPaginationV2Props> = ({
                   onClick={() => handlePageChange(p as number)}
                   aria-current={currentPage === p ? 'page' : undefined}
                   className={cn(
-                    'relative px-3 h-10 rounded-lg text-sm font-medium transition-soft focus:outline-none focus:ring-2 focus:ring-pink-500/40',
+                    'relative px-3 h-10 rounded-xl text-sm font-medium transition-soft focus:outline-none focus:ring-2 focus:ring-pink-500/40',
                     currentPage === p
                       ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-900/30'
                       : 'bg-white/5 hover:bg-white/10 text-white/80'

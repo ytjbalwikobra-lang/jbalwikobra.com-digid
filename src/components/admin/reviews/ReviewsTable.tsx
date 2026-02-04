@@ -157,19 +157,19 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onView(review)}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onEdit(review)}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(review)}
-                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -231,20 +231,20 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onView(review)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all duration-200"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition-all duration-200"
               >
                 <Eye className="w-4 h-4" />
                 View
               </button>
               <button
                 onClick={() => onEdit(review)}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200"
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDelete(review)}
-                className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

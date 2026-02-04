@@ -25,7 +25,7 @@ export const FlashSaleHeader: React.FC<Props> = ({ onBack, onWishlistToggle, onS
         </button>
 
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-pink-500" />
+          <Zap className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
           <PNText className="font-semibold text-white text-lg truncate max-w-[120px] sm:max-w-none">Flash Sale</PNText>
         </div>
 
@@ -36,7 +36,7 @@ export const FlashSaleHeader: React.FC<Props> = ({ onBack, onWishlistToggle, onS
             style={{ minHeight: MOBILE.MIN_TOUCH, minWidth: MOBILE.MIN_TOUCH }}
             aria-label={inWishlist ? 'Hapus dari Wishlist' : 'Tambahkan ke Wishlist'}
           >
-            <Heart className={`w-6 h-6 ${inWishlist ? 'fill-pink-500 text-pink-500' : 'text-[var(--cyber-text-muted)]'}`} />
+            <Heart className={`w-6 h-6 ${inWishlist ? 'fill-[var(--cyber-pink-primary)] text-[var(--cyber-pink-primary)]' : 'text-[var(--cyber-text-muted)]'}`} />
           </button>
           <button
             onClick={onShare}

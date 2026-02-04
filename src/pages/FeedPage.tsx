@@ -365,11 +365,11 @@ export default function FeedPage() {
           <button 
             onClick={loadInitialData} 
             disabled={isLoading}
-            className="bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/20 hover:border-pink-500/40 text-white backdrop-blur-sm shadow-lg px-6 py-3 rounded-cyber-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-[var(--cyber-pink-subtle)] to-[var(--cyber-purple)]/10 hover:from-[var(--cyber-pink-muted)] hover:to-[var(--cyber-purple)]/20 border border-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] text-white backdrop-blur-sm shadow-lg px-6 py-3 rounded-cyber-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <span className="inline-flex items-center gap-3">
-                <span className="animate-spin rounded-full h-5 w-5 border-2 border-pink-500 border-t-transparent" />
+                <span className="animate-spin rounded-full h-5 w-5 border-2 border-[var(--cyber-pink-primary)] border-t-transparent" />
                 Memuat ulang...
               </span>
             ) : (

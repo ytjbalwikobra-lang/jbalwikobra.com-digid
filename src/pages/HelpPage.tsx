@@ -183,7 +183,7 @@ const HelpPage: React.FC = () => {
           {/* Hero Content */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-full flex items-center justify-center">
                 <HelpCircle className="text-white" size={40} />
               </div>
             </div>
@@ -349,7 +349,7 @@ const HelpPage: React.FC = () => {
                 <PNText className="text-[var(--cyber-text-secondary)] mb-4">
                   Tim support siap membantu 24/7 via WhatsApp
                 </PNText>
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-fuchsia-500/5" />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-[var(--cyber-pink-subtle)]" />
                 <a
                   href={`https://wa.me/${whatsappNumber}?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20JBalwikobra`}
                   target="_blank"
@@ -424,7 +424,7 @@ const HelpPage: React.FC = () => {
                   <div className="space-y-4">
                     {guide.steps.map((step, stepIdx) => (
                       <div key={stepIdx} className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white rounded-full flex items-center justify-center text-sm font-bold">
                           {stepIdx + 1}
                         </div>
                         <PNText className="text-[var(--cyber-text-secondary)] pt-1">{step}</PNText>
@@ -439,7 +439,7 @@ const HelpPage: React.FC = () => {
           {/* Still Need Help CTA */}
           <div className="mt-16">
             <PNCard className="text-center p-12 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-fuchsia-500/5 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-[var(--cyber-pink-subtle)] pointer-events-none" />
               <div className="max-w-2xl mx-auto">
                 <div className="flex justify-center mb-6">
                   <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">

@@ -49,8 +49,8 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
         role="status"
         aria-live="polite"
       >
-        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
-          <div className="w-1.5 h-1.5 rounded-full bg-pink-500" aria-hidden="true"></div>
+        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-cyber-2xl bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)]">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--cyber-pink-primary)]" aria-hidden="true"></div>
           <p className="text-sm text-[var(--cyber-text-muted)]">
             Menampilkan semua {totalItems} produk
           </p>
@@ -88,7 +88,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
           aria-busy="true"
         >
           <Loader2 
-            className="w-8 h-8 text-pink-500 animate-spin" 
+            className="w-8 h-8 text-[var(--cyber-pink-primary)] animate-spin" 
             aria-hidden="true"
           />
           <p className="text-sm text-[var(--cyber-text-muted)]">
@@ -113,7 +113,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
               aria-label={`Progress pemuatan: ${totalDisplayed} dari ${totalItems} produk dimuat, ${Math.round((totalDisplayed / totalItems) * 100)}%`}
             >
               <div 
-                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-purple)] transition-all duration-500"
                 style={{ width: `${(totalDisplayed / totalItems) * 100}%` }}
                 aria-hidden="true"
               />

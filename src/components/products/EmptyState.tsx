@@ -16,8 +16,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div role="status" aria-live="polite">
       <PNCard className="text-center p-8">
-        <div className="w-16 h-16 bg-pink-500/10 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-          <Search className="text-pink-400" size={24} />
+        <div className="w-16 h-16 bg-[var(--cyber-pink-subtle)] rounded-cyber-2xl mx-auto mb-4 flex items-center justify-center">
+          <Search className="text-[var(--cyber-pink-primary)]" size={24} />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
         <p className="text-[var(--cyber-text-secondary)] mb-6 text-sm">{message}</p>

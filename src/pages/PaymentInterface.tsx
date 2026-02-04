@@ -477,12 +477,12 @@ const PaymentInterface: React.FC = () => {
         <PNSection padding="md">
           <PNCard className="p-8 mb-8 relative overflow-hidden">
             {/* Background Gradient Effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-transparent to-fuchsia-500/5"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-transparent to-[var(--cyber-pink-subtle)]"></div>
             
             <div className="relative text-center space-y-6">
               {/* Icon with Gradient Background */}
               <div className="relative inline-flex">
-                <div className="w-20 h-20 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl flex items-center justify-center shadow-lg shadow-pink-500/25 mx-auto">
+                <div className="w-20 h-20 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl flex items-center justify-center shadow-lg shadow-[var(--cyber-pink-muted)] mx-auto">
                   <CreditCard className="text-white" size={32} />
                 </div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
@@ -537,7 +537,7 @@ const PaymentInterface: React.FC = () => {
           <PNSection padding="md">
             <PNCard className="p-8 relative overflow-hidden">
               {/* Background Pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-[var(--cyber-info)]/5"></div>
               
               <div className="relative">
                 {/* Section Header with Pink Neon Style */}

@@ -188,8 +188,8 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
     <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <div className="p-2 bg-pink-500/10 rounded-cyber-lg">
-            <TrendingUp className="w-5 h-5 text-pink-500" />
+          <div className="p-2 bg-[var(--cyber-pink-subtle)] rounded-cyber-lg">
+            <TrendingUp className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
           </div>
           <h3 className="text-lg font-semibold text-white">Order Analytics</h3>
         </div>
@@ -199,7 +199,7 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d')}
-            className="bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] rounded-cyber-lg px-3 py-1 text-sm text-white focus:border-pink-500 focus:outline-none"
+            className="bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] rounded-cyber-lg px-3 py-1 text-sm text-white focus:border-[var(--cyber-pink-primary)] focus:outline-none"
           >
             {timeRangeOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -286,7 +286,7 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
           <p className="text-xs text-[var(--cyber-text-muted)]">Paid Orders</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-pink-500">
+          <p className="text-lg font-semibold text-[var(--cyber-pink-primary)]">
             {formatCurrency(actualTotalRevenue)}
           </p>
           <p className="text-xs text-[var(--cyber-text-muted)]">Total Revenue</p>

@@ -27,7 +27,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           w-full flex items-center transition-all duration-200 text-base font-semibold rounded-cyber-lg
           ${collapsed ? 'justify-center p-3 aspect-square' : 'gap-3 px-4 py-3'}
           ${isActive
-            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg ring-2 ring-pink-500/30 scale-[1.02]'
+            ? 'bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-purple)] text-white shadow-lg ring-2 ring-[var(--cyber-pink-muted)] scale-[1.02]'
             : 'text-ds-text-secondary hover:bg-surface-tint-light hover:text-ds-text hover:scale-[1.01] hover:shadow-md'
           }
         `}

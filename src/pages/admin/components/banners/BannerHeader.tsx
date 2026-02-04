@@ -20,14 +20,14 @@ export const BannerHeader: React.FC<BannerHeaderProps> = ({
           type="button"
           onClick={onRefresh}
           disabled={loading}
-          className="flex items-center space-x-2 px-4 py-2 bg-pink-500/10 border border-pink-500/20 rounded-cyber-lg text-pink-500 hover:bg-pink-500/20 transition-all duration-200 disabled:opacity-50"
+          className="flex items-center space-x-2 px-4 py-2 bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] rounded-cyber-lg text-[var(--cyber-pink-primary)] hover:bg-[var(--cyber-pink-muted)] transition-all duration-200 disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
         </button>
         <button 
           type="button"
-          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-semibold rounded-cyber-lg hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-200 shadow-lg hover:shadow-pink-500/25"
+          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white font-semibold rounded-cyber-lg hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-[var(--cyber-pink-muted)]"
           onClick={onCreateBanner}
         >
           <Plus className="w-4 h-4" />

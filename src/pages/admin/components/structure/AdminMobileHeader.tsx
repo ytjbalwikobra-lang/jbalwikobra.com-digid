@@ -34,7 +34,7 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({ onOpenMenu
   const { time, date } = formatDateTime(currentTime);
 
   return (
-    <div className="lg:hidden surface-glass-md border-b border-token sticky top-0 left-0 right-0 z-50 shadow-2xl shadow-pink-500/10">
+    <div className="lg:hidden surface-glass-md border-b border-token sticky top-0 left-0 right-0 z-50 shadow-2xl shadow-[var(--cyber-pink-subtle)]">
       <div className="cluster-md px-md py-md">
         <div className="cluster-sm">
           <button

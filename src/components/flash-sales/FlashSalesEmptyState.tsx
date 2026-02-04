@@ -30,8 +30,8 @@ const FlashSalesEmptyState: React.FC<FlashSalesEmptyStateProps> = ({
     <div className="py-8" role="status" aria-live="polite">
       <PNCard className="text-center p-8 max-w-md mx-auto">
         {/* Icon */}
-        <div className="w-16 h-16 bg-pink-500/10 rounded-2xl mx-auto mb-4 flex items-center justify-center" aria-hidden="true">
-          <Zap className="text-pink-400" size={32} />
+        <div className="w-16 h-16 bg-[var(--cyber-pink-subtle)] rounded-cyber-2xl mx-auto mb-4 flex items-center justify-center" aria-hidden="true">
+          <Zap className="text-[var(--cyber-pink-primary)]" size={32} />
         </div>
         
         {/* Title */}

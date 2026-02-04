@@ -365,7 +365,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => handleChange('isActive', e.target.checked)}
-              className="w-5 h-5 text-pink-500 border-slate-300 rounded focus:ring-pink-500"
+              className="w-5 h-5 text-[var(--cyber-pink-primary)] border-slate-300 rounded focus:ring-[var(--cyber-pink-primary)]"
             />
             <label htmlFor="isActive" className="admin-label" style={{marginBottom: 0}}>
               Aktif (Flash sale akan ditampilkan ke pelanggan)

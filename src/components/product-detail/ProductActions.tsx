@@ -70,7 +70,7 @@ export const ProductActions = React.memo(({
           onClick={onPurchase}
           disabled={isUnavailable}
           fullWidth
-          className={`flex items-center justify-center space-x-2 py-4 text-lg shadow-lg shadow-pink-500/20 ${isUnavailable ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'}`}
+          className={`flex items-center justify-center space-x-2 py-4 text-lg shadow-lg shadow-[var(--cyber-pink-muted)] ${isUnavailable ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'}`}
         >
           {!isUnavailable && <Zap className="fill-current animate-pulse" size={20} />}
           <span>{getButtonText()}</span>

@@ -255,7 +255,7 @@ const AdminBanners: React.FC = () => {
                           <p className="text-sm text-[var(--cyber-text-muted)]">{banner.subtitle}</p>
                         )}
                         {banner.cta_text && (
-                          <p className="text-xs text-pink-500 mt-1">{banner.cta_text}</p>
+                          <p className="text-xs text-[var(--cyber-pink-primary)] mt-1">{banner.cta_text}</p>
                         )}
                       </div>
                     </td>

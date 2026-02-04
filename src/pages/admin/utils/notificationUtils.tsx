@@ -187,7 +187,7 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         icon: 'bg-gradient-to-br from-gray-500 to-slate-600',
         badge: 'bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] border-[var(--cyber-border)]',
         glow: 'shadow-gray-500/20',
-        bg: 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20',
+        bg: 'bg-gradient-to-br from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-muted)]',
         pulse: 'bg-pink-500',
       };
   }

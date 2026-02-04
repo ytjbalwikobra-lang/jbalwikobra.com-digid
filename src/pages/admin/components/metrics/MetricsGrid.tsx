@@ -22,7 +22,7 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ stats, loading, classN
           <div 
             key={i} 
             className={cn(
-              'rounded-cyber-2xl h-40 bg-gradient-to-br from-pink-500/10 to-fuchsia-600/5 border border-pink-500/20',
+              'rounded-cyber-2xl h-40 bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-[var(--cyber-pink-subtle)]/25 border border-[var(--cyber-pink-muted)]',
               i === 0 && 'lg:col-span-2 h-48'
             )} 
           />

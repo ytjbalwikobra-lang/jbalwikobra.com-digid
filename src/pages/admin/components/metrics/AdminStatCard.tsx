@@ -13,7 +13,7 @@ export interface AdminStatCardProps {
 
 const variantStyles: Record<string, { container: string; iconWrap: string; gradient: string; ring: string; }>= {
   default: {
-    container: 'surface-glass-md bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-fuchsia-500/5',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-pink-subtle)]/50 to-[var(--cyber-pink-subtle)]/25',
     iconWrap: 'bg-accent-soft ring-accent text-accent',
     gradient: 'from-white to-pink-100',
     ring: 'ring-1 ring-inset ring-white/10'

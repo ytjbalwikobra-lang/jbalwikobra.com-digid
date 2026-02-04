@@ -30,9 +30,9 @@ const NotFoundPage: React.FC = () => {
       />
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10 rounded-full blur-2xl animate-pulse delay-500" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-subtle)] rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-[var(--cyber-info)]/20 to-[var(--cyber-purple)]/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-[var(--cyber-pink-muted)] rounded-full blur-2xl animate-pulse delay-500" />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -41,14 +41,14 @@ const NotFoundPage: React.FC = () => {
         <div className="bg-[var(--cyber-bg-pure)]/40 backdrop-blur-xl border border-[var(--cyber-border)] rounded-cyber-3xl p-8 lg:p-12 shadow-2xl">
           
           {/* Construction Icon */}
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-cyber-2xl mb-8 shadow-lg shadow-pink-500/30">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl mb-8 shadow-lg shadow-[var(--cyber-pink-muted)]">
             <Construction className="w-12 h-12 text-white" />
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/50 to-fuchsia-500/50 rounded-cyber-2xl blur-lg animate-pulse" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-subtle)] rounded-cyber-2xl blur-lg animate-pulse" />
           </div>
 
           {/* Main Message */}
           <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--cyber-pink-primary)] via-[var(--cyber-pink-glow)] to-[var(--cyber-purple)]">
               Akan Segera Hadir
             </span>
           </h1>
@@ -64,7 +64,7 @@ const NotFoundPage: React.FC = () => {
           </div>
 
           {/* Coming Soon Badge */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 backdrop-blur-sm border border-pink-500/30 rounded-cyber-2xl mb-12">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[var(--cyber-pink-subtle)] to-[var(--cyber-pink-muted)] backdrop-blur-sm border border-[var(--cyber-pink-muted)] rounded-cyber-2xl mb-12">
             <Clock className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
             <span className="text-[var(--cyber-pink-primary)] font-medium">Coming Soon</span>
             <div className="w-2 h-2 bg-[var(--cyber-pink-primary)] rounded-full animate-ping" />
@@ -86,7 +86,7 @@ const NotFoundPage: React.FC = () => {
                   <p className="text-[var(--cyber-text-secondary)] group-hover:text-white font-medium text-sm transition-colors duration-300">
                     {action.label}
                   </p>
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-fuchsia-500/0 group-hover:from-pink-500/5 group-hover:to-fuchsia-500/5 rounded-cyber-2xl transition-all duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-transparent group-hover:from-[var(--cyber-pink-subtle)] group-hover:to-[var(--cyber-pink-muted)] rounded-cyber-2xl transition-all duration-300" />
                 </Link>
               );
             })}
@@ -106,7 +106,7 @@ const NotFoundPage: React.FC = () => {
             <Link to="/">
               <PNButton
                 variant="primary"
-                className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700"
+                className="bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] hover:from-[var(--cyber-pink-glow)] hover:to-[var(--cyber-pink-primary)]"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Ke Beranda
@@ -130,8 +130,8 @@ const NotFoundPage: React.FC = () => {
         </div>
 
         {/* Floating Elements */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-br from-pink-500/30 to-transparent rounded-full blur-xl animate-pulse delay-300" />
-        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br from-fuchsia-500/30 to-transparent rounded-full blur-xl animate-pulse delay-700" />
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-br from-[var(--cyber-pink-muted)] to-transparent rounded-full blur-xl animate-pulse delay-300" />
+        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-transparent rounded-full blur-xl animate-pulse delay-700" />
       </div>
     </div>
   );

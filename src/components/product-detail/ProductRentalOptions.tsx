@@ -39,7 +39,7 @@ export const ProductRentalOptions = React.memo(({
   return (
     <div className="mb-6">
       <PNHeading level={3} className="mb-3 flex items-center space-x-2">
-        <Calendar className="text-pink-400" size={16} />
+        <Calendar className="text-[var(--cyber-pink-primary)]" size={16} />
         <span>Opsi Rental</span>
       </PNHeading>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -49,12 +49,12 @@ export const ProductRentalOptions = React.memo(({
             onClick={() => onRentalSelect(option)}
             className={`p-3 cursor-pointer text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               selectedRental?.id === option.id
-                ? 'border-2 border-pink-500 bg-pink-500/10 shadow-lg shadow-pink-500/20'
-                : 'border border-white/10 hover:bg-white/5 hover:border-pink-400/30'
+                ? 'border-2 border-[var(--cyber-pink-primary)] bg-[var(--cyber-pink-subtle)] shadow-lg shadow-[var(--cyber-pink-muted)]'
+                : 'border border-[var(--cyber-border)] hover:bg-[var(--cyber-bg-surface)] hover:border-[var(--cyber-pink-muted)]'
             }`}
           >
             <div className="font-medium text-white">{option.duration}</div>
-            <div className="text-pink-400 font-semibold">
+            <div className="text-[var(--cyber-pink-primary)] font-semibold">
               {formatCurrency(option.price)}
             </div>
             {option.description && (

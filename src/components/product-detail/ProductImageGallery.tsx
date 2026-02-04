@@ -53,7 +53,7 @@ export const ProductImageGallery = React.memo(({
         {/* SOLD Banner - Priority over flash sale badge */}
         {isSold && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="bg-red-600 text-white text-lg sm:text-xl font-bold px-6 py-2.5 rounded-xl shadow-lg transform -rotate-12">
+            <div className="bg-[var(--cyber-error)] text-white text-lg sm:text-xl font-bold px-6 py-2.5 rounded-cyber-lg shadow-lg transform -rotate-12">
               {soldLabel}
             </div>
           </div>
@@ -61,7 +61,7 @@ export const ProductImageGallery = React.memo(({
 
         {/* Flash Sale Badge (hide when sold) */}
         {!isSold && isFlashSaleActive && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1 shadow-lg backdrop-blur-sm">
+          <div className="absolute top-4 left-4 bg-gradient-to-r from-[var(--cyber-error)] to-[var(--cyber-pink-primary)] text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1 shadow-lg backdrop-blur-sm">
             <Zap size={14} />
             <span>Flash Sale</span>
           </div>
@@ -77,8 +77,8 @@ export const ProductImageGallery = React.memo(({
               onClick={() => onImageSelect(index)}
               className={`flex-shrink-0 w-20 md:w-24 min-w-[44px] min-h-[44px] aspect-[4/5] overflow-hidden transition-all duration-200 cursor-pointer p-0 hover:scale-105 ${
                 selectedImage === index 
-                  ? 'ring-2 ring-pink-500 shadow-lg shadow-pink-500/25 bg-pink-500/10' 
-                  : 'hover:bg-white/10'
+                  ? 'ring-2 ring-[var(--cyber-pink-primary)] shadow-lg shadow-[var(--cyber-pink-muted)] bg-[var(--cyber-pink-subtle)]' 
+                  : 'hover:bg-[var(--cyber-bg-elevated)]'
               }`}
             >
               <div
@@ -90,7 +90,7 @@ export const ProductImageGallery = React.memo(({
                 <img
                   src={image}
                   alt={`${productName} ${index + 1}`}
-                  className="w-full h-full object-cover rounded-xl"
+                  className="w-full h-full object-cover rounded-cyber-lg"
                   loading="lazy"
                 />
               </div>

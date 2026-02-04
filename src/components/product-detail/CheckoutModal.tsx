@@ -153,11 +153,11 @@ const CheckoutModal: React.FC<Props> = ({
         aria-modal="true"
         aria-labelledby="checkout-modal-title"
         aria-describedby="checkout-modal-price"
-        className="relative w-full sm:max-w-md bg-gray-950 sm:rounded-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slide-up sm:animate-fade-in"
+        className="relative w-full sm:max-w-md bg-[var(--cyber-bg-pure)] sm:rounded-cyber-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slide-up sm:animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
-        <div className="sticky top-0 z-10 bg-gray-950 border-b border-white/10 px-5 py-5">
+        <div className="sticky top-0 z-10 bg-[var(--cyber-bg-pure)] border-b border-[var(--cyber-border)] px-5 py-5">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <h2 id="checkout-modal-title" className="text-xl font-bold text-white truncate">
@@ -167,7 +167,7 @@ const CheckoutModal: React.FC<Props> = ({
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 ml-3 w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+              className="flex-shrink-0 ml-3 w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-border-hover)] transition-all duration-200"
               aria-label="Tutup"
             >
               <X size={20} />
@@ -175,9 +175,9 @@ const CheckoutModal: React.FC<Props> = ({
           </div>
           
           {/* Price Badge */}
-          <div id="checkout-modal-price" className="mt-4 flex items-center justify-between p-4 bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl">
+          <div id="checkout-modal-price" className="mt-4 flex items-center justify-between p-4 bg-gradient-to-r from-[var(--cyber-pink-subtle)] to-[var(--cyber-purple)]/10 border border-[var(--cyber-pink-muted)] rounded-cyber-lg">
             <span className="text-sm text-[var(--cyber-text-secondary)] font-medium">Total Pembayaran</span>
-            <span className="text-xl font-bold text-pink-400">{formatCurrency(price)}</span>
+            <span className="text-xl font-bold text-[var(--cyber-pink-primary)]">{formatCurrency(price)}</span>
           </div>
         </div>
 
@@ -186,8 +186,8 @@ const CheckoutModal: React.FC<Props> = ({
           {/* Section 1: Customer Information */}
           <section>
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded-full bg-pink-500/20 flex items-center justify-center">
-                <User size={16} className="text-pink-400" />
+              <div className="w-7 h-7 rounded-full bg-[var(--cyber-pink-muted)] flex items-center justify-center">
+                <User size={16} className="text-[var(--cyber-pink-primary)]" />
               </div>
               <h3 className="text-base font-semibold text-white">Informasi Pembeli</h3>
             </div>
@@ -261,9 +261,9 @@ const CheckoutModal: React.FC<Props> = ({
             <button
               onClick={() => setShowPaymentSection(!showPaymentSection)}
               disabled={!isCustomerInfoValid}
-              className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
+              className={`w-full flex items-center justify-between p-3 rounded-cyber-lg border transition-all ${
                 isCustomerInfoValid
-                  ? 'bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer'
+                  ? 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] hover:bg-[var(--cyber-bg-elevated)] cursor-pointer'
                   : 'bg-[var(--cyber-bg-pure)]/50 border-[var(--cyber-bg-card)] cursor-not-allowed opacity-50'
               }`}
             >
@@ -318,19 +318,19 @@ const CheckoutModal: React.FC<Props> = ({
                 />
                 <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                   acceptedTerms 
-                    ? 'bg-pink-500 border-pink-500' 
-                    : 'border-gray-500 group-hover:border-pink-400'
+                    ? 'bg-[var(--cyber-pink-primary)] border-[var(--cyber-pink-primary)]' 
+                    : 'border-[var(--cyber-text-muted)] group-hover:border-[var(--cyber-pink-primary)]'
                 }`}>
                   {acceptedTerms && <CheckCircle size={12} className="text-white" />}
                 </div>
               </div>
               <span className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed">
                 Saya menyetujui{' '}
-                <Link to="/terms" target="_blank" className="text-pink-400 hover:underline">
+                <Link to="/terms" target="_blank" className="text-[var(--cyber-pink-primary)] hover:underline">
                   Syarat & Ketentuan
                 </Link>
                 {' '}dan{' '}
-                <Link to="/privacy" target="_blank" className="text-pink-400 hover:underline">
+                <Link to="/privacy" target="_blank" className="text-[var(--cyber-pink-primary)] hover:underline">
                   Kebijakan Privasi
                 </Link>
               </span>
@@ -339,7 +339,7 @@ const CheckoutModal: React.FC<Props> = ({
         </div>
 
         {/* Fixed Footer */}
-        <div className="sticky bottom-0 bg-gray-950 border-t border-white/10 px-5 py-5 space-y-4">
+        <div className="sticky bottom-0 bg-[var(--cyber-bg-pure)] border-t border-[var(--cyber-border)] px-5 py-5 space-y-4">
           {/* Security Badge */}
           <div className="flex items-center justify-center gap-2 text-sm text-[var(--cyber-text-muted)]">
             <Shield size={16} className="text-green-400" />

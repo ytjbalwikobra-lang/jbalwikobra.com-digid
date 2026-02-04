@@ -16,9 +16,9 @@ const ComingSoonPage: React.FC = () => {
     <div className="min-h-screen bg-[var(--cyber-bg-pure)] flex items-center justify-center relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-full blur-2xl animate-pulse delay-500" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-subtle)] rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-[var(--cyber-info)]/20 to-[var(--cyber-purple)]/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-[var(--cyber-success)]/10 to-[var(--cyber-info)]/10 rounded-full blur-2xl animate-pulse delay-500" />
       </div>
 
       {/* Floating Particles */}
@@ -43,21 +43,21 @@ const ComingSoonPage: React.FC = () => {
         <div className="mb-12">
           {/* Construction Icon with Glow */}
           <div className="relative inline-flex items-center justify-center mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-full blur-2xl opacity-60 animate-pulse" />
-            <div className="relative p-8 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-full shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-full blur-2xl opacity-60 animate-pulse" />
+            <div className="relative p-8 bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-full shadow-2xl">
               <Construction className="w-16 h-16 text-white" strokeWidth={1.5} />
             </div>
           </div>
 
           {/* Coming Soon Badge */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/20 rounded-full mb-6">
-            <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
-            <span className="text-white/80 text-sm font-medium">Segera Hadir</span>
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-[var(--cyber-bg-surface)] backdrop-blur-xl border border-[var(--cyber-border)] rounded-full mb-6">
+            <Sparkles className="w-5 h-5 text-[var(--cyber-warning)] animate-pulse" />
+            <span className="text-[var(--cyber-text-secondary)] text-sm font-medium">Segera Hadir</span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500 animate-pulse">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--cyber-pink-primary)] via-[var(--cyber-pink-glow)] to-[var(--cyber-purple)] animate-pulse">
               Akan Segera Hadir
             </span>
           </h1>
@@ -97,7 +97,7 @@ const ComingSoonPage: React.FC = () => {
             <PNButton 
               variant="primary"
               size="lg"
-              className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 shadow-lg shadow-pink-500/30"
+              className="bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] hover:from-[var(--cyber-pink-glow)] hover:to-[var(--cyber-pink-primary)] shadow-lg shadow-[var(--cyber-pink-muted)]"
             >
               <div className="flex items-center gap-3">
                 <Home className="w-5 h-5" />
@@ -116,7 +116,7 @@ const ComingSoonPage: React.FC = () => {
         </div>
 
         {/* Estimated Timeline */}
-        <div className="bg-[var(--cyber-bg-card)]/20 backdrop-blur-xl border border-white/10 rounded-cyber-2xl p-6 max-w-md mx-auto">
+        <div className="bg-[var(--cyber-bg-card)]/20 backdrop-blur-xl border border-[var(--cyber-border)] rounded-cyber-2xl p-6 max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <Calendar className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
             <h3 className="text-white font-semibold">Estimasi Peluncuran</h3>

@@ -84,7 +84,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       case 'success':
         return <CheckCircle className="text-green-400" size={24} />;
       default:
-        return <Info className="text-pink-500" size={24} />;
+        return <Info className="text-[var(--cyber-pink-primary)]" size={24} />;
     }
   };
 
@@ -97,7 +97,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       case 'success':
         return 'bg-green-600 hover:bg-green-700';
       default:
-        return 'bg-pink-500 hover:bg-pink-600';
+        return 'bg-[var(--cyber-pink-primary)] hover:opacity-90';
     }
   };
 

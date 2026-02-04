@@ -109,11 +109,11 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
       </div>
 
       {/* Recent Reviews */}
-      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-pink-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-pink-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-[var(--cyber-pink-muted)] transition-all duration-300 hover:transform hover:scale-[1.02]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-[var(--cyber-pink-subtle)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 shadow-lg">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] shadow-lg">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
           </div>

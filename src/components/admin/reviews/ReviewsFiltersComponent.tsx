@@ -49,11 +49,11 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-[var(--cyber-bg-card)]">
-            <Filter className="w-5 h-5 text-pink-500" />
+            <Filter className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
           </div>
           <h3 className="text-lg font-semibold text-white">Search & Filters</h3>
           {hasActiveFilters && (
-            <div className="px-2 py-1 bg-pink-500/20 border border-pink-500/30 rounded-xl text-xs text-pink-500">
+            <div className="px-2 py-1 bg-[var(--cyber-pink-muted)] border border-[var(--cyber-pink-muted)] rounded-xl text-xs text-[var(--cyber-pink-primary)]">
               Filtered
             </div>
           )}
@@ -166,11 +166,11 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
               {/* Active Filter Pills */}
               <div className="flex flex-wrap items-center gap-2">
                 {filters.searchTerm && (
-                  <div className="flex items-center gap-1 px-3 py-1 bg-pink-500/20 border border-pink-500/30 rounded-xl text-sm text-pink-500">
+                  <div className="flex items-center gap-1 px-3 py-1 bg-[var(--cyber-pink-muted)] border border-[var(--cyber-pink-muted)] rounded-xl text-sm text-[var(--cyber-pink-primary)]">
                     <span>Search: "{filters.searchTerm}"</span>
                     <button
                       onClick={() => handleFilterChange('searchTerm', '')}
-                      className="text-pink-500 hover:text-pink-400"
+                      className="text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)]"
                     >
                       <X className="w-3 h-3" />
                     </button>

@@ -193,10 +193,10 @@ const Footer: React.FC = () => {
                       <li key={link.href}>
                         <Link
                           to={link.href}
-                          className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 rounded-md"
+                          className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-muted)] rounded-md"
                         >
                           <ChevronRight 
-                            className="w-3 h-3 text-[var(--cyber-text-muted)] group-hover:text-pink-500 group-hover:translate-x-0.5 transition-all" 
+                            className="w-3 h-3 text-[var(--cyber-text-muted)] group-hover:text-[var(--cyber-pink-primary)] group-hover:translate-x-0.5 transition-all" 
                             aria-hidden="true" 
                           />
                           <span>{link.label}</span>
@@ -225,7 +225,7 @@ const Footer: React.FC = () => {
             <p className="text-xs sm:text-sm text-[var(--cyber-text-muted)] flex items-center gap-1.5 order-1 sm:order-2">
               <span>Made with</span>
               <Heart 
-                className="w-3.5 h-3.5 text-pink-500 animate-pulse" 
+                className="w-3.5 h-3.5 text-[var(--cyber-pink-primary)] animate-pulse" 
                 fill="currentColor"
                 aria-hidden="true" 
               />

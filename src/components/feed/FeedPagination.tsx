@@ -40,7 +40,7 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
   return (
     <div className="relative">
       {/* Clean container with black background */}
-      <div className="bg-black/80 rounded-2xl p-4 border border-pink-500/20">
+      <div className="bg-black/80 rounded-2xl p-4 border border-[var(--cyber-pink-subtle)]">
         <div className="flex items-center justify-center gap-2 lg:gap-3">
           {/* Enhanced Previous Button */}
           <button
@@ -50,7 +50,7 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
               rounded-xl transition-all duration-300 group min-h-[48px] min-w-[48px] flex items-center justify-center
               ${currentPage === 1 || loading 
                 ? 'bg-gray-600/20 text-[var(--cyber-text-muted)] cursor-not-allowed border border-gray-600/20' 
-                : 'bg-pink-500/10 hover:bg-pink-500/20 text-white border border-pink-500/30 hover:border-pink-500/50 hover:scale-105'
+                : 'bg-[var(--cyber-pink-subtle)] hover:bg-[var(--cyber-pink-muted)] text-white border border-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] hover:scale-105'
               }
             `}
             aria-label="Halaman sebelumnya"
@@ -70,16 +70,16 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
                   flex items-center justify-center group relative overflow-hidden
                   min-h-[48px] min-w-[48px]
                   ${pageNum === currentPage
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 scale-110 border-2 border-pink-400/50'
+                    ? 'bg-gradient-to-r from-[var(--cyber-pink-primary)] to-purple-500 text-white shadow-lg shadow-[var(--cyber-pink-muted)] scale-110 border-2 border-[var(--cyber-pink-secondary)]'
                     : pageNum === '...'
                     ? 'text-white/50 cursor-default bg-transparent'
-                    : 'bg-pink-500/10 hover:bg-pink-500/20 text-white border border-pink-500/30 hover:border-pink-500/50 hover:scale-105 hover:shadow-lg'
+                    : 'bg-[var(--cyber-pink-subtle)] hover:bg-[var(--cyber-pink-muted)] text-white border border-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] hover:scale-105 hover:shadow-lg'
                   }
                 `}
               >
                 {/* Active page background animation */}
                 {pageNum === currentPage && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-400/20 to-purple-400/20 animate-pulse rounded-xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-pink-muted)] to-purple-400/20 animate-pulse rounded-xl"></div>
                 )}
                 
                 {/* Content */}
@@ -98,7 +98,7 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
               rounded-xl transition-all duration-300 group min-h-[48px] min-w-[48px] flex items-center justify-center
               ${currentPage === totalPages || loading 
                 ? 'bg-gray-600/20 text-[var(--cyber-text-muted)] cursor-not-allowed border border-gray-600/20' 
-                : 'bg-pink-500/10 hover:bg-pink-500/20 text-white border border-pink-500/30 hover:border-pink-500/50 hover:scale-105'
+                : 'bg-[var(--cyber-pink-subtle)] hover:bg-[var(--cyber-pink-muted)] text-white border border-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] hover:scale-105'
               }
             `}
             aria-label="Halaman berikutnya"

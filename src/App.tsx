@@ -11,7 +11,6 @@ import { CartIntegration } from './components/CartIntegration';
 import PNFooter from './components/public/layout/PNFooter';
 import './App.css';
 // Design system: cyber-compact.css (loaded via index.css)
-import './styles/public-pages.css';
 import { forceFixedPositioning } from './utils/forceFixedPositioning';
 import RequireAdmin from './components/RequireAdmin';
 import { ToastProvider } from './components/Toast';

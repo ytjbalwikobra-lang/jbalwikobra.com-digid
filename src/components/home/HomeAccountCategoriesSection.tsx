@@ -6,7 +6,7 @@ import { PNSection, PNSectionHeader, PNCard, PNContainer } from '../ui/CyberDesi
 
 const CategorySkeleton: React.FC = () => (
   <div className="min-w-[170px] snap-start" role="presentation" aria-hidden="true">
-    <div className="animate-pulse bg-white/5 border border-white/10 rounded-2xl h-28 w-[170px]" />
+    <div className="animate-pulse bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-2xl h-28 w-[170px]" />
   </div>
 );
 
@@ -33,7 +33,7 @@ const HomeAccountCategoriesSection: React.FC = () => {
           action={
             <Link 
               to="/products?category=all" 
-              className="text-sm text-pink-300 hover:text-pink-200 transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md"
+              className="text-sm text-[var(--cyber-pink-secondary)] hover:text-[var(--cyber-pink-primary)] transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] rounded-md"
               aria-label="Lihat semua kategori"
             >
               Lihat Semua <ChevronRight size={16} aria-hidden="true" />
@@ -65,7 +65,7 @@ const HomeAccountCategoriesSection: React.FC = () => {
         action={
           <Link 
             to="/products?category=all" 
-            className="text-sm text-pink-300 hover:text-pink-200 transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md"
+            className="text-sm text-[var(--cyber-pink-secondary)] hover:text-[var(--cyber-pink-primary)] transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] rounded-md"
             aria-label="Lihat semua kategori akun"
           >
             Lihat Semua <ChevronRight size={16} aria-hidden="true" />
@@ -82,17 +82,17 @@ const HomeAccountCategoriesSection: React.FC = () => {
           <Link
             key={c.id}
             to={`/kategori/${c.slug || c.name.toLowerCase().replace(/\s+/g, '-')}`}
-            className="block min-w-[170px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-2xl"
+            className="block min-w-[170px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] rounded-cyber-2xl"
             role="listitem"
             aria-label={`Kategori ${c.name}`}
           >
-            <PNCard className="p-4 hover:bg-white/10 hover:border-pink-500/30 transition-all h-full">
+            <PNCard className="p-4 hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all h-full">
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-pink-600 via-pink-500 to-fuchsia-600 border border-pink-500/30 flex items-center justify-center shadow-lg shadow-pink-500/10" aria-hidden="true">
+                <div className="w-11 h-11 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] via-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] border border-[var(--cyber-pink-muted)] flex items-center justify-center shadow-lg shadow-[var(--cyber-pink-muted)]" aria-hidden="true">
                   {React.createElement(getCategoryIcon(c.name), { size: 20, className: "text-white", "aria-hidden": "true" })}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-white font-semibold truncate group-hover:text-pink-300 transition-colors">{c.name}</div>
+                  <div className="text-white font-semibold truncate group-hover:text-[var(--cyber-pink-secondary)] transition-colors">{c.name}</div>
                   <div className="text-xs text-[var(--cyber-text-muted)] truncate mt-0.5">Lihat akun {c.name}</div>
                 </div>
               </div>

@@ -64,7 +64,7 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
             {showBackNav && (
               <Link 
                 to="/" 
-                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
+                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-pink-secondary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all duration-200"
                 aria-label="Kembali ke beranda"
               >
                 <ChevronLeft size={20} />
@@ -90,13 +90,13 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
               placeholder="Cari flash sale..."
               value={localSearchTerm}
               onChange={handleSearchInput}
-              className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-primary)] text-sm placeholder-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)]/50 focus:border-[var(--cyber-pink-primary)]/30 hover:bg-white/[0.07] transition-all duration-200"
+              className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-primary)] text-sm placeholder-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)]/50 focus:border-[var(--cyber-pink-primary)]/30 hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200"
               aria-label="Cari produk flash sale"
             />
             {localSearchTerm && (
               <button 
                 onClick={() => setLocalSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-full hover:bg-white/10 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-full hover:bg-[var(--cyber-bg-elevated)] transition-colors"
                 aria-label="Hapus pencarian"
               >
                 <X size={16} />

@@ -30,39 +30,39 @@ const PNCTA: React.FC = () => {
         {/* Service Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10" role="navigation" aria-label="Layanan kami">
           <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block group" aria-label="Jual Akun - Jual akun game Anda dengan harga terbaik (membuka di tab baru)">
-            <PNCard className="p-6 h-full hover:bg-white/10 hover:border-pink-500/30 transition-all">
+            <PNCard className="p-6 h-full hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all">
               <div className="w-12 h-12 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-success)] to-[var(--cyber-success)] flex items-center justify-center mb-4 shadow-lg shadow-[var(--cyber-success)]/20" aria-hidden="true">
                 <DollarSign size={24} className="text-[var(--cyber-text-primary)]" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-1.5 group-hover:text-pink-300 transition-colors">Jual Akun</h3>
+              <h3 className="text-white font-semibold text-lg mb-1.5 group-hover:text-[var(--cyber-pink-secondary)] transition-colors">Jual Akun</h3>
               <p className="text-[var(--cyber-text-muted)] text-sm mb-4 leading-relaxed">Jual akun game Anda dengan harga terbaik</p>
-              <span className="text-pink-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-2.5 transition-all" aria-hidden="true">
+              <span className="text-[var(--cyber-pink-primary)] text-sm font-medium flex items-center gap-1.5 group-hover:gap-2.5 transition-all" aria-hidden="true">
                 Hubungi Admin <ArrowRight size={14} />
               </span>
             </PNCard>
           </a>
           
           <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block group" aria-label="Rekber Aman - Transaksi aman dengan layanan rekening bersama (membuka di tab baru)">
-            <PNCard className="p-6 h-full hover:bg-white/10 hover:border-pink-500/30 transition-all">
+            <PNCard className="p-6 h-full hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all">
               <div className="w-12 h-12 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-info)] to-[var(--cyber-info)] flex items-center justify-center mb-4 shadow-lg shadow-[var(--cyber-info)]/20" aria-hidden="true">
                 <Handshake size={24} className="text-[var(--cyber-text-primary)]" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-1.5 group-hover:text-pink-300 transition-colors">Rekber Aman</h3>
+              <h3 className="text-white font-semibold text-lg mb-1.5 group-hover:text-[var(--cyber-pink-secondary)] transition-colors">Rekber Aman</h3>
               <p className="text-[var(--cyber-text-muted)] text-sm mb-4 leading-relaxed">Transaksi aman dengan layanan rekening bersama</p>
-              <span className="text-pink-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-2.5 transition-all" aria-hidden="true">
+              <span className="text-[var(--cyber-pink-primary)] text-sm font-medium flex items-center gap-1.5 group-hover:gap-2.5 transition-all" aria-hidden="true">
                 Gunakan Rekber <ArrowRight size={14} />
               </span>
             </PNCard>
           </a>
           
           <Link to="/products" className="block group" aria-label="Beli Akun - Lihat katalog akun game premium">
-            <PNCard className="p-6 h-full hover:bg-white/10 hover:border-pink-500/30 transition-all">
+            <PNCard className="p-6 h-full hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all">
               <div className="w-12 h-12 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] flex items-center justify-center mb-4 shadow-lg shadow-[var(--cyber-pink-muted)]" aria-hidden="true">
                 <ShoppingBag size={24} className="text-[var(--cyber-text-primary)]" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-1.5 group-hover:text-pink-300 transition-colors">Beli Akun</h3>
+              <h3 className="text-white font-semibold text-lg mb-1.5 group-hover:text-[var(--cyber-pink-secondary)] transition-colors">Beli Akun</h3>
               <p className="text-[var(--cyber-text-muted)] text-sm mb-4 leading-relaxed">Ribuan akun game premium siap dikirim instant</p>
-              <span className="text-pink-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-2.5 transition-all" aria-hidden="true">
+              <span className="text-[var(--cyber-pink-primary)] text-sm font-medium flex items-center gap-1.5 group-hover:gap-2.5 transition-all" aria-hidden="true">
                 Lihat Katalog <ArrowRight size={14} />
               </span>
             </PNCard>

@@ -23,7 +23,7 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
       <PNSectionHeader
         title={
           <span className="flex items-center gap-2">
-            <Zap size={20} className="text-yellow-400" aria-hidden="true" />
+            <Zap size={20} className="text-[var(--cyber-warning)]" aria-hidden="true" />
             Flash Sale
           </span>
         }
@@ -31,7 +31,7 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
         action={
           <Link 
             to="/flash-sales" 
-            className="text-sm text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md"
+            className="text-sm text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] transition-colors flex items-center gap-1 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] rounded-md"
             aria-label="Lihat semua flash sale"
           >
             Lihat Semua <ChevronRight size={16} aria-hidden="true" />

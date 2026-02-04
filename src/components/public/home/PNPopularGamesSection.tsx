@@ -18,7 +18,7 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
         action={
           <Link 
             to="/products" 
-            className="text-sm text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-md"
+            className="text-sm text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] transition-colors flex items-center gap-1 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] rounded-md"
             aria-label="Lihat semua game tersedia"
           >
             Lihat Semua <ChevronRight size={16} aria-hidden="true" />
@@ -35,19 +35,19 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
           <Link 
             key={g.id} 
             to={`/products?game=${encodeURIComponent(g.name)}`} 
-            className="block min-w-[140px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded-2xl"
+            className="block min-w-[140px] md:min-w-0 snap-start group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] rounded-cyber-2xl"
             role="listitem"
             aria-label={`${g.name}, ${g.count} akun tersedia`}
           >
-            <PNCard className="p-3.5 hover:bg-white/10 hover:border-pink-500/30 transition-all h-full">
-              <div className="aspect-square rounded-xl mb-2.5 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[var(--cyber-bg-card)] to-[var(--cyber-bg-pure)] border border-white/10 group-hover:border-pink-500/30 transition-colors" aria-hidden="true">
+            <PNCard className="p-3.5 hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all h-full">
+              <div className="aspect-square rounded-cyber-lg mb-2.5 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[var(--cyber-bg-card)] to-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] group-hover:border-[var(--cyber-pink-muted)] transition-colors" aria-hidden="true">
                 {g.logoUrl ? (
                   <img src={g.logoUrl} alt={`Logo ${g.name}`} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <Gamepad2 className="text-[var(--cyber-text-muted)]" size={28} aria-hidden="true" />
                 )}
               </div>
-              <div className="text-sm font-medium text-white line-clamp-2 mb-1 group-hover:text-pink-300 transition-colors">{g.name}</div>
+              <div className="text-sm font-medium text-white line-clamp-2 mb-1 group-hover:text-[var(--cyber-pink-secondary)] transition-colors">{g.name}</div>
               <div className="text-xs text-[var(--cyber-text-muted)]">{g.count} akun</div>
             </PNCard>
           </Link>

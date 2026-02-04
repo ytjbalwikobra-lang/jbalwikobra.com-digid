@@ -72,14 +72,14 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
   }, []);
 
   // Shared select styles - 44px min touch target, WCAG compliant
-  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3.5 pr-9 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-sm text-[var(--cyber-text-primary)] hover:bg-white/[0.07] hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:border-[var(--cyber-pink-primary)]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
+  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3.5 pr-9 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-sm text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-border-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:border-[var(--cyber-pink-primary)]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
   
   // Active select styling for filters with values
   const getSelectClass = (hasValue: boolean) => 
-    `${selectClass} ${hasValue ? 'border-pink-500/40 bg-pink-500/10 text-white' : ''}`;
+    `${selectClass} ${hasValue ? 'border-[var(--cyber-pink-primary)]/40 bg-[var(--cyber-pink-subtle)] text-white' : ''}`;
 
   return (
-    <div className="sticky top-0 z-20 bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
+    <div className="sticky top-0 z-20 bg-[var(--cyber-bg-pure)]/95 backdrop-blur-xl border-b border-[var(--cyber-border)] shadow-lg shadow-[var(--cyber-bg-pure)]/20">
       <PNContainer className="px-4 sm:px-6 py-4 space-y-4">
         {/* Row 1: Back + Title + Count */}
         <div className="flex items-center justify-between gap-4">
@@ -87,7 +87,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             {showBackNav && (
               <Link 
                 to="/" 
-                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
+                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-pink-secondary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-pink-muted)] transition-all duration-200"
                 aria-label="Kembali ke beranda"
               >
                 <ChevronLeft size={20} />
@@ -114,7 +114,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
           {localSearchTerm && (
             <button 
               onClick={() => setLocalSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-full hover:bg-white/10 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-full hover:bg-[var(--cyber-bg-elevated)] transition-colors"
               aria-label="Hapus pencarian"
             >
               <X size={16} />
@@ -128,7 +128,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
               <button
                 onClick={() => onGameChange?.('')}
-                className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-cyber-lg text-sm font-semibold transition-all duration-200 snap-start ${!selectedGame ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-[var(--cyber-text-primary)] shadow-lg shadow-pink-500/30' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-white/10 hover:border-white/20'}`}
+                className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-cyber-lg text-sm font-semibold transition-all duration-200 snap-start ${!selectedGame ? 'bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-[var(--cyber-text-primary)] shadow-lg shadow-[var(--cyber-pink-muted)]' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-border-hover)]'}`}
               >
                 Semua Game
               </button>
@@ -136,7 +136,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
                 <button
                   key={game.id}
                   onClick={() => onGameChange?.(game.name)}
-                  className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-cyber-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap snap-start ${selectedGame === game.name ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-[var(--cyber-text-primary)] shadow-lg shadow-pink-500/30' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-white/10 hover:border-white/20'}`}
+                  className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-cyber-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap snap-start ${selectedGame === game.name ? 'bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-[var(--cyber-text-primary)] shadow-lg shadow-[var(--cyber-pink-muted)]' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-border-hover)]'}`}
                 >
                   {game.name}
                 </button>
@@ -202,7 +202,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
           {/* Rental Toggle Button */}
           <button
             onClick={onToggleRental}
-            className={`h-11 min-h-[44px] px-4 rounded-cyber-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${rentalOnly ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-[var(--cyber-text-primary)] shadow-lg shadow-emerald-500/25' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-white/[0.07] hover:border-white/20'}`}
+            className={`h-11 min-h-[44px] px-4 rounded-cyber-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${rentalOnly ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-[var(--cyber-text-primary)] shadow-lg shadow-emerald-500/25' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-border-hover)]'}`}
           >
             <span className="text-base">🏠</span>
             <span>Rental</span>

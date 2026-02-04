@@ -34,7 +34,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
     'w-full px-4 py-3.5 pr-12 min-h-[48px]',
     'bg-white/5 border border-white/10 rounded-xl',
     'text-white placeholder:text-white/40',
-    'focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50',
+    'focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)]',
     'transition-all duration-200'
   ].join(' ');
 

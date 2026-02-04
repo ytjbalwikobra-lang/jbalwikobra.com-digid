@@ -116,7 +116,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
     return (
       <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div 
-          className="relative rounded-2xl overflow-hidden shadow-xl border border-pink-500/30"
+          className="relative rounded-2xl overflow-hidden shadow-xl border border-[var(--cyber-pink-muted)]"
           role="status"
           aria-busy="true"
           aria-label="Memuat banner"
@@ -167,7 +167,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
   return (
     <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div 
-        className="relative rounded-2xl overflow-hidden shadow-xl border border-pink-500/30 ring-1 ring-black/5"
+        className="relative rounded-2xl overflow-hidden shadow-xl border border-[var(--cyber-pink-muted)] ring-1 ring-black/5"
         role="region"
         aria-roledescription="carousel"
         aria-label="Banner promosi"
@@ -234,9 +234,9 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
+              className={`w-2 h-2 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
                 i === index 
-                  ? 'bg-pink-500 w-6' 
+                  ? 'bg-[var(--cyber-pink-primary)] w-6' 
                   : 'bg-white/50 hover:bg-white/80'
               }`}
               aria-label={`Lihat banner ${i + 1}`}

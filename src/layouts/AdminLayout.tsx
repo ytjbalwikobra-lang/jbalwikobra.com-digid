@@ -26,7 +26,7 @@ const AdminLayout: React.FC = () => {
       {/* Top bar */}
   <header className="sticky top-0 z-30 bg-black/90 backdrop-blur border-b border-[var(--cyber-border)] pt-safe-top">
         <div className="h-16 px-4 md:px-6 flex items-center justify-between">
-          <button onClick={() => setOpen(!open)} className="md:hidden text-white p-2 rounded-cyber-lg hover:bg-white/5 transition-colors" aria-label="Menu">
+          <button onClick={() => setOpen(!open)} className="md:hidden text-white p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-surface)] transition-colors" aria-label="Menu">
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-3">
@@ -40,7 +40,7 @@ const AdminLayout: React.FC = () => {
           </div>
           <button
             onClick={async ()=>{ await logout(); window.location.href='/' }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-cyber-lg bg-white/5 border border-[var(--cyber-border)] hover:bg-white/10 hover:border-[var(--cyber-border)] text-sm text-white transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-cyber-lg bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] hover:bg-[var(--cyber-bg-elevated)] hover:border-[var(--cyber-border)] text-sm text-white transition-all duration-200"
             title="Keluar"
           >
             <LogOut size={16} />
@@ -61,7 +61,7 @@ const AdminLayout: React.FC = () => {
                   key={l.to}
                   to={l.to}
                   end={(l as any).end}
-      className={({ isActive }) => `flex items-center gap-3 px-4 py-3 mb-1 text-sm font-medium rounded-cyber-lg transition-all duration-200 ${isActive ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-[var(--cyber-text-muted)] hover:text-white hover:bg-white/5'}`}
+      className={({ isActive }) => `flex items-center gap-3 px-4 py-3 mb-1 text-sm font-medium rounded-cyber-lg transition-all duration-200 ${isActive ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-surface)]'}`}
                 >
                   <Icon size={18} />
                   <span>{l.label}</span>

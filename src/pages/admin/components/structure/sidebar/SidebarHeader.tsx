@@ -18,7 +18,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
       {/* Logo and Title */}
       {!collapsed && (
         <div className="cluster-md">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-purple)] flex items-center justify-center shadow-lg">
             <LayoutDashboard className="w-6 h-6 text-white" />
           </div>
           <div className="stack-xs">
@@ -30,7 +30,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
       
       {/* Collapsed Logo */}
       {collapsed && (
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-purple)] flex items-center justify-center shadow-lg">
           <LayoutDashboard className="w-6 h-6 text-white" />
         </div>
       )}

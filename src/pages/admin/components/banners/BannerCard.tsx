@@ -32,7 +32,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
   return (
     <PNCard className={cn(
       'group bg-gradient-to-br from-black/60 to-[var(--cyber-bg-pure)]/60 border-[var(--cyber-border)]',
-      'hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10',
+      'hover:border-[var(--cyber-pink-muted)] hover:shadow-lg hover:shadow-[var(--cyber-pink-subtle)]',
       'transition-all duration-300',
       className
     )}>
@@ -91,7 +91,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             {/* Link */}
             {banner.link_url && (
               <div className="flex items-center gap-2 text-sm">
-                <ExternalLink className="w-4 h-4 text-pink-500" />
+                <ExternalLink className="w-4 h-4 text-[var(--cyber-pink-primary)]" />
                 <span className="text-[var(--cyber-text-muted)] truncate">
                   {banner.link_url}
                 </span>
@@ -120,7 +120,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between pt-4 border-t border-[var(--cyber-border)]">
             {/* View Button */}
             <PNButton
               variant="ghost"

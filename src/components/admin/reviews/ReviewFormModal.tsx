@@ -99,7 +99,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-[var(--cyber-border)]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-lg flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -124,7 +124,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           {/* Customer Info */}
           <div className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-pink-500" />
+              <User className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
               <h3 className="text-lg font-semibold text-white">Customer Information</h3>
             </div>
             
@@ -153,7 +153,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
                   id="is_verified"
                   checked={formData.is_verified || false}
                   onChange={(e) => handleInputChange('is_verified', e.target.checked)}
-                  className="w-4 h-4 text-pink-500 bg-[var(--cyber-bg-card)] border-[var(--cyber-border)] rounded focus:ring-pink-500"
+                  className="w-4 h-4 text-[var(--cyber-pink-primary)] bg-[var(--cyber-bg-card)] border-[var(--cyber-border)] rounded focus:ring-[var(--cyber-pink-primary)]"
                 />
                 <label htmlFor="is_verified" className="flex items-center gap-2 text-sm text-[var(--cyber-text-secondary)]">
                   <Shield className="w-4 h-4 text-green-400" />
@@ -166,7 +166,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           {/* Product Info */}
           <div className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
             <div className="flex items-center gap-2 mb-4">
-              <Package className="w-5 h-5 text-pink-500" />
+              <Package className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
               <h3 className="text-lg font-semibold text-white">Product Information</h3>
             </div>
             
@@ -192,7 +192,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           {/* Review Content */}
           <div className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
             <div className="flex items-center gap-2 mb-4">
-              <Star className="w-5 h-5 text-pink-500" />
+              <Star className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
               <h3 className="text-lg font-semibold text-white">Review Details</h3>
             </div>
             
@@ -270,11 +270,11 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-[var(--cyber-text-primary)] rounded-cyber-lg hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-[var(--cyber-text-primary)] rounded-cyber-lg hover:opacity-90 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-[var(--cyber-border)] border-t-white rounded-full animate-spin" />
                   Saving...
                 </>
               ) : (

@@ -178,8 +178,8 @@ const AdminOrdersV2: React.FC = () => {
       label: 'Total Revenue',
       value: realStats.totalRevenue,
       icon: DollarSign,
-      iconColor: 'text-pink-500',
-      iconBgColor: 'bg-pink-500/10',
+      iconColor: 'text-[var(--cyber-pink-primary)]',
+      iconBgColor: 'bg-[var(--cyber-pink-subtle)]',
       format: 'currency'
     },
     {

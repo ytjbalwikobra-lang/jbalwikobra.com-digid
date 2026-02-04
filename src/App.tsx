@@ -94,7 +94,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
             <p className="text-[var(--cyber-text-muted)] mb-4">Silakan refresh halaman atau coba lagi nanti.</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="bg-pink-500 text-white px-4 py-2 rounded-xl hover:bg-pink-600"
+              className="bg-[var(--cyber-pink-primary)] text-white px-4 py-2 rounded-xl hover:opacity-90"
             >
               Refresh Halaman
             </button>

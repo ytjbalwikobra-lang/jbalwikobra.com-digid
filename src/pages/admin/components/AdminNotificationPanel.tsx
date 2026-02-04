@@ -710,7 +710,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-cyber-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-cyber-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)]"
               style={{ 
                 background: currentPage === 1 ? AdminColors.primary.lighter : `${AdminColors.accent.DEFAULT}20`,
                 color: currentPage === 1 ? AdminColors.text.tertiary : AdminColors.accent.DEFAULT,

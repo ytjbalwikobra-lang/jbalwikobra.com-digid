@@ -453,7 +453,7 @@ const AdminSettings: React.FC = () => {
         {/* Hero Section */}
         <div className="bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)]">
               <Image className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>

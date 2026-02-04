@@ -363,8 +363,8 @@ const AdminProductsDirect: React.FC = () => {
       label: 'Total Nilai Produk',
       value: stats.totalValue,
       icon: DollarSign,
-      iconColor: 'text-pink-500',
-      iconBgColor: 'bg-pink-500/10',
+      iconColor: 'text-[var(--cyber-pink-primary)]',
+      iconBgColor: 'bg-[var(--cyber-pink-subtle)]',
       format: 'currency'
     }
   ], [stats]);
@@ -447,7 +447,7 @@ const AdminProductsDirect: React.FC = () => {
                     key={product.id} 
                     className={`hover:bg-[var(--cyber-bg-surface)]/30 transition-all duration-300 ${
                       saving && editingId === product.id 
-                        ? 'bg-pink-500/10 animate-pulse' 
+                        ? 'bg-[var(--cyber-pink-subtle)] animate-pulse' 
                         : ''
                     }`}
                     style={{
@@ -504,15 +504,15 @@ const AdminProductsDirect: React.FC = () => {
                             }}
                             className={`w-32 px-2 py-1 bg-[var(--cyber-bg-elevated)] border rounded-cyber-lg text-white text-sm transition-all ${
                               saving 
-                                ? 'border-pink-500 opacity-50 cursor-not-allowed' 
-                                : 'border-pink-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500'
+                                ? 'border-[var(--cyber-pink-primary)] opacity-50 cursor-not-allowed' 
+                                : 'border-[var(--cyber-pink-primary)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)]'
                             }`}
                             placeholder="Rp 0"
                             autoFocus
                             disabled={saving}
                           />
                           {saving && (
-                            <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-500 animate-spin" />
+                            <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--cyber-pink-primary)] animate-spin" />
                           )}
                           <div className="text-xs text-[var(--cyber-text-muted)] mt-1">Enter to save, Esc to cancel</div>
                         </div>

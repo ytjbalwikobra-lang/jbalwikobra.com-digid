@@ -39,7 +39,7 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
           </div>
 
           {/* Flash Sale Timer & Price */}
-          <div className="bg-gradient-to-r from-pink-900/30 to-fuchsia-900/30 rounded-2xl p-4 space-y-4">
+          <div className="bg-gradient-to-r from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-muted)] rounded-2xl p-4 space-y-4">
             {/* Timer */}
             <div className="text-center space-y-2">
               <div className="h-4 w-32 bg-[var(--cyber-bg-elevated)] rounded mx-auto"></div>

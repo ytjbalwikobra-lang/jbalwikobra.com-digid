@@ -58,9 +58,9 @@ const AdminDashboard: React.FC = () => {
     },
     {
       to: '/admin/users',
-      icon: <Users className="w-6 h-6 text-pink-500" />,
+      icon: <Users className="w-6 h-6 text-[var(--cyber-pink-primary)]" />,
       label: 'Kelola Pengguna',
-      color: 'from-pink-500 to-rose-500'
+      color: 'from-[var(--cyber-pink-primary)] to-rose-500'
     },
     {
       to: '/admin/flash-sales',
@@ -107,7 +107,7 @@ const AdminDashboard: React.FC = () => {
           aria-label="Aksi Cepat"
         >
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-pink-500" />
+            <div className="w-2 h-2 rounded-full bg-[var(--cyber-pink-primary)]" />
             Aksi Cepat
           </h2>
           <nav aria-label="Navigasi Aksi Cepat">

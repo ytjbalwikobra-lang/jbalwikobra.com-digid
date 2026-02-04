@@ -332,7 +332,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      <div className={`flex rounded-xl border ${getBorderColor()} bg-white/5 backdrop-blur-sm text-white overflow-hidden transition-all duration-200 focus-within:ring-2 ${getRingColor().replace('focus:', 'focus-within:')} focus-within:border-[var(--cyber-pink-muted)]`}>
+      <div className={`flex rounded-cyber-lg border ${getBorderColor()} bg-white/5 backdrop-blur-sm text-white overflow-hidden transition-all duration-200 focus-within:ring-2 ${getRingColor().replace('focus:', 'focus-within:')} focus-within:border-[var(--cyber-pink-muted)]`}>
         
         {/* Country Selector */}
         <button
@@ -368,7 +368,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {showDropdown && (
         <div 
           ref={dropdownRef} 
-          className="fixed bg-[var(--cyber-bg-pure)]/95 border border-[var(--cyber-pink-muted)] rounded-xl backdrop-blur-md shadow-xl z-[99999] max-h-64 overflow-hidden" 
+          className="fixed bg-[var(--cyber-bg-pure)]/95 border border-[var(--cyber-pink-muted)] rounded-cyber-lg backdrop-blur-md shadow-xl z-[99999] max-h-64 overflow-hidden" 
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -384,7 +384,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                 placeholder="Search countries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-[var(--cyber-pink-muted)] rounded-xl text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)] transition-all duration-200"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-[var(--cyber-pink-muted)] rounded-cyber-lg text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)] transition-all duration-200"
               />
             </div>
           </div>

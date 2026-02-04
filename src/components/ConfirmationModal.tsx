@@ -147,7 +147,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               {state.showCancel !== false && (
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 text-[var(--cyber-text-secondary)] hover:text-white bg-[var(--cyber-bg-elevated)] hover:bg-gray-600 rounded-xl transition-colors"
+                  className="px-4 py-2 text-[var(--cyber-text-secondary)] hover:text-white bg-[var(--cyber-bg-elevated)] hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-colors"
                 >
                   {state.cancelText || 'Batal'}
                 </button>
@@ -155,7 +155,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               
               <button
                 onClick={handleConfirm}
-                className={`px-6 py-2 text-white rounded-xl transition-colors ${getButtonColor()}`}
+                className={`px-6 py-2 text-white rounded-cyber-lg transition-colors ${getButtonColor()}`}
               >
                 {state.confirmText || 'Konfirmasi'}
               </button>

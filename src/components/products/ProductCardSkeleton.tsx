@@ -7,7 +7,7 @@ export const ProductCardSkeleton: React.FC = () => (
       <div className="h-3 bg-[var(--cyber-pink-subtle)] rounded w-full mb-1" />
       <div className="h-3 bg-[var(--cyber-pink-subtle)] rounded w-2/3 mb-1.5" />
       <div className="h-4 bg-[var(--cyber-pink-subtle)] rounded w-1/2 mb-2" />
-      <div className="h-9 bg-[var(--cyber-pink-subtle)] rounded-xl" />
+      <div className="h-9 bg-[var(--cyber-pink-subtle)] rounded-cyber-lg" />
     </div>
   </div>
 );

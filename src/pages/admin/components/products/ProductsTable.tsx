@@ -58,7 +58,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
       render: (_, p) => (
         (p as any).tiers ? (
           <span
-            className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium shadow-sm border border-white/10"
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium shadow-sm border border-[var(--cyber-border)]"
             style={{
               background: (p as any).tiers.background_gradient || 'linear-gradient(135deg, #1e1e1e, #2a2a2a)',
               color: '#fff'

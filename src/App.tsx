@@ -94,7 +94,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
             <p className="text-[var(--cyber-text-muted)] mb-4">Silakan refresh halaman atau coba lagi nanti.</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="bg-[var(--cyber-pink-primary)] text-white px-4 py-2 rounded-xl hover:opacity-90"
+              className="bg-[var(--cyber-pink-primary)] text-white px-4 py-2 rounded-cyber-lg hover:opacity-90"
             >
               Refresh Halaman
             </button>
@@ -209,7 +209,7 @@ function App() {
                     <main className="flex-1 pb-4 pt-12 lg:pt-20 lg:pb-4 overflow-x-hidden min-h-screen">
                       {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
                         <div className="max-w-3xl mx-auto p-4">
-                          <div className="bg-black/60 border border-yellow-500/40 rounded-xl p-4 mb-4">
+                          <div className="bg-black/60 border border-yellow-500/40 rounded-cyber-lg p-4 mb-4">
                             <h2 className="text-yellow-400 font-semibold mb-2">⚙️ Setup Required</h2>
                             <p className="text-[var(--cyber-text-secondary)] text-sm mb-3">
                               Supabase configuration is missing. Please set up your environment variables.

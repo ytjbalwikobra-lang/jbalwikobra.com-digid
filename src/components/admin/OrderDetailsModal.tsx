@@ -210,7 +210,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           >
             <div className="flex items-center gap-3">
               <div
-                className="p-2 rounded-xl"
+                className="p-2 rounded-cyber-lg"
                 style={{
                   background: AdminColors.primary.lighter,
                   color: AdminColors.primary.DEFAULT
@@ -228,7 +228,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
               style={{
                 background: `${AdminColors.accent.DEFAULT}15`,
                 color: AdminColors.accent.DEFAULT,
@@ -328,7 +328,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {/* Rental Duration (if applicable) */}
                 {order.order_type === 'rental' && order.rental_duration && (
                   <div
-                    className="p-4 rounded-xl"
+                    className="p-4 rounded-cyber-lg"
                     style={{
                       background: AdminColors.info.bg,
                       border: `1px solid ${AdminColors.info.border}`
@@ -425,7 +425,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
                 {/* Order ID */}
                 <div
-                  className="p-3 rounded-xl"
+                  className="p-3 rounded-cyber-lg"
                   style={{
                     background: AdminColors.background.secondary,
                     border: `1px solid ${AdminColors.border.DEFAULT}`

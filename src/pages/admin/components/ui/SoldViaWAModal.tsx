@@ -129,7 +129,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
     >
       <div className="space-y-4">
         {/* Product Info */}
-        <div className="flex items-center gap-3 p-3 rounded-cyber-lg bg-white/5 border border-white/10">
+        <div className="flex items-center gap-3 p-3 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)]">
           {product.image && (
             <img 
               src={product.image} 

@@ -203,7 +203,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="px-3 py-1 bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] hover:text-white hover:bg-gray-600 rounded-xl text-sm transition-all duration-200"
+                    className="px-3 py-1 bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg text-sm transition-all duration-200"
                   >
                     Clear All
                   </button>

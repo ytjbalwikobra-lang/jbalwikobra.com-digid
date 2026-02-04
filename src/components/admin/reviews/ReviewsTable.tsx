@@ -58,7 +58,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
       <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 bg-[var(--cyber-bg-card)] rounded-xl animate-pulse" />
+            <div key={i} className="h-16 bg-[var(--cyber-bg-card)] rounded-cyber-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -157,19 +157,19 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onView(review)}
-                        className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-xl transition-all duration-200"
+                        className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-all duration-200"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onEdit(review)}
-                        className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-xl transition-all duration-200"
+                        className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-all duration-200"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(review)}
-                        className="p-2 text-[var(--cyber-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
+                        className="p-2 text-[var(--cyber-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-cyber-lg transition-all duration-200"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -185,7 +185,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
       {/* Mobile Card View */}
       <div className="lg:hidden p-4 space-y-4">
         {reviews.map((review) => (
-          <div key={review.id} className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
+          <div key={review.id} className="bg-[var(--cyber-bg-card)]/30 rounded-cyber-lg p-4 border border-[var(--cyber-border)]">
             {/* Mobile Review Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -231,20 +231,20 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onView(review)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] rounded-xl hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200"
               >
                 <Eye className="w-4 h-4" />
                 View
               </button>
               <button
                 onClick={() => onEdit(review)}
-                className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-xl transition-all duration-200"
+                className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-all duration-200"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDelete(review)}
-                className="p-2 text-[var(--cyber-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
+                className="p-2 text-[var(--cyber-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-cyber-lg transition-all duration-200"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

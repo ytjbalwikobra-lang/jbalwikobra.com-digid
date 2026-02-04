@@ -156,7 +156,7 @@ const HomePage: React.FC = () => {
   if (state.error && state.flashSales.length === 0 && state.popularGames.length === 0) {
     return (
       <div className="min-h-screen bg-[var(--cyber-bg-pure)] flex items-center justify-center px-4">
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-cyber-2xl p-8 text-center max-w-md w-full">
+        <div className="bg-[var(--cyber-bg-card)] backdrop-blur-sm border border-[var(--cyber-border)] rounded-cyber-2xl p-8 text-center max-w-md w-full">
           <div className="text-6xl mb-4" aria-hidden="true">😔</div>
           <h2 className="text-xl font-bold text-white mb-2">Oops! Terjadi Kesalahan</h2>
           <p className="text-[var(--cyber-text-secondary)] mb-6 text-sm">{state.error}</p>

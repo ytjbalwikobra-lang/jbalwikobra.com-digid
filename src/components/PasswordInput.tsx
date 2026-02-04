@@ -7,8 +7,8 @@ import { Eye, EyeOff } from 'lucide-react';
  * Design Tokens:
  * - Min Height: 48px (touch target)
  * - Padding: 14px vertical, 16px horizontal
- * - Border Radius: 12px (rounded-xl)
- * - Colors: bg-white/5, border-white/10, focus:ring-pink-500/50
+ * - Border Radius: 12px (rounded-cyber-lg)
+ * - Colors: Uses design system variables
  */
 interface PasswordInputProps {
   value: string;
@@ -32,7 +32,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   // Consistent with PNInput from CyberDesignSystem
   const inputClassName = className || [
     'w-full px-4 py-3.5 pr-12 min-h-[48px]',
-    'bg-white/5 border border-white/10 rounded-xl',
+    'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg',
     'text-white placeholder:text-white/40',
     'focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)]',
     'transition-all duration-200'

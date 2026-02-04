@@ -28,12 +28,12 @@ export const ProductDetailLoadingSkeleton = React.memo(() => {
           {/* Image Gallery Skeleton */}
           <div>
             {/* Main Image */}
-            <div className="aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-xl mb-4"></div>
+            <div className="aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-cyber-lg mb-4"></div>
             
             {/* Thumbnails */}
             <div className="flex space-x-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="w-24 aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-xl"></div>
+                <div key={i} className="w-24 aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-cyber-lg"></div>
               ))}
             </div>
           </div>
@@ -53,15 +53,15 @@ export const ProductDetailLoadingSkeleton = React.memo(() => {
             <div className="h-12 w-48 bg-[var(--cyber-bg-elevated)] rounded mb-6"></div>
 
             {/* Account Details */}
-            <div className="p-4 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-xl mb-6">
+            <div className="p-4 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg mb-6">
               <div className="h-6 w-32 bg-[var(--cyber-bg-elevated)] rounded mb-2"></div>
               <div className="h-4 w-48 bg-[var(--cyber-bg-elevated)] rounded"></div>
             </div>
 
             {/* Action Buttons */}
             <div className="space-y-3 mb-6">
-              <div className="h-14 w-full bg-[var(--cyber-bg-elevated)] rounded-xl"></div>
-              <div className="h-14 w-full bg-[var(--cyber-bg-elevated)] rounded-xl"></div>
+              <div className="h-14 w-full bg-[var(--cyber-bg-elevated)] rounded-cyber-lg"></div>
+              <div className="h-14 w-full bg-[var(--cyber-bg-elevated)] rounded-cyber-lg"></div>
             </div>
 
             {/* Additional Actions */}
@@ -83,7 +83,7 @@ export const ProductDetailLoadingSkeleton = React.memo(() => {
         </div>
 
         {/* Description Skeleton */}
-        <div className="mt-12 bg-[var(--cyber-bg-card)] rounded-xl border border-[var(--cyber-border)] p-6">
+        <div className="mt-12 bg-[var(--cyber-bg-card)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="h-8 w-48 bg-[var(--cyber-bg-elevated)] rounded mb-4"></div>
           <div className="space-y-2">
             <div className="h-4 w-full bg-[var(--cyber-bg-elevated)] rounded"></div>

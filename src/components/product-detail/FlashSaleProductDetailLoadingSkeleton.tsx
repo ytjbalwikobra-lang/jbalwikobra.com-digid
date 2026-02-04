@@ -22,10 +22,10 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
       <div style={{ paddingBottom: 'calc(var(--bottom-nav-height, 72px) + 140px + env(safe-area-inset-bottom, 0px))' }}>
         {/* Gallery Skeleton */}
         <div className="px-4 pt-4">
-          <div className="aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-xl mb-4"></div>
+          <div className="aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-cyber-lg mb-4"></div>
           <div className="flex space-x-2 overflow-x-auto">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-20 aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-xl"></div>
+              <div key={i} className="flex-shrink-0 w-20 aspect-[4/5] bg-[var(--cyber-bg-card)] rounded-cyber-lg"></div>
             ))}
           </div>
         </div>
@@ -39,13 +39,13 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
           </div>
 
           {/* Flash Sale Timer & Price */}
-          <div className="bg-gradient-to-r from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-muted)] rounded-2xl p-4 space-y-4">
+          <div className="bg-gradient-to-r from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-muted)] rounded-cyber-2xl p-4 space-y-4">
             {/* Timer */}
             <div className="text-center space-y-2">
               <div className="h-4 w-32 bg-[var(--cyber-bg-elevated)] rounded mx-auto"></div>
               <div className="flex justify-center space-x-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-[var(--cyber-bg-card)] rounded-xl p-3">
+                  <div key={i} className="bg-[var(--cyber-bg-card)] rounded-cyber-lg p-3">
                     <div className="h-6 w-8 bg-[var(--cyber-bg-elevated)] rounded"></div>
                     <div className="h-3 w-6 bg-[var(--cyber-bg-elevated)] rounded mt-1"></div>
                   </div>
@@ -74,11 +74,11 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
           </div>
 
           {/* Rental Options */}
-          <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-2xl p-4 space-y-4">
+          <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-4 space-y-4">
             <div className="h-6 w-24 bg-[var(--cyber-bg-elevated)] rounded"></div>
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-[var(--cyber-bg-card)] rounded-xl p-4">
+                <div key={i} className="bg-[var(--cyber-bg-card)] rounded-cyber-lg p-4">
                   <div className="flex justify-between items-center">
                     <div className="space-y-2">
                       <div className="h-4 w-20 bg-[var(--cyber-bg-elevated)] rounded"></div>
@@ -96,8 +96,8 @@ export const FlashSaleProductDetailLoadingSkeleton = React.memo(() => {
       {/* Bottom Actions Skeleton */}
       <div className="fixed bottom-0 left-0 right-0 bg-[var(--cyber-bg-pure)] border-t border-[var(--cyber-border)] p-4">
         <div className="flex space-x-3">
-          <div className="flex-1 h-12 bg-[var(--cyber-bg-elevated)] rounded-xl"></div>
-          <div className="flex-1 h-12 bg-[var(--cyber-bg-elevated)] rounded-xl"></div>
+          <div className="flex-1 h-12 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg"></div>
+          <div className="flex-1 h-12 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg"></div>
         </div>
       </div>
     </div>

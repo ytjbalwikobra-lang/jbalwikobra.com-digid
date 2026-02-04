@@ -103,7 +103,7 @@ const Footer: React.FC = () => {
                 key={badge.label} 
                 className="flex items-center gap-2 flex-shrink-0"
               >
-                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] flex items-center justify-center">
                   <badge.icon className={`w-4 h-4 ${badge.color}`} aria-hidden="true" />
                 </div>
                 <span className="text-xs sm:text-sm font-medium text-gray-200 whitespace-nowrap">
@@ -126,7 +126,7 @@ const Footer: React.FC = () => {
             {/* Logo & Name */}
             <Link 
               to="/" 
-              className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 rounded-xl transition-transform active:scale-[0.98]"
+              className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 rounded-cyber-lg transition-transform active:scale-[0.98]"
               aria-label={`Kembali ke beranda ${siteName}`}
             >
               <div 
@@ -156,7 +156,7 @@ const Footer: React.FC = () => {
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-500/10 border border-green-500/30 rounded-xl text-sm font-medium text-green-300 hover:bg-green-500/20 hover:border-green-500/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-500/10 border border-green-500/30 rounded-cyber-lg text-sm font-medium text-green-300 hover:bg-green-500/20 hover:border-green-500/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 active:scale-[0.98]"
                 aria-label="Hubungi via WhatsApp"
               >
                 <MessageCircle className="w-4 h-4" aria-hidden="true" />
@@ -164,7 +164,7 @@ const Footer: React.FC = () => {
               </a>
               <a 
                 href={`mailto:${supportEmail}`}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] rounded-xl text-sm font-medium text-[var(--cyber-pink-secondary)] hover:bg-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] rounded-cyber-lg text-sm font-medium text-[var(--cyber-pink-secondary)] hover:bg-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 active:scale-[0.98]"
                 aria-label={`Email ke ${supportEmail}`}
               >
                 <Mail className="w-4 h-4" aria-hidden="true" />

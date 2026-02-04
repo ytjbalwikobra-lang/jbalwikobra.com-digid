@@ -153,7 +153,7 @@ const PNFooter: React.FC = () => {
                 className="flex items-center gap-3 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] rounded-md"
                 aria-label={`Email ke ${supportEmail}`}
               >
-                <div className="w-8 h-8 rounded-xl bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] flex items-center justify-center group-hover:bg-[var(--cyber-pink-muted)] transition-colors">
+                <div className="w-8 h-8 rounded-cyber-lg bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] flex items-center justify-center group-hover:bg-[var(--cyber-pink-muted)] transition-colors">
                   <Mail className="w-4 h-4 text-[var(--cyber-pink-secondary)]" aria-hidden="true" />
                 </div>
                 <span>{supportEmail}</span>

@@ -41,7 +41,7 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
     }
     
     return (
-      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] text-xs font-semibold border border-pink-500/60 backdrop-blur-sm ${className}`}>
+      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] text-xs font-semibold border border-[var(--cyber-pink-muted)] backdrop-blur-sm ${className}`}>
         <Clock size={12} className="text-[var(--cyber-pink-primary)]" />
         <span>BERAKHIR</span>
       </div>
@@ -93,7 +93,7 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
 
   if (compact) {
     return (
-      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] text-xs font-bold border border-pink-500/60 backdrop-blur-sm shadow-lg ${className}`}>
+      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] text-xs font-bold border border-[var(--cyber-pink-muted)] backdrop-blur-sm shadow-lg ${className}`}>
         <Clock size={10} className="text-[var(--cyber-pink-primary)]" />
         <span className="text-[var(--cyber-pink-primary)]">
           {timeRemaining.days > 0 ? (
@@ -107,19 +107,19 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] border border-pink-500/60 backdrop-blur-sm shadow-lg ${className}`}>
+    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] border border-[var(--cyber-pink-muted)] backdrop-blur-sm shadow-lg ${className}`}>
       <Clock size={14} className="text-[var(--cyber-pink-primary)]" />
       <div className="flex items-center gap-1 text-sm font-bold">
         {timeRemaining.days > 0 && (
           <>
             <span className="tabular-nums">{timeRemaining.days}</span>
-            <span className="text-pink-300 text-xs">d</span>
+            <span className="text-[var(--cyber-pink-secondary)] text-xs">d</span>
           </>
         )}
         <span className="tabular-nums">{timeRemaining.hours.toString().padStart(2, '0')}</span>
-        <span className="text-pink-300">:</span>
+        <span className="text-[var(--cyber-pink-secondary)]">:</span>
         <span className="tabular-nums">{timeRemaining.minutes.toString().padStart(2, '0')}</span>
-        <span className="text-pink-300">:</span>
+        <span className="text-[var(--cyber-pink-secondary)]">:</span>
         <span className="tabular-nums">{timeRemaining.seconds.toString().padStart(2, '0')}</span>
       </div>
     </div>

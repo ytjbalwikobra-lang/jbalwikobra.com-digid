@@ -57,7 +57,7 @@ export const ContentSection: React.FC<{
   const bgClasses = {
     default: '',
     surface: 'bg-[var(--cyber-bg-pure)] border-b border-[var(--cyber-border)]',
-    gradient: 'bg-gradient-to-r from-pink-600 via-pink-500 to-rose-500'
+    gradient: 'bg-gradient-to-r from-[var(--cyber-pink-primary)] via-[var(--cyber-pink-glow)] to-rose-500'
   };
 
   return (

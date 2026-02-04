@@ -57,7 +57,7 @@ const footerSections = [
 // Trust badges configuration
 const trustBadges = [
   { icon: Shield, label: 'Transaksi Aman', color: 'text-green-400' },
-  { icon: Headphones, label: '24/7 Support', color: 'text-pink-500' },
+  { icon: Headphones, label: '24/7 Support', color: 'text-[var(--cyber-pink-primary)]' },
   { icon: Lock, label: 'Data Terlindungi', color: 'text-blue-400' },
 ];
 
@@ -126,17 +126,17 @@ const Footer: React.FC = () => {
             {/* Logo & Name */}
             <Link 
               to="/" 
-              className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 rounded-xl transition-transform active:scale-[0.98]"
+              className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 rounded-xl transition-transform active:scale-[0.98]"
               aria-label={`Kembali ke beranda ${siteName}`}
             >
               <div 
-                className="w-12 h-12 bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/20 group-hover:shadow-pink-500/40 transition-all duration-300" 
+                className="w-12 h-12 bg-gradient-to-br from-[var(--cyber-pink-primary)] via-fuchsia-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--cyber-pink-subtle)] group-hover:shadow-[var(--cyber-pink-muted)] transition-all duration-300" 
                 aria-hidden="true"
               >
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="block text-xl font-bold text-white group-hover:text-pink-200 transition-colors">
+                <span className="block text-xl font-bold text-white group-hover:text-[var(--cyber-pink-secondary)] transition-colors">
                   {siteName}
                 </span>
                 <span className="block text-xs text-[var(--cyber-text-muted)] font-medium">
@@ -164,7 +164,7 @@ const Footer: React.FC = () => {
               </a>
               <a 
                 href={`mailto:${supportEmail}`}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-pink-500/10 border border-pink-500/30 rounded-xl text-sm font-medium text-pink-300 hover:bg-pink-500/20 hover:border-pink-500/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] rounded-xl text-sm font-medium text-[var(--cyber-pink-secondary)] hover:bg-[var(--cyber-pink-muted)] hover:border-[var(--cyber-pink-primary)] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 active:scale-[0.98]"
                 aria-label={`Email ke ${supportEmail}`}
               >
                 <Mail className="w-4 h-4" aria-hidden="true" />

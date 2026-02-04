@@ -95,7 +95,7 @@ const PNFooter: React.FC = () => {
 
   return (
     <footer 
-      className="relative mt-8 border-t border-white/10 bg-[var(--cyber-bg-pure)] overflow-hidden"
+      className="relative mt-8 border-t border-[var(--cyber-border)] bg-[var(--cyber-bg-pure)] overflow-hidden"
       role="contentinfo"
       aria-label="Footer website"
     >
@@ -132,7 +132,7 @@ const PNFooter: React.FC = () => {
                 </div>
               )}
               <div>
-                <span className="block text-xl font-bold text-white group-hover:text-pink-200 transition-colors">
+                <span className="block text-xl font-bold text-white group-hover:text-[var(--cyber-pink-secondary)] transition-colors">
                   {siteName}
                 </span>
                 <span className="block text-xs text-[var(--cyber-text-muted)] font-medium">
@@ -150,7 +150,7 @@ const PNFooter: React.FC = () => {
             <div className="space-y-3">
               <a 
                 href={`mailto:${supportEmail}`}
-                className="flex items-center gap-3 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded-md"
+                className="flex items-center gap-3 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] rounded-md"
                 aria-label={`Email ke ${supportEmail}`}
               >
                 <div className="w-8 h-8 rounded-xl bg-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-muted)] flex items-center justify-center group-hover:bg-[var(--cyber-pink-muted)] transition-colors">
@@ -218,10 +218,10 @@ const PNFooter: React.FC = () => {
                             href={link.href} 
                             target="_blank" 
                             rel="noopener noreferrer nofollow" 
-                            className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/60 rounded-md"
+                            className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-muted)] rounded-md"
                           >
                             <ChevronRight 
-                              className="w-3 h-3 text-[var(--cyber-text-muted)] group-hover:text-pink-400 group-hover:translate-x-0.5 transition-all" 
+                              className="w-3 h-3 text-[var(--cyber-text-muted)] group-hover:text-[var(--cyber-pink-primary)] group-hover:translate-x-0.5 transition-all" 
                               aria-hidden="true" 
                             />
                             <span>{link.label}</span>
@@ -229,7 +229,7 @@ const PNFooter: React.FC = () => {
                         ) : (
                           <Link 
                             to={link.href} 
-                            className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400/60 rounded-md"
+                            className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-muted)] rounded-md"
                           >
                             <ChevronRight 
                               className="w-3 h-3 text-[var(--cyber-text-muted)] group-hover:text-[var(--cyber-pink-secondary)] group-hover:translate-x-0.5 transition-all" 
@@ -249,7 +249,7 @@ const PNFooter: React.FC = () => {
       </PNContainer>
 
       {/* Bottom Bar */}
-      <div className="relative border-t border-white/10 bg-gradient-to-r from-[var(--cyber-bg-pure)] via-[var(--cyber-bg-surface)] to-[var(--cyber-bg-pure)]">
+      <div className="relative border-t border-[var(--cyber-border)] bg-gradient-to-r from-[var(--cyber-bg-pure)] via-[var(--cyber-bg-surface)] to-[var(--cyber-bg-pure)]">
         <PNContainer className="px-4 py-5 sm:py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             
@@ -281,14 +281,14 @@ const PNFooter: React.FC = () => {
             <div className="flex items-center gap-4 text-sm order-3">
               <Link 
                 to="/terms" 
-                className="text-[var(--cyber-text-muted)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded-sm"
+                className="text-[var(--cyber-text-muted)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] rounded-sm"
               >
                 Syarat
               </Link>
               <span className="text-white/20">•</span>
               <Link 
                 to="/terms#privacy" 
-                className="text-[var(--cyber-text-muted)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded-sm"
+                className="text-[var(--cyber-text-muted)] hover:text-[var(--cyber-pink-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] rounded-sm"
               >
                 Privasi
               </Link>

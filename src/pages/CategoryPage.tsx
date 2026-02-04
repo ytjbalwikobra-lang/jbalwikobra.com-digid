@@ -173,11 +173,11 @@ const CategoryPage: React.FC = () => {
 
         {/* Hero Section */}
         <PNSection padding="md">
-          <div className="relative overflow-hidden rounded-cyber-3xl bg-gradient-to-br from-pink-500/20 via-purple-500/10 to-transparent border border-[var(--cyber-border)] p-6 md:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-pink-500/10 via-transparent to-transparent" />
+          <div className="relative overflow-hidden rounded-cyber-3xl bg-gradient-to-br from-[var(--cyber-pink-muted)] via-[var(--cyber-purple)]/10 to-transparent border border-[var(--cyber-border)] p-6 md:p-8">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[var(--cyber-pink-subtle)] via-transparent to-transparent" />
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
+                <div className="w-12 h-12 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-purple)] flex items-center justify-center shadow-lg shadow-[var(--cyber-pink-muted)]">
                   <Grid3X3 size={24} className="text-white" />
                 </div>
                 <div>

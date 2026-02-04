@@ -23,7 +23,7 @@ export const PriceAndTimer: React.FC<Props> = ({
     <div className="space-y-6">
       {/* Flash Sale Timer */}
       {isActive && endTime && (
-        <PNCard className="bg-gradient-to-r from-pink-500 to-red-500 border-pink-500 rounded-cyber-2xl overflow-hidden">
+        <PNCard className="bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-error)] border-[var(--cyber-pink-primary)] rounded-cyber-2xl overflow-hidden">
           <div className="p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="p-2 bg-white/20 rounded-full flex-shrink-0">
@@ -52,7 +52,7 @@ export const PriceAndTimer: React.FC<Props> = ({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                    <PNHeading level={2} className="text-pink-500 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold break-words">
+                    <PNHeading level={2} className="text-[var(--cyber-pink-primary)] text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold break-words">
                       {formatCurrency(effectivePrice)}
                     </PNHeading>
                     {discountPercentage > 0 && (

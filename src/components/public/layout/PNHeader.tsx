@@ -258,7 +258,7 @@ const PNHeader: React.FC = () => {
               
               <Link
                 to={user ? '/profile' : '/auth'}
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-cyber-lg text-sm font-semibold bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-200 shadow-lg shadow-[var(--cyber-pink-muted)] hover:shadow-[var(--cyber-pink-muted)]"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-cyber-lg text-sm font-semibold bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white hover:opacity-90 transition-all duration-200 shadow-lg shadow-[var(--cyber-pink-muted)] hover:shadow-[var(--cyber-pink-muted)]"
               >
                 <User className="w-4 h-4" />
                 {user ? 'Profil' : 'Masuk'}
@@ -308,7 +308,7 @@ const PNHeader: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={cx(
-                  'flex items-center px-4 py-3.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-colors',
+                  'flex items-center px-4 py-3.5 rounded-cyber-lg text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-elevated)] transition-colors',
                   isActive(item.path) && 'bg-gradient-to-r from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-subtle)] border border-[var(--cyber-pink-subtle)]'
                 )}
               >
@@ -317,7 +317,7 @@ const PNHeader: React.FC = () => {
             ))}
           </nav>
           <div className="p-4 pt-2">
-            <Link to={user ? '/profile' : '/auth'} className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white font-semibold shadow-lg shadow-[var(--cyber-pink-muted)] transition-all duration-200 hover:from-pink-600 hover:to-fuchsia-700">
+            <Link to={user ? '/profile' : '/auth'} className="flex items-center justify-center gap-2 w-full h-12 rounded-cyber-lg bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white font-semibold shadow-lg shadow-[var(--cyber-pink-muted)] transition-all duration-200 hover:opacity-90">
               <User className="w-4 h-4" />
               {user ? 'Buka Profil' : 'Masuk / Daftar'}
             </Link>

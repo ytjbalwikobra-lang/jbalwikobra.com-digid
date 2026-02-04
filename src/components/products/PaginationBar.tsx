@@ -41,7 +41,7 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
   };
 
   const buttonBase = "w-10 h-10 flex items-center justify-center rounded-xl transition-colors";
-  const buttonActive = "bg-pink-500 text-white";
+  const buttonActive = "bg-[var(--cyber-pink-primary)] text-white";
   const buttonInactive = "bg-white/5 border border-white/10 text-[var(--cyber-text-secondary)] hover:bg-white/10";
   const buttonDisabled = "opacity-50 cursor-not-allowed";
 

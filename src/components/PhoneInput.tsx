@@ -325,14 +325,14 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   };
 
   const getRingColor = () => {
-    if (!phoneNumber) return 'focus:ring-pink-500/40';
+    if (!phoneNumber) return 'focus:ring-[var(--cyber-pink-muted)]';
     if (isValid) return 'focus:ring-green-500/40';
     return 'focus:ring-red-500/40';
   };
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      <div className={`flex rounded-xl border ${getBorderColor()} bg-white/5 backdrop-blur-sm text-white overflow-hidden transition-all duration-200 focus-within:ring-2 ${getRingColor().replace('focus:', 'focus-within:')} focus-within:border-pink-500/50`}>
+      <div className={`flex rounded-xl border ${getBorderColor()} bg-white/5 backdrop-blur-sm text-white overflow-hidden transition-all duration-200 focus-within:ring-2 ${getRingColor().replace('focus:', 'focus-within:')} focus-within:border-[var(--cyber-pink-muted)]`}>
         
         {/* Country Selector */}
         <button
@@ -368,7 +368,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {showDropdown && (
         <div 
           ref={dropdownRef} 
-          className="fixed bg-[var(--cyber-bg-pure)]/95 border border-pink-500/30 rounded-xl backdrop-blur-md shadow-xl z-[99999] max-h-64 overflow-hidden" 
+          className="fixed bg-[var(--cyber-bg-pure)]/95 border border-[var(--cyber-pink-muted)] rounded-xl backdrop-blur-md shadow-xl z-[99999] max-h-64 overflow-hidden" 
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -376,7 +376,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           }}
         >
           {/* Search */}
-          <div className="p-3 border-b border-pink-500/20">
+          <div className="p-3 border-b border-[var(--cyber-pink-subtle)]">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--cyber-text-muted)]" />
               <input
@@ -384,7 +384,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                 placeholder="Search countries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-pink-500/30 rounded-xl text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-[var(--cyber-pink-muted)] rounded-xl text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)] transition-all duration-200"
               />
             </div>
           </div>
@@ -395,8 +395,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
               <button
                 key={country.code}
                 onClick={() => handleCountrySelect(country)}
-                className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-pink-500/20 transition-colors ${
-                  selectedCountry.code === country.code ? 'bg-pink-500/30 text-pink-200' : 'text-white'
+                className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-[var(--cyber-pink-subtle)] transition-colors ${
+                  selectedCountry.code === country.code ? 'bg-[var(--cyber-pink-muted)] text-[var(--cyber-pink-secondary)]' : 'text-white'
                 }`}
               >
                 <span className="text-lg">{country.flag}</span>

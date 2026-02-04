@@ -94,7 +94,7 @@ export const EmptyState: React.FC<{ label: string; description: string }> = ({ l
       
       {/* Decorative elements */}
       <div className="flex justify-center gap-2">
-        <div className="w-2 h-2 bg-pink-500/50 rounded-full animate-pulse"></div>
+        <div className="w-2 h-2 bg-[var(--cyber-pink-muted)] rounded-full animate-pulse"></div>
         <div className="w-2 h-2 bg-purple-500/50 rounded-full animate-pulse delay-100"></div>
         <div className="w-2 h-2 bg-indigo-500/50 rounded-full animate-pulse delay-200"></div>
       </div>

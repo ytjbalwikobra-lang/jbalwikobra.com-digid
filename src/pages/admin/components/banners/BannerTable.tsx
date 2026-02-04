@@ -43,7 +43,7 @@ export const BannerTable: React.FC<BannerTableProps> = ({
         {banners.map((banner) => (
           <div key={banner.id} className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-[var(--cyber-pink-primary)]/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
             {/* Background gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-fuchsia-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-[var(--cyber-pink-subtle)]/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
             {/* Content */}
             <div className="relative z-10">
@@ -84,7 +84,7 @@ export const BannerTable: React.FC<BannerTableProps> = ({
                   <img
                     src={banner.image_url}
                     alt={banner.title}
-                    className="w-24 h-16 rounded-cyber-lg object-cover cursor-pointer border border-[var(--cyber-border)] hover:border-pink-500/50 transition-colors"
+                    className="w-24 h-16 rounded-cyber-lg object-cover cursor-pointer border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-muted)] transition-colors"
                     onClick={() => onImagePreview(banner.image_url)}
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = 'none';

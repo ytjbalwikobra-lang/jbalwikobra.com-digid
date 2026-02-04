@@ -267,7 +267,7 @@ const AdminUsersV2: React.FC = () => {
           <div className="lg:col-span-1">
             <AdminCard>
               <div className="flex items-center space-x-2 mb-6">
-                <div className="p-2 bg-pink-500/10 rounded-cyber-lg">
+                <div className="p-2 bg-[var(--cyber-pink-subtle)] rounded-cyber-lg">
                   <TrendingUp className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
                 </div>
                 <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Quick Actions</h3>
@@ -275,7 +275,7 @@ const AdminUsersV2: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => push('Add user functionality coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-pink-500/10 hover:border-[var(--cyber-pink-primary)]/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-primary)] transition-all duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-[var(--cyber-pink-subtle)] hover:border-[var(--cyber-pink-primary)]/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-primary)] transition-all duration-200"
                 >
                   <Plus className="w-5 h-5" />
                   <div className="text-left">
@@ -317,7 +317,7 @@ const AdminUsersV2: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)]">User Analytics</h3>
                 </div>
-                <button className="flex items-center space-x-2 text-sm text-pink-500 hover:text-pink-400 transition-colors">
+                <button className="flex items-center space-x-2 text-sm text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] transition-colors">
                   <span>View Details</span>
                   <ArrowUpRight className="w-4 h-4" />
                 </button>

@@ -9,8 +9,8 @@ export const FeedHeader: React.FC = () => {
         <div className="relative overflow-hidden rounded-cyber-3xl border border-[var(--cyber-border)] bg-gradient-to-br from-black via-black to-black px-6 py-10">
           {/* Glow background accents */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-fuchsia-600/20 rounded-full blur-3xl" />
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-[var(--cyber-pink-muted)] rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-[var(--cyber-pink-muted)] rounded-full blur-3xl" />
           </div>
           
           {/* Content */}

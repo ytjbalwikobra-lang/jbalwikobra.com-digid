@@ -306,7 +306,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+            className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)]"
             style={{ 
               background: AdminColors.primary.lighter,
               color: AdminColors.text.secondary
@@ -423,7 +423,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <button
               onClick={handleMarkAllAsRead}
               aria-label={`Tandai semua ${unreadCount} notifikasi sebagai sudah dibaca`}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-cyber-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-cyber-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)]"
               style={{ 
                 background: `linear-gradient(135deg, ${AdminColors.accent.DEFAULT}20, ${AdminColors.accent.dark}10)`,
                 color: AdminColors.accent.DEFAULT,
@@ -465,7 +465,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
               <p className="text-sm mb-4" style={{ color: AdminColors.text.secondary }}>{loadError}</p>
               <button
                 onClick={loadNotifications}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-cyber-lg text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-cyber-lg text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)]"
                 style={{ 
                   background: `linear-gradient(135deg, ${AdminColors.accent.DEFAULT}, ${AdminColors.accent.dark})`,
                   color: 'white',
@@ -509,7 +509,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                     className={cn(
                       'relative px-4 py-4 transition-all duration-200',
                       'hover:bg-white/5 focus:outline-none focus:bg-white/5',
-                      focusedIndex === index && 'bg-white/5 ring-2 ring-inset ring-pink-500/30',
+                      focusedIndex === index && 'bg-white/5 ring-2 ring-inset ring-[var(--cyber-pink-muted)]',
                       notification.order_id && 'cursor-pointer'
                     )}
                     style={{ 
@@ -737,7 +737,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-cyber-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-cyber-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)]"
               style={{ 
                 background: currentPage === totalPages ? AdminColors.primary.lighter : `${AdminColors.accent.DEFAULT}20`,
                 color: currentPage === totalPages ? AdminColors.text.tertiary : AdminColors.accent.DEFAULT,

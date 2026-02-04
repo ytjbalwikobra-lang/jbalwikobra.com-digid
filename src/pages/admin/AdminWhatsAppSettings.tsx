@@ -369,8 +369,8 @@ const AdminWhatsAppSettings: React.FC = () => {
       label: 'Last Updated',
       value: lastUpdated ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-',
       icon: Clock,
-      color: 'from-pink-500 to-fuchsia-500',
-      bgColor: 'bg-pink-500/10'
+      color: 'from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)]',
+      bgColor: 'bg-[var(--cyber-pink-subtle)]'
     }
   ], [apiKey, groups.length, provider, lastUpdated]);
 
@@ -447,7 +447,7 @@ const AdminWhatsAppSettings: React.FC = () => {
             </ul>
             <div className="mt-3 flex gap-2">
               <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow"
-                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-gradient-to-r from-pink-500 to-purple-500 text-[var(--cyber-text-primary)] text-xs font-medium hover:opacity-90">
+                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-purple)] text-[var(--cyber-text-primary)] text-xs font-medium hover:opacity-90">
                 WooWA Docs
               </a>
               <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow"
@@ -513,9 +513,9 @@ const AdminWhatsAppSettings: React.FC = () => {
       </div>
 
       {/* Update API Key Section */}
-      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-pink-500/30 p-6">
+      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-pink-muted)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
+          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)]">
             <Key className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -658,7 +658,7 @@ const AdminWhatsAppSettings: React.FC = () => {
             {/* Notification Routing */}
             <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
+                <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)]">
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -709,7 +709,7 @@ const AdminWhatsAppSettings: React.FC = () => {
       {/* Test Messaging */}
       <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
+          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)]">
             <Send className="w-5 h-5 text-white" />
           </div>
           <div>

@@ -22,7 +22,7 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-32 bg-gray-800 rounded-2xl animate-pulse" />
+          <div key={i} className="h-32 bg-[var(--cyber-bg-card)] rounded-2xl animate-pulse" />
         ))}
       </div>
     );
@@ -31,7 +31,7 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
       {/* Total Reviews */}
-      <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-blue-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
+      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-blue-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -41,13 +41,13 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-bold text-white">{stats.totalReviews.toLocaleString()}</p>
-            <p className="text-sm text-gray-400 font-medium">Total Reviews</p>
+            <p className="text-sm text-[var(--cyber-text-muted)] font-medium">Total Reviews</p>
           </div>
         </div>
       </div>
 
       {/* Average Rating */}
-      <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
+      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-yellow-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-yellow-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -71,13 +71,13 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
                 ))}
               </div>
             </div>
-            <p className="text-sm text-gray-400 font-medium">Average Rating</p>
+            <p className="text-sm text-[var(--cyber-text-muted)] font-medium">Average Rating</p>
           </div>
         </div>
       </div>
 
       {/* High Rated Reviews */}
-      <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-emerald-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
+      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-emerald-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-emerald-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -87,13 +87,13 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-bold text-white">{stats.highRatedReviews.toLocaleString()}</p>
-            <p className="text-sm text-gray-400 font-medium">High Rated (4-5★)</p>
+            <p className="text-sm text-[var(--cyber-text-muted)] font-medium">High Rated (4-5★)</p>
           </div>
         </div>
       </div>
 
       {/* Low Rated Reviews */}
-      <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-red-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
+      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-red-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
         <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -103,13 +103,13 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-bold text-white">{stats.lowRatedReviews.toLocaleString()}</p>
-            <p className="text-sm text-gray-400 font-medium">Low Rated (1-2★)</p>
+            <p className="text-sm text-[var(--cyber-text-muted)] font-medium">Low Rated (1-2★)</p>
           </div>
         </div>
       </div>
 
       {/* Recent Reviews */}
-      <div className="group relative overflow-hidden bg-black border border-gray-800 rounded-2xl p-6 hover:border-pink-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
+      <div className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6 hover:border-pink-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-pink-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -119,7 +119,7 @@ export const ReviewsStatsComponent: React.FC<ReviewsStatsComponentProps> = ({
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-bold text-white">{stats.recentReviews.toLocaleString()}</p>
-            <p className="text-sm text-gray-400 font-medium">Recent (This Week)</p>
+            <p className="text-sm text-[var(--cyber-text-muted)] font-medium">Recent (This Week)</p>
           </div>
         </div>
       </div>

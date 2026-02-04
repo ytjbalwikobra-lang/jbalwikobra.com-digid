@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package, ShoppingCart, Users } from 'lucide-react';
-import { IOSButton } from '../../../components/ios/IOSDesignSystemV2';
+import { PNButton } from '../../../components/ui/CyberDesignSystem';
 import { AdminTab } from '../types';
 
 interface AdminTabNavigationProps {
@@ -31,9 +31,9 @@ const AdminTabNavigation: React.FC<AdminTabNavigationProps> = ({
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6 p-1 bg-black-secondary rounded-xl">
+    <div className="flex flex-wrap gap-2 mb-6 p-1 bg-black-secondary rounded-cyber-lg">
       {tabs.map((tab) => (
-        <IOSButton
+        <PNButton
           key={tab.id}
           variant={activeTab === tab.id ? 'primary' : 'secondary'}
           size="md"
@@ -41,12 +41,12 @@ const AdminTabNavigation: React.FC<AdminTabNavigationProps> = ({
           className={`flex items-center gap-2 transition-all duration-200 ${
             activeTab === tab.id 
               ? 'bg-blue-600 text-white shadow-lg' 
-              : 'bg-transparent text-gray-200 hover:bg-black-tertiary'
+              : 'bg-transparent text-[var(--cyber-text-secondary)] hover:bg-black-tertiary'
           }`}
         >
           {tab.icon}
           {tab.label}
-        </IOSButton>
+        </PNButton>
       ))}
     </div>
   );

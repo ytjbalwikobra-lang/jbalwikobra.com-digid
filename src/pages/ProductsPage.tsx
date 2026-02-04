@@ -35,14 +35,12 @@ const ProductsPage: React.FC = () => {
     filteredProducts,
     tiers,
     gameTitles,
-    activeFilters,
     hasMore,
     totalItems,
     displayedItemsCount,
     fetchData,
     handleFilterChange,
     loadMoreItems,
-    clearFilter,
     clearAllFilters
   } = useProductsData({ mode: 'infinite', itemsPerLoad: 20 });
 
@@ -96,7 +94,7 @@ const ProductsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)]">
       {/* SEO Head with Products page meta tags */}
       <SEOHead
         title="Katalog Akun Game"
@@ -116,7 +114,7 @@ const ProductsPage: React.FC = () => {
       />
       
       {/* Breadcrumb Navigation */}
-      <div className="max-w-7xl mx-auto px-4 pt-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         <Breadcrumb items={[{ label: 'Katalog', href: '/products' }]} />
       </div>
 
@@ -151,7 +149,7 @@ const ProductsPage: React.FC = () => {
       
       {/* Infinite Scroll Trigger - ISO Compliant with manual fallback */}
       {!loading && currentProducts.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <InfiniteScrollTrigger
             observerRef={observerTarget}
             isLoading={loading}

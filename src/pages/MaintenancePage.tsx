@@ -1,13 +1,11 @@
-import React from 'react';
-
 export default function MaintenancePage() {
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center px-4">
       <div className="max-w-2xl w-full text-center">
         {/* Icon */}
         <div className="mb-8">
           <svg 
-            className="w-24 h-24 mx-auto text-pink-500" 
+            className="w-24 h-24 mx-auto text-[var(--cyber-pink-primary)]" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -33,14 +31,14 @@ export default function MaintenancePage() {
         </h1>
         
         {/* Description */}
-        <p className="text-lg md:text-xl text-gray-400 mb-8">
+        <p className="text-lg md:text-xl text-[var(--cyber-text-muted)] mb-8">
           We're currently performing scheduled maintenance to improve your experience. 
           Please check back soon.
         </p>
 
         {/* Additional info */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mb-8">
-          <p className="text-gray-400 text-sm">
+        <div className="bg-[var(--cyber-bg-surface)]/50 border border-[var(--cyber-border)] rounded-cyber-lg p-6 mb-8">
+          <p className="text-[var(--cyber-text-muted)] text-sm">
             💡 Our team is working hard to bring you an enhanced experience. 
             We appreciate your patience and understanding.
           </p>

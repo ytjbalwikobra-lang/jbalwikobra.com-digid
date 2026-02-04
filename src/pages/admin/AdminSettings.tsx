@@ -258,24 +258,24 @@ const AdminSettings: React.FC = () => {
     if (type === 'textarea') {
       return (
         <div key={field} className="space-y-1">
-          <label className="block text-sm font-medium text-gray-300">
+          <label className="block text-sm font-medium text-[var(--cyber-text-muted)]">
             {label} {required && <span className="text-red-500">*</span>}
           </label>
           <textarea
             value={form[field]}
             onChange={(e) => handleChange(field, e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 resize-none"
+            className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)] resize-none"
             placeholder={placeholder}
             rows={rows}
           />
-          {helpText && <p className="text-xs text-gray-400">{helpText}</p>}
+          {helpText && <p className="text-xs text-[var(--cyber-text-muted)]">{helpText}</p>}
         </div>
       );
     }
 
     return (
       <div key={field} className="space-y-1">
-        <label className="block text-sm font-medium text-gray-300">
+        <label className="block text-sm font-medium text-[var(--cyber-text-muted)]">
           {icon && <span className="inline-flex items-center gap-1">{icon} {label}</span>}
           {!icon && label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -284,10 +284,10 @@ const AdminSettings: React.FC = () => {
           type={type}
           value={form[field]}
           onChange={(e) => handleChange(field, e.target.value)}
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
           placeholder={placeholder}
         />
-        {helpText && <p className="text-xs text-gray-400">{helpText}</p>}
+        {helpText && <p className="text-xs text-[var(--cyber-text-muted)]">{helpText}</p>}
       </div>
     );
   };
@@ -312,7 +312,7 @@ const AdminSettings: React.FC = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
             Pengaturan Website
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-[var(--cyber-text-muted)] mt-1">
             Kelola konfigurasi dan informasi website
           </p>
         </div>
@@ -338,50 +338,50 @@ const AdminSettings: React.FC = () => {
 
       {/* Analytics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-blue-500/10 rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]">
+        <div className="bg-blue-500/10 rounded-cyber-lg p-4 border border-[var(--cyber-border)] transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-              <Settings className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-blue-500 to-blue-600">
+              <Settings className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Kelengkapan</p>
-              <p className="text-lg font-bold text-white">{stats.completion}%</p>
+              <p className="text-xs text-[var(--cyber-text-muted)] uppercase tracking-wide">Kelengkapan</p>
+              <p className="text-lg font-bold text-[var(--cyber-text-primary)]">{stats.completion}%</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-green-500/10 rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]">
+        <div className="bg-green-500/10 rounded-cyber-lg p-4 border border-[var(--cyber-border)] transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
-              <CheckCircle className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-green-500 to-green-600">
+              <CheckCircle className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Field Terisi</p>
-              <p className="text-lg font-bold text-white">{stats.filledFields}/{stats.totalFields}</p>
+              <p className="text-xs text-[var(--cyber-text-muted)] uppercase tracking-wide">Field Terisi</p>
+              <p className="text-lg font-bold text-[var(--cyber-text-primary)]">{stats.filledFields}/{stats.totalFields}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-purple-500/10 rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]">
+        <div className="bg-purple-500/10 rounded-cyber-lg p-4 border border-[var(--cyber-border)] transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
-              <Building className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-purple-500 to-purple-600">
+              <Building className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Sosial Media</p>
-              <p className="text-lg font-bold text-white">{stats.socialConnected}/5</p>
+              <p className="text-xs text-[var(--cyber-text-muted)] uppercase tracking-wide">Sosial Media</p>
+              <p className="text-lg font-bold text-[var(--cyber-text-primary)]">{stats.socialConnected}/5</p>
             </div>
           </div>
         </div>
 
-        <div className={`${hasChanges ? 'bg-amber-500/10' : 'bg-gray-500/10'} rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]`}>
+        <div className={`${hasChanges ? 'bg-amber-500/10' : 'bg-[var(--cyber-bg-elevated)]/10'} rounded-cyber-lg p-4 border border-[var(--cyber-border)] transition-all duration-300 hover:scale-[1.02]`}>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl bg-gradient-to-br ${hasChanges ? 'from-amber-500 to-amber-600' : 'from-gray-500 to-gray-600'}`}>
-              <Save className="w-5 h-5 text-white" />
+            <div className={`p-2 rounded-cyber-lg bg-gradient-to-br ${hasChanges ? 'from-amber-500 to-amber-600' : 'from-gray-500 to-gray-600'}`}>
+              <Save className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Status</p>
-              <p className={`text-lg font-bold ${hasChanges ? 'text-amber-400' : 'text-gray-400'}`}>
+              <p className="text-xs text-[var(--cyber-text-muted)] uppercase tracking-wide">Status</p>
+              <p className={`text-lg font-bold ${hasChanges ? 'text-amber-400' : 'text-[var(--cyber-text-muted)]'}`}>
                 {hasChanges ? 'Belum Disimpan' : 'Tersimpan'}
               </p>
             </div>
@@ -391,7 +391,7 @@ const AdminSettings: React.FC = () => {
 
       {/* Unsaved Changes Warning */}
       {hasChanges && (
-        <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4 text-amber-300">
+        <div className="bg-amber-500/20 border border-amber-500/30 rounded-cyber-lg p-4 text-amber-300">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">Ada perubahan yang belum disimpan. Jangan lupa simpan sebelum meninggalkan halaman.</p>
@@ -403,14 +403,14 @@ const AdminSettings: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* General Settings */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-              <Globe className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-blue-500 to-blue-600">
+              <Globe className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Pengaturan Umum</h2>
-              <p className="text-xs text-gray-400">Nama dan deskripsi website</p>
+              <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Pengaturan Umum</h2>
+              <p className="text-xs text-[var(--cyber-text-muted)]">Nama dan deskripsi website</p>
             </div>
           </div>
           <div className="space-y-4">
@@ -419,14 +419,14 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
-              <Phone className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-green-500 to-green-600">
+              <Phone className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Informasi Kontak</h2>
-              <p className="text-xs text-gray-400">Cara pelanggan menghubungi Anda</p>
+              <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Informasi Kontak</h2>
+              <p className="text-xs text-[var(--cyber-text-muted)]">Cara pelanggan menghubungi Anda</p>
             </div>
           </div>
           <div className="space-y-4">
@@ -435,14 +435,14 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* Business Location */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600">
-              <MapPin className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-amber-500 to-amber-600">
+              <MapPin className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Lokasi Bisnis</h2>
-              <p className="text-xs text-gray-400">Alamat dan jam operasional</p>
+              <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Lokasi Bisnis</h2>
+              <p className="text-xs text-[var(--cyber-text-muted)]">Alamat dan jam operasional</p>
             </div>
           </div>
           <div className="space-y-4">
@@ -451,14 +451,14 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
-              <Image className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
+              <Image className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Homepage Hero</h2>
-              <p className="text-xs text-gray-400">Konten banner utama</p>
+              <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Homepage Hero</h2>
+              <p className="text-xs text-[var(--cyber-text-muted)]">Konten banner utama</p>
             </div>
           </div>
           <div className="space-y-4">
@@ -467,14 +467,14 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* Social Media - Full Width */}
-        <div className="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="lg:col-span-2 bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
-              <Building className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-purple-500 to-purple-600">
+              <Building className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Media Sosial</h2>
-              <p className="text-xs text-gray-400">Hubungkan akun sosial media Anda</p>
+              <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Media Sosial</h2>
+              <p className="text-xs text-[var(--cyber-text-muted)]">Hubungkan akun sosial media Anda</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -483,14 +483,14 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* Additional Links - Full Width */}
-        <div className="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="lg:col-span-2 bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600">
-              <Link className="w-5 h-5 text-white" />
+            <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
+              <Link className="w-5 h-5 text-[var(--cyber-text-primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Link Tambahan</h2>
-              <p className="text-xs text-gray-400">Integrasi dan channel eksternal</p>
+              <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Link Tambahan</h2>
+              <p className="text-xs text-[var(--cyber-text-muted)]">Integrasi dan channel eksternal</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -500,39 +500,39 @@ const AdminSettings: React.FC = () => {
 
         {/* Logo Preview */}
         {(form.logoUrl || form.faviconUrl) && (
-          <div className="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-6">
+          <div className="lg:col-span-2 bg-[var(--cyber-bg-surface)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600">
-                <Image className="w-5 h-5 text-white" />
+              <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-gray-500 to-gray-600">
+                <Image className="w-5 h-5 text-[var(--cyber-text-primary)]" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Branding Saat Ini</h2>
-                <p className="text-xs text-gray-400">Preview logo dan favicon</p>
+                <h2 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Branding Saat Ini</h2>
+                <p className="text-xs text-[var(--cyber-text-muted)]">Preview logo dan favicon</p>
               </div>
             </div>
             <div className="flex gap-8 items-center">
               {form.logoUrl && (
                 <div className="text-center">
-                  <p className="text-sm text-gray-400 mb-2">Logo</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)] mb-2">Logo</p>
                   <img 
                     src={form.logoUrl} 
                     alt="Site Logo" 
-                    className="h-16 w-auto rounded-xl border border-gray-700"
+                    className="h-16 w-auto rounded-cyber-lg border border-[var(--cyber-border)]"
                   />
                 </div>
               )}
               {form.faviconUrl && (
                 <div className="text-center">
-                  <p className="text-sm text-gray-400 mb-2">Favicon</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)] mb-2">Favicon</p>
                   <img 
                     src={form.faviconUrl} 
                     alt="Site Favicon" 
-                    className="h-16 w-16 rounded-xl border border-gray-700 object-cover"
+                    className="h-16 w-16 rounded-cyber-lg border border-[var(--cyber-border)] object-cover"
                   />
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-400 mt-4">
+            <p className="text-sm text-[var(--cyber-text-muted)] mt-4">
               Untuk mengubah logo atau favicon, gunakan halaman manajemen banner/media.
             </p>
           </div>

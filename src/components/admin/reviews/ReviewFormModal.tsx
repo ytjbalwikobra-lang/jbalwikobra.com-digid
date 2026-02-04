@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Star, User, Package, MessageSquare, Calendar, Shield } from 'lucide-react';
+import { X, Save, Star, User, Package, MessageSquare, Shield } from 'lucide-react';
 import { Review } from '../../../services/adminService';
 
 interface ReviewFormModalProps {
@@ -95,9 +95,9 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-black border border-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-black border border-[var(--cyber-border)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--cyber-border)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-xl flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-white" />
@@ -106,14 +106,14 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
               <h2 className="text-xl font-bold text-white">
                 {review ? 'Edit Review' : 'Add New Review'}
               </h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--cyber-text-muted)]">
                 {review ? 'Update customer review details' : 'Create a new customer review'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl flex items-center justify-center transition-all duration-200"
+            className="w-8 h-8 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-xl flex items-center justify-center transition-all duration-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -122,7 +122,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(90vh-140px)] overflow-y-auto">
           {/* Customer Info */}
-          <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
+          <div className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
             <div className="flex items-center gap-2 mb-4">
               <User className="w-5 h-5 text-pink-500" />
               <h3 className="text-lg font-semibold text-white">Customer Information</h3>
@@ -130,16 +130,16 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-2">
                   Customer Name *
                 </label>
                 <input
                   type="text"
                   value={formData.user_name || ''}
                   onChange={(e) => handleInputChange('user_name', e.target.value)}
-                  className={`w-full px-4 py-3 bg-gray-700 border ${
-                    errors.user_name ? 'border-red-500' : 'border-gray-600'
-                  } rounded-xl text-white placeholder-gray-400 focus:border-pink-400 focus:ring-1 focus:ring-pink-400 transition-all duration-200`}
+                  className={`w-full px-4 py-3 bg-[var(--cyber-bg-card)] border ${
+                    errors.user_name ? 'border-red-500' : 'border-[var(--cyber-border)]'
+                  } rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200`}
                   placeholder="Enter customer name"
                 />
                 {errors.user_name && (
@@ -153,9 +153,9 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
                   id="is_verified"
                   checked={formData.is_verified || false}
                   onChange={(e) => handleInputChange('is_verified', e.target.checked)}
-                  className="w-4 h-4 text-pink-500 bg-gray-700 border-gray-600 rounded focus:ring-pink-500"
+                  className="w-4 h-4 text-pink-500 bg-[var(--cyber-bg-card)] border-[var(--cyber-border)] rounded focus:ring-pink-500"
                 />
-                <label htmlFor="is_verified" className="flex items-center gap-2 text-sm text-gray-300">
+                <label htmlFor="is_verified" className="flex items-center gap-2 text-sm text-[var(--cyber-text-secondary)]">
                   <Shield className="w-4 h-4 text-green-400" />
                   Verified Purchase
                 </label>
@@ -164,23 +164,23 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           </div>
 
           {/* Product Info */}
-          <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
+          <div className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
             <div className="flex items-center gap-2 mb-4">
               <Package className="w-5 h-5 text-pink-500" />
               <h3 className="text-lg font-semibold text-white">Product Information</h3>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-2">
                 Product Name *
               </label>
               <input
                 type="text"
                 value={formData.product_name || ''}
                 onChange={(e) => handleInputChange('product_name', e.target.value)}
-                className={`w-full px-4 py-3 bg-gray-700 border ${
-                  errors.product_name ? 'border-red-500' : 'border-gray-600'
-                } rounded-xl text-white placeholder-gray-400 focus:border-pink-400 focus:ring-1 focus:ring-pink-400 transition-all duration-200`}
+                className={`w-full px-4 py-3 bg-[var(--cyber-bg-card)] border ${
+                  errors.product_name ? 'border-red-500' : 'border-[var(--cyber-border)]'
+                } rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200`}
                 placeholder="Enter product name"
               />
               {errors.product_name && (
@@ -190,7 +190,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           </div>
 
           {/* Review Content */}
-          <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
+          <div className="bg-[var(--cyber-bg-card)]/30 rounded-xl p-4 border border-[var(--cyber-border)]">
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-5 h-5 text-pink-500" />
               <h3 className="text-lg font-semibold text-white">Review Details</h3>
@@ -199,7 +199,7 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
             <div className="space-y-4">
               {/* Rating */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">
                   Rating *
                 </label>
                 <div className="flex items-center gap-2">
@@ -214,12 +214,12 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
                         className={`w-8 h-8 ${
                           i < (formData.rating ?? 0)
                             ? 'text-yellow-400 fill-yellow-400'
-                            : 'text-gray-600 hover:text-gray-400'
+                            : 'text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-secondary)]'
                         }`}
                       />
                     </button>
                   ))}
-                  <span className="ml-3 text-gray-300">
+                  <span className="ml-3 text-[var(--cyber-text-secondary)]">
                     {formData.rating ?? 0} star{(formData.rating ?? 0) !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -230,27 +230,27 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
 
               {/* Comment */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-2">
                   Review Comment *
                 </label>
                 <textarea
                   value={formData.comment || ''}
                   onChange={(e) => handleInputChange('comment', e.target.value)}
                   rows={4}
-                  className={`w-full px-4 py-3 bg-gray-700 border ${
-                    errors.comment ? 'border-red-500' : 'border-gray-600'
-                  } rounded-xl text-white placeholder-gray-400 focus:border-pink-400 focus:ring-1 focus:ring-pink-400 transition-all duration-200 resize-none`}
+                  className={`w-full px-4 py-3 bg-[var(--cyber-bg-card)] border ${
+                    errors.comment ? 'border-red-500' : 'border-[var(--cyber-border)]'
+                  } rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200 resize-none`}
                   placeholder="Enter detailed review comment..."
                 />
                 <div className="flex justify-between items-center mt-1">
                   {errors.comment ? (
                     <p className="text-red-400 text-sm">{errors.comment}</p>
                   ) : (
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-[var(--cyber-text-muted)] text-sm">
                       Minimum 10 characters required
                     </p>
                   )}
-                  <span className="text-gray-400 text-sm">
+                  <span className="text-[var(--cyber-text-muted)] text-sm">
                     {formData.comment?.length || 0} characters
                   </span>
                 </div>
@@ -259,18 +259,18 @@ export const ReviewFormModal: React.FC<ReviewFormModalProps> = ({
           </div>
 
           {/* Submit Actions */}
-          <div className="flex items-center gap-3 pt-4 border-t border-gray-700">
+          <div className="flex items-center gap-3 pt-4 border-t border-[var(--cyber-border)]">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition-all duration-200 font-medium"
+              className="flex-1 px-6 py-3 bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-xl hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-[var(--cyber-text-primary)] rounded-cyber-lg hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

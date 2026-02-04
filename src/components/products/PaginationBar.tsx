@@ -1,6 +1,6 @@
 /**
  * PaginationBar - Compact pagination component
- * Uses PinkNeonDesignSystem for consistent styling
+ * Uses CyberDesignSystem for consistent styling
  */
 
 import React from 'react';
@@ -42,7 +42,7 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
 
   const buttonBase = "w-10 h-10 flex items-center justify-center rounded-xl transition-colors";
   const buttonActive = "bg-pink-500 text-white";
-  const buttonInactive = "bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10";
+  const buttonInactive = "bg-white/5 border border-white/10 text-[var(--cyber-text-secondary)] hover:bg-white/10";
   const buttonDisabled = "opacity-50 cursor-not-allowed";
 
   return (
@@ -61,7 +61,7 @@ export const PaginationBar: React.FC<PaginationBarProps> = ({
       
       <div className="flex items-center gap-1">
         {buildPages().map((p, i) => p === '...' ? (
-          <span key={`dots-${i}`} className="px-2 text-gray-400">...</span>
+          <span key={`dots-${i}`} className="px-2 text-[var(--cyber-text-muted)]">...</span>
         ) : (
           <button
             key={p}

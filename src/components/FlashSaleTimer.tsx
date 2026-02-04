@@ -33,7 +33,7 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
   if (timeRemaining.isExpired) {
     if (variant === 'card') {
       return (
-        <div className={`w-full flex items-center justify-center gap-1.5 bg-gray-700 text-gray-300 rounded-xl py-1.5 text-[10px] font-bold tracking-wide ${className}`}>
+        <div className={`w-full flex items-center justify-center gap-1.5 bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] rounded-xl py-1.5 text-[10px] font-bold tracking-wide ${className}`}>
           <Clock className="w-3 h-3" />
           <span>Berakhir</span>
         </div>
@@ -41,8 +41,8 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
     }
     
     return (
-      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-black text-pink-500 text-xs font-semibold border border-pink-500/60 backdrop-blur-sm ${className}`}>
-        <Clock size={12} className="text-pink-500" />
+      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] text-xs font-semibold border border-pink-500/60 backdrop-blur-sm ${className}`}>
+        <Clock size={12} className="text-[var(--cyber-pink-primary)]" />
         <span>BERAKHIR</span>
       </div>
     );
@@ -93,9 +93,9 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
 
   if (compact) {
     return (
-      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-black text-pink-500 text-xs font-bold border border-pink-500/60 backdrop-blur-sm shadow-lg ${className}`}>
-        <Clock size={10} className="text-pink-500" />
-        <span className="text-pink-500">
+      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] text-xs font-bold border border-pink-500/60 backdrop-blur-sm shadow-lg ${className}`}>
+        <Clock size={10} className="text-[var(--cyber-pink-primary)]" />
+        <span className="text-[var(--cyber-pink-primary)]">
           {timeRemaining.days > 0 ? (
             `${timeRemaining.days}d ${timeRemaining.hours.toString().padStart(2, '0')}:${timeRemaining.minutes.toString().padStart(2, '0')}`
           ) : (
@@ -107,8 +107,8 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black text-pink-500 border border-pink-500/60 backdrop-blur-sm shadow-lg ${className}`}>
-      <Clock size={14} className="text-pink-500" />
+    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-cyber-lg bg-[var(--cyber-bg-pure)] text-[var(--cyber-pink-primary)] border border-pink-500/60 backdrop-blur-sm shadow-lg ${className}`}>
+      <Clock size={14} className="text-[var(--cyber-pink-primary)]" />
       <div className="flex items-center gap-1 text-sm font-bold">
         {timeRemaining.days > 0 && (
           <>

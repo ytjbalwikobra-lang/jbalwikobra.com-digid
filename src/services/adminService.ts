@@ -1,5 +1,4 @@
 import { adminCache } from './adminCache';
-import { ordersService } from './ordersService';
 import { dbRowToDomainProduct } from './mappers/productMapper';
 import { supabase } from './supabase';
 import { supabaseAdmin } from './supabaseAdmin';
@@ -321,31 +320,6 @@ export interface TopProductStat {
   revenue: number;
 }
 
-// Simple in-memory cache for admin data
-const adminDataCache = {
-  orders: null as { data: Order[]; count: number; timestamp: number } | null,
-  users: null as { data: User[]; count: number; timestamp: number } | null,
-  CACHE_DURATION: 60 * 1000, // 1 minute
-
-  isValid(cache: { timestamp: number } | null): boolean {
-    if (!cache) return false;
-    return Date.now() - cache.timestamp < this.CACHE_DURATION;
-  },
-
-  clearOrders() {
-    this.orders = null;
-  },
-
-  clearUsers() {
-    this.users = null;
-  },
-
-  clearAll() {
-    this.orders = null;
-    this.users = null;
-  }
-};
-
 // Note: AdminStats interface is defined earlier in this file (around line 137)
 // DO NOT duplicate - use the existing one
 
@@ -544,7 +518,7 @@ export const adminService = {
         // Calculate total revenue from paid and completed orders
         let totalRevenue = 0;
         if (ordersWithRevenue.data) {
-          totalRevenue = ordersWithRevenue.data.reduce((sum, order) => 
+          totalRevenue = ordersWithRevenue.data.reduce((sum: number, order: { amount?: number; status?: string }) => 
             sum + (Number(order.amount) || 0), 0);
         }
 
@@ -563,7 +537,7 @@ export const adminService = {
           
           totalReviews = reviewCount || 0;
           averageRating = reviewsWithRating.data?.length > 0
-            ? reviewsWithRating.data.reduce((sum, review) => sum + review.rating, 0) / reviewsWithRating.data.length
+            ? reviewsWithRating.data.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / reviewsWithRating.data.length
             : 0;
         } catch (reviewError) {
           // Silent fallback if reviews table missing - this is expected for new installations
@@ -1688,7 +1662,7 @@ export const adminService = {
             const productIds = Array.from(new Set(recentOrders.map((o: any) => o.product_id).filter(Boolean)));
             const productsMap = await fetchProductNames(productIds);
 
-            return recentOrders.map((order: any, index: number) => {
+            return recentOrders.map((order: any, _index: number) => {
               const productName = order.product_id ? productsMap[order.product_id] || 'Product Order' : 'Product Order';
               
               return {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Heart, Share2, Zap } from 'lucide-react';
-import { PNText } from '../../../components/ui/PinkNeonDesignSystem';
+import { PNText } from '../../../components/ui/CyberDesignSystem';
 
 type Props = {
   onBack: () => void;
@@ -13,11 +13,11 @@ const MOBILE = { HEADER_HEIGHT: 64, MIN_TOUCH: 48 } as const;
 
 export const FlashSaleHeader: React.FC<Props> = ({ onBack, onWishlistToggle, onShare, inWishlist }) => {
   return (
-    <div className="bg-app-dark border-b border-gray-800 sticky top-0 z-40">
+    <div className="bg-[var(--cyber-bg-pure)] border-b border-[var(--cyber-border)] sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 py-3" style={{ height: MOBILE.HEADER_HEIGHT }}>
         <button
           onClick={onBack}
-          className="p-3 hover:bg-gray-800 rounded-xl transition-colors active:scale-95"
+          className="p-3 hover:bg-[var(--cyber-bg-surface)] rounded-cyber-lg transition-colors active:scale-95"
           style={{ minHeight: MOBILE.MIN_TOUCH, minWidth: MOBILE.MIN_TOUCH }}
           aria-label="Kembali"
         >
@@ -32,19 +32,19 @@ export const FlashSaleHeader: React.FC<Props> = ({ onBack, onWishlistToggle, onS
         <div className="flex items-center gap-1">
           <button
             onClick={onWishlistToggle}
-            className="p-3 hover:bg-gray-800 rounded-xl transition-colors active:scale-95"
+            className="p-3 hover:bg-[var(--cyber-bg-surface)] rounded-cyber-lg transition-colors active:scale-95"
             style={{ minHeight: MOBILE.MIN_TOUCH, minWidth: MOBILE.MIN_TOUCH }}
             aria-label={inWishlist ? 'Hapus dari Wishlist' : 'Tambahkan ke Wishlist'}
           >
-            <Heart className={`w-6 h-6 ${inWishlist ? 'fill-pink-500 text-pink-500' : 'text-gray-400'}`} />
+            <Heart className={`w-6 h-6 ${inWishlist ? 'fill-pink-500 text-pink-500' : 'text-[var(--cyber-text-muted)]'}`} />
           </button>
           <button
             onClick={onShare}
-            className="p-3 hover:bg-gray-800 rounded-xl transition-colors active:scale-95"
+            className="p-3 hover:bg-[var(--cyber-bg-surface)] rounded-cyber-lg transition-colors active:scale-95"
             style={{ minHeight: MOBILE.MIN_TOUCH, minWidth: MOBILE.MIN_TOUCH }}
             aria-label="Bagikan"
           >
-            <Share2 className="w-6 h-6 text-gray-400" />
+            <Share2 className="w-6 h-6 text-[var(--cyber-text-muted)]" />
           </button>
         </div>
       </div>

@@ -32,7 +32,7 @@ export const BannerService = {
     }
   },
 
-  async remove(id: string, imageUrl?: string): Promise<boolean> {
+  async remove(id: string, _imageUrl?: string): Promise<boolean> {
     try {
       await adminService.deleteBanner(id);
       return true;

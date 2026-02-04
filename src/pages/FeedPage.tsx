@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MessageCircle, Users, Star } from 'lucide-react';
 import { FeedService, type FeedPost } from '../services/feedService';
 import { reviewService, type UserReview } from '../services/reviewService';
-import { PNSection, PNContainer } from '../components/ui/PinkNeonDesignSystem';
+import { PNSection, PNContainer } from '../components/ui/CyberDesignSystem';
 import { FeedCard } from '../components/FeedCard';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/TraditionalAuthContext';
@@ -12,45 +12,10 @@ import { FeedPagination } from '../components/feed/FeedPagination';
 import { FeedSkeleton, ErrorState, EmptyState, ImageLightbox } from '../components/feed/FeedStates';
 import { ReviewCard, ReviewData } from '../components/feed/ReviewCard';
 import { SEOHead, Breadcrumb } from '../components/seo';
-// Removed legacy standardClasses & cn helper – using a minimal local cls combiner
-const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 import { scrollToPaginationContent } from '../utils/scrollUtils';
-
-// Mobile-first constants following iOS design guidelines
-const MOBILE_CONSTANTS = {
-  // iOS/Android recommended touch target sizes
-  MIN_TOUCH_TARGET: 44, // 44dp/pt minimum touch target
-  CONTENT_PADDING: 16,   // Standard content padding
-  SECTION_SPACING: 24,   // Section spacing
-  CARD_SPACING: 12,      // Card spacing
-  
-  // Performance optimizations
-  ITEMS_PER_PAGE: 10,
-  CACHE_DURATION: 5 * 60 * 1000,
-  
-  // Animation timing following platform standards
-  ANIMATIONS: {
-    FAST: 200,    // Quick interactions
-    STANDARD: 300, // Standard transitions
-    SLOW: 500,    // Complex transitions
-  },
-  
-  // Safe area considerations
-  HEADER_HEIGHT_MOBILE: 0,     // Hide header on mobile
-  HEADER_HEIGHT_DESKTOP: 80,   // Standard header height on desktop
-  BOTTOM_NAV_HEIGHT: 80,       // Bottom navigation height
-} as const;
 
 // Tab filter type
 type FeedFilter = 'semua' | 'pengumuman' | 'review';
-
-function timeAgo(iso: string) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return `${Math.max(1, Math.floor(diff))} dtk`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} j`;
-  return `${Math.floor(diff / 86400)} h`;
-}
 
 export default function FeedPage() {
   const { user } = useAuth();
@@ -67,7 +32,7 @@ export default function FeedPage() {
   const [activeFilter, setActiveFilter] = useState<'semua' | 'pengumuman' | 'review'>('semua');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCounts, setTotalCounts] = useState({
+  const [_totalCounts, setTotalCounts] = useState({
     semua: 0,
     pengumuman: 0,
     review: 0
@@ -80,11 +45,11 @@ export default function FeedPage() {
   // Set body attribute for CSS targeting and mobile optimizations
   useEffect(() => {
     document.body.setAttribute('data-page', 'feed');
-    document.body.classList.add('feed-mobile-optimized', 'ios-scroll');
+    document.body.classList.add('feed-mobile-optimized', 'cyber-scroll');
     
     return () => {
       document.body.removeAttribute('data-page');
-      document.body.classList.remove('feed-mobile-optimized', 'ios-scroll');
+      document.body.classList.remove('feed-mobile-optimized', 'cyber-scroll');
     };
   }, []);
 
@@ -267,10 +232,10 @@ export default function FeedPage() {
 
           {/* Enhanced Login Notice for Guests */}
           {!user && (
-            <div className="bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/10 backdrop-blur-2xl rounded-3xl p-6 lg:p-8 border border-amber-500/20 shadow-2xl mb-8 lg:mb-12">
+            <div className="bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/10 backdrop-blur-2xl rounded-cyber-3xl p-6 lg:p-8 border border-amber-500/20 shadow-2xl mb-8 lg:mb-12">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 rounded-2xl flex items-center justify-center border border-amber-500/30">
+                  <div className="w-14 h-14 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 rounded-cyber-2xl flex items-center justify-center border border-amber-500/30">
                     <Users className="w-7 h-7 text-amber-400" />
                   </div>
                   <div>
@@ -280,7 +245,7 @@ export default function FeedPage() {
                 </div>
                 <button 
                   onClick={() => navigate('/auth')}
-                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 border-transparent text-white shadow-lg shadow-amber-500/30 px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 border-transparent text-white shadow-lg shadow-amber-500/30 px-6 py-3 rounded-cyber-lg font-medium transition-all duration-300"
                 >
                   Masuk
                 </button>
@@ -300,14 +265,14 @@ export default function FeedPage() {
         {!isLoading && (activeFilter === 'semua' || activeFilter === 'pengumuman') && feedPosts.length > 0 && (
           <div className="space-y-8 mb-12">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center border border-blue-500/30">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-cyber-2xl flex items-center justify-center border border-blue-500/30">
                 <MessageCircle className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <h2 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
                   {activeFilter === 'semua' ? 'Pengumuman Terbaru' : 'Pengumuman'}
                 </h2>
-                <p className="text-gray-400 text-sm lg:text-base mt-1">Informasi penting dari komunitas</p>
+                <p className="text-[var(--cyber-text-muted)] text-sm lg:text-base mt-1">Informasi penting dari komunitas</p>
               </div>
             </div>
             
@@ -340,14 +305,14 @@ export default function FeedPage() {
         {!isLoading && (activeFilter === 'semua' || activeFilter === 'review') && userReviews.length > 0 && (
           <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center border border-purple-500/30">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-cyber-2xl flex items-center justify-center border border-purple-500/30">
                 <Star className="w-6 h-6 text-purple-400" />
               </div>
               <div>
                 <h2 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent">
                   {activeFilter === 'semua' ? 'Review Pembelian' : 'Review Komunitas'}
                 </h2>
-                <p className="text-gray-400 text-sm lg:text-base mt-1">Pengalaman dan ulasan dari member</p>
+                <p className="text-[var(--cyber-text-muted)] text-sm lg:text-base mt-1">Pengalaman dan ulasan dari member</p>
               </div>
             </div>
             
@@ -400,7 +365,7 @@ export default function FeedPage() {
           <button 
             onClick={loadInitialData} 
             disabled={isLoading}
-            className="bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/20 hover:border-pink-500/40 text-white backdrop-blur-sm shadow-lg px-6 py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/20 hover:border-pink-500/40 text-white backdrop-blur-sm shadow-lg px-6 py-3 rounded-cyber-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <span className="inline-flex items-center gap-3">

@@ -30,7 +30,7 @@ const WhatsAppConfirmPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  const handleWhatsAppVerification = async (token: string) => {
+  const handleWhatsAppVerification = async (_token: string) => {
     try {
       // In a real implementation, you would verify the token with your backend
       // For now, we'll simulate a successful verification
@@ -57,7 +57,7 @@ const WhatsAppConfirmPage: React.FC = () => {
     }
   };
 
-  const handleGeneralConfirmation = async (token: string) => {
+  const handleGeneralConfirmation = async (_token: string) => {
     try {
       // Handle other types of confirmations
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -80,15 +80,15 @@ const WhatsAppConfirmPage: React.FC = () => {
 
   if (isLoading) {
     return (
-  <div className="min-h-screen bg-black flex items-center justify-center">
+  <div className="min-h-screen bg-[var(--cyber-bg-pure)] flex items-center justify-center">
         <div className="max-w-md w-full mx-auto p-6">
-          <div className="bg-black rounded-2xl border border-gray-700 p-6">
-            <div className="ios-skeleton h-6 w-40 mb-4 rounded"></div>
-            <div className="space-y-2 mb-4">
-              <div className="ios-skeleton h-4 w-full rounded"></div>
-              <div className="ios-skeleton h-4 w-5/6 rounded"></div>
+          <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-2xl border border-[var(--cyber-border)] p-6">
+            <div className="cyber-skeleton h-6 w-40 mb-4 rounded"></div>
+            <div className="space-y-2">
+              <div className="cyber-skeleton h-4 w-full rounded"></div>
+              <div className="cyber-skeleton h-4 w-5/6 rounded"></div>
             </div>
-            <div className="ios-skeleton h-10 w-full rounded-xl"></div>
+            <div className="cyber-skeleton h-10 w-full rounded-cyber-lg"></div>
           </div>
         </div>
       </div>
@@ -96,34 +96,34 @@ const WhatsAppConfirmPage: React.FC = () => {
   }
 
   return (
-  <div className="min-h-screen bg-black flex items-center justify-center">
+  <div className="min-h-screen bg-[var(--cyber-bg-pure)] flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6">
-        <div className="bg-black rounded-2xl border border-gray-700 p-6 text-center">
+        <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-2xl border border-[var(--cyber-border)] p-6 text-center">
           {isSuccess ? (
-            <div className="text-ios-success">
+            <div className="text-green-400">
               <svg className="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
           ) : (
-            <div className="text-ios-destructive">
+            <div className="text-red-400">
               <svg className="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
           )}
 
-          <h2 className={`text-xl font-semibold mb-4 ${isSuccess ? 'text-ios-success' : 'text-ios-destructive'}`}>
+          <h2 className={`text-xl font-semibold mb-4 ${isSuccess ? 'text-green-400' : 'text-red-400'}`}>
             {isSuccess ? 'Success!' : 'Error'}
           </h2>
 
-          <p className="text-white/70 mb-6">
+          <p className="text-[var(--cyber-text-secondary)] mb-6">
             {message}
           </p>
 
           <button
             onClick={() => navigate('/')}
-            className="w-full bg-pink-500 text-white py-3 px-4 rounded-xl border border-transparent hover:opacity-90 transition-colors"
+            className="w-full bg-[var(--cyber-pink-primary)] text-white py-3 px-4 rounded-cyber-lg border border-transparent hover:opacity-90 transition-colors"
           >
             Return to Home
           </button>

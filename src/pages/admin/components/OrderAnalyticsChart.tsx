@@ -20,7 +20,7 @@ interface OrderAnalyticsChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-gray-900/95 border border-gray-700 rounded-xl p-4 shadow-xl backdrop-blur-sm">
+      <div className="bg-[var(--cyber-bg-surface)]/95 border border-[var(--cyber-border)] rounded-cyber-lg p-4 shadow-xl backdrop-blur-sm">
         <p className="text-white font-medium mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center space-x-2 text-sm">
@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               className="w-3 h-3 rounded-full" 
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-gray-300">{entry.name}:</span>
+            <span className="text-[var(--cyber-text-secondary)]">{entry.name}:</span>
             <span className="text-white font-medium">
               {entry.dataKey === 'revenue' 
                 ? formatCurrency(entry.value || 0)
@@ -175,31 +175,31 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
 
   if (loading || isLoading) {
     return (
-      <div className="bg-black border border-gray-800 rounded-2xl p-6">
+      <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-800 rounded w-48 mb-4" />
-          <div className="h-64 bg-gray-800 rounded" />
+          <div className="h-6 bg-[var(--cyber-bg-elevated)] rounded w-48 mb-4" />
+          <div className="h-64 bg-[var(--cyber-bg-elevated)] rounded" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-black border border-gray-800 rounded-2xl p-6">
+    <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <div className="p-2 bg-pink-500/10 rounded-xl">
+          <div className="p-2 bg-pink-500/10 rounded-cyber-lg">
             <TrendingUp className="w-5 h-5 text-pink-500" />
           </div>
           <h3 className="text-lg font-semibold text-white">Order Analytics</h3>
         </div>
         
         <div className="flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-gray-400" />
+          <Calendar className="w-4 h-4 text-[var(--cyber-text-muted)]" />
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d')}
-            className="bg-gray-800 border border-gray-700 rounded-xl px-3 py-1 text-sm text-white focus:border-pink-500 focus:outline-none"
+            className="bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] rounded-cyber-lg px-3 py-1 text-sm text-white focus:border-pink-500 focus:outline-none"
           >
             {timeRangeOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -272,24 +272,24 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-800" role="group" aria-label="Order summary statistics">
+      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--cyber-border)]" role="group" aria-label="Order summary statistics">
         <div className="text-center">
           <p className="text-lg font-semibold text-white">
             {formatAnalyticsValue(chartData.reduce((sum, day) => sum + day.totalOrders, 0))}
           </p>
-          <p className="text-xs text-gray-400">Total Orders</p>
+          <p className="text-xs text-[var(--cyber-text-muted)]">Total Orders</p>
         </div>
         <div className="text-center">
           <p className="text-lg font-semibold text-green-400">
             {formatAnalyticsValue(chartData.reduce((sum, day) => sum + day.paidOrders, 0))}
           </p>
-          <p className="text-xs text-gray-400">Paid Orders</p>
+          <p className="text-xs text-[var(--cyber-text-muted)]">Paid Orders</p>
         </div>
         <div className="text-center">
           <p className="text-lg font-semibold text-pink-500">
             {formatCurrency(actualTotalRevenue)}
           </p>
-          <p className="text-xs text-gray-400">Total Revenue</p>
+          <p className="text-xs text-[var(--cyber-text-muted)]">Total Revenue</p>
         </div>
       </div>
     </div>

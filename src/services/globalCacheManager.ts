@@ -84,7 +84,6 @@ class GlobalCacheManager {
     const {
       ttl = 5 * 60 * 1000, // 5 minutes default
       tags = [],
-      priority = 'normal',
       syncAcrossTabs = false
     } = options;
 

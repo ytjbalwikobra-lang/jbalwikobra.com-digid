@@ -67,7 +67,7 @@ export function useAdminOrders({
 export function useAdminUsers({ 
   page = 1, 
   limit = 10, 
-  filters = {} 
+  filters: _filters = {} 
 }: UsePaginatedDataOptions = {}): PaginatedDataResult<User> {
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ export function useAdminUsers({
 export function useAdminProducts({ 
   page = 1, 
   limit = 10, 
-  filters = {} 
+  filters: _filters = {} 
 }: UsePaginatedDataOptions = {}): PaginatedDataResult<Product> {
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

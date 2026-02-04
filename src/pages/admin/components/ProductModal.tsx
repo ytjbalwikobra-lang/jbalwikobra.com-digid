@@ -41,12 +41,6 @@ interface FormData {
   }>;
 }
 
-interface DropdownData {
-  categories: Array<{ id: string; name: string }>;
-  gameTitles: Array<{ id: string; name: string }>;
-  tiers: Array<{ id: string; name: string }>;
-}
-
 const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
   onClose,
@@ -57,7 +51,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
   const [loading, setLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
   
   // Track original images for cleanup on save
   const [originalImages, setOriginalImages] = useState<string[]>([]);
@@ -412,7 +405,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   disabled={isReadOnly}
                 />
                 {isReadOnly && (
-                  <p className="text-sm text-gray-400 mt-1">{formatCurrency(formData.price)}</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)] mt-1">{formatCurrency(formData.price)}</p>
                 )}
               </div>
 
@@ -431,7 +424,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   disabled={isReadOnly}
                 />
                 {isReadOnly && formData.original_price && (
-                  <p className="text-sm text-gray-400 mt-1">{formatCurrency(formData.original_price)}</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)] mt-1">{formatCurrency(formData.original_price)}</p>
                 )}
               </div>
 
@@ -492,7 +485,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               {/* Rental Options */}
               <div className="md:col-span-2">
                 <div className="flex items-center justify-between mb-4">
-                  <label htmlFor="has_rental" className="text-sm font-medium text-gray-300">
+                  <label htmlFor="has_rental" className="text-sm font-medium text-[var(--cyber-text-secondary)]">
                     Enable Rental Options
                   </label>
                   {/* Modern Toggle Switch */}
@@ -500,10 +493,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type="button"
                     onClick={() => !isReadOnly && setFormData(prev => ({ ...prev, has_rental: !prev.has_rental }))}
                     disabled={isReadOnly}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] focus:ring-offset-2 focus:ring-offset-[var(--cyber-bg-surface)] ${
                       formData.has_rental 
-                        ? 'bg-pink-500' 
-                        : 'bg-gray-600'
+                        ? 'bg-[var(--cyber-pink-primary)]' 
+                        : 'bg-[var(--cyber-border)]'
                     } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-opacity-80'}`}
                   >
                     <span
@@ -515,9 +508,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
 
                 {formData.has_rental && (
-                  <div className="space-y-4 p-4 bg-gray-800 rounded-xl border border-gray-700">
+                  <div className="space-y-4 p-4 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg border border-[var(--cyber-border)]">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-gray-300">Rental Options</h4>
+                      <h4 className="text-sm font-medium text-[var(--cyber-text-secondary)]">Rental Options</h4>
                       {!isReadOnly && (
                         <button
                           type="button"
@@ -536,7 +529,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     </div>
 
                     {formData.rental_options.length === 0 ? (
-                      <p className="text-gray-400 text-sm">No rental options configured</p>
+                      <p className="text-[var(--cyber-text-muted)] text-sm">No rental options configured</p>
                     ) : (
                       <div className="space-y-3">
                         {formData.rental_options.map((option, index) => (
@@ -551,7 +544,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                   setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                 }}
                                 placeholder="Duration (e.g., 1 day, 1 week)"
-                                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-pink-500"
+                                className="w-full px-2 py-1 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
                                 disabled={isReadOnly}
                               />
                             </div>
@@ -566,7 +559,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                   setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                 }}
                                 placeholder="Rp 0"
-                                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-pink-500"
+                                className="w-full px-2 py-1 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded text-[var(--cyber-text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
                                 disabled={isReadOnly}
                               />
                             </div>
@@ -580,7 +573,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                   setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                 }}
                                 placeholder="Description (optional)"
-                                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-pink-500"
+                                className="w-full px-2 py-1 bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] rounded text-[var(--cyber-text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
                                 disabled={isReadOnly}
                               />
                             </div>
@@ -620,7 +613,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   gridCols={5}
                   label={`Product Images ${isReadOnly && formData.images.length > 0 ? `(${formData.images.length})` : ''}`}
                   helpText="Upload up to 15 images. First image is primary. Drag to reorder."
-                  onUploadingChange={setImageUploading}
                   disabled={loading}
                 />
               </div>
@@ -632,10 +624,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                    className="w-4 h-4 text-pink-500 bg-gray-800 border-gray-700 rounded focus:ring-pink-500 focus:ring-2"
+                    className="w-4 h-4 text-[var(--cyber-accent)] bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] rounded focus:ring-[var(--cyber-accent)] focus:ring-2"
                     disabled={isReadOnly}
                   />
-                  <span className="text-sm font-medium text-gray-300">Active Product</span>
+                  <span className="text-sm font-medium text-[var(--cyber-text-muted)]">Active Product</span>
                 </label>
               </div>
             </div>

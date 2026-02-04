@@ -61,14 +61,14 @@ const HorizontalScroller: React.FC<HorizontalScrollerProps> = ({
           <button
             aria-label="Scroll left"
             onClick={() => handleScroll('prev')}
-            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-black/70 border border-gray-800 text-white hover:bg-gray-900/20 backdrop-blur shadow-md"
+            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-black/70 border border-[var(--cyber-border)] text-white hover:bg-[var(--cyber-bg-pure)]/20 backdrop-blur shadow-md"
           >
             ‹
           </button>
           <button
             aria-label="Scroll right"
             onClick={() => handleScroll('next')}
-            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-black/70 border border-gray-800 text-white hover:bg-gray-900/20 backdrop-blur shadow-md"
+            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 items-center justify-center rounded-full bg-black/70 border border-[var(--cyber-border)] text-white hover:bg-[var(--cyber-bg-pure)]/20 backdrop-blur shadow-md"
           >
             ›
           </button>

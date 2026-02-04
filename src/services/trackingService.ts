@@ -54,11 +54,9 @@ declare global {
 }
 
 class TrackingService {
-  private isInitialized = false;
   private isDevelopment = process.env.NODE_ENV === 'development';
   private GTM_ID = process.env.REACT_APP_GTM_CONTAINER_ID;
   private GA4_ID = process.env.REACT_APP_GA4_MEASUREMENT_ID;
-  private GOOGLE_ADS_ID = process.env.REACT_APP_GOOGLE_ADS_ID;
   private debugMode = process.env.REACT_APP_GA4_DEBUG === 'true';
 
   constructor() {
@@ -82,7 +80,6 @@ class TrackingService {
       });
     }
 
-    this.isInitialized = true;
     this.log('Tracking service initialized');
   }
 
@@ -107,7 +104,7 @@ class TrackingService {
   /**
    * Enhanced logging for development
    */
-  private log(message: string, data?: any) {
+  private log(_message: string, _data?: any) {
     if (this.isDevelopment) {
     }
   }

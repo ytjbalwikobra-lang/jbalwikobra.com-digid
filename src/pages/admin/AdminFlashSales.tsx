@@ -191,8 +191,8 @@ const AdminFlashSales: React.FC = () => {
       label: 'Berakhir',
       value: stats.expired,
       icon: TrendingUp,
-      iconColor: 'text-gray-400',
-      iconBgColor: 'bg-gray-500/10',
+      iconColor: 'text-[var(--cyber-text-muted)]',
+      iconBgColor: 'bg-[var(--cyber-bg-elevated)]/10',
       format: 'number'
     }
   ], [stats]);
@@ -233,19 +233,19 @@ const AdminFlashSales: React.FC = () => {
       <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
 
       {/* Table */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-800/50 border-b border-gray-700">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Produk</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Harga</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Periode</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Aksi</th>
+              <tr className="bg-[var(--cyber-bg-surface)]/50 border-b border-[var(--cyber-border)]">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Produk</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Harga</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Periode</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-[var(--cyber-border)]">
               {loading ? (
                 <AdminLoadingState variant="skeleton-table" rows={5} columns={5} />
               ) : flashSales.length === 0 ? (
@@ -269,7 +269,7 @@ const AdminFlashSales: React.FC = () => {
                     : 0;
 
                   return (
-                    <tr key={sale.id} className="hover:bg-gray-800/30 transition-colors">
+                    <tr key={sale.id} className="hover:bg-[var(--cyber-bg-surface)]/30 transition-colors">
                       {/* Product */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -277,18 +277,18 @@ const AdminFlashSales: React.FC = () => {
                             <img 
                               src={sale.products.image} 
                               alt={sale.products?.name} 
-                              className="w-10 h-10 rounded-xl object-cover" 
+                              className="w-10 h-10 rounded-cyber-lg object-cover" 
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center">
-                              <Package className="w-5 h-5 text-gray-400" />
+                            <div className="w-10 h-10 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg flex items-center justify-center">
+                              <Package className="w-5 h-5 text-[var(--cyber-text-muted)]" />
                             </div>
                           )}
                           <div>
                             <p className="font-medium text-white">
                               {sale.products?.name || 'Unknown Product'}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-[var(--cyber-text-muted)]">
                               ID: {sale.product_id.slice(0, 8)}...
                             </p>
                           </div>
@@ -298,14 +298,14 @@ const AdminFlashSales: React.FC = () => {
                       {/* Price */}
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-bold text-pink-500">
+                          <p className="font-bold text-[var(--cyber-pink-primary)]">
                             {formatCurrency(sale.sale_price)}
                           </p>
-                          <p className="text-sm text-gray-400 line-through">
+                          <p className="text-sm text-[var(--cyber-text-muted)] line-through">
                             {formatCurrency(sale.original_price)}
                           </p>
                           {discount > 0 && (
-                            <span className="inline-block mt-1 px-2 py-0.5 bg-pink-500/20 text-pink-500 text-xs font-semibold rounded-xl">
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-[var(--cyber-pink-primary)]/20 text-[var(--cyber-pink-primary)] text-xs font-semibold rounded-cyber-lg">
                               -{discount}%
                             </span>
                           )}
@@ -315,15 +315,15 @@ const AdminFlashSales: React.FC = () => {
                       {/* Period */}
                       <td className="px-4 py-3">
                         <div className="text-sm space-y-1">
-                          <p className="text-gray-300">
-                            <span className="text-gray-400">Mulai:</span>{' '}
+                          <p className="text-[var(--cyber-text-muted)]">
+                            <span className="text-[var(--cyber-text-muted)]">Mulai:</span>{' '}
                             {new Date(sale.start_time).toLocaleString('id-ID', { 
                               dateStyle: 'short', 
                               timeStyle: 'short' 
                             })}
                           </p>
-                          <p className="text-gray-300">
-                            <span className="text-gray-400">Selesai:</span>{' '}
+                          <p className="text-[var(--cyber-text-muted)]">
+                            <span className="text-[var(--cyber-text-muted)]">Selesai:</span>{' '}
                             {new Date(sale.end_time).toLocaleString('id-ID', { 
                               dateStyle: 'short', 
                               timeStyle: 'short' 
@@ -345,13 +345,13 @@ const AdminFlashSales: React.FC = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(sale)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                            className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(sale)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+                            className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
                           >
                             Hapus
                           </button>

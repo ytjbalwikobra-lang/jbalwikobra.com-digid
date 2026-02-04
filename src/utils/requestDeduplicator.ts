@@ -1,11 +1,6 @@
 // Simple in-flight request deduplication utility
 // Prevents multiple concurrent identical API calls
 
-type PromiseResolver<T> = {
-  resolve: (value: T) => void;
-  reject: (error: any) => void;
-};
-
 export class RequestDeduplicator {
   private static instance: RequestDeduplicator;
   private inflightRequests = new Map<string, Promise<any>>();

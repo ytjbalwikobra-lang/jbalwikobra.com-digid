@@ -39,7 +39,6 @@ const formatPrice = (amount: number): string => {
 
 const PurchaseNotificationTicker: React.FC = () => {
   const [purchases, setPurchases] = useState<RecentPurchase[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayIndex, setDisplayIndex] = useState(0);
@@ -84,7 +83,6 @@ const PurchaseNotificationTicker: React.FC = () => {
       
       // After exit animation completes, update index and start enter animation
       transitionTimeoutRef.current = setTimeout(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % purchases.length);
         setDisplayIndex((prevIndex) => (prevIndex + 1) % purchases.length);
         setIsTransitioning(false);
       }, 400); // Match this with CSS transition duration

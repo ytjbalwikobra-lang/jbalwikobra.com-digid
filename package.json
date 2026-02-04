@@ -48,12 +48,13 @@
     "serve": "^14.2.4",
     "supabase": "^2.70.5",
     "tailwindcss": "^3.4.17",
+    "typescript-eslint": "^8.54.0",
     "vercel": "^48.1.6",
     "webpack-bundle-analyzer": "^4.10.2"
   },
   "scripts": {
     "start": "react-scripts start",
-    "dev": "react-scripts start",
+    "dev": "cross-env REACT_APP_ENV=production react-scripts start",
     "dev:vercel": "vercel dev",
     "dev:prod-like": "cross-env NODE_ENV=production REACT_APP_ENV=development vercel dev",
     "dev:docker": "docker-compose up",

@@ -59,30 +59,7 @@ export class ProductionMonitor {
     // this.validateApiEndpoints();
   }
 
-  private async validateApiEndpoints(): Promise<void> {
-    // Note: Analytics endpoints were consolidated into admin dashboard
-    // Auth endpoints require authentication and should not be tested with OPTIONS
-    const endpoints: string[] = [
-      // No public endpoints to validate currently
-    ];
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, { 
-          method: 'OPTIONS',
-          signal: AbortSignal.timeout(3000) // 3 second timeout
-        });
-        
-        if (!response.ok && response.status !== 405) { // 405 is acceptable for OPTIONS
-          console.warn(`⚠️ API endpoint issue: ${endpoint} returned ${response.status}`);
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(`📍 API endpoint unavailable: ${endpoint}`);
-        }
-      }
-    }
-  }
+  // Note: validateApiEndpoints method removed - API validation handled elsewhere
 
   private logError(type: string, message: string): void {
     const error = {

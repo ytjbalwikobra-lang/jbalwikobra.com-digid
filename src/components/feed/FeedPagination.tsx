@@ -1,6 +1,5 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
-import { PNButton } from '../ui/PinkNeonDesignSystem';
 
 interface PaginationProps {
   currentPage: number;
@@ -8,8 +7,6 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   loading?: boolean;
 }
-
-const MIN_TOUCH = 48; // Increased for better touch targets
 
 export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange, loading }) => {
   if (totalPages <= 1) return null;
@@ -52,7 +49,7 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
             className={`
               rounded-xl transition-all duration-300 group min-h-[48px] min-w-[48px] flex items-center justify-center
               ${currentPage === 1 || loading 
-                ? 'bg-gray-600/20 text-gray-400 cursor-not-allowed border border-gray-600/20' 
+                ? 'bg-gray-600/20 text-[var(--cyber-text-muted)] cursor-not-allowed border border-gray-600/20' 
                 : 'bg-pink-500/10 hover:bg-pink-500/20 text-white border border-pink-500/30 hover:border-pink-500/50 hover:scale-105'
               }
             `}
@@ -100,7 +97,7 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
             className={`
               rounded-xl transition-all duration-300 group min-h-[48px] min-w-[48px] flex items-center justify-center
               ${currentPage === totalPages || loading 
-                ? 'bg-gray-600/20 text-gray-400 cursor-not-allowed border border-gray-600/20' 
+                ? 'bg-gray-600/20 text-[var(--cyber-text-muted)] cursor-not-allowed border border-gray-600/20' 
                 : 'bg-pink-500/10 hover:bg-pink-500/20 text-white border border-pink-500/30 hover:border-pink-500/50 hover:scale-105'
               }
             `}
@@ -111,7 +108,7 @@ export const FeedPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
         </div>
         
         {/* Page info */}
-        <div className="text-center mt-3 text-sm text-gray-400">
+        <div className="text-center mt-3 text-sm text-[var(--cyber-text-muted)]">
           Halaman <span className="text-white font-semibold">{currentPage}</span> dari <span className="text-white font-semibold">{totalPages}</span>
         </div>
       </div>

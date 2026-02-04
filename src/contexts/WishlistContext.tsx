@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './TraditionalAuthContext';
-import trackingService from '../services/trackingService';
 
 interface WishlistItem {
   id: string;

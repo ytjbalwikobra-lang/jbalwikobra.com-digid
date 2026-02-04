@@ -24,8 +24,6 @@ import {
   getOrderTypeLabel,
   isCompletedNotification,
   getStatusBadge,
-  getPanelTitle,
-  getPanelCopy,
   getStatusLabel
 } from '../utils/notificationUtils';
 import { cn } from '../../../utils/cn';
@@ -249,7 +247,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           // Mobile: Full screen drawer from right
           'right-0 top-0 bottom-0 w-full max-w-[420px]',
           // Desktop: Dropdown positioned below bell
-          'lg:right-0 lg:top-14 lg:bottom-auto lg:w-[400px] lg:max-h-[85vh] lg:rounded-2xl'
+          'lg:right-0 lg:top-14 lg:bottom-auto lg:w-[400px] lg:max-h-[85vh] lg:rounded-cyber-2xl'
         )}
         style={{
           background: `linear-gradient(135deg, ${AdminColors.primary.light} 0%, rgba(30, 41, 59, 0.98) 100%)`,
@@ -267,14 +265,14 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           <div className="flex items-center gap-3">
             {/* Animated Bell Icon */}
             <div 
-              className="relative p-2 rounded-xl"
+              className="relative p-2 rounded-cyber-lg"
               style={{ background: `linear-gradient(135deg, ${AdminColors.accent.DEFAULT}20, ${AdminColors.accent.dark}10)` }}
             >
               <Bell size={22} style={{ color: AdminColors.accent.DEFAULT }} aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--cyber-pink-primary)] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--cyber-pink-primary)]"></span>
                 </span>
               )}
             </div>
@@ -308,7 +306,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="p-2 rounded-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+            className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
             style={{ 
               background: AdminColors.primary.lighter,
               color: AdminColors.text.secondary
@@ -348,7 +346,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             className={cn(
               'flex-1 px-4 py-3.5 text-sm font-medium transition-all duration-200',
               'focus:outline-none focus:bg-white/5',
-              filter === 'all' ? 'text-pink-500' : ''
+              filter === 'all' ? 'text-[var(--cyber-pink-primary)]' : ''
             )}
             style={{ color: filter === 'all' ? AdminColors.accent.DEFAULT : AdminColors.text.tertiary }}
           >
@@ -425,7 +423,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <button
               onClick={handleMarkAllAsRead}
               aria-label={`Tandai semua ${unreadCount} notifikasi sebagai sudah dibaca`}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-cyber-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
               style={{ 
                 background: `linear-gradient(135deg, ${AdminColors.accent.DEFAULT}20, ${AdminColors.accent.dark}10)`,
                 color: AdminColors.accent.DEFAULT,
@@ -459,7 +457,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             /* Error State with Retry */
             <div className="flex flex-col items-center justify-center p-8 text-center" role="alert">
               <div 
-                className="p-4 rounded-2xl mb-4"
+                className="p-4 rounded-cyber-2xl mb-4"
                 style={{ background: `${AdminColors.error.DEFAULT}15` }}
               >
                 <AlertCircle size={40} style={{ color: AdminColors.error.DEFAULT }} aria-hidden="true" />
@@ -467,7 +465,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
               <p className="text-sm mb-4" style={{ color: AdminColors.text.secondary }}>{loadError}</p>
               <button
                 onClick={loadNotifications}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-cyber-lg text-sm font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                 style={{ 
                   background: `linear-gradient(135deg, ${AdminColors.accent.DEFAULT}, ${AdminColors.accent.dark})`,
                   color: 'white',
@@ -483,7 +481,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             /* Empty State */
             <div className="flex flex-col items-center justify-center p-10 text-center" role="status">
               <div 
-                className="p-5 rounded-2xl mb-4"
+                className="p-5 rounded-cyber-2xl mb-4"
                 style={{ background: `${AdminColors.accent.DEFAULT}10` }}
               >
                 <Bell size={40} style={{ color: AdminColors.text.tertiary }} aria-hidden="true" />
@@ -544,7 +542,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                   <div className="flex gap-3.5">
                     {/* Icon */}
                     <div 
-                      className="flex-shrink-0 p-2.5 rounded-xl"
+                      className="flex-shrink-0 p-2.5 rounded-cyber-lg"
                       style={{ 
                         background: `${AdminColors.primary.lighter}`,
                         border: `1px solid ${AdminColors.border.DEFAULT}`
@@ -665,7 +663,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                                 e.stopPropagation();
                                 handleMarkAsRead(notification.id);
                               }}
-                              className="p-2 rounded-xl transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                              className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
                               style={{ 
                                 background: `${AdminColors.success.DEFAULT}15`,
                                 color: AdminColors.success.DEFAULT
@@ -680,7 +678,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
                               e.stopPropagation();
                               handleDelete(notification.id);
                             }}
-                            className="p-2 rounded-xl transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                            className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                             style={{ 
                               background: `${AdminColors.error.DEFAULT}15`,
                               color: AdminColors.error.DEFAULT
@@ -712,7 +710,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-cyber-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
               style={{ 
                 background: currentPage === 1 ? AdminColors.primary.lighter : `${AdminColors.accent.DEFAULT}20`,
                 color: currentPage === 1 ? AdminColors.text.tertiary : AdminColors.accent.DEFAULT,
@@ -739,7 +737,7 @@ export const AdminNotificationPanel: React.FC<AdminNotificationPanelProps> = ({
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-cyber-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
               style={{ 
                 background: currentPage === totalPages ? AdminColors.primary.lighter : `${AdminColors.accent.DEFAULT}20`,
                 color: currentPage === totalPages ? AdminColors.text.tertiary : AdminColors.accent.DEFAULT,

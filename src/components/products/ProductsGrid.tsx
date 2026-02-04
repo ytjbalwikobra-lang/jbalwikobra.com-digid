@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
 import { PNProductCard } from '../catalog';
-import { PNButton } from '../ui/PinkNeonDesignSystem';
+import { PNButton } from '../ui/CyberDesignSystem';
 import { formatCurrency } from '../../utils/helpers';
 import { EmptyState } from './EmptyState';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
@@ -60,7 +60,7 @@ export const ProductsGrid = React.memo(({
 
   return (
     <section className="py-4">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {Array.from({ length: skeletonCount }).map((_, i) => (

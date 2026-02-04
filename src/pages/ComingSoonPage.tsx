@@ -9,11 +9,11 @@ import {
   Calendar,
   Bell
 } from 'lucide-react';
-import { IOSButton } from '../components/ios/IOSDesignSystem';
+import { PNButton } from '../components/ui/CyberDesignSystem';
 
 const ComingSoonPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] flex items-center justify-center relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 rounded-full blur-3xl animate-pulse" />
@@ -65,7 +65,7 @@ const ComingSoonPage: React.FC = () => {
           <p className="text-xl lg:text-2xl text-white/70 mb-8 max-w-2xl mx-auto leading-relaxed">
             Halaman yang Anda cari sedang dalam tahap pengembangan. 
             <br className="hidden sm:block" />
-            <span className="text-pink-300">Silahkan kembali lagi nanti!</span>
+            <span className="text-[var(--cyber-pink-secondary)]">Silahkan kembali lagi nanti!</span>
           </p>
         </div>
 
@@ -94,21 +94,21 @@ const ComingSoonPage: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
           <Link to="/">
-            <IOSButton 
+            <PNButton 
               variant="primary"
-              size="large"
+              size="lg"
               className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 shadow-lg shadow-pink-500/30"
             >
               <div className="flex items-center gap-3">
                 <Home className="w-5 h-5" />
                 <span>Kembali ke Beranda</span>
               </div>
-            </IOSButton>
+            </PNButton>
           </Link>
           
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-3 px-6 py-3 interactive-card backdrop-blur-sm rounded-xl text-white hover:text-pink-300 transition-all duration-300"
+            className="flex items-center gap-3 px-6 py-3 interactive-card backdrop-blur-sm rounded-cyber-lg text-white hover:text-[var(--cyber-pink-secondary)] transition-all duration-300"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Halaman Sebelumnya</span>
@@ -116,9 +116,9 @@ const ComingSoonPage: React.FC = () => {
         </div>
 
         {/* Estimated Timeline */}
-        <div className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-md mx-auto">
+        <div className="bg-[var(--cyber-bg-card)]/20 backdrop-blur-xl border border-white/10 rounded-cyber-2xl p-6 max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-4">
-            <Calendar className="w-5 h-5 text-pink-500" />
+            <Calendar className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
             <h3 className="text-white font-semibold">Estimasi Peluncuran</h3>
           </div>
           <p className="text-white/70 text-sm mb-3">
@@ -126,16 +126,16 @@ const ComingSoonPage: React.FC = () => {
             Ikuti media sosial kami untuk update terbaru!
           </p>
           <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce delay-100" />
-            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce delay-200" />
+            <div className="w-2 h-2 bg-[var(--cyber-pink-primary)] rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-[var(--cyber-pink-primary)] rounded-full animate-bounce delay-100" />
+            <div className="w-2 h-2 bg-[var(--cyber-pink-primary)] rounded-full animate-bounce delay-200" />
           </div>
         </div>
 
         {/* Footer Note */}
         <p className="text-white/50 text-sm mt-8">
           Jika Anda mengalami masalah atau memiliki pertanyaan, 
-          <Link to="/help" className="text-pink-500 hover:text-pink-400 ml-1 underline">
+          <Link to="/help" className="text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] ml-1 underline">
             hubungi tim support kami
           </Link>
         </p>
@@ -154,15 +154,15 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, description, color }) => (
   <div className="group relative">
-    <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300" 
+    <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-10 rounded-cyber-2xl transition-opacity duration-300" 
          style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }} />
     
-  <div className="relative p-6 interactive-card backdrop-blur-sm rounded-2xl transition-all duration-300 group-hover:scale-[1.01]">
-      <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${color} mb-4 shadow-lg`}>
+  <div className="relative p-6 interactive-card backdrop-blur-sm rounded-cyber-2xl transition-all duration-300 group-hover:scale-[1.01]">
+      <div className={`inline-flex p-3 rounded-cyber-lg bg-gradient-to-br ${color} mb-4 shadow-lg`}>
         <Icon className="w-6 h-6 text-white" />
       </div>
       
-      <h3 className="text-white font-semibold mb-2 group-hover:text-pink-300 transition-colors">
+      <h3 className="text-white font-semibold mb-2 group-hover:text-[var(--cyber-pink-secondary)] transition-colors">
         {title}
       </h3>
       

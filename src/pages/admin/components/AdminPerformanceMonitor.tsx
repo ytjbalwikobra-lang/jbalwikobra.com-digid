@@ -14,7 +14,7 @@ import { adminClient } from '../../../services/unifiedAdminClient';
 import { adminCache } from '../../../services/adminCache';
 import { prefetchManager } from '../../../services/intelligentPrefetch';
 import { DataPanel } from '../layout/DashboardPrimitives';
-import { Activity, Database, Clock, TrendingDown, TrendingUp, Server } from 'lucide-react';
+import { Activity, Database, TrendingDown, TrendingUp, Server } from 'lucide-react';
 
 interface PerformanceMetrics {
   apiCalls: number;
@@ -152,15 +152,15 @@ export const AdminPerformanceMonitor: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 right-4 w-96 z-50">
-      <DataPanel className="bg-black/95 backdrop-blur-md text-white border border-gray-700 rounded-2xl shadow-xl">
+      <DataPanel className="bg-black/95 backdrop-blur-md text-white border border-[var(--cyber-border)] rounded-cyber-2xl shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">
-            <span className="text-white font-semibold">Performance Monitor</span>
-            <span className="text-xs text-gray-400">API & Cache Metrics</span>
+            <span className="text-[var(--cyber-text-primary)] font-semibold">Performance Monitor</span>
+            <span className="text-xs text-[var(--cyber-text-muted)]">API & Cache Metrics</span>
           </div>
           <button
             onClick={() => setExpanded(false)}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] transition-colors"
           >
             ×
           </button>
@@ -169,32 +169,32 @@ export const AdminPerformanceMonitor: React.FC = () => {
         <div className="space-y-4 text-sm">
           {/* API Metrics */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-xl p-3">
+            <div className="bg-white/5 rounded-cyber-lg p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Server className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300">API Calls</span>
+                <span className="text-[var(--cyber-text-muted)]">API Calls</span>
               </div>
               <span className="text-xl font-semibold text-blue-400">{metrics.apiCalls}</span>
             </div>
 
-            <div className="bg-white/5 rounded-xl p-3">
+            <div className="bg-white/5 rounded-cyber-lg p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Database className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Cache Hits</span>
+                <span className="text-[var(--cyber-text-muted)]">Cache Hits</span>
               </div>
               <span className="text-xl font-semibold text-green-400">{metrics.cacheHits}</span>
             </div>
           </div>
 
           {/* Cache Hit Rate */}
-          <div className="bg-white/5 rounded-xl p-3">
+          <div className="bg-white/5 rounded-cyber-lg p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-300">Cache Hit Rate</span>
+              <span className="text-[var(--cyber-text-muted)]">Cache Hit Rate</span>
               <span className={`font-semibold ${getHitRateColor(cacheMetrics.hitRate)}`}>
                 {cacheMetrics.hitRate.toFixed(1)}%
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-[var(--cyber-bg-elevated)] rounded-full h-2">
               <div 
                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${cacheMetrics.hitRate}%` }}
@@ -204,20 +204,20 @@ export const AdminPerformanceMonitor: React.FC = () => {
 
           {/* Data Transfer */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-xl p-3">
+            <div className="bg-white/5 rounded-cyber-lg p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingDown className="w-4 h-4 text-purple-400" />
-                <span className="text-gray-300">Data Transfer</span>
+                <span className="text-[var(--cyber-text-muted)]">Data Transfer</span>
               </div>
               <span className="text-lg font-semibold text-purple-400">
                 {formatBytes(metrics.totalBytes)}
               </span>
             </div>
 
-            <div className="bg-white/5 rounded-xl p-3">
+            <div className="bg-white/5 rounded-cyber-lg p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-orange-400" />
-                <span className="text-gray-300">Egress Saved</span>
+                <span className="text-[var(--cyber-text-muted)]">Egress Saved</span>
               </div>
               <span className="text-lg font-semibold text-orange-400">
                 {formatBytes(metrics.egressSavings)}
@@ -226,19 +226,19 @@ export const AdminPerformanceMonitor: React.FC = () => {
           </div>
 
           {/* Cache Details */}
-          <div className="bg-white/5 rounded-xl p-3">
-            <div className="text-gray-300 mb-2">Cache Statistics</div>
+          <div className="bg-white/5 rounded-cyber-lg p-3">
+            <div className="text-[var(--cyber-text-muted)] mb-2">Cache Statistics</div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div>
-                <div className="text-gray-400">Entries</div>
-                <div className="text-white font-medium">{cacheMetrics.totalEntries}</div>
+                <div className="text-[var(--cyber-text-muted)]">Entries</div>
+                <div className="text-[var(--cyber-text-primary)] font-medium">{cacheMetrics.totalEntries}</div>
               </div>
               <div>
-                <div className="text-gray-400">Size</div>
-                <div className="text-white font-medium">{formatBytes(cacheMetrics.totalSize)}</div>
+                <div className="text-[var(--cyber-text-muted)]">Size</div>
+                <div className="text-[var(--cyber-text-primary)] font-medium">{formatBytes(cacheMetrics.totalSize)}</div>
               </div>
               <div>
-                <div className="text-gray-400">Errors</div>
+                <div className="text-[var(--cyber-text-muted)]">Errors</div>
                 <div className="text-red-400 font-medium">{metrics.errors}</div>
               </div>
             </div>
@@ -246,21 +246,21 @@ export const AdminPerformanceMonitor: React.FC = () => {
 
           {/* Prefetch Status */}
           {prefetchStats.config.enabled && (
-            <div className="bg-white/5 rounded-xl p-3">
-              <div className="text-gray-300 mb-2">Prefetch Status</div>
+            <div className="bg-white/5 rounded-cyber-lg p-3">
+              <div className="text-[var(--cyber-text-muted)] mb-2">Prefetch Status</div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400">Current Page</span>
-                <span className="text-white font-medium">{prefetchStats.currentPage || 'Unknown'}</span>
+                <span className="text-[var(--cyber-text-muted)]">Current Page</span>
+                <span className="text-[var(--cyber-text-primary)] font-medium">{prefetchStats.currentPage || 'Unknown'}</span>
               </div>
               <div className="flex items-center justify-between text-xs mt-1">
-                <span className="text-gray-400">User Status</span>
+                <span className="text-[var(--cyber-text-muted)]">User Status</span>
                 <span className={`font-medium ${prefetchStats.isUserIdle ? 'text-yellow-400' : 'text-green-400'}`}>
                   {prefetchStats.isUserIdle ? 'Idle' : 'Active'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs mt-1">
-                <span className="text-gray-400">Patterns</span>
-                <span className="text-white font-medium">{prefetchStats.navigationPatterns.length}</span>
+                <span className="text-[var(--cyber-text-muted)]">Patterns</span>
+                <span className="text-[var(--cyber-text-primary)] font-medium">{prefetchStats.navigationPatterns.length}</span>
               </div>
             </div>
           )}
@@ -269,28 +269,28 @@ export const AdminPerformanceMonitor: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={resetStats}
-              className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 px-3 rounded-xl text-xs font-medium transition-colors"
+              className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 px-3 rounded-cyber-lg text-xs font-medium transition-colors"
             >
               Reset Stats
             </button>
             <button
               onClick={() => {
               }}
-              className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-xl text-xs font-medium transition-colors"
+              className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-cyber-lg text-xs font-medium transition-colors"
             >
               Log Details
             </button>
           </div>
 
           {/* Performance Score */}
-          <div className="bg-white/5 rounded-xl p-3">
+          <div className="bg-white/5 rounded-cyber-lg p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-300">Performance Score</span>
+              <span className="text-[var(--cyber-text-muted)]">Performance Score</span>
               <span className="text-2xl font-bold text-green-400">
                 {calculatePerformanceScore(metrics, cacheMetrics)}
               </span>
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-[var(--cyber-text-muted)]">
               Based on cache hit rate, error rate, and data efficiency
             </div>
           </div>

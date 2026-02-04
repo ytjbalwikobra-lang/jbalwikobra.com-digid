@@ -44,7 +44,7 @@ const variantStyles: Record<string, { container: string; iconWrap: string; gradi
   },
   neutral: {
     container: 'surface-glass-md bg-gradient-to-br from-gray-600/10 via-gray-700/5 to-gray-800/5',
-    iconWrap: 'bg-gray-500/20 ring-1 ring-gray-400/30 text-gray-300',
+    iconWrap: 'bg-[var(--cyber-bg-surface)]/20 ring-1 ring-[var(--cyber-border)]/30 text-[var(--cyber-text-muted)]',
     gradient: 'from-white to-gray-200',
     ring: 'ring-1 ring-inset ring-white/10'
   }
@@ -62,7 +62,7 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
   const styles = variantStyles[variant];
   return (
     <div className={cn(
-      'relative rounded-2xl overflow-hidden transition-soft hover:scale-[1.02] hover:shadow-xl',
+      'relative rounded-cyber-2xl overflow-hidden transition-soft hover:scale-[1.02] hover:shadow-xl',
       'p-5 flex flex-col justify-between min-h-[140px]',
       size === 'large' && 'lg:col-span-2 min-h-[180px] p-6',
       styles.container,
@@ -76,12 +76,12 @@ export const AdminStatCard: React.FC<AdminStatCardProps> = ({
           {sub && <p className="typography-footnote text-white/60 font-medium">{sub}</p>}
         </div>
         {icon && (
-          <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center backdrop-blur-sm', styles.iconWrap)}>
+          <div className={cn('w-14 h-14 rounded-cyber-2xl flex items-center justify-center backdrop-blur-sm', styles.iconWrap)}>
             {icon}
           </div>
         )}
       </div>
-      <div className={cn('absolute inset-0 pointer-events-none rounded-2xl', styles.ring)} />
+      <div className={cn('absolute inset-0 pointer-events-none rounded-cyber-2xl', styles.ring)} />
     </div>
   );
 };

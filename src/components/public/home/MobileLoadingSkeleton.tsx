@@ -2,7 +2,7 @@ import React from 'react';
 
 const MobileLoadingSkeleton: React.FC = () => (
   <div 
-    className="min-h-screen bg-black" 
+    className="min-h-screen bg-[var(--cyber-bg-pure)]" 
     role="status" 
     aria-live="polite"
     aria-busy="true" 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
-import { PNSection, PNContainer, PNHeading, PNText } from '../ui/PinkNeonDesignSystem';
+import { PNSection, PNContainer, PNHeading, PNText } from '../ui/CyberDesignSystem';
 
 export const FeedHeader: React.FC = () => {
   return (

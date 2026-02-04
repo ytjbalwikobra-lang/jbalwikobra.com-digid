@@ -147,8 +147,8 @@ const AdminBanners: React.FC = () => {
       label: 'Nonaktif',
       value: stats.inactive,
       icon: EyeOff,
-      iconColor: 'text-gray-400',
-      iconBgColor: 'bg-gray-500/10',
+      iconColor: 'text-[var(--cyber-text-muted)]',
+      iconBgColor: 'bg-[var(--cyber-bg-elevated)]/10',
       format: 'number'
     }
   ], [stats]);
@@ -198,17 +198,17 @@ const AdminBanners: React.FC = () => {
       <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={3} />
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-light)', border: '1px solid var(--admin-border)' }}>
+      <div className="rounded-cyber-lg overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-light)', border: '1px solid var(--admin-border)' }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)', borderBottom: '1px solid var(--admin-border)' }}>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Gambar</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Judul</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Link</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Urutan</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Aksi</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Gambar</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Judul</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Link</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Urutan</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--admin-border)' }}>
@@ -232,7 +232,7 @@ const AdminBanners: React.FC = () => {
                   <tr key={banner.id} className="hover:bg-white/5 transition-colors">
                     {/* Image */}
                     <td className="px-4 py-3">
-                      <div className="w-24 h-14 rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-lighter)' }}>
+                      <div className="w-24 h-14 rounded-cyber-lg overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-lighter)' }}>
                         {banner.image_url ? (
                           <img
                             src={banner.image_url}
@@ -241,7 +241,7 @@ const AdminBanners: React.FC = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-gray-600" />
+                            <ImageIcon className="w-6 h-6 text-[var(--cyber-text-disabled)]" />
                           </div>
                         )}
                       </div>
@@ -252,7 +252,7 @@ const AdminBanners: React.FC = () => {
                       <div>
                         <p className="font-medium text-white">{banner.title}</p>
                         {banner.subtitle && (
-                          <p className="text-sm text-gray-400">{banner.subtitle}</p>
+                          <p className="text-sm text-[var(--cyber-text-muted)]">{banner.subtitle}</p>
                         )}
                         {banner.cta_text && (
                           <p className="text-xs text-pink-500 mt-1">{banner.cta_text}</p>
@@ -272,7 +272,7 @@ const AdminBanners: React.FC = () => {
                           {banner.link_url}
                         </a>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-[var(--cyber-text-muted)]">-</span>
                       )}
                     </td>
 
@@ -294,13 +294,13 @@ const AdminBanners: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(banner)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(banner)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
                         >
                           Hapus
                         </button>

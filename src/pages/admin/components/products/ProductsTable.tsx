@@ -46,7 +46,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
       key: 'category',
       header: 'Kategori',
       render: (_, p) => (
-        <span className="inline-flex px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-300 text-[11px] font-medium capitalize">
+        <span className="inline-flex px-2 py-0.5 rounded-full bg-[var(--cyber-pink-primary)]/10 text-[var(--cyber-pink-secondary)] text-[11px] font-medium capitalize">
           {(p as any).categoryData?.name || (p as any).category || '—'}
         </span>
       ),

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IOSCard } from '../../../../components/ios/IOSDesignSystemV2';
+import { PNCard } from '../../../../components/ui/CyberDesignSystem';
 import { Product } from '../../../../types';
 import { formatCurrency } from '../../../../utils/helpers';
 
@@ -13,12 +13,12 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ products, loading })
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-cluster-md">
         {[...Array(4)].map((_, i) => (
-          <IOSCard key={i} className="p-stack-md bg-surface-glass-light border border-surface-tint-light">
+          <PNCard key={i} className="p-stack-md bg-surface-glass-light border border-surface-tint-light">
             <div className="animate-pulse">
               <div className="h-4 bg-surface-tint-light rounded mb-2"></div>
               <div className="h-8 bg-surface-tint-light rounded"></div>
             </div>
-          </IOSCard>
+          </PNCard>
         ))}
       </div>
     );
@@ -59,7 +59,7 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ products, loading })
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-cluster-md">
       {stats.map((stat, index) => (
-        <IOSCard key={index} className="p-stack-md bg-surface-glass-light border border-surface-tint-light">
+        <PNCard key={index} className="p-stack-md bg-surface-glass-light border border-surface-tint-light">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-ds-text-secondary mb-1">
@@ -73,7 +73,7 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ products, loading })
               <div className={`w-6 h-6 rounded-full ${stat.color.replace('text-', 'bg-')}`}></div>
             </div>
           </div>
-        </IOSCard>
+        </PNCard>
       ))}
     </div>
   );

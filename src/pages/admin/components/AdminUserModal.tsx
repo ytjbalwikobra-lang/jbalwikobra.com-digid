@@ -236,17 +236,17 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
       >
         <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
           {/* User Avatar Preview */}
-          <div className="flex items-center gap-4 p-4 rounded-xl" style={{ backgroundColor: 'var(--admin-primary)', border: '1px solid var(--admin-border)' }}>
+          <div className="flex items-center gap-4 p-4 rounded-cyber-lg" style={{ backgroundColor: 'var(--admin-primary)', border: '1px solid var(--admin-border)' }}>
             <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--admin-primary-lighter)' }}>
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt={user.name} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <User className="w-8 h-8 text-gray-400" />
+                <User className="w-8 h-8 text-[var(--cyber-text-muted)]" />
               )}
             </div>
             <div>
-              <p className="text-white font-semibold">{user?.name || 'Unknown'}</p>
-              <p className="text-gray-400 text-sm">{user?.email}</p>
+              <p className="text-[var(--cyber-text-primary)] font-semibold">{user?.name || 'Unknown'}</p>
+              <p className="text-[var(--cyber-text-muted)] text-sm">{user?.email}</p>
               <div className="flex gap-2 mt-2">
                 {user?.is_admin && (
                   <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
@@ -312,10 +312,10 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
               type="button"
               onClick={() => !isViewMode && updateField('is_admin', !formData.is_admin)}
               disabled={isViewMode}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 w-full ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-cyber-lg border transition-all duration-200 w-full ${
                 formData.is_admin 
                   ? 'bg-purple-500/20 border-purple-500/30 text-purple-300' 
-                  : 'text-gray-400 hover:text-white'
+                  : 'text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)]'
               } ${isViewMode ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
               style={{ 
                 backgroundColor: formData.is_admin ? undefined : 'var(--admin-primary-light)',
@@ -346,7 +346,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
               type="button"
               onClick={() => !isViewMode && updateField('is_active', !formData.is_active)}
               disabled={isViewMode}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 w-full ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-cyber-lg border transition-all duration-200 w-full ${
                 formData.is_active 
                   ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' 
                   : 'bg-red-500/20 border-red-500/30 text-red-400'

@@ -83,17 +83,13 @@ class WebVitalsMonitor {
   // Log metrics with better formatting and warnings
   logMetric(metric: WebVitalMetric): void {
     const value = Math.round(metric.value);
-    let status = '';
     
     switch (metric.rating) {
       case 'good':
-        status = '✅';
         break;
       case 'needs-improvement':
-        status = '⚠️';
         break;
       case 'poor':
-        status = '❌';
         break;
     }
 
@@ -157,7 +153,7 @@ class WebVitalsMonitor {
     for (const [name, metric] of metrics) {
       const emoji = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
       const unit = name === 'CLS' ? '' : 'ms';
-      const threshold = WebVitalsMonitor.THRESHOLDS[name];
+      const threshold = WebVitalsMonitor.THRESHOLDS[name as keyof typeof WebVitalsMonitor.THRESHOLDS];
       
       report += `${emoji} ${name}: ${metric.value.toFixed(2)}${unit} (${metric.rating})\n`;
       report += `   Target: ≤${threshold.good}${unit} (good), ≤${threshold.poor}${unit} (poor)\n`;
@@ -239,7 +235,7 @@ export const useWebVitals = () => {
   React.useEffect(() => {
     const monitor = WebVitalsMonitor.getInstance();
     
-    const unsubscribe = monitor.onMetricChange((metric) => {
+    const unsubscribe = monitor.onMetricChange((_metric) => {
       setMetrics(monitor.getMetrics());
       setScore(monitor.getPerformanceScore());
     });

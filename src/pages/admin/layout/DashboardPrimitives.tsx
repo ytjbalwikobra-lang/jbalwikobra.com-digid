@@ -36,8 +36,8 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
       {(title || actions) && (
         <div className="dashboard-section-header">
           <div>
-            {typeof title === 'string' ? <h2 className={cn(typeScale.h3, 'm-0 text-gray-900 dark:text-white')}>{title}</h2> : title}
-            {subtitle && <p className="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-300">{subtitle}</p>}
+            {typeof title === 'string' ? <h2 className={cn(typeScale.h3, 'm-0 text-[var(--cyber-text-primary)] dark:text-white')}>{title}</h2> : title}
+            {subtitle && <p className="mt-1 text-xs md:text-sm text-[var(--cyber-text-disabled)] dark:text-[var(--cyber-text-secondary)]">{subtitle}</p>}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>

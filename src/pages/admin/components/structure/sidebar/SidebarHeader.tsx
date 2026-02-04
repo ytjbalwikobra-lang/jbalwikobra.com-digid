@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { ChevronLeft, LayoutDashboard } from 'lucide-react';
 
 interface SidebarHeaderProps {
   collapsed: boolean;

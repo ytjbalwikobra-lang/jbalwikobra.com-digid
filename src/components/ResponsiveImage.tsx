@@ -46,8 +46,6 @@ class ImageFormatDetector {
 
 // Image URL optimizer
 class ImageOptimizer {
-  private static readonly CDN_BASE = 'https://images.unsplash.com/';
-
   static optimizeUrl(
     originalUrl?: string,
     options: {
@@ -262,16 +260,16 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
 
       {/* Loading indicator */}
       {!isLoaded && isVisible && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/20 backdrop-blur-sm">
-          <div className="w-8 h-8 border-2 border-gray-600 border-t-white/80 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--cyber-bg-pure)]/20 backdrop-blur-sm">
+          <div className="w-8 h-8 border-2 border-[var(--cyber-border)] border-t-white/80 rounded-full animate-spin"></div>
         </div>
       )}
 
       {/* Error state */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white text-sm">
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--cyber-bg-surface)] text-white text-sm">
           <div className="text-center p-4">
-            <div className="text-gray-400 mb-2">⚠️</div>
+            <div className="text-[var(--cyber-text-muted)] mb-2">⚠️</div>
             <div>Image failed to load</div>
           </div>
         </div>

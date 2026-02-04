@@ -116,13 +116,13 @@ export const validators = {
   // Compare two values
   lessThan: (otherField: string, otherFieldName: string): ValidationRule<number> => ({
     validate: (value, formData) => !formData || value < formData[otherField],
-    message: (value, formData) => 
+    message: (_value, formData) => 
       `Nilai harus lebih kecil dari ${otherFieldName} (${formData?.[otherField]?.toLocaleString('id-ID') || ''})`
   }),
 
   greaterThan: (otherField: string, otherFieldName: string): ValidationRule<number> => ({
     validate: (value, formData) => !formData || value > formData[otherField],
-    message: (value, formData) => 
+    message: (_value, formData) => 
       `Nilai harus lebih besar dari ${otherFieldName} (${formData?.[otherField]?.toLocaleString('id-ID') || ''})`
   }),
 

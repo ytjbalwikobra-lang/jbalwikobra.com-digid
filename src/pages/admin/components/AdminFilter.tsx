@@ -4,7 +4,7 @@
  * WCAG 2.1 AA Compliant
  */
 
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 import { AdminButton } from './ui/AdminButton';
 // Design system: cyber-compact.css (loaded via index.css)

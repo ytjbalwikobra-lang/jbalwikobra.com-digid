@@ -83,7 +83,7 @@ const testProductCreationWithDetails = async (): Promise<{ success: boolean; err
 };
 
 // Alternative approach - use a service role key for admin operations
-export const createProductWithAdminAccess = async (productData: any): Promise<any> => {
+export const createProductWithAdminAccess = async (_productData: any): Promise<any> => {
   // This would require a service role key to bypass RLS
   // For now, we'll document this as a requirement
   

@@ -277,7 +277,7 @@ export const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
   phone,
   email,
   address,
-  openingHours = 'Mo-Su 09:00-21:00',
+  openingHours: _openingHours = 'Mo-Su 09:00-21:00',
   priceRange = 'Rp50.000 - Rp5.000.000'
 }) => {
   const schema = {

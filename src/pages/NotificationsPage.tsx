@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Clock, X, Settings } from 'lucide-react';
-import { IOSCard, IOSButton } from '../components/ios/IOSDesignSystem';
+import { PNCard, PNButton } from '../components/ui/CyberDesignSystem';
 import { PageWrapper, ConsistentLayout } from '../components/layout/ConsistentLayout';
 import { notificationService, AppNotification } from '../services/notificationService';
 import { getAuthUserId } from '../services/authService';
@@ -105,15 +105,15 @@ const NotificationsPage: React.FC = () => {
   const getNotificationColor = (type: NotificationUI['type']) => {
     switch (type) {
       case 'order':
-        return 'border-l-blue-500';
+        return 'border-l-[var(--cyber-blue)]';
       case 'payment':
-        return 'border-l-green-500';
+        return 'border-l-[var(--cyber-green)]';
       case 'promo':
-        return 'border-l-purple-500';
+        return 'border-l-[var(--cyber-pink-primary)]';
       case 'system':
-        return 'border-l-gray-500';
+        return 'border-l-[var(--cyber-border)]';
       default:
-        return 'border-l-gray-400';
+        return 'border-l-[var(--cyber-border)]';
     }
   };
 
@@ -136,15 +136,15 @@ const NotificationsPage: React.FC = () => {
       <PageWrapper>
         <ConsistentLayout>
           <div className="space-y-4">
-            <div className="ios-skeleton h-8 w-48"></div>
+            <div className="cyber-skeleton h-8 w-48"></div>
             {Array.from({ length: 5 }).map((_, i) => (
-              <IOSCard key={i}>
+              <PNCard key={i}>
                 <div className="p-4 space-y-3">
-                  <div className="ios-skeleton h-5 w-3/4"></div>
-                  <div className="ios-skeleton h-4 w-full"></div>
-                  <div className="ios-skeleton h-3 w-1/3"></div>
+                  <div className="cyber-skeleton h-5 w-3/4"></div>
+                  <div className="cyber-skeleton h-4 w-full"></div>
+                  <div className="cyber-skeleton h-3 w-1/3"></div>
                 </div>
-              </IOSCard>
+              </PNCard>
             ))}
           </div>
         </ConsistentLayout>
@@ -163,25 +163,25 @@ const NotificationsPage: React.FC = () => {
                 <Bell className="w-6 h-6 mr-3" />
                 Notifikasi
                 {unreadCount > 0 && (
-                  <span className="ml-2 px-2 py-1 bg-ios-destructive text-white text-xs rounded-full">
+                  <span className="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full">
                     {unreadCount}
                   </span>
                 )}
               </h1>
-              <p className="text-white/70 mt-1">
+              <p className="text-[var(--cyber-text-secondary)] mt-1">
                 Kelola semua notifikasi Anda di sini
               </p>
             </div>
             
             {unreadCount > 0 && (
-              <IOSButton
+              <PNButton
                 variant="secondary"
                 onClick={markAllAsRead}
                 className="flex items-center"
               >
                 <Check className="w-4 h-4 mr-2" />
                 Tandai Semua Dibaca
-              </IOSButton>
+              </PNButton>
             )}
           </div>
 
@@ -196,15 +196,15 @@ const NotificationsPage: React.FC = () => {
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key as typeof filter)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-cyber-lg text-sm font-medium transition-colors ${
                   filter === tab.key
-                    ? 'bg-pink-500 text-white'
-                    : 'bg-black text-white hover:bg-black-secondary'
+                    ? 'bg-[var(--cyber-pink-primary)] text-white'
+                    : 'bg-[var(--cyber-bg-pure)] text-white hover:bg-[var(--cyber-bg-card)]'
                 }`}
               >
                 {tab.label}
                 {tab.key === 'unread' && unreadCount > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-ios-destructive text-white text-xs rounded-full">
+                  <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">
                     {unreadCount}
                   </span>
                 )}
@@ -215,24 +215,24 @@ const NotificationsPage: React.FC = () => {
           {/* Notifications List */}
           <div className="space-y-3">
             {filteredNotifications.length === 0 ? (
-              <IOSCard>
+              <PNCard>
                 <div className="p-8 text-center">
-                  <Bell className="w-12 h-12 mx-auto text-white/70 mb-3" />
+                  <Bell className="w-12 h-12 mx-auto text-[var(--cyber-text-secondary)] mb-3" />
                   <h3 className="text-lg font-medium text-white mb-2">
                     Tidak ada notifikasi
                   </h3>
-                  <p className="text-white/70">
+                  <p className="text-[var(--cyber-text-secondary)]">
                     {filter === 'unread' 
                       ? 'Semua notifikasi sudah dibaca'
                       : 'Belum ada notifikasi untuk kategori ini'
                     }
                   </p>
                 </div>
-              </IOSCard>
+              </PNCard>
             ) : (
               filteredNotifications.map((notification) => (
-                <IOSCard key={notification.id} className={`border-l-4 ${getNotificationColor(notification.type)}`}>
-                  <div className={`p-4 ${!notification.isRead ? 'bg-black/50' : ''}`}>
+                <PNCard key={notification.id} className={`border-l-4 ${getNotificationColor(notification.type)}`}>
+                  <div className={`p-4 ${!notification.isRead ? 'bg-[var(--cyber-bg-card)]/50' : ''}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
                         <div className="text-2xl">
@@ -240,17 +240,17 @@ const NotificationsPage: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
-                            <h3 className={`font-semibold ${!notification.isRead ? 'text-white' : 'text-white/70'}`}>
+                            <h3 className={`font-semibold ${!notification.isRead ? 'text-white' : 'text-[var(--cyber-text-secondary)]'}`}>
                               {notification.title}
                             </h3>
                             {!notification.isRead && (
-                              <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                              <div className="w-2 h-2 bg-[var(--cyber-pink-primary)] rounded-full"></div>
                             )}
                           </div>
-                          <p className="text-white/70 text-sm mb-2 leading-relaxed">
+                          <p className="text-[var(--cyber-text-secondary)] text-sm mb-2 leading-relaxed">
                             {notification.message}
                           </p>
-                          <div className="flex items-center space-x-4 text-xs text-white/70">
+                          <div className="flex items-center space-x-4 text-xs text-[var(--cyber-text-secondary)]">
                             <span className="flex items-center">
                               <Clock className="w-3 h-3 mr-1" />
                               {formatTimestamp(notification.timestamp)}
@@ -258,7 +258,7 @@ const NotificationsPage: React.FC = () => {
                             {notification.actionUrl && (
                               <a
                                 href={notification.actionUrl}
-                                className="text-pink-500 hover:text-pink-500/80 font-medium"
+                                className="text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] font-medium"
                               >
                                 Lihat Detail →
                               </a>
@@ -270,7 +270,7 @@ const NotificationsPage: React.FC = () => {
                         {!notification.isRead && (
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="p-1 text-white/70 hover:text-pink-500 transition-colors"
+                            className="p-1 text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-secondary)] transition-colors"
                             title="Tandai sudah dibaca"
                           >
                             <Check className="w-4 h-4" />
@@ -278,7 +278,7 @@ const NotificationsPage: React.FC = () => {
                         )}
                         <button
                           onClick={() => deleteNotification(notification.id)}
-                          className="p-1 text-white/70 hover:text-ios-destructive transition-colors"
+                          className="p-1 text-[var(--cyber-text-secondary)] hover:text-red-400 transition-colors"
                           title="Hapus notifikasi"
                         >
                           <X className="w-4 h-4" />
@@ -286,27 +286,27 @@ const NotificationsPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </IOSCard>
+                </PNCard>
               ))
             )}
           </div>
 
           {/* Settings Footer */}
-          <IOSCard>
+          <PNCard>
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium text-white">Pengaturan Notifikasi</h3>
-                  <p className="text-sm text-white/70">
+                  <p className="text-sm text-[var(--cyber-text-secondary)]">
                     Kelola preferensi notifikasi Anda
                   </p>
                 </div>
-                <IOSButton variant="ghost">
+                <PNButton variant="ghost">
                   <Settings className="w-5 h-5" />
-                </IOSButton>
+                </PNButton>
               </div>
             </div>
-          </IOSCard>
+          </PNCard>
         </div>
       </ConsistentLayout>
     </PageWrapper>

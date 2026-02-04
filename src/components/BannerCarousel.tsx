@@ -123,7 +123,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
         >
           <div className="w-full aspect-[3/2] flex items-center justify-center">
             <span className="sr-only">Memuat banner promosi...</span>
-            <div className="ios-skeleton w-[92%] h-[85%] rounded-xl" aria-hidden="true"></div>
+            <div className="cyber-skeleton w-[92%] h-[85%] rounded-xl" aria-hidden="true"></div>
           </div>
         </div>
       </div>
@@ -185,7 +185,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
               <img
                 src={slide.image}
                 alt={slide.title || 'Banner promosi'}
-                className="absolute inset-0 w-full h-full object-cover ios-image"
+                className="absolute inset-0 w-full h-full object-cover cyber-image"
                 onError={(e) => {
                   console.error('Banner image failed to load:', slide.image);
                   e.currentTarget.src = 'https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200&h=800&fit=crop';
@@ -196,7 +196,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" aria-hidden="true" />
 
               {/* Content with iOS safe area support */}
-              <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end ios-safe-area">
+              <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end cyber-safe-area">
                 {(slide.title || slide.subtitle) && (
                   <div className="text-white max-w-full sm:max-w-md lg:max-w-xl">
                     {slide.title && (

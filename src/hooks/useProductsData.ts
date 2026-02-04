@@ -200,7 +200,7 @@ export const useProductsData = (options: UseProductsDataOptions = {}) => {
 
       // Sort tiers: Pelajar → Reguler → Premium
       const sortedTiers = [...tiersData].sort((a, b) => {
-        const order = { 'pelajar': 1, 'reguler': 2, 'premium': 3 };
+        const order: Record<string, number> = { 'pelajar': 1, 'reguler': 2, 'premium': 3 };
         const aOrder = order[a.slug] || 999;
         const bOrder = order[b.slug] || 999;
         return aOrder - bOrder;

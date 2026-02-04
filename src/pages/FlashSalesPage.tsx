@@ -15,7 +15,7 @@ import {
   ProductsErrorState,
   PaginationBar
 } from '../components/products';
-import { PNContainer } from '../components/ui/PinkNeonDesignSystem';
+import { PNContainer } from '../components/ui/CyberDesignSystem';
 import FlashSalesPageHeader from '../components/flash-sales/FlashSalesPageHeader';
 import FlashSalesProductGrid from '../components/flash-sales/FlashSalesProductGrid';
 import FlashSalesEmptyState from '../components/flash-sales/FlashSalesEmptyState';
@@ -53,7 +53,7 @@ const FlashSalesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)]">
       <SEOHead
         title="Flash Sale - Diskon Terbatas"
         description="Promo flash sale terbatas! Dapatkan diskon hingga 70% untuk top up game, voucher digital, dan produk gaming populer. Penawaran terbatas, buruan sebelum kehabisan!"
@@ -62,11 +62,13 @@ const FlashSalesPage: React.FC = () => {
         page={currentPage}
         totalPages={totalPages}
       />
-      <Breadcrumb
-        items={[
-          { label: 'Flash Sale', href: '/flash-sales' }
-        ]}
-      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <Breadcrumb
+          items={[
+            { label: 'Flash Sale', href: '/flash-sales' }
+          ]}
+        />
+      </div>
       <ItemListSchema
         name="Flash Sale - Promo Terbatas"
         description="Penawaran flash sale terbatas untuk produk gaming dan digital"
@@ -86,8 +88,8 @@ const FlashSalesPage: React.FC = () => {
         totalPages={totalPages}
       />
 
-      <section className="py-8">
-        <PNContainer className="px-4 sm:px-6">
+      <section className="py-6 sm:py-8 lg:py-10">
+        <PNContainer className="px-4 sm:px-6 lg:px-8">
           {/* Products Grid or Empty State */}
           {currentProducts.length > 0 ? (
             <FlashSalesProductGrid products={currentProducts} />

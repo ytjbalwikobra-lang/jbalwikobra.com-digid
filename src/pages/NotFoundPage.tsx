@@ -10,7 +10,7 @@ import {
   MessageSquare,
   Heart
 } from 'lucide-react';
-import { IOSButton } from '../components/ios/IOSDesignSystem';
+import { PNButton } from '../components/ui/CyberDesignSystem';
 import { SEOHead } from '../components/seo';
 
 const NotFoundPage: React.FC = () => {
@@ -22,7 +22,7 @@ const NotFoundPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center relative overflow-hidden">
       <SEOHead
         title="Halaman Tidak Ditemukan | JBal WiKobra"
         description="Halaman yang Anda cari tidak ditemukan atau sedang dalam pengembangan. Kembali ke beranda untuk menjelajahi produk gaming kami."
@@ -38,12 +38,12 @@ const NotFoundPage: React.FC = () => {
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         
         {/* Main Content */}
-        <div className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-3xl p-8 lg:p-12 shadow-2xl">
+        <div className="bg-[var(--cyber-bg-pure)]/40 backdrop-blur-xl border border-[var(--cyber-border)] rounded-cyber-3xl p-8 lg:p-12 shadow-2xl">
           
           {/* Construction Icon */}
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-2xl mb-8 shadow-lg shadow-pink-500/30">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-cyber-2xl mb-8 shadow-lg shadow-pink-500/30">
             <Construction className="w-12 h-12 text-white" />
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/50 to-fuchsia-500/50 rounded-2xl blur-lg animate-pulse" />
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/50 to-fuchsia-500/50 rounded-cyber-2xl blur-lg animate-pulse" />
           </div>
 
           {/* Main Message */}
@@ -54,20 +54,20 @@ const NotFoundPage: React.FC = () => {
           </h1>
 
           <div className="space-y-4 mb-8">
-            <p className="text-xl lg:text-2xl text-white/90 font-medium">
+            <p className="text-xl lg:text-2xl text-[var(--cyber-text-primary)] font-medium">
               Halaman yang Anda cari sedang dalam pengembangan
             </p>
-            <p className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="text-[var(--cyber-text-secondary)] text-lg max-w-2xl mx-auto leading-relaxed">
               Tim kami sedang bekerja keras untuk memberikan pengalaman terbaik. 
               Silakan kembali lagi nanti untuk melihat fitur-fitur menarik yang akan datang!
             </p>
           </div>
 
           {/* Coming Soon Badge */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 backdrop-blur-sm border border-pink-500/30 rounded-2xl mb-12">
-            <Clock className="w-5 h-5 text-pink-500" />
-            <span className="text-pink-300 font-medium">Coming Soon</span>
-            <div className="w-2 h-2 bg-pink-500 rounded-full animate-ping" />
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 backdrop-blur-sm border border-pink-500/30 rounded-cyber-2xl mb-12">
+            <Clock className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
+            <span className="text-[var(--cyber-pink-primary)] font-medium">Coming Soon</span>
+            <div className="w-2 h-2 bg-[var(--cyber-pink-primary)] rounded-full animate-ping" />
           </div>
 
           {/* Quick Actions */}
@@ -78,15 +78,15 @@ const NotFoundPage: React.FC = () => {
                 <Link
                   key={action.path}
                   to={action.path}
-                  className="group relative p-6 interactive-card backdrop-blur-sm rounded-2xl transition-all duration-300 hover:scale-105"
+                  className="group relative p-6 interactive-card backdrop-blur-sm rounded-cyber-2xl transition-all duration-300 hover:scale-105"
                 >
-                  <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br ${action.color} rounded-xl mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br ${action.color} rounded-cyber-lg mb-3 group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-white/80 group-hover:text-white font-medium text-sm transition-colors duration-300">
+                  <p className="text-[var(--cyber-text-secondary)] group-hover:text-white font-medium text-sm transition-colors duration-300">
                     {action.label}
                   </p>
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-fuchsia-500/0 group-hover:from-pink-500/5 group-hover:to-fuchsia-500/5 rounded-2xl transition-all duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/0 to-fuchsia-500/0 group-hover:from-pink-500/5 group-hover:to-fuchsia-500/5 rounded-cyber-2xl transition-all duration-300" />
                 </Link>
               );
             })}
@@ -94,33 +94,33 @@ const NotFoundPage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <IOSButton
+            <PNButton
               onClick={() => window.history.back()}
               variant="ghost"
               className="interactive-card text-white px-6 py-3"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Kembali
-            </IOSButton>
+            </PNButton>
             
             <Link to="/">
-              <IOSButton
+              <PNButton
                 variant="primary"
                 className="bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Ke Beranda
-              </IOSButton>
+              </PNButton>
             </Link>
           </div>
 
           {/* Support Message */}
-          <div className="mt-12 pt-8 border-t border-white/10">
-            <div className="flex items-center justify-center gap-2 text-white/60">
-              <Heart className="w-4 h-4 text-pink-500" />
+          <div className="mt-12 pt-8 border-t border-[var(--cyber-border)]">
+            <div className="flex items-center justify-center gap-2 text-[var(--cyber-text-muted)]">
+              <Heart className="w-4 h-4 text-[var(--cyber-pink-primary)]" />
               <span className="text-sm">
                 Butuh bantuan? Hubungi{' '}
-                <Link to="/help" className="text-pink-500 hover:text-pink-400 transition-colors underline">
+                <Link to="/help" className="text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] transition-colors underline">
                   tim support
                 </Link>
                 {' '}kami

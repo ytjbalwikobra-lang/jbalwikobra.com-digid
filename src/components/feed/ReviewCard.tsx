@@ -1,5 +1,5 @@
 import React from 'react';
-import { PNCard, PNText, PNButton } from '../ui/PinkNeonDesignSystem';
+import { PNCard } from '../ui/CyberDesignSystem';
 import { Star, Edit2, Save, X, MessageSquare, Clock, User, Package } from 'lucide-react';
 
 export interface ReviewData {
@@ -42,8 +42,8 @@ const Stars: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({ rating
           className={`
             ${starSizes[size]} transition-all duration-200
             ${i < rating 
-              ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm' 
-              : 'text-gray-400 hover:text-gray-400'
+              ? 'fill-[var(--cyber-warning)] text-[var(--cyber-warning)] drop-shadow-sm' 
+              : 'text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-muted)]'
             }
           `} 
         />
@@ -76,7 +76,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   const canEdit = review.user_id === currentUserId && review.canEdit;
 
   return (
-    <PNCard className="p-6 lg:p-8 hover:shadow-2xl hover:shadow-purple-500/10 group transition-all duration-300">
+    <PNCard className="p-6 lg:p-8 hover:shadow-2xl hover:shadow-[var(--cyber-pink-muted)] group transition-all duration-300">
       {/* Content */}
       <div className="relative">
         {/* Header with enhanced user info */}
@@ -88,37 +88,37 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
                 <img 
                   src={review.user_avatar} 
                   alt={review.user_name || 'User'} 
-                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl object-cover border-2 border-purple-500/30 shadow-lg"
+                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-cyber-2xl object-cover border-2 border-[var(--cyber-pink-muted)] shadow-lg"
                   loading="lazy" 
                 />
               ) : (
-                <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg font-bold text-white border-2 border-purple-500/30 shadow-lg">
+                <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-cyber-2xl bg-gradient-to-br from-[var(--cyber-purple)] to-[var(--cyber-pink-primary)] flex items-center justify-center text-lg font-bold text-[var(--cyber-text-primary)] border-2 border-[var(--cyber-pink-muted)] shadow-lg">
                   {(review.user_name || 'U').charAt(0).toUpperCase()}
                 </div>
               )}
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-black flex items-center justify-center">
-                <MessageSquare className="w-3 h-3 text-white" />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--cyber-success)] rounded-full border-2 border-[var(--cyber-bg-pure)] flex items-center justify-center">
+                <MessageSquare className="w-3 h-3 text-[var(--cyber-text-primary)]" />
               </div>
             </div>
             
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-400" />
-                <div className="text-lg font-semibold text-white group-hover:text-gray-100 transition-colors">
+                <User className="w-4 h-4 text-[var(--cyber-text-muted)]" />
+                <div className="text-lg font-semibold text-white group-hover:text-[var(--cyber-text-primary)] transition-colors">
                   {review.user_name || 'Anonymous'}
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
                 <Stars rating={review.rating} size="md" />
-                <div className="flex items-center gap-1 text-sm text-gray-400">
+                <div className="flex items-center gap-1 text-sm text-[var(--cyber-text-muted)]">
                   <Clock className="w-3 h-3" />
                   <span>{timeAgo(review.created_at)}</span>
                 </div>
               </div>
               
               {review.product_name && (
-                <div className="flex items-center gap-2 text-sm text-purple-300 bg-purple-500/10 px-3 py-1 rounded-xl border border-purple-500/20">
+                <div className="flex items-center gap-2 text-sm text-[var(--cyber-pink-secondary)] bg-[var(--cyber-pink-subtle)] px-3 py-1 rounded-cyber-lg border border-[var(--cyber-pink-muted)]">
                   <Package className="w-3 h-3" />
                   <span>Review untuk: <span className="font-medium">{review.product_name}</span></span>
                 </div>
@@ -130,7 +130,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
           {canEdit && (
             <button 
               onClick={() => onStartEdit(review)} 
-              className="bg-white/5 hover:bg-white/15 border border-white/10 hover:border-purple-500/30 text-white/70 hover:text-white transition-all duration-300 rounded-xl gap-2 px-3 py-2 flex items-center"
+              className="bg-[var(--cyber-bg-card)] hover:bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-muted)] text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-text-primary)] transition-all duration-300 rounded-cyber-lg gap-2 px-3 py-2 flex items-center min-h-[44px]"
             >
               <Edit2 className="h-4 w-4" />
               Edit
@@ -151,12 +151,12 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
                 <img 
                   src={review.product_image} 
                   alt={review.product_name || 'Product'} 
-                  className="w-full aspect-square lg:aspect-[4/3] rounded-2xl object-cover border border-white/10 shadow-lg group-hover/image:scale-105 transition-transform duration-300"
+                  className="w-full aspect-square lg:aspect-[4/3] rounded-cyber-2xl object-cover border border-[var(--cyber-border)] shadow-lg group-hover/image:scale-105 transition-transform duration-300"
                   loading="lazy" 
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 rounded-2xl transition-colors duration-300 flex items-center justify-center opacity-0 group-hover/image:opacity-100">
-                  <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <Star className="w-4 h-4 text-white" />
+                <div className="absolute inset-0 bg-transparent group-hover/image:bg-[var(--cyber-bg-overlay)] rounded-cyber-2xl transition-colors duration-300 flex items-center justify-center opacity-0 group-hover/image:opacity-100">
+                  <div className="w-8 h-8 bg-[var(--cyber-bg-elevated)] backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <Star className="w-4 h-4 text-[var(--cyber-text-primary)]" />
                   </div>
                 </div>
               </button>
@@ -171,22 +171,22 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
                   value={editValue} 
                   onChange={(e) => onChangeEdit(e.target.value)} 
                   placeholder="Tulis review Anda..." 
-                  className="w-full min-h-[120px] p-4 bg-black/40 border border-white/20 rounded-2xl resize-none 
-                           focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                           text-white placeholder-gray-400 text-base leading-relaxed
+                  className="w-full min-h-[120px] p-4 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-2xl resize-none 
+                           focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] focus:border-transparent
+                           text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] text-base leading-relaxed
                            backdrop-blur-sm"
                 />
                 <div className="flex gap-3">
                   <button 
                     onClick={() => onSaveEdit(review.id)} 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-transparent text-white shadow-lg shadow-purple-500/30 gap-2 px-4 py-2 rounded-xl flex items-center"
+                    className="bg-gradient-to-r from-[var(--cyber-purple)] to-[var(--cyber-pink-primary)] hover:from-[var(--cyber-purple)] hover:to-[var(--cyber-pink-glow)] border-transparent text-[var(--cyber-text-primary)] shadow-lg shadow-[var(--cyber-pink-muted)] gap-2 px-4 py-2 rounded-cyber-lg flex items-center min-h-[44px]"
                   >
                     <Save className="h-4 w-4" />
                     Simpan
                   </button>
                   <button 
                     onClick={onCancelEdit} 
-                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white gap-2 px-4 py-2 rounded-xl flex items-center"
+                    className="bg-[var(--cyber-bg-card)] hover:bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] text-[var(--cyber-text-primary)] gap-2 px-4 py-2 rounded-cyber-lg flex items-center min-h-[44px]"
                   >
                     <X className="h-4 w-4" />
                     Batal
@@ -195,12 +195,12 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-gray-100 text-base lg:text-lg leading-relaxed">
+                <p className="text-[var(--cyber-text-primary)] text-base lg:text-lg leading-relaxed">
                   {review.comment}
                 </p>
                 
                 {canEdit && (
-                  <div className="flex items-center gap-2 text-sm text-purple-300 bg-purple-500/10 px-3 py-2 rounded-xl border border-purple-500/20 w-fit">
+                  <div className="flex items-center gap-2 text-sm text-[var(--cyber-pink-secondary)] bg-[var(--cyber-pink-subtle)] px-3 py-2 rounded-cyber-lg border border-[var(--cyber-pink-muted)] w-fit">
                     <Clock className="w-3 h-3" />
                     <span>Review dapat diedit dalam 5 menit</span>
                   </div>

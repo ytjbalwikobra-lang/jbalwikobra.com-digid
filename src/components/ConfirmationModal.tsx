@@ -115,9 +115,9 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           />
           
           {/* Modal Content */}
-          <div className="relative bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+          <div className="relative bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--cyber-border)]">
               <div className="flex items-center space-x-3">
                 {getIcon()}
                 <h3 className="text-lg font-semibold text-white">
@@ -128,7 +128,7 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               {state.showCancel !== false && (
                 <button
                   onClick={handleCancel}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-[var(--cyber-text-muted)] hover:text-white transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -137,17 +137,17 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             
             {/* Body */}
             <div className="p-6">
-              <p className="text-gray-300 leading-relaxed">
+              <p className="text-[var(--cyber-text-secondary)] leading-relaxed">
                 {state.message}
               </p>
             </div>
             
             {/* Footer */}
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-700 bg-gray-800/50">
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-[var(--cyber-border)] bg-[var(--cyber-bg-card)]/50">
               {state.showCancel !== false && (
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
+                  className="px-4 py-2 text-[var(--cyber-text-secondary)] hover:text-white bg-[var(--cyber-bg-elevated)] hover:bg-gray-600 rounded-xl transition-colors"
                 >
                   {state.cancelText || 'Batal'}
                 </button>

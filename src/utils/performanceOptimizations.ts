@@ -103,7 +103,7 @@ export const inlineCriticalCSS = () => {
 export const registerServiceWorker = async () => {
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.register('/sw.js');
     } catch (error) {
     }
   }
@@ -115,14 +115,13 @@ export const initPerformanceMonitoring = () => {
   if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
     // Largest Contentful Paint
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as PerformanceEntry[]) {
+      for (const _entry of list.getEntries() as PerformanceEntry[]) {
               }
     }).observe({ type: 'largest-contentful-paint', buffered: true } as any);
 
     // First Input Delay
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as PerformanceEntry[]) {
-        const e: any = entry;
+      for (const _entry of list.getEntries() as PerformanceEntry[]) {
               }
     }).observe({ type: 'first-input', buffered: true } as any);
 

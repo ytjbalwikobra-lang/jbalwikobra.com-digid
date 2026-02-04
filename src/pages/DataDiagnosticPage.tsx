@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { IOSCard, IOSButton } from '../components/ios/IOSDesignSystem';
+import React, { useState } from 'react';
+import { PNCard, PNButton } from '../components/ui/CyberDesignSystem';
 import { adminService } from '../services/adminService';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -121,19 +121,19 @@ export const DataDiagnosticPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Data Display Diagnostic</h1>
-        <IOSButton onClick={runDiagnostic} disabled={loading}>
+        <PNButton onClick={runDiagnostic} disabled={loading}>
           {loading ? 'Running...' : 'Run Diagnostic'}
-        </IOSButton>
+        </PNButton>
       </div>
 
       {diagnostic && (
         <div className="space-y-6">
           {/* Errors */}
           {diagnostic.errors.length > 0 && (
-            <IOSCard className="border-red-200 bg-red-50">
+            <PNCard className="border-red-200 bg-red-50">
               <div className="p-4">
                 <h2 className="text-lg font-semibold text-red-700 mb-2">Errors Found:</h2>
                 <ul className="list-disc list-inside space-y-1">
@@ -142,40 +142,40 @@ export const DataDiagnosticPage: React.FC = () => {
                   ))}
                 </ul>
               </div>
-            </IOSCard>
+            </PNCard>
           )}
 
           {/* Stats Overview */}
           {diagnostic.stats && (
-            <IOSCard>
+            <PNCard>
               <div className="p-4">
                 <h2 className="text-lg font-semibold text-white mb-4">Current Stats</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-ios-primary">{diagnostic.stats.totalOrders}</div>
-                    <div className="text-sm text-white/70">Total Orders</div>
+                    <div className="text-2xl font-bold text-[var(--cyber-pink-primary)]">{diagnostic.stats.totalOrders}</div>
+                    <div className="text-sm text-[var(--cyber-text-secondary)]">Total Orders</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-ios-success">Rp {diagnostic.stats.totalRevenue.toLocaleString()}</div>
-                    <div className="text-sm text-white/70">Revenue</div>
+                    <div className="text-2xl font-bold text-green-400">Rp {diagnostic.stats.totalRevenue.toLocaleString()}</div>
+                    <div className="text-sm text-[var(--cyber-text-secondary)]">Revenue</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-ios-secondary">{diagnostic.stats.totalUsers}</div>
-                    <div className="text-sm text-white/70">Total Users</div>
+                    <div className="text-2xl font-bold text-[var(--cyber-text-secondary)]">{diagnostic.stats.totalUsers}</div>
+                    <div className="text-sm text-[var(--cyber-text-secondary)]">Total Users</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-pink-500">{diagnostic.stats.totalProducts}</div>
-                    <div className="text-sm text-white/70">Products</div>
+                    <div className="text-2xl font-bold text-[var(--cyber-pink-primary)]">{diagnostic.stats.totalProducts}</div>
+                    <div className="text-sm text-[var(--cyber-text-secondary)]">Products</div>
                   </div>
                 </div>
               </div>
-            </IOSCard>
+            </PNCard>
           )}
 
           {/* Data Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Orders */}
-            <IOSCard>
+            <PNCard>
               <div className="p-4">
                 <h2 className="text-lg font-semibold text-white mb-2">
                   Orders ({diagnostic.orders.count})
@@ -183,22 +183,22 @@ export const DataDiagnosticPage: React.FC = () => {
                 {diagnostic.orders.sample.length > 0 ? (
                   <div className="space-y-2 text-sm">
                     {diagnostic.orders.sample.map((order, i) => (
-                      <div key={i} className="p-2 bg-black rounded">
+                      <div key={i} className="p-2 bg-[var(--cyber-bg-pure)] rounded-cyber-lg">
                         <div className="font-medium">{order.customer_name}</div>
-                        <div className="text-white/70">
+                        <div className="text-[var(--cyber-text-secondary)]">
                           Rp {order.amount?.toLocaleString()} - {order.status}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-white/70">No orders found</div>
+                  <div className="text-[var(--cyber-text-secondary)]">No orders found</div>
                 )}
               </div>
-            </IOSCard>
+            </PNCard>
 
             {/* Users */}
-            <IOSCard>
+            <PNCard>
               <div className="p-4">
                 <h2 className="text-lg font-semibold text-white mb-2">
                   Users ({diagnostic.users.count})
@@ -206,20 +206,20 @@ export const DataDiagnosticPage: React.FC = () => {
                 {diagnostic.users.sample.length > 0 ? (
                   <div className="space-y-2 text-sm">
                     {diagnostic.users.sample.map((user, i) => (
-                      <div key={i} className="p-2 bg-black rounded">
+                      <div key={i} className="p-2 bg-[var(--cyber-bg-pure)] rounded-cyber-lg">
                         <div className="font-medium">{user.name}</div>
-                        <div className="text-white/70">{user.email}</div>
+                        <div className="text-[var(--cyber-text-secondary)]">{user.email}</div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-white/70">No users found</div>
+                  <div className="text-[var(--cyber-text-secondary)]">No users found</div>
                 )}
               </div>
-            </IOSCard>
+            </PNCard>
 
             {/* Products */}
-            <IOSCard>
+            <PNCard>
               <div className="p-4">
                 <h2 className="text-lg font-semibold text-white mb-2">
                   Products ({diagnostic.products.count})
@@ -227,22 +227,22 @@ export const DataDiagnosticPage: React.FC = () => {
                 {diagnostic.products.sample.length > 0 ? (
                   <div className="space-y-2 text-sm">
                     {diagnostic.products.sample.map((product, i) => (
-                      <div key={i} className="p-2 bg-black rounded">
+                      <div key={i} className="p-2 bg-[var(--cyber-bg-pure)] rounded-cyber-lg">
                         <div className="font-medium">{product.name}</div>
-                        <div className="text-white/70">
+                        <div className="text-[var(--cyber-text-secondary)]">
                           Rp {product.price?.toLocaleString()} - Stock: {product.stock}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-white/70">No products found</div>
+                  <div className="text-[var(--cyber-text-secondary)]">No products found</div>
                 )}
               </div>
-            </IOSCard>
+            </PNCard>
 
             {/* Reviews */}
-            <IOSCard>
+            <PNCard>
               <div className="p-4">
                 <h2 className="text-lg font-semibold text-white mb-2">
                   Reviews ({diagnostic.reviews.count})
@@ -250,7 +250,7 @@ export const DataDiagnosticPage: React.FC = () => {
                 {diagnostic.reviews.sample.length > 0 ? (
                   <div className="space-y-2 text-sm">
                     {diagnostic.reviews.sample.map((review, i) => (
-                      <div key={i} className="p-2 bg-black rounded">
+                      <div key={i} className="p-2 bg-[var(--cyber-bg-pure)] rounded-cyber-lg">
                         <div className="font-medium">{review.rating}/5 ⭐</div>
                         <div className="text-white/70">{review.comment}</div>
                       </div>
@@ -260,7 +260,7 @@ export const DataDiagnosticPage: React.FC = () => {
                   <div className="text-white/70">No reviews found</div>
                 )}
               </div>
-            </IOSCard>
+            </PNCard>
           </div>
         </div>
       )}

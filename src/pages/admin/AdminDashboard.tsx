@@ -29,12 +29,12 @@ interface QuickActionProps {
 const QuickAction: React.FC<QuickActionProps> = ({ to, icon, label, color }) => (
   <Link
     to={to}
-    className="group relative overflow-hidden bg-gray-900 border border-gray-800 rounded-xl p-4 text-center hover:border-pink-500/30 transition-all duration-300 hover:transform hover:scale-[1.02]"
+    className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg p-4 text-center hover:border-[var(--cyber-pink-primary)]/30 transition-all duration-300 hover:transform hover:scale-[1.02]"
     aria-label={label}
   >
     <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
     <div className="relative z-10">
-      <div className="mx-auto mb-3 w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
+      <div className="mx-auto mb-3 w-12 h-12 rounded-cyber-lg bg-[var(--cyber-bg-surface)] flex items-center justify-center group-hover:bg-[var(--cyber-bg-elevated)] transition-colors">
         {icon}
       </div>
       <p className="font-medium text-white text-sm">{label}</p>
@@ -76,7 +76,7 @@ const AdminDashboard: React.FC = () => {
     },
     {
       to: '/admin/settings',
-      icon: <Settings className="w-6 h-6 text-gray-400" />,
+      icon: <Settings className="w-6 h-6 text-[var(--cyber-text-muted)]" />,
       label: 'Pengaturan',
       color: 'from-gray-500 to-slate-500'
     }
@@ -90,7 +90,7 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
             Dashboard Admin
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-[var(--cyber-text-muted)] mt-1">
             Ringkasan statistik dan aktivitas terkini
           </p>
         </div>
@@ -103,7 +103,7 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
         <section 
-          className="lg:col-span-1 bg-gray-900 rounded-xl border border-gray-800 p-6"
+          className="lg:col-span-1 bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6"
           aria-label="Aksi Cepat"
         >
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">

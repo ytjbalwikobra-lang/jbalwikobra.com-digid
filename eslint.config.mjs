@@ -4,9 +4,14 @@ import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import tailwindcssPlugin from "eslint-plugin-tailwindcss";
 
+// Local plugin for Cyber-Compact Design System enforcement
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const cyberCompactPlugin = require('./eslint-rules/index.js');
+
 export default tseslint.config(
   {
-    ignores: ["build/**", "node_modules/**", "**/*.js"]
+    ignores: ["build/**", "node_modules/**", "**/*.js", "src/__tests__/**", "eslint-rules/**"]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -26,6 +31,7 @@ export default tseslint.config(
       react: reactPlugin,
       "react-hooks": reactHooksPlugin,
       tailwindcss: tailwindcssPlugin,
+      "cyber-compact": cyberCompactPlugin,
     },
     settings: {
       react: { version: "detect" },
@@ -58,6 +64,8 @@ export default tseslint.config(
       "react-hooks/static-components": "off",
       // TypeScript handles prop validation - disable prop-types rule
       "react/prop-types": "off",
+      // Cyber-Compact Design System enforcement - ERROR mode enabled
+      "cyber-compact/no-hardcoded-colors": "error",
     },
   },
   {

@@ -44,11 +44,11 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
   const hasActiveFilters = filters.searchTerm || filters.ratingFilter !== 'all' || filters.dateFilter !== 'all';
 
   return (
-    <div className="bg-black border border-gray-800 rounded-2xl p-6">
+    <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
       {/* Filter Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gray-800">
+          <div className="p-2 rounded-xl bg-[var(--cyber-bg-card)]">
             <Filter className="w-5 h-5 text-pink-500" />
           </div>
           <h3 className="text-lg font-semibold text-white">Search & Filters</h3>
@@ -60,7 +60,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
         </div>
         <button
           onClick={onToggleFilters}
-          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
+          className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-elevated)] rounded-xl transition-all duration-200"
         >
           <TrendingDown className={`w-5 h-5 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
         </button>
@@ -68,27 +68,27 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
       {/* Search Bar */}
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--cyber-text-muted)]" />
         <input
           type="text"
           placeholder="Search reviews by customer name, product, or content..."
           value={filters.searchTerm}
           onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
+          className="w-full pl-12 pr-4 py-3 bg-[var(--cyber-bg-surface)]/50 border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] focus:border-transparent transition-all duration-200"
         />
       </div>
 
       {/* Expandable Filters */}
       {showFilters && (
-        <div className="space-y-6 border-t border-gray-700 pt-6">
+        <div className="space-y-6 border-t border-[var(--cyber-border)] pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Rating Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">Rating</label>
+              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">Rating</label>
               <select
                 value={filters.ratingFilter}
                 onChange={(e) => handleFilterChange('ratingFilter', e.target.value as any)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200"
               >
                 <option value="all">All Ratings</option>
                 <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
@@ -103,11 +103,11 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
             {/* Date Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">Time Period</label>
+              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">Time Period</label>
               <select
                 value={filters.dateFilter}
                 onChange={(e) => handleFilterChange('dateFilter', e.target.value as any)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -120,12 +120,12 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
             {/* Sort Options */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">Sort By</label>
+              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">Sort By</label>
               <div className="flex gap-2">
                 <select
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value as any)}
-                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-200"
+                  className="flex-1 px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200"
                 >
                   <option value="created_at">Date Created</option>
                   <option value="rating">Rating</option>
@@ -134,7 +134,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                 </select>
                 <button
                   onClick={() => handleFilterChange('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200 flex items-center gap-2"
+                  className="px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200 flex items-center gap-2"
                 >
                   {filters.sortOrder === 'asc' ? (
                     <>
@@ -154,8 +154,8 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
           {/* Results Count and Clear Filters */}
           {typeof resultCount === 'number' && (
-            <div className="flex items-center justify-between pt-6 mt-6 border-t border-gray-700">
-              <div className="text-sm text-gray-400">
+            <div className="flex items-center justify-between pt-6 mt-6 border-t border-[var(--cyber-border)]">
+              <div className="text-sm text-[var(--cyber-text-muted)]">
                 {resultCount === 0 ? (
                   'No reviews match the current filters'
                 ) : (
@@ -189,7 +189,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                   </div>
                 )}
                 {filters.dateFilter !== 'all' && (
-                  <div className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-xl text-sm text-green-400">>
+                  <div className="flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-xl text-sm text-green-400">
                     <Calendar className="w-3 h-3" />
                     <span>Date: {filters.dateFilter}</span>
                     <button
@@ -203,7 +203,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="px-3 py-1 bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600 rounded-xl text-sm transition-all duration-200"
+                    className="px-3 py-1 bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] hover:text-white hover:bg-gray-600 rounded-xl text-sm transition-all duration-200"
                   >
                     Clear All
                   </button>

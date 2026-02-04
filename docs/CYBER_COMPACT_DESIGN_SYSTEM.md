@@ -236,10 +236,42 @@ src/
 
 ## 🚀 Usage with Tailwind
 
-All Cyber-Compact tokens are available in Tailwind:
+All Cyber-Compact tokens are available in Tailwind via CSS variable bridge in `tailwind.config.js`:
+
+### CSS Variable Syntax (Recommended)
+
+Use CSS variables directly in className for full consistency:
 
 ```jsx
-// Colors
+// Backgrounds
+<div className="bg-[var(--cyber-bg-pure)]">
+  <div className="bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)]">
+    Card content
+  </div>
+</div>
+
+// Pink Spectrum
+<button className="bg-[var(--cyber-pink-primary)] hover:shadow-cyber-md">
+  Buy Now
+</button>
+<span className="text-[var(--cyber-pink-secondary)]">Sale!</span>
+
+// Text Hierarchy
+<h1 className="text-[var(--cyber-text-primary)]">Heading</h1>
+<p className="text-[var(--cyber-text-secondary)]">Body text</p>
+<span className="text-[var(--cyber-text-muted)]">Caption</span>
+
+// Border Radius (use cyber tokens)
+<div className="rounded-cyber-lg">Buttons, inputs (12px)</div>
+<div className="rounded-cyber-2xl">Cards, modals (20px)</div>
+```
+
+### Tailwind Shorthand (via config)
+
+These are also available as Tailwind utilities:
+
+```jsx
+// Colors via Tailwind config
 <div className="bg-cyber-pure text-cyber-text">
   <button className="bg-cyber-pink hover:shadow-cyber-md">
     Buy Now
@@ -255,3 +287,20 @@ All Cyber-Compact tokens are available in Tailwind:
   Click me
 </button>
 ```
+
+---
+
+## ⚠️ Deprecated Patterns
+
+Do NOT use these hardcoded Tailwind classes:
+
+| ❌ Avoid | ✅ Use Instead |
+|----------|----------------|
+| `bg-black` | `bg-[var(--cyber-bg-pure)]` |
+| `bg-white/5` | `bg-[var(--cyber-bg-card)]` |
+| `border-white/10` | `border-[var(--cyber-border)]` |
+| `text-gray-400` | `text-[var(--cyber-text-muted)]` |
+| `text-pink-500` | `text-[var(--cyber-pink-primary)]` |
+| `rounded-xl` | `rounded-cyber-lg` |
+| `rounded-2xl` | `rounded-cyber-2xl` |
+

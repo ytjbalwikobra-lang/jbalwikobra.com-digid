@@ -29,10 +29,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   showFooter = true,
 }) => {
   return (
-    <div className={cn('w-full min-h-screen flex flex-col bg-black text-white', className)}>
+    <div className={cn('w-full min-h-screen flex flex-col bg-[var(--cyber-bg-pure)] text-white', className)}>
       {header}
-      <main className="dashboard-shell pt-16 flex-1 bg-black">
-        <div className={cn('dashboard-container bg-black', fullWidth && 'max-w-none')}>
+      <main className="dashboard-shell pt-16 flex-1 bg-[var(--cyber-bg-pure)]">
+        <div className={cn('dashboard-container bg-[var(--cyber-bg-pure)]', fullWidth && 'max-w-none')}>
           {children}
         </div>
       </main>

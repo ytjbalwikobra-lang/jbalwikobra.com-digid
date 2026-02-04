@@ -5,8 +5,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, ArrowLeft, Home } from 'lucide-react';
-import { PNContainer, PNCard, PNHeading, PNText, PNButton } from '../components/ui/PinkNeonDesignSystem';
+import { CheckCircle, XCircle, Clock, Home } from 'lucide-react';
+import { PNContainer, PNCard, PNHeading, PNText, PNButton } from '../components/ui/CyberDesignSystem';
 import { formatCurrency } from '../utils/helpers';
 
 const PaymentStatus: React.FC = () => {
@@ -18,12 +18,9 @@ const PaymentStatus: React.FC = () => {
 
   const status = searchParams.get('status'); // 'success', 'failed', or 'expired'
   const paymentId = searchParams.get('id');
-  const orderId = searchParams.get('order_id');
-  const reason = searchParams.get('reason');
 
   const isSuccess = status === 'success';
   const isExpired = status === 'expired';
-  const isFailed = status === 'failed' || isExpired;
 
   useEffect(() => {
     // Fetch payment data if payment ID is provided
@@ -70,15 +67,11 @@ const PaymentStatus: React.FC = () => {
     navigate('/');
   };
 
-  const handleGoBack = () => {
-    navigate(-1);
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--cyber-pink-secondary)] mx-auto mb-4"></div>
           <PNText>Memuat status pembayaran...</PNText>
         </div>
       </div>
@@ -86,7 +79,7 @@ const PaymentStatus: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center">
       <PNContainer className="py-8">
         <div className="max-w-md mx-auto">
           {isSuccess ? (
@@ -98,31 +91,31 @@ const PaymentStatus: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <PNHeading level={2} className="text-green-400">Pembayaran Berhasil!</PNHeading>
-                  <PNText className="text-gray-300">Terima kasih! Pembayaran Anda telah berhasil diproses.</PNText>
+                  <PNText className="text-[var(--cyber-text-secondary)]">Terima kasih! Pembayaran Anda telah berhasil diproses.</PNText>
                 </div>
               </div>
 
               {paymentData && (
-                <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2 text-left">
+                <div className="bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] p-4 rounded-cyber-lg space-y-2 text-left">
                   <div className="flex justify-between">
-                    <PNText className="text-sm text-gray-400">ID Pembayaran:</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">ID Pembayaran:</PNText>
                     <PNText className="text-sm font-mono">{paymentData.id}</PNText>
                   </div>
                   {paymentData.amount && (
                     <div className="flex justify-between">
-                      <PNText className="text-sm text-gray-400">Jumlah:</PNText>
+                      <PNText className="text-sm text-[var(--cyber-text-muted)]">Jumlah:</PNText>
                       <PNText className="text-sm font-bold">{formatCurrency(paymentData.amount)}</PNText>
                     </div>
                   )}
                   {paymentData.payment_method && (
                     <div className="flex justify-between">
-                      <PNText className="text-sm text-gray-400">Metode:</PNText>
+                      <PNText className="text-sm text-[var(--cyber-text-muted)]">Metode:</PNText>
                       <PNText className="text-sm">{paymentData.payment_method.toUpperCase()}</PNText>
                     </div>
                   )}
                   {paymentData.description && (
                     <div className="flex justify-between">
-                      <PNText className="text-sm text-gray-400">Keterangan:</PNText>
+                      <PNText className="text-sm text-[var(--cyber-text-muted)]">Keterangan:</PNText>
                       <PNText className="text-sm">{paymentData.description}</PNText>
                     </div>
                   )}
@@ -130,7 +123,7 @@ const PaymentStatus: React.FC = () => {
               )}
 
               <div className="space-y-4">
-                <div className="bg-blue-500/15 border border-blue-400/30 p-5 rounded-xl">
+                <div className="bg-blue-500/15 border border-blue-400/30 p-5 rounded-cyber-lg">
                   <div className="flex items-center justify-center space-x-2 mb-2">
                     <Clock className="text-blue-400" size={16} />
                     <PNText className="text-sm text-blue-300">Mengarahkan ke beranda dalam</PNText>
@@ -150,9 +143,9 @@ const PaymentStatus: React.FC = () => {
                     <span>Kembali ke Beranda</span>
                   </PNButton>
                   <div className="text-center">
-                    <PNText className="text-sm text-gray-400">• Pesanan Anda sedang diproses</PNText>
-                    <PNText className="text-sm text-gray-400">• Akun akan dikirim via WhatsApp dalam 5-30 menit</PNText>
-                    <PNText className="text-sm text-gray-400">• Tim support siap membantu: wa.me/6289653510125</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">• Pesanan Anda sedang diproses</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">• Akun akan dikirim via WhatsApp dalam 5-30 menit</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">• Tim support siap membantu: wa.me/6289653510125</PNText>
                   </div>
                 </div>
               </div>
@@ -168,39 +161,39 @@ const PaymentStatus: React.FC = () => {
                   <PNHeading level={2} className={isExpired ? 'text-orange-400' : 'text-red-400'}>
                     {isExpired ? 'Waktu Pembayaran Habis' : 'Pembayaran Gagal'}
                   </PNHeading>
-                  <PNText className="text-gray-300">{isExpired ? 'Maaf, waktu untuk menyelesaikan pembayaran telah habis.' : 'Maaf, pembayaran Anda tidak dapat diproses.'}</PNText>
+                  <PNText className="text-[var(--cyber-text-secondary)]">{isExpired ? 'Maaf, waktu untuk menyelesaikan pembayaran telah habis.' : 'Maaf, pembayaran Anda tidak dapat diproses.'}</PNText>
                 </div>
               </div>
 
               {paymentData && (
-                <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2 text-left">
+                <div className="bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] p-4 rounded-cyber-lg space-y-2 text-left">
                   <div className="flex justify-between">
-                    <PNText className="text-sm text-gray-400">ID Pembayaran:</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">ID Pembayaran:</PNText>
                     <PNText className="text-sm font-mono">{paymentData.id}</PNText>
                   </div>
                   {paymentData.amount && (
                     <div className="flex justify-between">
-                      <PNText className="text-sm text-gray-400">Jumlah:</PNText>
+                      <PNText className="text-sm text-[var(--cyber-text-muted)]">Jumlah:</PNText>
                       <PNText className="text-sm font-bold">{formatCurrency(paymentData.amount)}</PNText>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <PNText className="text-sm text-gray-400">Status:</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">Status:</PNText>
                     <PNText className={`text-sm ${isExpired ? 'text-orange-400' : 'text-red-400'}`}>{isExpired ? 'EXPIRED' : (paymentData.status || 'FAILED')}</PNText>
                   </div>
                   {isExpired && paymentData.expiry_date && (
                     <div className="flex justify-between">
-                      <PNText className="text-sm text-gray-400">Kedaluwarsa:</PNText>
-                      <PNText className="text-sm text-gray-300">{new Date(paymentData.expiry_date).toLocaleString('id-ID')}</PNText>
+                      <PNText className="text-sm text-[var(--cyber-text-muted)]">Kedaluwarsa:</PNText>
+                      <PNText className="text-sm text-[var(--cyber-text-secondary)]">{new Date(paymentData.expiry_date).toLocaleString('id-ID')}</PNText>
                     </div>
                   )}
                 </div>
               )}
 
               <div className="space-y-4">
-                <div className={`${isExpired ? 'bg-orange-500/15 border border-orange-400/30' : 'bg-yellow-500/15 border border-yellow-400/30'} p-4 rounded-xl text-left`}>
+                <div className={`${isExpired ? 'bg-orange-500/15 border border-orange-400/30' : 'bg-yellow-500/15 border border-yellow-400/30'} p-4 rounded-cyber-lg text-left`}>
                   <PNText className={`${isExpired ? 'text-orange-400' : 'text-yellow-400'} font-semibold mb-2`}>{isExpired ? 'Apa yang terjadi?' : 'Kemungkinan penyebab:'}</PNText>
-                  <ul className="text-sm text-gray-300 space-y-1">
+                  <ul className="text-sm text-[var(--cyber-text-secondary)] space-y-1">
                     {isExpired ? (
                       <>
                         <li>• Anda tidak menyelesaikan pembayaran dalam waktu yang ditentukan</li>
@@ -240,8 +233,8 @@ const PaymentStatus: React.FC = () => {
                     <span>Kembali ke Beranda</span>
                   </PNButton>
                   <div className="text-center">
-                    <PNText className="text-sm text-gray-400">Butuh bantuan? Hubungi customer service:</PNText>
-                    <PNText className="text-sm text-pink-500">wa.me/6289653510125</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">Butuh bantuan? Hubungi customer service:</PNText>
+                    <PNText className="text-sm text-[var(--cyber-pink-primary)]">wa.me/6289653510125</PNText>
                   </div>
                 </div>
               </div>

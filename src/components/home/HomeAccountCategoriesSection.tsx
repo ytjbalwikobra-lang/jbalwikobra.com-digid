@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Crown, UserPlus } from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
-import { PNSection, PNSectionHeader, PNCard } from '../ui/PinkNeonDesignSystem';
+import { PNSection, PNSectionHeader, PNCard, PNContainer } from '../ui/CyberDesignSystem';
 
 const CategorySkeleton: React.FC = () => (
   <div className="min-w-[170px] snap-start" role="presentation" aria-hidden="true">
@@ -25,6 +25,7 @@ const HomeAccountCategoriesSection: React.FC = () => {
   if (loading) {
     return (
       <PNSection padding="md" aria-busy="true" aria-label="Memuat kategori">
+        <PNContainer>
         <PNSectionHeader
           title="Kategori Akun"
           subtitle="Berbagai pilihan untuk Anda"
@@ -47,6 +48,7 @@ const HomeAccountCategoriesSection: React.FC = () => {
             ))}
           </div>
         </div>
+        </PNContainer>
       </PNSection>
     );
   }
@@ -55,6 +57,7 @@ const HomeAccountCategoriesSection: React.FC = () => {
 
   return (
     <PNSection padding="md" aria-label="Kategori akun tersedia">
+      <PNContainer>
       <PNSectionHeader
         title="Kategori Akun"
         subtitle="Berbagai pilihan akun untuk Anda"
@@ -90,13 +93,14 @@ const HomeAccountCategoriesSection: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white font-semibold truncate group-hover:text-pink-300 transition-colors">{c.name}</div>
-                  <div className="text-xs text-gray-400 truncate mt-0.5">Lihat akun {c.name}</div>
+                  <div className="text-xs text-[var(--cyber-text-muted)] truncate mt-0.5">Lihat akun {c.name}</div>
                 </div>
               </div>
             </PNCard>
           </Link>
         ))}
       </div>
+      </PNContainer>
     </PNSection>
   );
 };

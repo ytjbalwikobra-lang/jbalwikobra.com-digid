@@ -95,9 +95,9 @@ export const getNotificationIcon = (type: AdminNotificationType): React.ReactNod
     case 'new_review':
       return <Star className="w-5 h-5 text-yellow-400" />;
     case 'system':
-      return <AlertCircle className="w-5 h-5 text-gray-400" />;
+      return <AlertCircle className="w-5 h-5 text-[var(--cyber-text-muted)]" />;
     default:
-      return <Info className="w-5 h-5 text-gray-400" />;
+      return <Info className="w-5 h-5 text-[var(--cyber-text-muted)]" />;
   }
 };
 
@@ -182,10 +182,10 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
       };
     default:
       return {
-        gradient: 'from-gray-500/20 to-slate-500/10',
-        border: 'border-gray-500/30',
+        gradient: 'from-[var(--cyber-bg-card)] to-slate-500/10',
+        border: 'border-[var(--cyber-border)]',
         icon: 'bg-gradient-to-br from-gray-500 to-slate-600',
-        badge: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
+        badge: 'bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] border-[var(--cyber-border)]',
         glow: 'shadow-gray-500/20',
         bg: 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20',
         pulse: 'bg-pink-500',

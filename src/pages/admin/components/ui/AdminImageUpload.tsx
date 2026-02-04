@@ -365,13 +365,13 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
         {label && <label className="admin-label">{label}</label>}
         
         {successfulImages.length === 0 ? (
-          <p className="text-gray-400 text-sm">No images</p>
+          <p className="text-[var(--cyber-text-muted)] text-sm">No images</p>
         ) : (
           <div className={`grid ${gridColsClass} gap-3`}>
             {successfulImages.map((item, index) => (
               <div
                 key={item.id}
-                className="relative aspect-square rounded-xl overflow-hidden bg-gray-800 border border-gray-700"
+                className="relative aspect-square rounded-cyber-lg overflow-hidden bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)]"
               >
                 <img
                   src={item.url}
@@ -380,7 +380,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 />
                 {/* Primary badge */}
                 {showPrimaryBadge && index === 0 && (
-                  <div className="absolute top-1 left-1 bg-pink-500 text-white text-xs px-2 py-0.5 rounded">
+                  <div className="absolute top-1 left-1 bg-[var(--cyber-pink-primary)] text-white text-xs px-2 py-0.5 rounded">
                     Primary
                   </div>
                 )}
@@ -399,9 +399,9 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       {/* Drop Zone */}
       <div
         className={`
-          border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer
-          ${dragOver ? 'border-pink-500 bg-pink-500/10' : 'border-gray-600 bg-gray-800/50'}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-pink-500/50 hover:bg-gray-800'}
+          border-2 border-dashed rounded-cyber-lg p-6 text-center transition-all cursor-pointer
+          ${dragOver ? 'border-[var(--cyber-pink-primary)] bg-[var(--cyber-pink-primary)]/10' : 'border-[var(--cyber-text-disabled)] bg-[var(--cyber-bg-elevated)]/50'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[var(--cyber-pink-primary)]/50 hover:bg-[var(--cyber-bg-elevated)]'}
         `}
         onDragOver={(e) => {
           e.preventDefault();
@@ -411,8 +411,8 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
         onDrop={handleDropZoneDrop}
         onClick={() => !disabled && inputRef.current?.click()}
       >
-        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-        <p className="text-gray-300 mb-2">
+        <Upload className="h-8 w-8 text-[var(--cyber-text-muted)] mx-auto mb-3" />
+        <p className="text-[var(--cyber-text-secondary)] mb-2">
           {uploading ? 'Uploading...' : 'Drag & drop images here'}
         </p>
         <button
@@ -435,14 +435,14 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
           onChange={handleFileChange}
           disabled={disabled}
         />
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-xs text-[var(--cyber-text-muted)] mt-2">
           {helpText} ({images.length}/{maxImages})
         </p>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-xl">
+        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-cyber-lg">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -452,20 +452,20 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       {uploadingImages.length > 0 && (
         <div className="space-y-2">
           {uploadingImages.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 bg-gray-800 p-3 rounded-xl">
-              <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden">
+            <div key={item.id} className="flex items-center gap-3 bg-[var(--cyber-bg-elevated)] p-3 rounded-cyber-lg">
+              <div className="w-12 h-12 bg-[var(--cyber-bg-card)] rounded overflow-hidden">
                 {item.tempUrl && (
                   <img src={item.tempUrl} alt="Uploading" className="w-full h-full object-cover" />
                 )}
               </div>
               <div className="flex-1">
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-[var(--cyber-bg-card)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-pink-500 transition-all duration-300"
+                    className="h-full bg-[var(--cyber-pink-primary)] transition-all duration-300"
                     style={{ width: `${item.progress}%` }}
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-1">Uploading... {item.progress}%</p>
+                <p className="text-xs text-[var(--cyber-text-muted)] mt-1">Uploading... {item.progress}%</p>
               </div>
             </div>
           ))}
@@ -476,8 +476,8 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       {errorImages.length > 0 && (
         <div className="space-y-2">
           {errorImages.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 bg-red-500/10 p-3 rounded-xl border border-red-500/30">
-              <div className="w-12 h-12 bg-gray-700 rounded overflow-hidden">
+            <div key={item.id} className="flex items-center gap-3 bg-red-500/10 p-3 rounded-cyber-lg border border-red-500/30">
+              <div className="w-12 h-12 bg-[var(--cyber-bg-card)] rounded overflow-hidden">
                 {item.tempUrl && (
                   <img src={item.tempUrl} alt="Failed" className="w-full h-full object-cover opacity-50" />
                 )}
@@ -489,7 +489,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRetry(item.id)}
-                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-300"
+                  className="p-2 bg-[var(--cyber-bg-card)] hover:bg-[var(--cyber-bg-elevated)] rounded-cyber-lg text-[var(--cyber-text-secondary)]"
                   title="Retry"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -497,7 +497,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemove(item.id)}
-                  className="p-2 bg-gray-700 hover:bg-red-600 rounded-xl text-gray-300"
+                  className="p-2 bg-[var(--cyber-bg-card)] hover:bg-red-600 rounded-cyber-lg text-[var(--cyber-text-secondary)]"
                   title="Remove"
                 >
                   <X className="h-4 w-4" />
@@ -515,8 +515,8 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
             <div
               key={item.id}
               className={`
-                relative aspect-square rounded-xl overflow-hidden bg-gray-800 border group cursor-move transition-all
-                ${dragOverIndex === index ? 'border-pink-500 border-2 scale-105' : 'border-gray-700'}
+                relative aspect-square rounded-cyber-lg overflow-hidden bg-[var(--cyber-bg-elevated)] border group cursor-move transition-all
+                ${dragOverIndex === index ? 'border-[var(--cyber-pink-primary)] border-2 scale-105' : 'border-[var(--cyber-border)]'}
                 ${dragItemIndex.current === index ? 'opacity-50' : ''}
               `}
               draggable
@@ -537,7 +537,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemove(item.id)}
-                  className="p-2 bg-red-600 hover:bg-red-700 rounded-xl text-white"
+                  className="p-2 bg-red-600 hover:bg-red-700 rounded-cyber-lg text-white"
                   title="Remove image"
                 >
                   <X className="h-4 w-4" />
@@ -545,7 +545,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
               </div>
               {/* Primary badge */}
               {showPrimaryBadge && index === 0 && (
-                <div className="absolute top-1 left-1 bg-pink-500 text-white text-xs px-2 py-0.5 rounded">
+                <div className="absolute top-1 left-1 bg-[var(--cyber-pink-primary)] text-white text-xs px-2 py-0.5 rounded">
                   Primary
                 </div>
               )}

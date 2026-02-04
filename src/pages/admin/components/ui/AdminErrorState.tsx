@@ -28,14 +28,14 @@ export const AdminErrorState: React.FC<AdminErrorStateProps> = ({
   // Full-page error
   if (variant === 'full-page') {
     return (
-      <div className={cn("bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center", className)} role="alert">
+      <div className={cn("bg-red-500/10 border border-red-500/30 rounded-cyber-2xl p-8 text-center", className)} role="alert">
         <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-red-400 mb-2">{title}</h2>
-        <p className="text-gray-300 mb-6">{message}</p>
+        <p className="text-[var(--cyber-text-secondary)] mb-6">{message}</p>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-cyber-lg transition-colors"
           >
             <RefreshCw size={18} />
             {retryLabel}
@@ -48,7 +48,7 @@ export const AdminErrorState: React.FC<AdminErrorStateProps> = ({
   // Banner error (for page-level notifications)
   if (variant === 'banner') {
     return (
-      <div className={cn("bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-red-300", className)} role="alert">
+      <div className={cn("bg-red-500/20 border border-red-500/30 rounded-cyber-lg p-4 text-red-300", className)} role="alert">
         <div className="flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <div className="flex-1">

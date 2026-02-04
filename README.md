@@ -1,177 +1,270 @@
-# Supabase CLI
+# JB AlWikobra E-commerce Platform
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+A modern e-commerce platform for digital product sales, built with React, TypeScript, and Supabase.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## 🚀 Quick Start
 
-This repository contains all the functionality for Supabase CLI.
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
+- Vercel CLI (optional): `npm install -g vercel`
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
-
-## Getting started
-
-### Install the CLI
-
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+### Quick Setup (2 minutes)
 
 ```bash
-npm i supabase --save-dev
+# Clone and install
+git clone <repository-url>
+cd jbalwikobra.com-digid
+npm install
+
+# Option A: With Vercel (Recommended)
+npm run setup:dev     # Links project and pulls env variables
+
+# Option B: Manual
+cp .env.development .env.local
+# Edit .env.local with your credentials
+
+# Start development
+npm run dev           # Full stack with API
+# OR
+npm start             # Frontend only
 ```
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+**📚 For detailed setup**: See [QUICKSTART.md](QUICKSTART.md) or [Development Environment Guide](docs/guides/development-environment.md)
 
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
-
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
-
-<details>
-  <summary><b>macOS</b></summary>
-
-  Available via [Homebrew](https://brew.sh). To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
+### Development Modes
 
 ```bash
-supabase bootstrap
+npm start              # Frontend only (fast, UI dev)
+npm run dev            # Full stack with Vercel Dev (recommended)
+npm run dev:prod-like  # Production-like testing
+npm run dev:docker     # Docker containerized environment
+npm run preview        # Preview production build locally
 ```
 
-Or using npx:
+## 📁 Project Structure
+
+```
+jbalwikobra.com-digid/
+├── src/                    # Source code
+│   ├── components/         # Reusable React components
+│   ├── pages/              # Page components
+│   ├── features/           # Feature modules
+│   ├── services/           # API services
+│   ├── hooks/              # Custom React hooks
+│   ├── contexts/           # React contexts
+│   ├── layouts/            # Layout components
+│   ├── utils/              # Utility functions
+│   └── types/              # TypeScript types
+├── api/                    # Serverless API endpoints
+│   ├── __tests__/          # API test files
+│   ├── _config/            # API configuration
+│   ├── _middleware/        # API middleware
+│   └── _utils/             # API utilities
+├── scripts/                # Utility scripts
+│   ├── tests/              # Test scripts
+│   ├── monitoring/         # Monitoring & diagnostic scripts
+│   └── maintenance/        # Maintenance & migration scripts
+├── docs/                   # Documentation
+│   ├── admin/              # Admin panel documentation
+│   ├── features/           # Feature documentation
+│   ├── architecture/       # Architecture documentation
+│   ├── deployment/         # Deployment guides
+│   ├── security/           # Security documentation
+│   ├── troubleshooting/    # Troubleshooting guides
+│   ├── guides/             # How-to guides
+│   └── INDEX.md            # Documentation index
+├── migrations/             # Database migrations
+├── public/                 # Static assets
+└── supabase/              # Supabase configuration
+```
+
+## 📚 Documentation
+
+For comprehensive documentation, see [docs/INDEX.md](docs/INDEX.md)
+
+### Quick Links
+- [Deployment Instructions](docs/deployment/instructions.md)
+- [Admin Panel Documentation](docs/admin/)
+- [Security Best Practices](docs/security/security-best-practices.md)
+- [Troubleshooting Guide](docs/troubleshooting/)
+- [API Documentation](api/README.md)
+
+## 🛠️ Development
+
+### Available Scripts
 
 ```bash
-npx supabase bootstrap
+# Development
+npm start                   # Start development server
+npm run build              # Build for production
+npm test                   # Run tests
+
+# Linting
+npm run lint              # Run ESLint
+npm run lint:fix          # Fix linting issues
+
+# Deployment
+npm run deploy            # Deploy to Vercel
 ```
 
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+### Environment Variables
 
-## Docs
+See [.env.example](.env.example) for required environment variables:
+- `REACT_APP_SUPABASE_URL` - Supabase project URL
+- `REACT_APP_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `REACT_APP_TURNSTILE_SITE_KEY` - Cloudflare Turnstile site key
+- `REACT_APP_MAINTENANCE_MODE` - Enable/disable maintenance mode
 
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+For detailed configuration, see [docs/deployment/instructions.md](docs/deployment/instructions.md)
 
-## Breaking changes
+## 🔒 Security
 
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+- All secrets must be stored in environment variables
+- Follow [security best practices](docs/security/security-best-practices.md)
+- Use [secret management guidelines](docs/security/secret-management.md)
+- Enable Cloudflare Turnstile for bot protection
 
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+## 🚢 Deployment
 
-## Developing
+### Vercel (Recommended)
 
-To run from source:
+```bash
+# Deploy to production
+vercel --prod
 
-```sh
-# Go >= 1.22
-go run . help
+# Deploy to preview
+vercel
 ```
+
+See [Deployment Checklist](docs/deployment/checklist.md) for complete deployment guide.
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test suite
+npm test -- --testPathPattern=admin
+
+# Run with coverage
+npm test -- --coverage
+```
+
+### Manual Testing
+
+Test scripts are available in `scripts/tests/`:
+- Admin authentication tests
+- Payment flow tests
+- API endpoint tests
+- WhatsApp integration tests
+
+## 📦 Features
+
+### Customer Features
+- Product catalog with search and filters
+- Shopping cart with real-time updates
+- Multiple payment methods (QRIS, Bank Transfer, E-wallet)
+- Order tracking and history
+- WhatsApp notifications
+- Purchase notification ticker
+
+### Admin Features
+- Comprehensive admin dashboard
+- Product management (CRUD)
+- Order management
+- Real-time notifications
+- WhatsApp group integration
+- Analytics and reporting
+- User management
+
+## 🔧 Maintenance
+
+### Maintenance Mode
+
+Enable maintenance mode via environment variable:
+```bash
+REACT_APP_MAINTENANCE_MODE=true
+```
+
+See [Maintenance Mode Guide](docs/deployment/maintenance-mode-guide.md) for details.
+
+### Database Migrations
+
+Migrations are stored in `/migrations/` and should be run in order:
+```bash
+# Run migration
+npm run migrate
+```
+
+## 📊 Monitoring
+
+### Performance Monitoring
+- Vercel Analytics integration
+- Speed Insights enabled
+- Custom performance monitoring scripts in `scripts/monitoring/`
+
+### Error Tracking
+- API error logging
+- Frontend error boundaries
+- Webhook failure monitoring
+
+## 🤝 Contributing
+
+### Code Style
+- Follow TypeScript best practices
+- Use ESLint for code quality
+- Follow component naming conventions
+- Write meaningful commit messages
+
+### Documentation
+- Update documentation for new features
+- Use kebab-case for file names
+- Keep docs organized by category
+- Update INDEX.md when adding new docs
+
+### Git Workflow
+```bash
+# Create feature branch
+git checkout -b feature/your-feature
+
+# Make changes and commit
+git add .
+git commit -m "feat: add new feature"
+
+# Push and create pull request
+git push origin feature/your-feature
+```
+
+## 📝 Changelog
+
+See [docs/changelog-admin.md](docs/changelog-admin.md) and [docs/changelog-week1.md](docs/changelog-week1.md) for recent changes.
+
+## 🗺️ Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for planned features and improvements.
+
+## 📄 License
+
+See [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For troubleshooting and support:
+1. Check [troubleshooting guides](docs/troubleshooting/)
+2. Review [FAQ section](docs/guides/)
+3. Contact development team
+
+## 🔗 Links
+
+- **Production**: https://www.jbalwikobra.com
+- **Documentation**: [docs/INDEX.md](docs/INDEX.md)
+- **Repository**: Contact admin for access
+
+---
+
+Built with ❤️ using React, TypeScript, and Supabase

@@ -86,7 +86,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="admin-btn-ghost p-2 rounded-xl hover:bg-white/10 transition-colors"
+                className="admin-btn-ghost p-2 rounded-cyber-lg hover:bg-white/10 transition-colors"
                 aria-label="Close modal"
               >
                 <X size={20} />

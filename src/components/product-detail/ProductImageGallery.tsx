@@ -7,7 +7,7 @@
 import React from 'react';
 import { Zap } from 'lucide-react';
 import ResponsiveImage from '../ResponsiveImage';
-import { PNCard } from '../ui/PinkNeonDesignSystem';
+import { PNCard } from '../ui/CyberDesignSystem';
 
 interface ProductImageGalleryProps {
   images: string[];

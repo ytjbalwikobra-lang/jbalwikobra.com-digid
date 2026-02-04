@@ -129,17 +129,17 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
     >
       <div className="space-y-4">
         {/* Product Info */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center gap-3 p-3 rounded-cyber-lg bg-white/5 border border-white/10">
           {product.image && (
             <img 
               src={product.image} 
               alt={product.name}
-              className="w-12 h-12 rounded-xl object-cover"
+              className="w-12 h-12 rounded-cyber-lg object-cover"
             />
           )}
           <div className="flex-1 min-w-0">
             <h4 className="text-white font-medium truncate">{product.name}</h4>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-[var(--cyber-text-muted)]">
               Harga asli: {formatCurrency(originalPrice)}
             </p>
           </div>
@@ -149,12 +149,12 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
         <div>
           <label 
             htmlFor="sold-price" 
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-2"
           >
             Harga Jual Sebenarnya
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">Rp</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">Rp</span>
             <input
               ref={inputRef}
               id="sold-price"
@@ -163,7 +163,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
               value={displayPrice}
               onChange={handlePriceChange}
               onKeyDown={handleKeyDown}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-cyber-lg bg-white/5 border border-white/20 text-white placeholder-[var(--cyber-text-muted)] focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
               placeholder="Masukkan harga jual"
               disabled={loading}
               aria-describedby={error ? 'price-error' : undefined}
@@ -179,7 +179,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
 
         {/* Price Difference Indicator */}
         {numericSoldPrice > 0 && priceDifference !== 0 && (
-          <div className={`p-3 rounded-xl ${hasDiscount ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-green-500/10 border border-green-500/30'}`}>
+          <div className={`p-3 rounded-cyber-lg ${hasDiscount ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-green-500/10 border border-green-500/30'}`}>
             <p className={`text-sm ${hasDiscount ? 'text-yellow-300' : 'text-green-300'}`}>
               {hasDiscount ? (
                 <>
@@ -195,7 +195,7 @@ export const SoldViaWAModal: React.FC<SoldViaWAModalProps> = ({
         )}
 
         {/* Confirmation Note */}
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[var(--cyber-text-muted)]">
           Produk akan ditandai sebagai tidak aktif dan terjual via WhatsApp dengan harga yang Anda masukkan.
         </p>
       </div>

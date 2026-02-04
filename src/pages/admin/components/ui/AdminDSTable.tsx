@@ -57,7 +57,7 @@ export interface AdminDSTableProps<T = any> {
 }
 
 function actionBtnClass(variant: DSTableAction['variant']) {
-  const base = 'p-2 rounded-xl transition-colors';
+  const base = 'p-2 rounded-cyber-lg transition-colors';
   switch (variant) {
     case 'primary':
       return `${base} bg-ds-pink text-white hover:bg-ds-pink/90`;
@@ -102,7 +102,7 @@ export function AdminDSTable<T extends Record<string, any>>({
 
   if (loading) {
     return (
-      <div className={cn('dashboard-data-panel padded rounded-xl p-stack-lg', className)}>
+      <div className={cn('dashboard-data-panel padded rounded-cyber-lg p-stack-lg', className)}>
         <div className="p-12 text-center">
           <div className="w-16 h-16 bg-surface-tint-light rounded-full animate-pulse mx-auto mb-4" />
           <p className="text-ds-text-secondary font-medium">Memuat data...</p>
@@ -113,7 +113,7 @@ export function AdminDSTable<T extends Record<string, any>>({
 
   if (!data.length) {
     return (
-      <div className={cn('dashboard-data-panel padded rounded-xl p-stack-lg', className)}>
+      <div className={cn('dashboard-data-panel padded rounded-cyber-lg p-stack-lg', className)}>
         <div className="p-12 text-center">
           {EmptyIcon && <EmptyIcon className="w-16 h-16 text-ds-text-tertiary mx-auto mb-4" />}
           <p className="text-ds-text-secondary font-medium">{emptyMessage}</p>
@@ -131,7 +131,7 @@ export function AdminDSTable<T extends Record<string, any>>({
   const totalPages = showPagination ? Math.max(1, Math.ceil((totalItems as number) / (pageSize as number))) : 1;
 
   return (
-    <div className={cn('dashboard-data-panel padded rounded-xl p-stack-lg', className)}>
+    <div className={cn('dashboard-data-panel padded rounded-cyber-lg p-stack-lg', className)}>
       <div className="overflow-x-auto">
         <table className="w-full" role="table">
           <thead className={stickyHeader ? 'sticky top-0 bg-surface-glass-light' : undefined}>

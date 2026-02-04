@@ -30,7 +30,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCountries, setFilteredCountries] = useState(COUNTRIES);
-  const [error, setError] = useState<string>('');
+  const [_validationError, setValidationError] = useState<string>('');
   const [isValid, setIsValid] = useState<boolean>(true);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   
@@ -152,7 +152,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
     // Apply country-specific formatting
     if (country.code === 'ID') {
-      return localNumber.replace(/(\d{3})(\d{4})?(\d{4})?/, (match, p1, p2, p3) => {
+      return localNumber.replace(/(\d{3})(\d{4})?(\d{4})?/, (_match, p1, p2, p3) => {
         let result = p1;
         if (p2) result += '-' + p2;
         if (p3) result += '-' + p3;
@@ -161,7 +161,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     }
     
     if (country.code === 'MY') {
-      return localNumber.replace(/(\d{2})(\d{3})?(\d{4})?/, (match, p1, p2, p3) => {
+      return localNumber.replace(/(\d{2})(\d{3})?(\d{4})?/, (_match, p1, p2, p3) => {
         let result = p1;
         if (p2) result += '-' + p2;
         if (p3) result += '-' + p3;
@@ -188,7 +188,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     
     // Validate and format
     const validation = validatePhoneNumber(inputValue, currentCountry);
-    setError(validation.error);
+    setValidationError(validation.error);
     setIsValid(validation.isValid);
     
     // Format for display
@@ -227,7 +227,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     // Revalidate with new country
     if (phoneNumber) {
       const validation = validatePhoneNumber(phoneNumber, country);
-      setError(validation.error);
+      setValidationError(validation.error);
       setIsValid(validation.isValid);
       
       if (onValidationChange) {
@@ -307,7 +307,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       
       // Validate
       const validation = validatePhoneNumber(value, currentCountry);
-      setError(validation.error);
+      setValidationError(validation.error);
       setIsValid(validation.isValid);
     }
   }, [value, disableAutoDetection]);
@@ -319,7 +319,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   };
 
   const getIconColor = () => {
-    if (!phoneNumber) return 'text-gray-400';
+    if (!phoneNumber) return 'text-[var(--cyber-text-muted)]';
     if (isValid) return 'text-green-500';
     return 'text-red-500';
   };
@@ -341,7 +341,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           className="flex items-center gap-2 px-3 py-2 border-r border-white/20 hover:bg-white/10 transition-colors cursor-pointer"
         >
           <span className="text-lg">{selectedCountry.flag}</span>
-          <ChevronDown size={16} className={`text-gray-300 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+          <ChevronDown size={16} className={`text-[var(--cyber-text-secondary)] transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Phone Number Input */}
@@ -353,7 +353,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           placeholder={placeholder || selectedCountry.placeholder}
           required={required}
           maxLength={Math.max(selectedCountry.maxLength || 15, 15)}
-          className="flex-1 px-3 py-2 bg-transparent border-0 focus:outline-none focus:ring-0 text-white placeholder:text-gray-400"
+          className="flex-1 px-3 py-2 bg-transparent border-0 focus:outline-none focus:ring-0 text-white placeholder:text-[var(--cyber-text-muted)]"
         />
 
         {/* Validation Icon */}
@@ -368,7 +368,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {showDropdown && (
         <div 
           ref={dropdownRef} 
-          className="fixed bg-gray-900/95 border border-pink-500/30 rounded-xl backdrop-blur-md shadow-xl z-[99999] max-h-64 overflow-hidden" 
+          className="fixed bg-[var(--cyber-bg-pure)]/95 border border-pink-500/30 rounded-xl backdrop-blur-md shadow-xl z-[99999] max-h-64 overflow-hidden" 
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -378,13 +378,13 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           {/* Search */}
           <div className="p-3 border-b border-pink-500/20">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--cyber-text-muted)]" />
               <input
                 type="text"
                 placeholder="Search countries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-pink-500/30 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-black/50 border border-pink-500/30 rounded-xl text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500/50 transition-all duration-200"
               />
             </div>
           </div>
@@ -406,7 +406,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             ))}
             
             {filteredCountries.length === 0 && (
-              <div className="px-3 py-4 text-center text-gray-300 text-sm">
+              <div className="px-3 py-4 text-center text-[var(--cyber-text-secondary)] text-sm">
                 No countries found
               </div>
             )}

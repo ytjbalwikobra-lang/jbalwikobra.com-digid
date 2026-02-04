@@ -7,35 +7,41 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Cyber-Compact Design System
+        // Cyber-Compact Design System - CSS Variable Bridge
+        // Use these for Tailwind classes that reference cyber-compact.css tokens
         cyber: {
-          pure: '#000000',
-          surface: '#0a0a0a',
-          elevated: '#121212',
-          card: '#1a1a1a',
+          // Backgrounds - use CSS variables for consistency
+          pure: 'var(--cyber-bg-pure, #000000)',
+          surface: 'var(--cyber-bg-surface, #0a0a0a)',
+          elevated: 'var(--cyber-bg-elevated, #121212)',
+          card: 'var(--cyber-bg-card, #1a1a1a)',
+          // Pink spectrum
           pink: {
-            glow: '#ff2d92',
-            DEFAULT: '#ec4899',
-            secondary: '#f472b6',
-            muted: 'rgba(236, 72, 153, 0.3)',
-            subtle: 'rgba(236, 72, 153, 0.15)',
-            ghost: 'rgba(236, 72, 153, 0.08)',
+            glow: 'var(--cyber-pink-glow, #ff2d92)',
+            DEFAULT: 'var(--cyber-pink-primary, #ec4899)',
+            secondary: 'var(--cyber-pink-secondary, #f472b6)',
+            muted: 'var(--cyber-pink-muted, rgba(236, 72, 153, 0.3))',
+            subtle: 'var(--cyber-pink-subtle, rgba(236, 72, 153, 0.15))',
+            ghost: 'var(--cyber-pink-ghost, rgba(236, 72, 153, 0.08))',
           },
-          cyan: '#06b6d4',
-          purple: '#a855f7',
-          green: '#10b981',
-          orange: '#f97316',
-          red: '#ef4444',
+          // Status colors
+          cyan: 'var(--cyber-cyan, #06b6d4)',
+          purple: 'var(--cyber-purple, #a855f7)',
+          green: 'var(--cyber-success, #10b981)',
+          orange: 'var(--cyber-orange, #f97316)',
+          red: 'var(--cyber-error, #ef4444)',
+          // Text hierarchy
           text: {
-            DEFAULT: '#ffffff',
-            secondary: '#a1a1aa',
-            muted: '#71717a',
-            disabled: '#52525b',
+            DEFAULT: 'var(--cyber-text-primary, #ffffff)',
+            secondary: 'var(--cyber-text-secondary, #a1a1aa)',
+            muted: 'var(--cyber-text-muted, #71717a)',
+            disabled: 'var(--cyber-text-disabled, #52525b)',
           },
+          // Borders
           border: {
-            DEFAULT: 'rgba(255, 255, 255, 0.08)',
-            hover: 'rgba(255, 255, 255, 0.15)',
-            active: 'rgba(236, 72, 153, 0.5)',
+            DEFAULT: 'var(--cyber-border, rgba(255, 255, 255, 0.08))',
+            hover: 'var(--cyber-border-hover, rgba(255, 255, 255, 0.15))',
+            active: 'var(--cyber-border-active, rgba(236, 72, 153, 0.5))',
           },
         },
         ds: {
@@ -62,21 +68,9 @@ module.exports = {
           accent600: 'var(--accent-600)',
           dark: '#000000'
         },
-        // iOS Design System Colors
-        ios: {
-          background: 'var(--ios-background)',
-          surface: 'var(--ios-surface)',
-          'surface-secondary': 'var(--ios-surface-secondary)',
-          text: 'var(--ios-text)',
-          'text-secondary': 'var(--ios-text-secondary)',
-          border: 'var(--ios-border)',
-          accent: 'var(--ios-accent)',
-          primary: 'var(--ios-primary)',
-          secondary: 'var(--ios-secondary)',
-          destructive: 'var(--ios-destructive)',
-          success: 'var(--ios-success)',
-          warning: 'var(--ios-warning)'
-        },
+        // Cyber-Compact Design System Colors (Primary)
+        // Use CSS variables directly: bg-[var(--cyber-pink-primary)]
+        // iOS Design System (DEPRECATED - Use Cyber tokens instead)
         primary: {
           50: '#fdf2f8',
           100: '#fce7f3',
@@ -121,6 +115,13 @@ module.exports = {
         '6': '1.5rem',      // 24px
       },
       borderRadius: {
+        // Cyber-Compact radius tokens
+        'cyber-sm': 'var(--cyber-radius-sm, 4px)',
+        'cyber-md': 'var(--cyber-radius-md, 8px)',
+        'cyber-lg': 'var(--cyber-radius-lg, 12px)',
+        'cyber-xl': 'var(--cyber-radius-xl, 16px)',
+        'cyber-2xl': 'var(--cyber-radius-2xl, 20px)',
+        // Standard Tailwind overrides
         'sm': '0.375rem',   // 6px
         'DEFAULT': '0.5rem', // 8px
         'md': '0.5rem',     // 8px

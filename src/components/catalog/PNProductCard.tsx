@@ -1,6 +1,6 @@
 /**
- * PNProductCard - Clean product card with square image and overlay badge
- * WCAG 2.1 AA compliant, PinkNeon design system
+ * PNProductCard - Clean product card using Cyber-Compact design tokens
+ * WCAG 2.1 AA compliant, consistent with cyber-compact.css
  */
 
 import React, { useCallback } from 'react';
@@ -60,10 +60,10 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
       onClick={isSold ? undefined : onClick}
       onMouseEnter={handlePrefetch}
       onFocus={handlePrefetch}
-      className={`group rounded-2xl bg-white/5 border border-white/10 overflow-hidden transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${
+      className={`group rounded-cyber-2xl bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] overflow-hidden transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cyber-bg-pure)] ${
         isSold 
           ? 'cursor-not-allowed opacity-75' 
-          : 'cursor-pointer hover:border-pink-500/30 hover:bg-white/[0.07]'
+          : 'cursor-pointer hover:border-[var(--cyber-border-active)] hover:bg-[var(--cyber-bg-elevated)]'
       } ${className}`}
       role="button"
       tabIndex={isSold ? -1 : 0}
@@ -72,24 +72,24 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
       onKeyDown={(e) => !isSold && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onClick?.())}
     >
       {/* Image Container - 4:5 ratio */}
-      <div className={`relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-pink-900/30 to-fuchsia-900/30 ${isSold ? 'grayscale' : ''}`}>
+      <div className={`relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-[var(--cyber-pink-muted)] to-[var(--cyber-bg-elevated)] ${isSold ? 'grayscale' : ''}`}>
         {image ? (
           <img 
             src={image} 
             alt={title} 
-            className={`w-full h-full object-cover transition-transform duration-300 ${isSold ? '' : 'group-hover:scale-105'}`} 
+            className={`w-full h-full object-cover transition-transform duration-150 ${isSold ? '' : 'group-hover:scale-105'}`} 
             loading="lazy" 
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+          <div className="w-full h-full flex items-center justify-center text-[var(--cyber-text-muted)] text-xs">
             No Image
           </div>
         )}
         
         {/* SOLD Banner - Full width diagonal overlay */}
         {isSold && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="bg-red-600 text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-xl shadow-lg transform -rotate-12">
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--cyber-bg-pure)]/50">
+            <div className="bg-[var(--cyber-error)] text-white text-xs sm:text-sm font-bold px-4 py-1.5 rounded-cyber-lg shadow-lg transform -rotate-12">
               {soldLabel}
             </div>
           </div>
@@ -97,14 +97,14 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
         
         {/* Discount Badge - Top Right (hide when sold) */}
         {!isSold && discountPercent && discountPercent > 0 && (
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-xl bg-pink-500 text-white text-xs font-bold shadow-lg">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-pink-primary)] text-white text-xs font-bold shadow-lg">
             -{discountPercent}%
           </div>
         )}
         
         {/* Rental Badge - Top Left (hide when sold) */}
         {!isSold && rentalAvailable && (
-          <div className="absolute top-2 left-2 px-2 py-1 rounded-xl bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-success)]/90 backdrop-blur-sm text-white text-[10px] font-semibold">
             Rental
           </div>
         )}
@@ -118,7 +118,7 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
               </span>
             )}
             {tierName && (
-              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md backdrop-blur-sm text-white text-[10px] font-medium ${TIER_DOT_COLORS[tierSlug || ''] || 'bg-gray-600'}`}>
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md backdrop-blur-sm text-white text-[10px] font-medium ${TIER_DOT_COLORS[tierSlug || ''] || 'bg-[var(--cyber-bg-elevated)]'}`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
                 {tierName}
               </span>
@@ -129,12 +129,12 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
 
       {/* Content */}
       <div className="p-3">
-        <h3 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 mb-1.5">
+        <h3 className="text-xs sm:text-sm font-semibold text-[var(--cyber-text-primary)] line-clamp-2 mb-1.5">
           {title}
         </h3>
         
         {price && (
-          <div className="text-pink-300 font-bold text-sm sm:text-base mb-2">
+          <div className="text-[var(--cyber-pink-secondary)] font-bold text-sm sm:text-base mb-2">
             {price}
           </div>
         )}

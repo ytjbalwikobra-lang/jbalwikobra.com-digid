@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { uploadFiles, deletePublicUrls, UploadResult } from '../services/storageService';
+import { uploadFiles, deletePublicUrls } from '../services/storageService';
 
 /**
  * useImageGallery - Reusable hook for managing image galleries in modals

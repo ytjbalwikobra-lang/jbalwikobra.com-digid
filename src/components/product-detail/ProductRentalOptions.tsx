@@ -7,7 +7,7 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { RentalOption } from '../../types';
-import { PNHeading, PNCard, PNText } from '../ui/PinkNeonDesignSystem';
+import { PNHeading, PNCard, PNText } from '../ui/CyberDesignSystem';
 
 interface ProductRentalOptionsProps {
   rentalOptions: RentalOption[];

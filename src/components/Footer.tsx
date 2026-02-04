@@ -84,18 +84,18 @@ const Footer: React.FC = () => {
 
   return (
     <footer 
-      className="relative bg-gray-950 border-t border-white/10 overflow-hidden"
+      className="relative bg-[var(--cyber-bg-surface)] border-t border-[var(--cyber-border)] overflow-hidden"
       role="contentinfo"
       aria-label="Footer website"
     >
       {/* Background gradient accent */}
       <div 
-        className="absolute inset-0 bg-gradient-to-t from-pink-950/20 via-transparent to-transparent pointer-events-none" 
+        className="absolute inset-0 bg-gradient-to-t from-[var(--cyber-pink-subtle)] via-transparent to-transparent pointer-events-none" 
         aria-hidden="true" 
       />
       
       {/* Trust Badges Bar - Mobile: horizontal scroll, Desktop: centered row */}
-      <div className="relative border-b border-white/5 bg-white/[0.02]">
+      <div className="relative border-b border-[var(--cyber-border)] bg-[var(--cyber-bg-elevated)]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-center gap-6 sm:gap-8 lg:gap-12 overflow-x-auto scrollbar-hide">
             {trustBadges.map((badge) => (
@@ -139,14 +139,14 @@ const Footer: React.FC = () => {
                 <span className="block text-xl font-bold text-white group-hover:text-pink-200 transition-colors">
                   {siteName}
                 </span>
-                <span className="block text-xs text-gray-400 font-medium">
+                <span className="block text-xs text-[var(--cyber-text-muted)] font-medium">
                   Game Account Marketplace
                 </span>
               </div>
             </Link>
             
             {/* Tagline */}
-            <p className="text-sm text-gray-300 leading-relaxed max-w-xs">
+            <p className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed max-w-xs">
               Platform terpercaya untuk jual beli akun game. Transaksi aman, proses cepat, harga terjangkau.
             </p>
 
@@ -193,10 +193,10 @@ const Footer: React.FC = () => {
                       <li key={link.href}>
                         <Link
                           to={link.href}
-                          className="group inline-flex items-center gap-1.5 text-sm text-gray-300 hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 rounded-md"
+                          className="group inline-flex items-center gap-1.5 text-sm text-[var(--cyber-text-secondary)] hover:text-pink-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/60 rounded-md"
                         >
                           <ChevronRight 
-                            className="w-3 h-3 text-gray-400 group-hover:text-pink-500 group-hover:translate-x-0.5 transition-all" 
+                            className="w-3 h-3 text-[var(--cyber-text-muted)] group-hover:text-pink-500 group-hover:translate-x-0.5 transition-all" 
                             aria-hidden="true" 
                           />
                           <span>{link.label}</span>
@@ -217,12 +217,12 @@ const Footer: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             
             {/* Copyright */}
-            <p className="text-xs sm:text-sm text-gray-400 text-center sm:text-left order-2 sm:order-1">
+            <p className="text-xs sm:text-sm text-[var(--cyber-text-muted)] text-center sm:text-left order-2 sm:order-1">
               © {currentYear} {siteName}. All rights reserved.
             </p>
 
             {/* Made with love */}
-            <p className="text-xs sm:text-sm text-gray-400 flex items-center gap-1.5 order-1 sm:order-2">
+            <p className="text-xs sm:text-sm text-[var(--cyber-text-muted)] flex items-center gap-1.5 order-1 sm:order-2">
               <span>Made with</span>
               <Heart 
                 className="w-3.5 h-3.5 text-pink-500 animate-pulse" 

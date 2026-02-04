@@ -2,10 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { NotificationProvider } from './components/ios/NotificationSystem';
+import { NotificationProvider } from './components/ui/NotificationSystem';
 import { injectCriticalCSS } from './utils/criticalCSS';
 import { initWebVitalsMonitoring } from './utils/webVitalsMonitor';
-import { FontOptimizer } from './utils/fontOptimizer';
 import { silenceConsoleInProduction } from './utils/consoleSilencer';
 
 // Suppress React DevTools warning in development

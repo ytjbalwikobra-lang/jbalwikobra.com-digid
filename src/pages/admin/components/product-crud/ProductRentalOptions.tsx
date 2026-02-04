@@ -1,5 +1,5 @@
 import React from 'react';
-import { IOSButton } from '../../../../components/ios/IOSDesignSystemV2';
+import { PNButton } from '../../../../components/ui/CyberDesignSystem';
 import { Clock, X } from 'lucide-react';
 import { formatNumberID, parseNumberID } from '../../../../utils/helpers';
 
@@ -52,7 +52,7 @@ export const ProductRentalOptions: React.FC<ProductRentalOptionsProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500/20 to-green-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
+          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500/20 to-green-600/20 rounded-cyber-lg flex items-center justify-center border border-emerald-500/30">
             <Clock className="w-5 h-5 text-emerald-400" />
           </div>
           <h3 className="text-lg font-semibold text-white">Rental Option</h3>
@@ -96,13 +96,13 @@ export const ProductRentalOptions: React.FC<ProductRentalOptionsProps> = ({
                   const numValue = e.target.value.replace(/[^0-9]/g, '');
                   updateRow(row.id, 'qty', numValue);
                 }}
-                className="col-span-2 px-3 py-2 rounded-xl bg-black/40 backdrop-blur-sm border border-white/15 text-white placeholder-white/40 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 text-sm"
+                className="col-span-2 px-3 py-2 rounded-cyber-lg bg-black/40 backdrop-blur-sm border border-white/15 text-white placeholder-white/40 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 text-sm"
                 placeholder="0"
               />
               <select
                 value={row.type}
                 onChange={e => updateRow(row.id, 'type', e.target.value)}
-                className="col-span-3 px-3 py-2 rounded-xl bg-black/40 backdrop-blur-sm border border-white/15 text-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 text-sm"
+                className="col-span-3 px-3 py-2 rounded-cyber-lg bg-black/40 backdrop-blur-sm border border-white/15 text-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 text-sm"
               >
                 <option value="">Select</option>
                 <option value="Hours">Hours</option>
@@ -118,14 +118,14 @@ export const ProductRentalOptions: React.FC<ProductRentalOptionsProps> = ({
                   const parsedValue = parseNumberID(e.target.value);
                   updateRow(row.id, 'price', parsedValue.toString());
                 }}
-                className="col-span-5 px-3 py-2 rounded-xl bg-black/40 backdrop-blur-sm border border-white/15 text-white placeholder-white/40 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 text-sm"
+                className="col-span-5 px-3 py-2 rounded-cyber-lg bg-black/40 backdrop-blur-sm border border-white/15 text-white placeholder-white/40 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 text-sm"
                 placeholder="Rp 0"
               />
               <div className="col-span-2 flex justify-end">
                 <button
                   type="button"
                   onClick={() => removeRow(row.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs text-red-200"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded-cyber-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs text-red-200"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -136,17 +136,17 @@ export const ProductRentalOptions: React.FC<ProductRentalOptionsProps> = ({
       </div>
 
       <div className="mt-6">
-        <IOSButton
+        <PNButton
           onClick={addRow}
           disabled={!enabled || options.length >= max}
           className={`w-full transition-all duration-300 ${
             !enabled || options.length >= max
-              ? 'bg-gray-600/20 border-gray-600/30 text-gray-400 cursor-not-allowed'
+              ? 'bg-[var(--cyber-bg-elevated)]/20 border-[var(--cyber-border)]/30 text-[var(--cyber-text-muted)] cursor-not-allowed'
               : 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-emerald-500/30 hover:from-emerald-500/30 hover:to-green-500/30 text-emerald-200'
           }`}
         >
           Add Rental Option
-        </IOSButton>
+        </PNButton>
       </div>
     </div>
   );

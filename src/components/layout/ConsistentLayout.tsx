@@ -19,7 +19,7 @@ export const ConsistentLayout: React.FC<ConsistentLayoutProps> = ({
 }) => {
   const containerClasses = fullWidth 
     ? 'w-full'
-    : 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8';
+    : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
   
   const paddingClasses = noPadding ? '' : 'py-6';
 
@@ -37,7 +37,7 @@ export const PageWrapper: React.FC<{ children: React.ReactNode; className?: stri
   children,
   className = ''
 }) => (
-  <div className={`min-h-screen bg-black text-white ${className}`}>
+  <div className={`min-h-screen bg-[var(--cyber-bg-pure)] text-[var(--cyber-text-primary)] ${className}`}>
     {children}
   </div>
 );
@@ -56,7 +56,7 @@ export const ContentSection: React.FC<{
 }) => {
   const bgClasses = {
     default: '',
-    surface: 'bg-black border-b border-gray-700',
+    surface: 'bg-[var(--cyber-bg-pure)] border-b border-[var(--cyber-border)]',
     gradient: 'bg-gradient-to-r from-pink-600 via-pink-500 to-rose-500'
   };
 

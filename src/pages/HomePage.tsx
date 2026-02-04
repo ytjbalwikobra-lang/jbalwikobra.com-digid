@@ -155,11 +155,11 @@ const HomePage: React.FC = () => {
 
   if (state.error && state.flashSales.length === 0 && state.popularGames.length === 0) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-4">
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center max-w-md w-full">
+      <div className="min-h-screen bg-[var(--cyber-bg-pure)] flex items-center justify-center px-4">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-cyber-2xl p-8 text-center max-w-md w-full">
           <div className="text-6xl mb-4" aria-hidden="true">😔</div>
           <h2 className="text-xl font-bold text-white mb-2">Oops! Terjadi Kesalahan</h2>
-          <p className="text-gray-300 mb-6 text-sm">{state.error}</p>
+          <p className="text-[var(--cyber-text-secondary)] mb-6 text-sm">{state.error}</p>
           <button
             onClick={handleRetry}
             className="cyber-btn cyber-btn-primary w-full"
@@ -173,7 +173,7 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)]">
       {/* SEO Head with Homepage-specific meta tags and schemas */}
       <SEOHead
         title="Gaming Marketplace #1 Indonesia"
@@ -188,7 +188,7 @@ const HomePage: React.FC = () => {
 
       {/* Error banner for partial failures */}
       {state.error && (state.flashSales.length > 0 || state.popularGames.length > 0) && (
-        <div className="mx-4 sm:mx-6 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-xl p-4" role="alert">
+        <div className="mx-4 sm:mx-6 mt-4 bg-amber-900/20 border border-amber-600/30 rounded-cyber-lg p-4" role="alert">
           <p className="text-amber-200 text-sm">{state.error}</p>
         </div>
       )}

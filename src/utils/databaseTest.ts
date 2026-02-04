@@ -10,7 +10,7 @@ export const testDatabaseConnection = async () => {
   
   try {
     // Test basic connection
-    const { data, error } = await supabase.from('products').select('count').limit(1);
+    const { data: _data, error } = await supabase.from('products').select('count').limit(1);
     if (error) {
       console.error('❌ Database connection failed:', error);
       return false;
@@ -20,7 +20,7 @@ export const testDatabaseConnection = async () => {
     
     // Check if tiers table exists
     try {
-      const { data: tiersData, error: tiersError } = await supabase.from('tiers').select('id').limit(1);
+      const { data: _tiersData, error: tiersError } = await supabase.from('tiers').select('id').limit(1);
       if (tiersError) {
         console.warn('⚠️ Tiers table issue:', tiersError.message);
       } else {
@@ -31,7 +31,7 @@ export const testDatabaseConnection = async () => {
 
     // Check if game_titles table exists
     try {
-      const { data: gamesData, error: gamesError } = await supabase.from('game_titles').select('id').limit(1);
+      const { data: _gamesData, error: gamesError } = await supabase.from('game_titles').select('id').limit(1);
       if (gamesError) {
         console.warn('⚠️ Game titles table issue:', gamesError.message);
       } else {
@@ -42,7 +42,7 @@ export const testDatabaseConnection = async () => {
 
     // Check products table structure
     try {
-      const { data: productsData, error: productsError } = await supabase
+      const { data: _productsData, error: productsError } = await supabase
         .from('products')
         .select('id, name, price, game_title_id, tier_id')
         .limit(1);
@@ -51,7 +51,7 @@ export const testDatabaseConnection = async () => {
         console.warn('⚠️ Products relational query failed:', productsError.message);
         
         // Try basic products query
-        const { data: basicData, error: basicError } = await supabase
+        const { data: _basicData, error: basicError } = await supabase
           .from('products')
           .select('id, name, price')
           .limit(1);

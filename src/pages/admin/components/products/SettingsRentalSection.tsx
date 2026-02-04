@@ -15,12 +15,12 @@ export const SettingsRentalSection: React.FC<SettingsRentalProps> = ({ values, o
       <h3 className="text-lg font-semibold text-white border-b pb-2" style={{ borderColor: 'var(--admin-border)' }}>Settings & Options</h3>
       <div className="space-y-4">
         <label className="flex items-center gap-2 text-white">
-          <input type="checkbox" checked={values.is_active} onChange={e=>onChange({ is_active: e.target.checked })} className="form-checkbox h-4 w-4 text-pink-500" />
+          <input type="checkbox" checked={values.is_active} onChange={e=>onChange({ is_active: e.target.checked })} className="form-checkbox h-4 w-4 text-[var(--cyber-pink-primary)]" />
           <span className="text-sm">Active Product</span>
           <span className="ml-2 text-xs text-white/60">Uncheck to create as draft</span>
         </label>
         <label className="flex items-center gap-2 text-white">
-          <input type="checkbox" checked={values.is_rental} onChange={e=>onChange({ is_rental: e.target.checked })} className="form-checkbox h-4 w-4 text-pink-500" />
+          <input type="checkbox" checked={values.is_rental} onChange={e=>onChange({ is_rental: e.target.checked })} className="form-checkbox h-4 w-4 text-[var(--cyber-pink-primary)]" />
           <span className="text-sm">Enable Rental Option</span>
           <span className="ml-2 text-xs text-white/60">Allow customers to rent this account temporarily</span>
         </label>
@@ -28,7 +28,7 @@ export const SettingsRentalSection: React.FC<SettingsRentalProps> = ({ values, o
       {values.is_rental && (
         <div className="space-y-3 mt-6">
           <h4 className="text-sm font-semibold text-white">Rental Variation</h4>
-          <div className="p-4 rounded-xl space-y-3" style={{ backgroundColor: 'var(--admin-primary)', border: '1px solid var(--admin-border)' }}>
+          <div className="p-4 rounded-cyber-lg space-y-3" style={{ backgroundColor: 'var(--admin-primary)', border: '1px solid var(--admin-border)' }}>
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <label className="block text-xs font-medium text-white mb-1">Duration</label>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Database, TrendingUp, Clock, RefreshCw } from 'lucide-react';
+import { Database, RefreshCw } from 'lucide-react';
 import { adminCache } from '../../services/adminCache';
-import { IOSCard, IOSButton } from '../ios/IOSDesignSystemV2';
+import { PNCard, PNButton } from '../ui/CyberDesignSystem';
 
 // Use the CacheStats from adminCache.ts
 interface CacheStats {
@@ -38,21 +38,21 @@ export const AdminCacheMonitor: React.FC<{ className?: string }> = ({ className 
 
   return (
     <div className={className}>
-      <IOSCard className="surface-glass-md">
+      <PNCard className="surface-glass-md">
         <div className="p-stack-md">
           <div className="flex items-center justify-between mb-stack-md">
             <h4 className="fs-sm font-medium text-white flex items-center gap-cluster-xs">
               <Database className="w-4 h-4" />
               Cache Performance
             </h4>
-            <IOSButton
+            <PNButton
               variant="secondary"
               size="sm"
               onClick={() => setShowDetails(!showDetails)}
               className="fs-xs"
             >
               {showDetails ? 'Hide' : 'Show'} Details
-            </IOSButton>
+            </PNButton>
           </div>
 
           <div className="grid grid-cols-3 gap-stack-md text-center">
@@ -76,15 +76,15 @@ export const AdminCacheMonitor: React.FC<{ className?: string }> = ({ className 
             <div className="mt-stack-md pt-stack-md border-t border-surface-tint-gray/20">
               <div className="flex justify-between items-center mb-stack-sm">
                 <span className="fs-xs font-medium text-surface-tint-gray">Cache Entries</span>
-                <IOSButton
-                  variant="destructive"
+                <PNButton
+                  variant="secondary"
                   size="sm"
                   onClick={handleClearCache}
                   className="flex items-center gap-cluster-xs fs-xs"
                 >
                   <RefreshCw className="w-3 h-3" />
                   Clear Cache
-                </IOSButton>
+                </PNButton>
               </div>
               
               <div className="space-y-stack-xs max-h-40 overflow-y-auto">
@@ -105,7 +105,7 @@ export const AdminCacheMonitor: React.FC<{ className?: string }> = ({ className 
             </div>
           )}
         </div>
-      </IOSCard>
+      </PNCard>
     </div>
   );
 };

@@ -9,8 +9,7 @@ import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { RotateCcw, AlertCircle } from 'lucide-react';
 import { MetricsGrid, defaultStats } from './metrics/index';
 import { AdminButton } from './ui/AdminButton';
-
-const cn = (...c: (string | boolean | undefined)[]) => c.filter(Boolean).join(' ');
+import { cn } from '../../../utils/cn';
 
 export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const { user, loading: authLoading } = useAuth();
@@ -92,7 +91,7 @@ export const DashboardMetricsOverview: React.FC<{ onRefresh?: () => void }> = ({
       
       {error && !isLoading && (
         <div 
-          className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3"
+          className="bg-red-500/10 border border-red-500/30 rounded-cyber-lg p-4 flex items-start gap-3"
           role="alert"
           aria-live="polite"
         >

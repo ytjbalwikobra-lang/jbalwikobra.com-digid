@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Search, Zap, X } from 'lucide-react';
-import { PNContainer } from '../ui/PinkNeonDesignSystem';
+import { PNContainer } from '../ui/CyberDesignSystem';
 import { useDebounce } from '../../hooks/useDebounce';
 
 interface FlashSalesPageHeaderProps {
@@ -56,7 +56,7 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
   }, []);
 
   return (
-    <div className="sticky top-0 z-20 bg-black/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
+    <div className="sticky top-0 z-20 bg-[var(--cyber-bg-pure)]/95 backdrop-blur-xl border-b border-[var(--cyber-border)] shadow-lg shadow-[var(--cyber-bg-pure)]/20">
       <PNContainer className="px-4 sm:px-6 py-4 space-y-4">
         {/* Row 1: Back Navigation + Title */}
         <div className="flex items-center justify-between gap-4">
@@ -64,18 +64,18 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
             {showBackNav && (
               <Link 
                 to="/" 
-                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
+                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
                 aria-label="Kembali ke beranda"
               >
                 <ChevronLeft size={20} />
               </Link>
             )}
             <div className="flex items-center gap-2">
-              <Zap className="text-yellow-400 animate-pulse" size={20} aria-hidden="true" />
+              <Zap className="text-[var(--cyber-warning)] animate-pulse" size={20} aria-hidden="true" />
               <h1 className="text-xl font-bold text-white">Flash Sales</h1>
             </div>
           </div>
-          <p className="text-sm text-gray-400 font-medium">
+          <p className="text-sm text-[var(--cyber-text-muted)] font-medium">
             {totalProducts} produk
             {currentPage && totalPages && totalPages > 1 && ` • ${currentPage}/${totalPages}`}
           </p>
@@ -84,19 +84,19 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
         <div>
           {/* Row 2: Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--cyber-text-muted)]" aria-hidden="true" />
             <input
               type="text"
               placeholder="Cari flash sale..."
               value={localSearchTerm}
               onChange={handleSearchInput}
-              className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/30 hover:bg-white/[0.07] transition-all duration-200"
+              className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-primary)] text-sm placeholder-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)]/50 focus:border-[var(--cyber-pink-primary)]/30 hover:bg-white/[0.07] transition-all duration-200"
               aria-label="Cari produk flash sale"
             />
             {localSearchTerm && (
               <button 
                 onClick={() => setLocalSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-full hover:bg-white/10 transition-colors"
                 aria-label="Hapus pencarian"
               >
                 <X size={16} />
@@ -105,7 +105,7 @@ const FlashSalesPageHeader: React.FC<FlashSalesPageHeaderProps> = ({
           </div>
 
           {/* Subtitle hint */}
-          <p className="text-xs text-center text-gray-400 mt-2.5">
+          <p className="text-xs text-center text-[var(--cyber-text-muted)] mt-2.5">
             ⚡ Diskon hingga 70% - Stok dan waktu terbatas! ⚡
           </p>
         </div>

@@ -18,11 +18,11 @@ import {
   PNInput,
   PNTabSwitcher,
   PNLinkButton,
-} from '../components/ui/PinkNeonDesignSystem';
+} from '../components/ui/CyberDesignSystem';
 
 /**
  * TraditionalAuthPage - Unified Login/Signup page
- * Uses PinkNeonDesignSystem for consistent styling with ProfilePage
+ * Uses CyberDesignSystem for consistent styling with ProfilePage
  * 
  * Design System Tokens:
  * - Spacing: 16px (md), 24px (lg), 32px (xl)
@@ -256,13 +256,13 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4 py-8 sm:py-12 with-bottom-nav">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center px-4 py-8 sm:py-12 with-bottom-nav">
       <PNContainer className="max-w-md w-full">
         <PNCard className="p-6 sm:p-8">
           {/* Header */}
           <div className="text-center mb-8">
             {/* Logo/Icon */}
-            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/25">
+            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl flex items-center justify-center shadow-lg shadow-[var(--cyber-pink-muted)]">
               {mode === 'login' && <Lock size={28} className="text-white" />}
               {mode === 'signup' && <User size={28} className="text-white" />}
               {mode === 'verify' && <Phone size={28} className="text-white" />}
@@ -311,7 +311,7 @@ const AuthPage: React.FC = () => {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-white/80">
+                      <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
                         Nomor HP
                       </label>
                       <PhoneInput
@@ -336,9 +336,10 @@ const AuthPage: React.FC = () => {
                   fullWidth
                   size="lg"
                   disabled={loading}
+                  loading={loading}
                   className="mt-6"
                 >
-                  {loading ? 'Masuk...' : `Masuk dengan ${loginTab === 'email' ? 'Email' : 'Nomor HP'}`}
+                  Masuk dengan {loginTab === 'email' ? 'Email' : 'Nomor HP'}
                 </PNButton>
 
                 {/* Forgot Password Button */}
@@ -387,7 +388,7 @@ const AuthPage: React.FC = () => {
               />
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-white/80">
+                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
                   Nomor WhatsApp
                 </label>
                 <PhoneInput
@@ -397,7 +398,7 @@ const AuthPage: React.FC = () => {
                   required
                   disableAutoDetection={true}
                 />
-                <p className="text-xs text-white/50">
+                <p className="text-xs text-[var(--cyber-text-muted)]">
                   Kode verifikasi akan dikirim ke nomor ini
                 </p>
               </div>
@@ -422,9 +423,10 @@ const AuthPage: React.FC = () => {
                 fullWidth
                 size="lg"
                 disabled={loading}
+                loading={loading}
                 className="mt-6"
               >
-                {loading ? 'Mendaftar...' : 'Daftar'}
+                Daftar
               </PNButton>
 
               <div className="text-center pt-2">
@@ -439,7 +441,7 @@ const AuthPage: React.FC = () => {
           {mode === 'verify' && (
             <form onSubmit={handleVerification} className="space-y-6">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-2xl flex items-center justify-center mx-auto mb-4">
                   <Phone size={28} className="text-green-400" />
                 </div>
                 <PNText color="muted" className="text-sm">
@@ -448,7 +450,7 @@ const AuthPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-white/80">
+                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
                   Kode Verifikasi (6 digit)
                 </label>
                 <input
@@ -458,7 +460,7 @@ const AuthPage: React.FC = () => {
                     ...verificationData, 
                     code: e.target.value.replace(/\D/g, '').slice(0, 6)
                   })}
-                  className="w-full px-4 py-4 min-h-[56px] bg-white/5 border border-white/10 rounded-xl text-white text-center text-2xl tracking-[0.5em] font-mono placeholder:text-white/30 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50"
+                  className="w-full px-4 py-4 min-h-[56px] bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg text-white text-center text-2xl tracking-[0.5em] font-mono placeholder:text-[var(--cyber-text-disabled)] placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)]"
                   placeholder="123456"
                   maxLength={6}
                   required
@@ -470,8 +472,9 @@ const AuthPage: React.FC = () => {
                 fullWidth
                 size="lg"
                 disabled={loading || verificationData.code.length !== 6}
+                loading={loading}
               >
-                {loading ? 'Memverifikasi...' : 'Verifikasi'}
+                Verifikasi
               </PNButton>
 
               <div className="text-center pt-2">
@@ -486,8 +489,8 @@ const AuthPage: React.FC = () => {
           {mode === 'complete' && (
             <form onSubmit={handleProfileCompletion} className="space-y-5">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <User size={28} className="text-pink-500" />
+                <div className="w-16 h-16 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-2xl flex items-center justify-center mx-auto mb-4">
+                  <User size={28} className="text-[var(--cyber-pink-primary)]" />
                 </div>
                 <PNText color="muted" className="text-sm">
                   Tambahkan email untuk notifikasi dan pemulihan akun
@@ -504,12 +507,12 @@ const AuthPage: React.FC = () => {
                 required
               />
 
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-                <p className="text-sm text-white/60 flex items-center gap-2">
+              <div className="bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg p-4 space-y-2">
+                <p className="text-sm text-[var(--cyber-text-muted)] flex items-center gap-2">
                   <span className="text-green-400">✓</span>
                   Nama dan password sudah diatur saat pendaftaran
                 </p>
-                <p className="text-sm text-white/60 flex items-center gap-2">
+                <p className="text-sm text-[var(--cyber-text-muted)] flex items-center gap-2">
                   <span className="text-green-400">✓</span>
                   Nomor WhatsApp terverifikasi
                 </p>
@@ -520,9 +523,10 @@ const AuthPage: React.FC = () => {
                 fullWidth
                 size="lg"
                 disabled={loading}
+                loading={loading}
                 className="mt-6"
               >
-                {loading ? 'Menyelesaikan...' : 'Selesaikan Pendaftaran'}
+                Selesaikan Pendaftaran
               </PNButton>
             </form>
           )}

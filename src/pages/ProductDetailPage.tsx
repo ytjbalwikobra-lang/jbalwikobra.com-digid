@@ -21,7 +21,7 @@ import {
   CheckoutModal
 } from '../components/product-detail';
 import PublicPageHeader from '../components/shared/PublicPageHeader';
-import { PNButton, PNContainer } from '../components/ui/PinkNeonDesignSystem';
+import { PNButton, PNContainer } from '../components/ui/CyberDesignSystem';
 import { SEOHead, Breadcrumb, ProductSchema } from '../components/seo';
 import { GEOAIHints } from '../components/seo/GEOSchemas';
 
@@ -52,7 +52,7 @@ const ProductDetailPage: React.FC = () => {
     setCheckoutState,
     
     // WhatsApp
-    whatsappNumber,
+    whatsappNumber: _whatsappNumber,
     
     // Actions
     handlePurchase,
@@ -78,7 +78,7 @@ const ProductDetailPage: React.FC = () => {
         <PNContainer>
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-white">Produk Tidak Ditemukan</h1>
-            <p className="text-gray-300 mb-6">{error}</p>
+            <p className="text-[var(--cyber-text-secondary)] mb-6">{error}</p>
             <PNButton
               onClick={handleBackToCatalog}
               variant="primary"
@@ -92,7 +92,7 @@ const ProductDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white">
       {/* SEO Head with Product-specific meta tags */}
       <SEOHead
         title={product.name}
@@ -129,8 +129,8 @@ const ProductDetailPage: React.FC = () => {
         ].filter(Boolean)}
       />
       
-      <section className="py-4">
-        <PNContainer className="px-4 sm:px-6">
+      <section className="py-4 sm:py-5">
+        <PNContainer className="px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb Navigation */}
           <Breadcrumb 
             items={[

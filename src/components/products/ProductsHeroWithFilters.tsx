@@ -1,13 +1,13 @@
 /**
  * ProductsHeroWithFilters - Mobile-first header with filters
  * WCAG 2.1 AA compliant with 44px touch targets
- * PinkNeonDesignSystem consistent styling
+ * CyberDesignSystem consistent styling
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Search, X, ChevronDown } from 'lucide-react';
-import { PNContainer } from '../ui/PinkNeonDesignSystem';
+import { PNContainer } from '../ui/CyberDesignSystem';
 import { Tier, GameTitle } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -72,7 +72,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
   }, []);
 
   // Shared select styles - 44px min touch target, WCAG compliant
-  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3.5 pr-9 rounded-xl bg-white/5 border border-white/10 text-sm text-white hover:bg-white/[0.07] hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:border-pink-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
+  const selectClass = "appearance-none w-full h-11 min-h-[44px] pl-3.5 pr-9 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-sm text-[var(--cyber-text-primary)] hover:bg-white/[0.07] hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cyber-pink-primary)] focus-visible:border-[var(--cyber-pink-primary)]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer";
   
   // Active select styling for filters with values
   const getSelectClass = (hasValue: boolean) => 
@@ -87,7 +87,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             {showBackNav && (
               <Link 
                 to="/" 
-                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
+                className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-pink-300 hover:bg-white/10 hover:border-pink-500/30 transition-all duration-200"
                 aria-label="Kembali ke beranda"
               >
                 <ChevronLeft size={20} />
@@ -95,7 +95,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             )}
             <h1 className="text-xl font-bold text-white">Katalog</h1>
           </div>
-          <p className="text-sm text-gray-400 font-medium">
+          <p className="text-sm text-[var(--cyber-text-muted)] font-medium">
             {totalProducts} produk
             {currentPage && totalPages && totalPages > 1 && ` • ${currentPage}/${totalPages}`}
           </p>
@@ -103,18 +103,18 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
 
         {/* Row 2: Full-width Search */}
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--cyber-text-muted)]" />
           <input
             type="text"
             placeholder="Cari produk, game, atau kategori..."
             value={localSearchTerm}
             onChange={handleSearchInput}
-            className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/30 hover:bg-white/[0.07] transition-all duration-200"
+            className="w-full h-12 min-h-[48px] pl-11 pr-11 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-primary)] text-sm placeholder-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)]/50 focus:border-[var(--cyber-pink-primary)]/30 hover:bg-white/[0.07] transition-all duration-200"
           />
           {localSearchTerm && (
             <button 
               onClick={() => setLocalSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-full hover:bg-white/10 transition-colors"
               aria-label="Hapus pencarian"
             >
               <X size={16} />
@@ -128,7 +128,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
             <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
               <button
                 onClick={() => onGameChange?.('')}
-                className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-xl text-sm font-semibold transition-all duration-200 snap-start ${!selectedGame ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/30' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'}`}
+                className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-cyber-lg text-sm font-semibold transition-all duration-200 snap-start ${!selectedGame ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-[var(--cyber-text-primary)] shadow-lg shadow-pink-500/30' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-white/10 hover:border-white/20'}`}
               >
                 Semua Game
               </button>
@@ -136,7 +136,7 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
                 <button
                   key={game.id}
                   onClick={() => onGameChange?.(game.name)}
-                  className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap snap-start ${selectedGame === game.name ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/30' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'}`}
+                  className={`flex-shrink-0 h-11 min-h-[44px] px-5 rounded-cyber-lg text-sm font-semibold transition-all duration-200 whitespace-nowrap snap-start ${selectedGame === game.name ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-[var(--cyber-text-primary)] shadow-lg shadow-pink-500/30' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-white/10 hover:border-white/20'}`}
                 >
                   {game.name}
                 </button>
@@ -156,14 +156,14 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
               disabled={categoriesLoading}
               aria-label="Pilih kategori produk"
             >
-              <option value="" className="bg-gray-900">Kategori</option>
+              <option value="" className="bg-[var(--cyber-bg-pure)]">Kategori</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.name} className="bg-gray-900">
+                <option key={cat.id} value={cat.name} className="bg-[var(--cyber-bg-pure)]">
                   {cat.name}
                 </option>
               ))}
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-colors" />
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-secondary)] pointer-events-none transition-colors" />
           </div>
 
           {/* Tier Select */}
@@ -174,14 +174,14 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
               className={getSelectClass(!!selectedTier)}
               aria-label="Pilih tier produk"
             >
-              <option value="" className="bg-gray-900">Tier</option>
+              <option value="" className="bg-[var(--cyber-bg-pure)]">Tier</option>
               {(tiers || []).map((tier) => (
-                <option key={tier.id} value={tier.slug} className="bg-gray-900">
+                <option key={tier.id} value={tier.slug} className="bg-[var(--cyber-bg-pure)]">
                   {tier.name}
                 </option>
               ))}
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-colors" />
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-secondary)] pointer-events-none transition-colors" />
           </div>
 
           {/* Sort Select */}
@@ -192,17 +192,17 @@ const ProductsHeroWithFilters: React.FC<ProductsHeroWithFiltersProps> = ({
               className={selectClass}
               aria-label="Urutkan produk"
             >
-              <option value="newest" className="bg-gray-900">Terbaru</option>
-              <option value="price-low" className="bg-gray-900">Termurah</option>
-              <option value="price-high" className="bg-gray-900">Termahal</option>
+              <option value="newest" className="bg-[var(--cyber-bg-pure)]">Terbaru</option>
+              <option value="price-low" className="bg-[var(--cyber-bg-pure)]">Termurah</option>
+              <option value="price-high" className="bg-[var(--cyber-bg-pure)]">Termahal</option>
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none transition-colors" />
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-secondary)] pointer-events-none transition-colors" />
           </div>
 
           {/* Rental Toggle Button */}
           <button
             onClick={onToggleRental}
-            className={`h-11 min-h-[44px] px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${rentalOnly ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/25' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/[0.07] hover:border-white/20'}`}
+            className={`h-11 min-h-[44px] px-4 rounded-cyber-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${rentalOnly ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-[var(--cyber-text-primary)] shadow-lg shadow-emerald-500/25' : 'bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:bg-white/[0.07] hover:border-white/20'}`}
           >
             <span className="text-base">🏠</span>
             <span>Rental</span>

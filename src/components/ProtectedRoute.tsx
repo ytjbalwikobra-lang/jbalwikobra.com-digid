@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/TraditionalAuthContext';
-import { Loader2, Lock } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,7 +16,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (loading) {
     return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center px-6">
         <div className="w-full max-w-sm">
       <div className="h-5 w-36 mb-4 rounded bg-white/10 animate-pulse"></div>
       <div className="h-4 w-full mb-2 rounded bg-white/10 animate-pulse"></div>

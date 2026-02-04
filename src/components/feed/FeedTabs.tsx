@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageCircle, Megaphone, Star } from 'lucide-react';
-import { PNSection, PNContainer } from '../ui/PinkNeonDesignSystem';
+import { PNSection, PNContainer } from '../ui/CyberDesignSystem';
 
 type FeedFilter = 'semua' | 'pengumuman' | 'review';
 
@@ -15,19 +15,19 @@ export const FeedTabs: React.FC<FeedTabsProps> = ({ active, onChange }) => {
       key: 'semua' as FeedFilter,
       label: 'Semua',
       icon: MessageCircle,
-      iconColor: 'text-pink-500'
+      iconColor: 'text-[var(--cyber-pink-primary)]'
     },
     {
       key: 'pengumuman' as FeedFilter,
       label: 'Pengumuman',
       icon: Megaphone,
-      iconColor: 'text-fuchsia-400'
+      iconColor: 'text-[var(--cyber-pink-secondary)]'
     },
     {
       key: 'review' as FeedFilter,
       label: 'Review',
       icon: Star,
-      iconColor: 'text-yellow-400'
+      iconColor: 'text-[var(--cyber-warning)]'
     }
   ];
 
@@ -44,12 +44,12 @@ export const FeedTabs: React.FC<FeedTabsProps> = ({ active, onChange }) => {
                 key={tab.key}
                 onClick={() => onChange(tab.key)}
                 className={`
-                  flex items-center justify-center gap-3 px-6 py-4 rounded-2xl
+                  flex items-center justify-center gap-3 px-6 py-4 rounded-cyber-2xl
                   font-semibold text-sm transition-all duration-300 min-h-[56px]
-                  border border-white/10 hover:border-pink-500/30
+                  border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-muted)]
                   ${isActive 
-                    ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/25'
-                    : 'bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
+                    ? 'bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-[var(--cyber-text-primary)] shadow-lg shadow-[var(--cyber-pink-muted)]'
+                    : 'bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] hover:bg-[var(--cyber-bg-card)] hover:text-[var(--cyber-text-primary)]'
                   }
                 `}
               >

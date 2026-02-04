@@ -379,7 +379,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .cyber-btn-sm {
   padding: var(--cyber-space-sm) var(--cyber-space-base);
   font-size: var(--cyber-text-xs);
-  min-height: 36px;
+  min-height: 44px; /* Meet iOS/Android touch target requirement */
 }
 
 .cyber-btn-lg {
@@ -862,4 +862,66 @@ input[type="number"] { -moz-appearance: textfield; }
   display: flex;
   align-items: center;
   gap: var(--cyber-space-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MOBILE & PROGRESSIVE ENHANCEMENT UTILITIES
+═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Skeleton Loading State */
+.cyber-skeleton {
+  background: linear-gradient(
+    90deg, 
+    var(--cyber-bg-surface) 0%,
+    var(--cyber-bg-elevated) 50%,
+    var(--cyber-bg-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: cyber-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--cyber-radius-base);
+}
+
+@keyframes cyber-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Smooth Scroll Behavior (Mobile Optimized) */
+.cyber-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y proximity;
+}
+
+/* Optimized Image Rendering */
+.cyber-image {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Safe Area Insets (Notched Devices) */
+.cyber-safe-area {
+  padding-top: max(env(safe-area-inset-top), 1rem);
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  padding-left: max(env(safe-area-inset-left), 1rem);
+  padding-right: max(env(safe-area-inset-right), 1rem);
+}
+
+/* Reduced Motion Support (Accessibility) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .cyber-skeleton {
+    animation: none;
+    background: var(--cyber-bg-elevated);
+  }
 }

@@ -39,7 +39,7 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({ onOpenMenu
         <div className="cluster-sm">
           <button
             onClick={onOpenMenu}
-            className="btn btn-ghost btn-sm surface-tint-pink hover:bg-pink-500/25 transition-soft"
+            className="btn btn-ghost btn-sm surface-tint-pink hover:bg-[var(--cyber-pink-primary)]/25 transition-soft"
           >
             <Menu className="w-6 h-6 text-accent" />
           </button>

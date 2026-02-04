@@ -23,7 +23,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useConfirmation } from '../components/ConfirmationModal';
 import { useToast } from '../components/Toast';
 import { supabase } from '../services/supabase';
-import { PNSection, PNContainer, PNCard, PNHeading, PNText, PNButton, PNInput } from '../components/ui/PinkNeonDesignSystem';
+import { PNSection, PNContainer, PNCard, PNHeading, PNText, PNButton, PNInput } from '../components/ui/CyberDesignSystem';
 import { getCurrentUserProfile } from '../services/authService';
 import { SEOHead, Breadcrumb } from '../components/seo';
 
@@ -61,6 +61,7 @@ const ProfilePage: React.FC = () => {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isValidPhone, setIsValidPhone] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleLogout = async () => {
     const confirmed = await confirm({
@@ -177,6 +178,7 @@ const ProfilePage: React.FC = () => {
     });
 
     if (confirmed) {
+      setIsSaving(true);
       try {
         // Get session token for API authentication
         const sessionToken = localStorage.getItem('session_token');
@@ -233,6 +235,8 @@ const ProfilePage: React.FC = () => {
       } catch (error: any) {
         console.error('Failed to save profile:', error);
         showToast(error.message || 'Gagal menyimpan profil. Silakan coba lagi.', 'error');
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -243,20 +247,20 @@ const ProfilePage: React.FC = () => {
       label: 'Riwayat Pesanan',
       path: '/orders',
       count: profile.totalOrders,
-      color: 'text-pink-500'
+      color: 'text-[var(--cyber-pink-primary)]'
     },
     {
       icon: Heart,
       label: 'Wishlist',
       path: '/wishlist',
       count: profile.wishlistCount,
-      color: 'text-pink-500'
+      color: 'text-[var(--cyber-pink-primary)]'
     },
     {
       icon: Settings,
       label: 'Pengaturan',
       path: '/settings',
-      color: 'text-gray-400'
+      color: 'text-[var(--cyber-text-muted)]'
     }
   ];
 
@@ -272,27 +276,27 @@ const ProfilePage: React.FC = () => {
           { label: 'Profil', href: '/profile' }
         ]}
       />
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white">
         {/* Hero header */}
-        <PNSection padding="lg" className="border-b border-white/10">
+        <PNSection padding="lg" className="border-b border-[var(--cyber-border)]">
           <PNContainer>
             <PNCard className="relative isolate overflow-hidden p-6 sm:p-8 lg:p-10">
-              <div className="absolute inset-0 -z-10 pointer-events-none bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-fuchsia-500/5" />
+              <div className="absolute inset-0 -z-10 pointer-events-none bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-[var(--cyber-pink-subtle)]" />
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 {/* User */}
                 <div className="flex items-center gap-5">
                   <div className="relative">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-xl shadow-pink-500/25">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl flex items-center justify-center shadow-xl shadow-[var(--cyber-pink-muted)]">
                       <User size={36} className="text-white" />
                     </div>
-                    <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-black/40">
+                    <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-[var(--cyber-success)] rounded-full flex items-center justify-center ring-4 ring-[var(--cyber-bg-pure)]/40">
                       <Check size={14} className="text-white" />
                     </div>
                   </div>
                   <div>
                     <PNHeading level={1} className="mb-1">{profile.name || 'Pengguna Baru'}</PNHeading>
-                    <PNText className="flex items-center gap-2"><Mail size={14} className="text-white/70" />{profile.email}</PNText>
-                    <PNText className="text-sm flex items-center gap-2"><Star size={14} className="text-yellow-400" />Member sejak {profile.joinDate}</PNText>
+                    <PNText className="flex items-center gap-2"><Mail size={14} className="text-[var(--cyber-text-secondary)]" />{profile.email}</PNText>
+                    <PNText className="text-sm flex items-center gap-2"><Star size={14} className="text-[var(--cyber-warning)]" />Member sejak {profile.joinDate}</PNText>
                   </div>
                 </div>
 
@@ -311,8 +315,8 @@ const ProfilePage: React.FC = () => {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                      <Package size={18} className="text-pink-500" />
+                    <div className="w-10 h-10 rounded-cyber-lg bg-[var(--cyber-bg-elevated)] flex items-center justify-center">
+                      <Package size={18} className="text-[var(--cyber-pink-primary)]" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold">{profile.totalOrders}</div>
@@ -322,8 +326,8 @@ const ProfilePage: React.FC = () => {
                 </PNCard>
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
-                      <Heart size={18} className="text-pink-500" />
+                    <div className="w-10 h-10 rounded-cyber-lg bg-[var(--cyber-pink-muted)] border border-[var(--cyber-pink-muted)] flex items-center justify-center">
+                      <Heart size={18} className="text-[var(--cyber-pink-primary)]" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold">{profile.wishlistCount}</div>
@@ -333,8 +337,8 @@ const ProfilePage: React.FC = () => {
                 </PNCard>
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-yellow-500/20 border border-yellow-400/30 flex items-center justify-center">
-                      <Trophy size={18} className="text-yellow-400" />
+                    <div className="w-10 h-10 rounded-cyber-lg bg-[var(--cyber-warning)]/20 border border-[var(--cyber-warning)]/30 flex items-center justify-center">
+                      <Trophy size={18} className="text-[var(--cyber-warning)]" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold">0</div>
@@ -344,8 +348,8 @@ const ProfilePage: React.FC = () => {
                 </PNCard>
                 <PNCard className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center">
-                      <Crown size={18} className="text-purple-400" />
+                    <div className="w-10 h-10 rounded-cyber-lg bg-[var(--cyber-purple)]/20 border border-[var(--cyber-purple)]/30 flex items-center justify-center">
+                      <Crown size={18} className="text-[var(--cyber-purple)]" />
                     </div>
                     <div>
                       <div className="text-2xl font-bold">Basic</div>
@@ -360,17 +364,17 @@ const ProfilePage: React.FC = () => {
 
         {/* Recent Orders Section */}
         {recentOrders.length > 0 && (
-          <PNSection padding="lg" className="border-b border-white/10">
+          <PNSection padding="lg" className="border-b border-[var(--cyber-border)]">
             <PNContainer>
               <PNCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <PNHeading level={3} className="flex items-center gap-2">
-                    <Package size={20} className="text-pink-500" />
+                    <Package size={20} className="text-[var(--cyber-pink-primary)]" />
                     Pesanan Terbaru
                   </PNHeading>
                   <Link 
                     to="/orders" 
-                    className="text-pink-500 hover:text-pink-400 text-sm font-medium flex items-center gap-1 transition-colors"
+                    className="text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] text-sm font-medium flex items-center gap-1 transition-colors"
                   >
                     Lihat Semua
                     <ChevronRight size={16} />
@@ -378,15 +382,15 @@ const ProfilePage: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   {recentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                    <div key={order.id} className="flex items-center justify-between p-4 rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:bg-[var(--cyber-bg-elevated)] transition-colors">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="text-sm font-mono text-gray-300">{order.id.slice(0, 8)}...</div>
+                          <div className="text-sm font-mono text-[var(--cyber-text-secondary)]">{order.id.slice(0, 8)}...</div>
                           <div className={`text-xs px-2 py-1 rounded ${
-                            order.status === 'paid' ? 'bg-green-600 text-white' :
-                            order.status === 'pending' ? 'bg-yellow-600 text-white' :
-                            order.status === 'completed' ? 'bg-blue-600 text-white' :
-                            'bg-red-600 text-white'
+                            order.status === 'paid' ? 'bg-[var(--cyber-success)] text-[var(--cyber-text-primary)]' :
+                            order.status === 'pending' ? 'bg-[var(--cyber-warning)] text-[var(--cyber-bg-pure)]' :
+                            order.status === 'completed' ? 'bg-[var(--cyber-info)] text-[var(--cyber-text-primary)]' :
+                            'bg-[var(--cyber-error)] text-[var(--cyber-text-primary)]'
                           }`}>
                             {order.status === 'paid' ? 'Lunas' :
                              order.status === 'pending' ? 'Menunggu' :
@@ -394,7 +398,7 @@ const ProfilePage: React.FC = () => {
                              'Dibatalkan'}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-xs text-[var(--cyber-text-muted)] mt-1">
                           {new Date(order.created_at).toLocaleDateString('id-ID')}
                           {order.payment_channel && (
                             <span className="ml-2">
@@ -418,7 +422,7 @@ const ProfilePage: React.FC = () => {
 
         {/* Edit form */}
         {isEditing && (
-          <PNSection padding="lg" className="border-b border-white/10">
+          <PNSection padding="lg" className="border-b border-[var(--cyber-border)]">
             <PNContainer>
               <PNCard className="p-6 sm:p-8">
                 <PNHeading level={2} className="mb-6">Edit Informasi Profil</PNHeading>
@@ -442,7 +446,7 @@ const ProfilePage: React.FC = () => {
                   />
 
                   <div className="lg:col-span-2 space-y-2">
-                    <label className="block text-sm font-medium text-white/80">
+                    <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
                       Nomor WhatsApp
                     </label>
                     <PhoneInput
@@ -455,11 +459,23 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                  <PNButton size="lg" onClick={saveProfile} className="flex items-center justify-center gap-2">
+                  <PNButton 
+                    size="lg" 
+                    onClick={saveProfile} 
+                    disabled={isSaving}
+                    loading={isSaving}
+                    className="flex items-center justify-center gap-2"
+                  >
                     <Check size={18} />
                     Simpan Perubahan
                   </PNButton>
-                  <PNButton size="lg" variant="ghost" onClick={() => { setIsEditing(false); loadProfile(); }} className="flex items-center justify-center gap-2">
+                  <PNButton 
+                    size="lg" 
+                    variant="ghost" 
+                    onClick={() => { setIsEditing(false); loadProfile(); }} 
+                    disabled={isSaving}
+                    className="flex items-center justify-center gap-2"
+                  >
                     <X size={18} />
                     Batal
                   </PNButton>
@@ -470,20 +486,20 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Menu section */}
-        <PNSection padding="lg" className="border-b border-white/10">
+        <PNSection padding="lg" className="border-b border-[var(--cyber-border)]">
           <PNContainer>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {profileMenuItems.map((item, index) => (
                 <Link
                   key={index}
                   to={item.path}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                  className="group relative overflow-hidden rounded-cyber-2xl border border-[var(--cyber-border)] bg-[var(--cyber-bg-card)] hover:bg-[var(--cyber-bg-elevated)] transition-all"
                 >
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${item.color} bg-opacity-20 border border-current border-opacity-20`}>
+                        <div className={`w-14 h-14 rounded-cyber-lg flex items-center justify-center ${item.color} bg-opacity-20 border border-current border-opacity-20`}>
                           <item.icon size={24} />
                         </div>
                         <div>
@@ -491,31 +507,31 @@ const ProfilePage: React.FC = () => {
                             {item.label}
                           </h3>
                           {item.count !== undefined && (
-                            <p className="text-white/70 text-sm">{item.count} item</p>
+                            <p className="text-[var(--cyber-text-secondary)] text-sm">{item.count} item</p>
                           )}
                         </div>
                       </div>
-                      <ChevronRight size={20} className="text-white/70 group-hover:text-white transition-colors transform group-hover:translate-x-1" />
+                      <ChevronRight size={20} className="text-[var(--cyber-text-secondary)] group-hover:text-white transition-colors transform group-hover:translate-x-1" />
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
             <div className="space-y-4 mt-8">
-              <Link to="/help" className="group w-full rounded-2xl p-6 border border-white/10 bg-white/5 hover:bg-white/10 transition flex items-center justify-between">
+              <Link to="/help" className="group w-full rounded-cyber-2xl p-6 border border-[var(--cyber-border)] bg-[var(--cyber-bg-card)] hover:bg-[var(--cyber-bg-elevated)] transition flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-yellow-500/20 border border-yellow-500/20 flex items-center justify-center">
-                    <Shield size={20} className="text-yellow-400" />
+                  <div className="w-12 h-12 rounded-cyber-lg bg-[var(--cyber-warning)]/20 border border-[var(--cyber-warning)]/20 flex items-center justify-center">
+                    <Shield size={20} className="text-[var(--cyber-warning)]" />
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">Bantuan & Dukungan</h3>
                     <PNText className="text-sm">FAQ, Kontak Support, Panduan</PNText>
                   </div>
                 </div>
-                <ChevronRight size={20} className="text-white/70" />
+                <ChevronRight size={20} className="text-[var(--cyber-text-secondary)]" />
               </Link>
 
-              <PNButton onClick={handleLogout} variant="ghost" size="lg" className="w-full border border-red-500/40 text-red-300 hover:bg-red-500/10">
+              <PNButton onClick={handleLogout} variant="ghost" size="lg" className="w-full border border-[var(--cyber-error)]/40 text-[var(--cyber-error)] hover:bg-[var(--cyber-error)]/10">
                 <div className="flex items-center justify-center gap-2">
                   <LogOut size={18} />
                   Keluar dari Akun

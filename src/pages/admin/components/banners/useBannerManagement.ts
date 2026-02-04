@@ -37,7 +37,7 @@ export const useBannerManagement = (itemsPerPage: number = 10) => {
     }
   };
 
-  const toggleBannerStatus = async (bannerId: string, currentStatus: boolean) => {
+  const toggleBannerStatus = async (bannerId: string, _currentStatus: boolean) => {
     try {
       await adminService.toggleBannerStatus(bannerId);
       await loadBanners();

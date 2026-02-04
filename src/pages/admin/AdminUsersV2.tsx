@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Users, UserCheck, Shield, Clock, Plus, Edit, Eye, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { adminService, User } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
-import { AdminCard, AdminCardBody } from './components/ui/AdminCard';
+import { AdminCard } from './components/ui/AdminCard';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
@@ -13,7 +13,6 @@ import { AdminFilter } from './components/AdminFilter';
 import { AdminUserModal } from './components/AdminUserModal';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
-import { useAbortController } from '../../hooks/useAbortController';
 // Design system: cyber-compact.css (loaded via index.css)
 
 interface UserStats {
@@ -268,40 +267,40 @@ const AdminUsersV2: React.FC = () => {
           <div className="lg:col-span-1">
             <AdminCard>
               <div className="flex items-center space-x-2 mb-6">
-                <div className="p-2 bg-pink-500/10 rounded-xl">
-                  <TrendingUp className="w-5 h-5 text-pink-500" />
+                <div className="p-2 bg-pink-500/10 rounded-cyber-lg">
+                  <TrendingUp className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Quick Actions</h3>
+                <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Quick Actions</h3>
               </div>
               <div className="space-y-3">
                 <button
                   onClick={() => push('Add user functionality coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gray-800/50 hover:bg-pink-500/10 hover:border-pink-500/30 border border-gray-700 text-gray-300 hover:text-pink-500 transition-all duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-pink-500/10 hover:border-[var(--cyber-pink-primary)]/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-primary)] transition-all duration-200"
                 >
                   <Plus className="w-5 h-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">Add New User</p>
-                    <p className="text-xs text-gray-400">Create a new user account</p>
+                    <p className="text-xs text-[var(--cyber-text-muted)]">Create a new user account</p>
                   </div>
                 </button>
                 <button
                   onClick={() => push('Export functionality coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gray-800/50 hover:bg-blue-500/10 hover:border-blue-500/30 border border-gray-700 text-gray-300 hover:text-blue-400 transition-all duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-blue-500/10 hover:border-blue-500/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-blue-400 transition-all duration-200"
                 >
                   <Mail className="w-5 h-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">Export Users</p>
-                    <p className="text-xs text-gray-400">Download user data</p>
+                    <p className="text-xs text-[var(--cyber-text-muted)]">Download user data</p>
                   </div>
                 </button>
                 <button
                   onClick={() => push('Bulk actions coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gray-800/50 hover:bg-green-500/10 hover:border-green-500/30 border border-gray-700 text-gray-300 hover:text-green-400 transition-all duration-200"
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-green-500/10 hover:border-green-500/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-green-400 transition-all duration-200"
                 >
                   <Shield className="w-5 h-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">Manage Permissions</p>
-                    <p className="text-xs text-gray-400">Bulk permission updates</p>
+                    <p className="text-xs text-[var(--cyber-text-muted)]">Bulk permission updates</p>
                   </div>
                 </button>
               </div>
@@ -313,10 +312,10 @@ const AdminUsersV2: React.FC = () => {
             <AdminCard>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-500/10 rounded-xl">
+                  <div className="p-2 bg-blue-500/10 rounded-cyber-lg">
                     <Users className="w-5 h-5 text-blue-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white">User Analytics</h3>
+                  <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)]">User Analytics</h3>
                 </div>
                 <button className="flex items-center space-x-2 text-sm text-pink-500 hover:text-pink-400 transition-colors">
                   <span>View Details</span>
@@ -325,17 +324,17 @@ const AdminUsersV2: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-black border border-gray-800 rounded-xl">
-                  <p className="text-2xl font-bold text-white mb-1">{Math.round((realStats.active / realStats.total) * 100) || 0}%</p>
-                  <p className="text-sm text-gray-400">Activity Rate</p>
+                <div className="text-center p-4 bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg">
+                  <p className="text-2xl font-bold text-[var(--cyber-text-primary)] mb-1">{Math.round((realStats.active / realStats.total) * 100) || 0}%</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)]">Activity Rate</p>
                 </div>
-                <div className="text-center p-4 bg-black border border-gray-800 rounded-xl">
-                  <p className="text-2xl font-bold text-white mb-1">{Math.round((realStats.admin / realStats.total) * 100) || 0}%</p>
-                  <p className="text-sm text-gray-400">Admin Ratio</p>
+                <div className="text-center p-4 bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg">
+                  <p className="text-2xl font-bold text-[var(--cyber-text-primary)] mb-1">{Math.round((realStats.admin / realStats.total) * 100) || 0}%</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)]">Admin Ratio</p>
                 </div>
-                <div className="text-center p-4 bg-black border border-gray-800 rounded-xl">
-                  <p className="text-2xl font-bold text-white mb-1">{Math.round((realStats.recent / realStats.total) * 100) || 0}%</p>
-                  <p className="text-sm text-gray-400">Growth Rate</p>
+                <div className="text-center p-4 bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg">
+                  <p className="text-2xl font-bold text-[var(--cyber-text-primary)] mb-1">{Math.round((realStats.recent / realStats.total) * 100) || 0}%</p>
+                  <p className="text-sm text-[var(--cyber-text-muted)]">Growth Rate</p>
                 </div>
               </div>
             </AdminCard>
@@ -374,7 +373,7 @@ const AdminUsersV2: React.FC = () => {
         />
         
         {/* Results Count & Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-xl">
+        <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-cyber-lg">
           <span className="text-slate-400 text-sm">
             Showing <span className="font-semibold text-white">{filteredUsers.length}</span> of <span className="font-semibold text-white">{totalCount.toLocaleString()}</span> users
             {totalPages > 1 && <span className="ml-2">(Page {currentPage} of {totalPages})</span>}
@@ -384,11 +383,11 @@ const AdminUsersV2: React.FC = () => {
               <button
                 onClick={() => loadUsers(true, currentPage - 1)}
                 disabled={currentPage <= 1 || loading}
-                className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white transition-colors"
+                className="px-3 py-1.5 text-sm bg-[var(--cyber-bg-elevated)] hover:bg-[var(--cyber-bg-elevated)] disabled:opacity-50 disabled:cursor-not-allowed rounded-cyber-lg text-[var(--cyber-text-primary)] transition-colors"
               >
                 Previous
               </button>
-              <span className="text-gray-400 text-sm px-2">{currentPage}/{totalPages}</span>
+              <span className="text-[var(--cyber-text-muted)] text-sm px-2">{currentPage}/{totalPages}</span>
               <button
                 onClick={() => loadUsers(true, currentPage + 1)}
                 disabled={currentPage >= totalPages || loading}
@@ -424,8 +423,8 @@ const AdminUsersV2: React.FC = () => {
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-                        <Users className="h-6 w-6 text-gray-400" />
+                      <div className="w-12 h-12 bg-[var(--cyber-bg-elevated)] rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-[var(--cyber-text-muted)]" />
                       </div>
                     )}
                     <div>
@@ -439,7 +438,7 @@ const AdminUsersV2: React.FC = () => {
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           user.last_login
                             ? 'bg-green-500/20 text-green-300'
-                            : 'bg-gray-500/20 text-gray-300'
+                            : 'bg-[var(--cyber-bg-elevated)]/20 text-[var(--cyber-text-muted)]'
                         }`}>
                           {user.last_login ? 'Active' : 'Inactive'}
                         </span>
@@ -450,14 +449,14 @@ const AdminUsersV2: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleViewUser(user)}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl transition-colors"
+                      className="p-2 bg-[var(--cyber-bg-surface)] hover:bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-cyber-lg transition-colors"
                       title="View user details"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleEditUser(user)}
-                      className="p-2 bg-gray-800 hover:bg-pink-500 text-gray-300 hover:text-white rounded-xl transition-colors"
+                      className="p-2 bg-[var(--cyber-bg-surface)] hover:bg-[var(--cyber-pink-primary)] text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-cyber-lg transition-colors"
                       title="Edit user"
                     >
                       <Edit className="h-4 w-4" />
@@ -467,24 +466,24 @@ const AdminUsersV2: React.FC = () => {
 
                 {/* User Details */}
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
                     <Mail className="h-4 w-4" />
                     <span>{user.email}</span>
                   </div>
                   
                   {user.phone && (
-                    <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
                       <Phone className="h-4 w-4" />
                       <span>{formatPhoneNumber(user.phone)}</span>
                     </div>
                   )}
                   
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
                     <Calendar className="h-4 w-4" />
                     <span>Joined {formatDateHelper(user.created_at)}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
                     <Clock className="h-4 w-4" />
                     <span>Last login: {formatLastLogin(user.last_login)}</span>
                   </div>

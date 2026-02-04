@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Gamepad2 } from 'lucide-react';
-import { PNSection, PNSectionHeader, PNCard } from '../../ui/PinkNeonDesignSystem';
+import { PNSection, PNSectionHeader, PNCard, PNContainer } from '../../ui/CyberDesignSystem';
 
 interface GameItem { id: string; name: string; slug: string; logoUrl?: string | null; count: number; }
 interface Props { games: GameItem[]; limit?: number }
@@ -11,6 +11,7 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
   const list = games.slice(0, limit);
   return (
     <PNSection padding="md" aria-label="Game populer tersedia">
+      <PNContainer>
       <PNSectionHeader
         title="Game Populer"
         subtitle="Pilih dari berbagai game favorit"
@@ -39,19 +40,20 @@ const PNPopularGamesSection: React.FC<Props> = ({ games, limit = 12 }) => {
             aria-label={`${g.name}, ${g.count} akun tersedia`}
           >
             <PNCard className="p-3.5 hover:bg-white/10 hover:border-pink-500/30 transition-all h-full">
-              <div className="aspect-square rounded-xl mb-2.5 flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 group-hover:border-pink-500/30 transition-colors" aria-hidden="true">
+              <div className="aspect-square rounded-xl mb-2.5 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[var(--cyber-bg-card)] to-[var(--cyber-bg-pure)] border border-white/10 group-hover:border-pink-500/30 transition-colors" aria-hidden="true">
                 {g.logoUrl ? (
                   <img src={g.logoUrl} alt={`Logo ${g.name}`} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
-                  <Gamepad2 className="text-gray-400" size={28} aria-hidden="true" />
+                  <Gamepad2 className="text-[var(--cyber-text-muted)]" size={28} aria-hidden="true" />
                 )}
               </div>
               <div className="text-sm font-medium text-white line-clamp-2 mb-1 group-hover:text-pink-300 transition-colors">{g.name}</div>
-              <div className="text-xs text-gray-400">{g.count} akun</div>
+              <div className="text-xs text-[var(--cyber-text-muted)]">{g.count} akun</div>
             </PNCard>
           </Link>
         ))}
       </div>
+      </PNContainer>
     </PNSection>
   );
 };

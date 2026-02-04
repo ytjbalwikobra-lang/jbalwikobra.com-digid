@@ -44,7 +44,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 }) => {
   const [updating, setUpdating] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   // Use useModalData hook for lazy loading - eliminates ~40 lines of fetch logic
   const {
@@ -104,7 +103,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     if (!order) return;
     setUpdating(true);
     setActionError(null);
-    setActionMessage(null);
 
     try {
       const sessionToken = localStorage.getItem('session_token');
@@ -125,7 +123,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
       // Refetch to get updated data
       await refetch();
-      setActionMessage(null);
     } catch (err) {
       console.error('Gagal menyelesaikan order:', err);
       setActionError('Gagal menyelesaikan order');

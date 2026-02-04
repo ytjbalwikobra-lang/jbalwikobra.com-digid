@@ -62,7 +62,7 @@ export const AdminAnalyticsCards: React.FC<AdminAnalyticsCardsProps> = ({
           <AdminCard key={i} className="animate-pulse">
             <AdminCardBody>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-surface-card-hover" />
+                <div className="w-12 h-12 rounded-cyber-lg bg-surface-card-hover" />
                 <div className="flex-1">
                   <div className="h-4 bg-surface-card-hover rounded w-24 mb-2" />
                   <div className="h-6 bg-surface-card-hover rounded w-16" />
@@ -86,7 +86,7 @@ export const AdminAnalyticsCards: React.FC<AdminAnalyticsCardsProps> = ({
           <AdminCard key={index} className="hover-lift">
             <AdminCardBody>
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-12 h-12 rounded-cyber-lg ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
                   <Icon className={`w-6 h-6 ${iconColor}`} />
                 </div>
                 <div className="flex-1 min-w-0">

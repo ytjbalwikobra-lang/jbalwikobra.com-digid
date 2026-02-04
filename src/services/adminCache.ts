@@ -257,17 +257,10 @@ class EnhancedAdminCacheManager {
    * Cleanup expired entries
    */
   cleanup(): void {
-    const now = Date.now();
-    let cleaned = 0;
-
     for (const [key, entry] of this.cache.entries()) {
       if (this.isExpired(entry)) {
         this.cache.delete(key);
-        cleaned++;
       }
-    }
-
-    if (cleaned > 0) {
     }
   }
 
@@ -286,10 +279,9 @@ class EnhancedAdminCacheManager {
       'feed': ['admin:feed-posts']
     };
 
-    const keysToWarm = prefetchMap[currentPage] || [];
-        
     // This would be implemented by the component using this cache
     // by calling the appropriate fetch functions
+    void prefetchMap[currentPage];
   }
 }
 

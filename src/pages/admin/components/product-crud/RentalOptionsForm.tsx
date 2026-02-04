@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
-import { IOSButton } from '../../../../components/ios/IOSDesignSystemV2';
+import { PNButton } from '../../../../components/ui/CyberDesignSystem';
 import { formatCurrency } from '../../../../utils/helpers';
 import type { RentalOption } from './types';
 
@@ -18,8 +18,8 @@ export const RentalOptionsForm: React.FC<RentalOptionsFormProps> = ({
   onHasRentalChange,
   rentalOptions,
   onRentalOptionsChange,
-  isActive,
-  onIsActiveChange,
+  isActive: _isActive,
+  onIsActiveChange: _onIsActiveChange,
 }) => {
   const addRentalOption = () => {
     if (rentalOptions.length >= 5) {
@@ -42,11 +42,6 @@ export const RentalOptionsForm: React.FC<RentalOptionsFormProps> = ({
     onRentalOptionsChange(updated);
   };
 
-  const removeRentalOption = (id: string) => {
-    const filtered = rentalOptions.filter((option) => option.id !== id);
-    onRentalOptionsChange(filtered);
-  };
-
   return (
     <div className="section-block stack-lg">
       <div className="section-title flex items-center gap-2">
@@ -55,7 +50,7 @@ export const RentalOptionsForm: React.FC<RentalOptionsFormProps> = ({
       </div>
       <div className="section-divider" />
       <div className="stack-md">
-        <div className="flex items-center justify-between p-sm rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center justify-between p-sm rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)]">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-white/90">Rental Tersedia</span>
             <span className="text-xs text-white/50">Aktifkan untuk menambah varian durasi & harga</span>
@@ -99,9 +94,9 @@ export const RentalOptionsForm: React.FC<RentalOptionsFormProps> = ({
                 />
               </div>
             ))}
-            <IOSButton onClick={addRentalOption} disabled={rentalOptions.length >= 5} className="w-full">
+            <PNButton onClick={addRentalOption} disabled={rentalOptions.length >= 5} className="w-full">
               Add Rental Option
-            </IOSButton>
+            </PNButton>
           </div>
         )}
       </div>

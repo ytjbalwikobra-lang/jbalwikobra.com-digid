@@ -3,7 +3,7 @@
  * Handles dynamic payment method fetching and direct payment processing
  */
 
-import { PaymentMethodUtils, PAYMENT_METHOD_CONFIGS, type PaymentMethodConfig } from '../config/paymentMethodConfig';
+import { PaymentMethodUtils } from '../config/paymentMethodConfig';
 
 export interface XenditPaymentMethod {
   id: string;

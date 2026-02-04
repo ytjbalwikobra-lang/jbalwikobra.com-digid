@@ -8,9 +8,7 @@ import {
   Clock,
   RefreshCw,
   Calendar,
-  DollarSign,
-  CheckCircle,
-  XCircle
+  DollarSign
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { adminService, type Order as AdminOrder } from '../../services/adminService';
@@ -259,12 +257,12 @@ const AdminOrdersV2: React.FC = () => {
                   />
                 ) : (
                   paginatedOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-900/50 transition-colors duration-150">
+                    <tr key={order.id} className="hover:bg-[var(--cyber-bg-pure)]/50 transition-colors duration-150">
                       <td className="px-6 py-4">
                         <div className="space-y-1">
                           <div className="font-semibold text-white">{order.customer_name}</div>
-                          <div className="text-sm text-gray-400">{order.customer_email}</div>
-                          <div className="text-xs text-gray-400">{formatPhoneNumber(order.customer_phone)}</div>
+                          <div className="text-sm text-[var(--cyber-text-muted)]">{order.customer_email}</div>
+                          <div className="text-xs text-[var(--cyber-text-muted)]">{formatPhoneNumber(order.customer_phone)}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -278,10 +276,10 @@ const AdminOrdersV2: React.FC = () => {
                               {order.order_type === 'purchase' ? 'Purchase' : 'Rental'}
                             </span>
                             {order.order_type === 'rental' && (order as any).rental_duration && (
-                              <span className="text-xs text-gray-400">⏰ {(order as any).rental_duration}</span>
+                              <span className="text-xs text-[var(--cyber-text-muted)]">⏰ {(order as any).rental_duration}</span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-400">Order ID: {order.id.slice(0, 8)}...</div>
+                          <div className="text-xs text-[var(--cyber-text-muted)]">Order ID: {order.id.slice(0, 8)}...</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -296,7 +294,7 @@ const AdminOrdersV2: React.FC = () => {
                         />
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-300">
+                        <div className="text-sm text-[var(--cyber-text-secondary)]">
                           {formatDate(order.created_at)}
                         </div>
                       </td>
@@ -304,7 +302,7 @@ const AdminOrdersV2: React.FC = () => {
                         <div className="flex items-center justify-end space-x-2">
                           <button 
                             onClick={() => handleViewOrder(order.id)}
-                            className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-xl transition-colors"
+                            className="p-2 text-[var(--cyber-text-secondary)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-colors"
                             title="View order details"
                           >
                             <Eye className="h-4 w-4" />

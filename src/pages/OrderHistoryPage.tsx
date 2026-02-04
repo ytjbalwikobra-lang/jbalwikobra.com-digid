@@ -4,6 +4,7 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { AuthRequired } from '../components/ProtectedRoute';
 import { useToast } from '../components/Toast';
+import { SEOHead, Breadcrumb } from '../components/seo';
 // Removed legacy standardClasses helper – using direct utilities
 
 type Order = {
@@ -71,14 +72,25 @@ const OrderHistoryPage: React.FC = () => {
 
   return (
     <AuthRequired>
-      <div className="min-h-screen bg-app-dark">
-        <div className="pt-20 pb-20 px-4">
+      <SEOHead
+        title="Riwayat Order | JBal WiKobra"
+        description="Lihat riwayat pembelian dan status order Anda."
+        url="/orders"
+      />
+      <Breadcrumb
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Riwayat Order', href: '/orders' }
+        ]}
+      />
+      <div className="min-h-screen bg-[var(--cyber-bg-pure)]">
+        <div className="py-6 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-white">
                 Riwayat Order Saya
                 {!loading && orders.length > 0 && (
-                  <span className="ml-2 text-sm text-gray-400">
+                  <span className="ml-2 text-sm text-[var(--cyber-text-muted)]">
                     ({orders.length} order)
                   </span>
                 )}
@@ -86,43 +98,43 @@ const OrderHistoryPage: React.FC = () => {
               <button
                 onClick={handleRefresh}
                 disabled={loading}
-                className="p-2 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 text-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-cyber-lg bg-[var(--cyber-pink-primary)]/10 hover:bg-[var(--cyber-pink-primary)]/20 text-[var(--cyber-pink-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Refresh"
               >
                 <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
             {loading ? (
-              <div className="bg-black border border-gray-700 rounded-xl p-6">
-                <div className="ios-skeleton h-5 w-48 mb-4"></div>
-                <div className="divide-y divide-ios-border/60">
+              <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg p-6">
+                <div className="cyber-skeleton h-5 w-48 mb-4"></div>
+                <div className="divide-y divide-[var(--cyber-border)]/60">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="py-4 flex items-center justify-between">
                       <div className="flex-1 pr-4">
-                        <div className="ios-skeleton h-3.5 w-40 mb-2"></div>
-                        <div className="ios-skeleton h-3.5 w-56"></div>
+                        <div className="cyber-skeleton h-3.5 w-40 mb-2"></div>
+                        <div className="cyber-skeleton h-3.5 w-56"></div>
                       </div>
-                      <div className="text-right w-40">
-                        <div className="ios-skeleton h-4 w-28 mb-2 ml-auto"></div>
-                        <div className="ios-skeleton h-6 w-20 rounded-md ml-auto"></div>
+                      <div className="text-right">
+                        <div className="cyber-skeleton h-4 w-28 mb-2 ml-auto"></div>
+                        <div className="cyber-skeleton h-6 w-20 rounded-md ml-auto"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : orders.length === 0 ? (
-              <div className="bg-black border border-pink-500/30 rounded-xl p-6 text-center text-gray-300">
+              <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-pink-primary)]/30 rounded-cyber-lg p-6 text-center text-[var(--cyber-text-secondary)]">
                 Belum ada order.
               </div>
             ) : (
-              <div className="bg-black border border-pink-500/30 rounded-xl divide-y divide-pink-500/20">
+              <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-pink-primary)]/30 rounded-cyber-lg divide-y divide-[var(--cyber-pink-primary)]/20">
                 {orders.map(o => (
                   <div key={o.id} className="p-4 flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">{new Date(o.created_at).toLocaleString('id-ID')}</div>
-                      <div className="font-mono text-gray-200">{o.id}</div>
+                      <div className="text-sm text-[var(--cyber-text-muted)]">{new Date(o.created_at).toLocaleString('id-ID')}</div>
+                      <div className="font-mono text-[var(--cyber-text-secondary)]">{o.id}</div>
                       {o.payment_channel && (
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-xs text-[var(--cyber-text-muted)] mt-1">
                           Metode: <span className="capitalize">{o.payment_channel.toLowerCase().replace(/_/g,' ')}</span>
                         </div>
                       )}
@@ -141,7 +153,7 @@ const OrderHistoryPage: React.FC = () => {
                          'Dibatalkan'}
                       </div>
                       {o.xendit_invoice_url && o.status === 'pending' && (
-                        <a href={o.xendit_invoice_url} target="_blank" rel="noopener noreferrer" className="text-xs text-pink-500 hover:underline block mt-1">
+                        <a href={o.xendit_invoice_url} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--cyber-pink-primary)] hover:underline block mt-1">
                           Bayar Sekarang
                         </a>
                       )}

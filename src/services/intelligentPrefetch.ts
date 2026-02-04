@@ -193,7 +193,7 @@ class IntelligentPrefetchManager {
   private async prefetchRecentOrderDetails(): Promise<void> {
     try {
       // Get recent orders and prefetch their details
-      const { data: orders } = await adminClient.getOrders(1, 5, undefined, { skipCache: true });
+      const { data: _orders } = await adminClient.getOrders(1, 5, undefined, { skipCache: true });
       
       // Here you could prefetch individual order details if you had that endpoint
       // For now, this just ensures recent orders are cached

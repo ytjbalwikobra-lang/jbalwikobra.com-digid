@@ -2,7 +2,7 @@ import React from 'react';
 import { X, LayoutDashboard } from 'lucide-react';
 import { navigationItems } from './navigationConfig';
 import { AdminTab } from './adminTypes';
-const cn = (...c: any[]) => c.filter(Boolean).join(' ');
+import { cn } from '../../../../utils/cn';
 
 interface AdminMobileMenuProps {
   open: boolean;
@@ -32,7 +32,7 @@ export const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ open, activeTa
             </div>
             <button 
               onClick={onClose} 
-              className="btn btn-ghost btn-sm surface-tint-pink hover:bg-pink-500/25 transition-soft"
+              className="btn btn-ghost btn-sm surface-tint-pink hover:bg-[var(--cyber-pink-primary)]/25 transition-soft"
             >
               <X className="w-5 h-5 text-accent" />
             </button>
@@ -46,7 +46,7 @@ export const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ open, activeTa
                   key={item.id}
                   onClick={() => { onSelect(item.id); onClose(); }}
                   className={cn(
-                    'w-full cluster-md px-lg py-md rounded-2xl transition-soft fs-base font-semibold relative group',
+                    'w-full cluster-md px-lg py-md rounded-cyber-2xl transition-soft fs-base font-semibold relative group',
                     isActive
                       ? 'surface-accent text-primary shadow-lg ring-2 ring-accent/50'
                       : 'text-secondary hover:surface-tint-pink hover:text-accent hover:shadow-md hover:ring-1 hover:ring-accent/30'

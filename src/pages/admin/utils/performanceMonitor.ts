@@ -112,7 +112,7 @@ class AdminPerformanceMonitor {
     const summary: Record<string, any> = {};
     
     for (const key in grouped) {
-      if (grouped.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(grouped, key)) {
         const durations = grouped[key];
         summary[key] = {
           count: durations.length,

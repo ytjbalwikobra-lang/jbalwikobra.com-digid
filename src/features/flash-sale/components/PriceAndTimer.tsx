@@ -1,11 +1,10 @@
 import React from 'react';
 import { Clock, Tag, Zap } from 'lucide-react';
 import FlashSaleTimer from '../../../components/FlashSaleTimer';
-import { PNCard, PNHeading, PNText } from '../../../components/ui/PinkNeonDesignSystem';
+import { PNCard, PNHeading, PNText } from '../../../components/ui/CyberDesignSystem';
 import { formatCurrency } from '../../../utils/helpers';
 
 type Props = {
-  productName: string;
   isActive: boolean;
   endTime?: string | null;
   effectivePrice: number;
@@ -14,7 +13,6 @@ type Props = {
 };
 
 export const PriceAndTimer: React.FC<Props> = ({
-  productName,
   isActive,
   endTime,
   effectivePrice,
@@ -25,7 +23,7 @@ export const PriceAndTimer: React.FC<Props> = ({
     <div className="space-y-6">
       {/* Flash Sale Timer */}
       {isActive && endTime && (
-        <PNCard className="bg-gradient-to-r from-pink-500 to-red-500 border-pink-500 rounded-2xl overflow-hidden">
+        <PNCard className="bg-gradient-to-r from-pink-500 to-red-500 border-pink-500 rounded-cyber-2xl overflow-hidden">
           <div className="p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="p-2 bg-white/20 rounded-full flex-shrink-0">
@@ -47,7 +45,7 @@ export const PriceAndTimer: React.FC<Props> = ({
       )}
 
       {/* Price Block */}
-      <PNCard className="bg-gray-900 border-gray-700 rounded-2xl overflow-hidden">
+      <PNCard className="bg-[var(--cyber-bg-pure)] border-[var(--cyber-border)] rounded-cyber-2xl overflow-hidden">
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
           {isActive && originalPrice && originalPrice > effectivePrice ? (
             <div className="space-y-4">
@@ -66,12 +64,12 @@ export const PriceAndTimer: React.FC<Props> = ({
                   </div>
                 </div>
               </div>
-              <div className="border-t border-gray-700 pt-4">
+              <div className="border-t border-[var(--cyber-border)] pt-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <PNText className="text-gray-400 line-through text-lg sm:text-xl lg:text-2xl break-words">
+                  <PNText className="text-[var(--cyber-text-muted)] line-through text-lg sm:text-xl lg:text-2xl break-words">
                     {formatCurrency(originalPrice)}
                   </PNText>
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm sm:text-base font-semibold inline-flex items-center gap-2 w-fit">
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-cyber-lg text-sm sm:text-base font-semibold inline-flex items-center gap-2 w-fit">
                     <Tag className="w-4 h-4 flex-shrink-0" />
                     <span className="break-words">Hemat {formatCurrency(originalPrice - effectivePrice)}</span>
                   </div>

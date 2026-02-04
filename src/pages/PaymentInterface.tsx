@@ -6,9 +6,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Clock, CreditCard, ArrowLeft, QrCode, Shield, Smartphone, CheckCircle, AlertTriangle, Zap, Star, Building2, Copy, Camera } from 'lucide-react';
+import { Clock, CreditCard, ArrowLeft, QrCode, Shield, Smartphone, CheckCircle, AlertTriangle, Zap, Star, Building2, Copy } from 'lucide-react';
 import { formatCurrency } from '../utils/helpers';
-import { PNContainer, PNCard, PNHeading, PNText, PNButton, PNSection, PNSectionHeader } from '../components/ui/PinkNeonDesignSystem';
+import { PNContainer, PNCard, PNHeading, PNText, PNButton, PNSection } from '../components/ui/CyberDesignSystem';
 import QRCode from 'react-qr-code';
 
 interface PaymentData {
@@ -385,15 +385,15 @@ const PaymentInterface: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center">
         <PNContainer>
           <div className="text-center">
             {/* Enhanced Loading Animation */}
             <div className="relative mb-8">
               <div className="w-16 h-16 mx-auto relative">
-                <div className="absolute inset-0 animate-spin rounded-full border-4 border-pink-500/20"></div>
-                <div className="absolute inset-0 animate-spin rounded-full border-4 border-t-pink-500 border-r-transparent border-b-transparent border-l-transparent"></div>
-                <div className="absolute inset-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-full flex items-center justify-center">
+                <div className="absolute inset-0 animate-spin rounded-full border-4 border-[var(--cyber-pink-muted)]"></div>
+                <div className="absolute inset-0 animate-spin rounded-full border-4 border-t-[var(--cyber-pink-primary)] border-r-transparent border-b-transparent border-l-transparent"></div>
+                <div className="absolute inset-2 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-full flex items-center justify-center">
                   <CreditCard className="text-white" size={24} />
                 </div>
               </div>
@@ -408,7 +408,7 @@ const PaymentInterface: React.FC = () => {
 
   if (error || !paymentData) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white flex items-center justify-center">
         <PNContainer>
           <div className="text-center max-w-md mx-auto">
             <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
@@ -433,7 +433,7 @@ const PaymentInterface: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white overflow-x-hidden max-w-full">
       <PNContainer>
         
         {/* Compact Header: Back button only (timer moved below status badge) */}
@@ -443,10 +443,10 @@ const PaymentInterface: React.FC = () => {
               {/* Back Button with Pink Accent */}
               <button
                 onClick={() => navigate('/')}
-                className="flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-200 group"
+                className="flex items-center space-x-3 text-[var(--cyber-text-secondary)] hover:text-white transition-all duration-200 group"
                 aria-label="Kembali ke beranda"
               >
-                <div className="p-2 bg-white/5 border border-white/10 rounded-xl group-hover:bg-pink-500/20 group-hover:border-pink-500/50 transition-all">
+                <div className="p-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg group-hover:bg-[var(--cyber-pink-muted)] group-hover:border-[var(--cyber-pink-primary)] transition-all">
                   <ArrowLeft size={20} />
                 </div>
                 <span className="font-medium">Kembali</span>
@@ -458,10 +458,10 @@ const PaymentInterface: React.FC = () => {
         {/* Warning Banner for Time Running Out */}
         {isTimeRunningOut() && (
           <PNSection padding="sm">
-            <div className="relative overflow-hidden bg-gradient-to-r from-red-500/20 via-pink-500/20 to-red-500/20 border border-red-500/50 rounded-2xl p-6 mb-6">
+            <div className="relative overflow-hidden bg-gradient-to-r from-red-500/20 via-pink-500/20 to-red-500/20 border border-red-500/50 rounded-cyber-2xl p-6 mb-6">
               <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-pink-500/10 animate-pulse"></div>
               <div className="relative flex items-center space-x-4">
-                <div className="p-3 bg-red-500 rounded-xl">
+                <div className="p-3 bg-red-500 rounded-cyber-lg">
                   <AlertTriangle className="text-white" size={24} />
                 </div>
                 <div>
@@ -482,7 +482,7 @@ const PaymentInterface: React.FC = () => {
             <div className="relative text-center space-y-6">
               {/* Icon with Gradient Background */}
               <div className="relative inline-flex">
-                <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/25 mx-auto">
+                <div className="w-20 h-20 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl flex items-center justify-center shadow-lg shadow-pink-500/25 mx-auto">
                   <CreditCard className="text-white" size={32} />
                 </div>
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
@@ -492,7 +492,7 @@ const PaymentInterface: React.FC = () => {
               
               {/* Payment Details */}
               <div className="space-y-3">
-                <div className="text-sm text-pink-300/80 font-medium tracking-wide">JBalwikobra Payment</div>
+                <div className="text-sm text-[var(--cyber-pink-secondary)]/80 font-medium tracking-wide">JBalwikobra Payment</div>
                 <PNHeading level={1} gradient className="text-4xl font-extrabold">
                   {formatCurrency(paymentData.amount)}
                 </PNHeading>
@@ -500,23 +500,23 @@ const PaymentInterface: React.FC = () => {
               </div>
               
               {/* Status Badge */}
-              <div className="inline-flex items-center space-x-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 text-yellow-300 px-6 py-3 rounded-2xl backdrop-blur-sm">
+              <div className="inline-flex items-center space-x-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 text-yellow-300 px-6 py-3 rounded-cyber-2xl backdrop-blur-sm">
                 <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
                 <span className="font-semibold">Menunggu Pembayaran</span>
               </div>
 
               {/* Big Countdown directly under status badge */}
               <div
-                className={`mt-5 w-full max-w-sm mx-auto rounded-2xl border backdrop-blur-sm px-6 py-5 ${
+                className={`mt-5 w-full max-w-sm mx-auto rounded-cyber-2xl border backdrop-blur-sm px-6 py-5 ${
                   isTimeRunningOut()
-                    ? 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border-red-500/50 shadow-lg shadow-red-500/25'
-                    : 'bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 border-pink-500/40 shadow-lg shadow-pink-500/20'
+                    ? 'bg-gradient-to-r from-red-500/20 to-[var(--cyber-pink-muted)] border-red-500/50 shadow-lg shadow-red-500/25'
+                    : 'bg-gradient-to-r from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-glow)]/20 border-[var(--cyber-pink-primary)]/40 shadow-lg shadow-[var(--cyber-pink-primary)]/20'
                 }`}
                 aria-live="polite"
               >
                 <div className="flex items-center justify-center space-x-3 mb-1">
-                  <Clock size={20} className="text-white/90" />
-                  <span className="text-xs tracking-wide text-gray-200/90">Sisa Waktu Pembayaran</span>
+                  <Clock size={20} className="text-[var(--cyber-text-secondary)]" />
+                  <span className="text-xs tracking-wide text-[var(--cyber-text-secondary)]/90">Sisa Waktu Pembayaran</span>
                 </div>
                 <div className={`text-center font-mono font-extrabold ${isTimeRunningOut() ? 'text-red-200' : 'text-white'}`}>
                   <span className="text-4xl lg:text-5xl leading-none">{getTimeRemaining()}</span>
@@ -524,7 +524,7 @@ const PaymentInterface: React.FC = () => {
               </div>
 
               {/* Payment Method Info */}
-              <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+              <div className="flex items-center justify-center space-x-2 text-sm text-[var(--cyber-text-muted)]">
                 <QrCode size={16} />
                 <span>Metode: {(paymentMethod || paymentData.payment_method || 'QRIS').toUpperCase()}</span>
               </div>
@@ -543,7 +543,7 @@ const PaymentInterface: React.FC = () => {
                 {/* Section Header with Pink Neon Style */}
                 <div className="text-center mb-8">
                   <div className="flex items-center justify-center space-x-3 mb-4">
-                    <div className="p-3 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-2xl">
+                    <div className="p-3 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl">
                       <QrCode className="text-white" size={28} />
                     </div>
                     <div className="text-left">
@@ -556,7 +556,7 @@ const PaymentInterface: React.FC = () => {
                 {/* Enhanced QR Code Display */}
                 <div className="text-center mb-8">
                   <div className="relative inline-block">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl shadow-pink-500/10 border-4 border-pink-500/20">
+                    <div className="bg-white p-8 rounded-cyber-3xl shadow-2xl shadow-[var(--cyber-pink-subtle)] border-4 border-[var(--cyber-pink-muted)]">
                       {paymentData.qr_string ? (
                         <QRCode 
                           value={paymentData.qr_string} 
@@ -564,11 +564,11 @@ const PaymentInterface: React.FC = () => {
                           style={{ maxWidth: "100%", height: "auto" }}
                         />
                       ) : (
-                        <div className="w-70 h-70 flex items-center justify-center bg-gray-100 rounded-2xl">
-                          <div className="text-center text-gray-600">
-                            <QrCode size={64} className="mx-auto mb-4 text-gray-400" />
+                        <div className="w-70 h-70 flex items-center justify-center bg-[var(--cyber-bg-elevated)] rounded-cyber-2xl">
+                          <div className="text-center text-[var(--cyber-text-disabled)]">
+                            <QrCode size={64} className="mx-auto mb-4 text-[var(--cyber-text-muted)]" />
                             <p className="text-sm">QR Code sedang dimuat...</p>
-                            <p className="text-xs text-gray-400 mt-2">
+                            <p className="text-xs text-[var(--cyber-text-muted)] mt-2">
                               Payment ID: {paymentData.id}
                             </p>
                           </div>
@@ -576,7 +576,7 @@ const PaymentInterface: React.FC = () => {
                       )}
                     </div>
                     {/* Glow Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 rounded-3xl blur-xl -z-10 animate-pulse"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-glow)]/20 rounded-cyber-3xl blur-xl -z-10 animate-pulse"></div>
                   </div>
                 </div>
                 
@@ -591,12 +591,12 @@ const PaymentInterface: React.FC = () => {
                       { icon: Zap, text: "Arahkan kamera ke QR code di atas" },
                       { icon: CheckCircle, text: `Konfirmasi pembayaran sebesar ${formatCurrency(paymentData.amount)}` }
                     ].map((step, index) => (
-                      <div key={index} className="flex items-start space-x-4 p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-all">
-                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-pink-500 to-fuchsia-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">
+                      <div key={index} className="flex items-start space-x-4 p-4 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-2xl backdrop-blur-sm hover:bg-[var(--cyber-bg-elevated)] transition-all">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-lg flex items-center justify-center text-white font-bold text-sm">
                           {index + 1}
                         </div>
                         <div className="flex items-center space-x-3 flex-1">
-                          <step.icon size={20} className="text-pink-500 flex-shrink-0" />
+                          <step.icon size={20} className="text-[var(--cyber-pink-primary)] flex-shrink-0" />
                           <PNText className="text-sm leading-relaxed">{step.text}</PNText>
                         </div>
                       </div>
@@ -619,7 +619,7 @@ const PaymentInterface: React.FC = () => {
                 {/* Section Header */}
                 <div className="text-center mb-8">
                   <div className="flex items-center justify-center space-x-3 mb-4">
-                    <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl">
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-cyber-2xl">
                       <Building2 className="text-white" size={28} />
                     </div>
                     <div className="text-left">
@@ -633,17 +633,17 @@ const PaymentInterface: React.FC = () => {
                 {(paymentData.virtual_account_number || paymentData.account_number) ? (
                   <div className="space-y-6 mb-8">
                     {/* Bank Information */}
-                    <div className="text-center p-6 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl border border-blue-500/20">
-                      <PNText className="text-sm text-gray-400 mb-2">Bank</PNText>
+                    <div className="text-center p-6 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-cyber-2xl border border-blue-500/20">
+                      <PNText className="text-sm text-[var(--cyber-text-muted)] mb-2">Bank</PNText>
                       <PNHeading level={3} className="text-2xl font-bold">
                         {paymentData.bank_name || `Bank ${paymentData.bank_code?.toUpperCase()}`}
                       </PNHeading>
                     </div>
 
                     {/* Virtual Account Number */}
-                    <div className="text-center p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl border border-green-500/20">
-                      <PNText className="text-sm text-gray-400 mb-2">Nomor Virtual Account</PNText>
-                      <div className="font-mono text-2xl lg:text-3xl font-bold text-white tracking-wider bg-gray-800/50 px-4 py-3 rounded-xl border border-gray-600/50">
+                    <div className="text-center p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-cyber-2xl border border-green-500/20">
+                      <PNText className="text-sm text-[var(--cyber-text-muted)] mb-2">Nomor Virtual Account</PNText>
+                      <div className="font-mono text-2xl lg:text-3xl font-bold text-white tracking-wider bg-[var(--cyber-bg-elevated)] px-4 py-3 rounded-cyber-lg border border-[var(--cyber-border)]">
                         {paymentData.virtual_account_number || paymentData.account_number}
                       </div>
                       <button
@@ -656,8 +656,8 @@ const PaymentInterface: React.FC = () => {
                     </div>
 
                     {/* Amount */}
-                    <div className="text-center p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl border border-purple-500/20">
-                      <PNText className="text-sm text-gray-400 mb-2">Jumlah Transfer</PNText>
+                    <div className="text-center p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-cyber-2xl border border-purple-500/20">
+                      <PNText className="text-sm text-[var(--cyber-text-muted)] mb-2">Jumlah Transfer</PNText>
                       <PNHeading level={3} className="text-2xl font-bold text-purple-300">
                         {formatCurrency(paymentData.amount)}
                       </PNHeading>
@@ -666,13 +666,13 @@ const PaymentInterface: React.FC = () => {
                 ) : (
                   /* Invoice URL as fallback */
                   <div className="space-y-6 mb-8">
-                    <div className="text-center p-6 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-2xl border border-indigo-500/20">
+                    <div className="text-center p-6 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-cyber-2xl border border-indigo-500/20">
                       <PNHeading level={3} className="text-xl mb-4">
                         Klik tombol di bawah untuk melihat detail Virtual Account
                       </PNHeading>
                       <PNButton
                         onClick={() => window.open(paymentData.invoice_url, '_blank')}
-                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-semibold"
+                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 text-white px-8 py-3 rounded-cyber-lg font-semibold"
                       >
                         Lihat Detail Pembayaran
                       </PNButton>
@@ -694,7 +694,7 @@ const PaymentInterface: React.FC = () => {
                       { icon: CreditCard, text: `Transfer sejumlah: ${formatCurrency(paymentData.amount)}` },
                       { icon: CheckCircle, text: "Konfirmasi transfer dan selesai!" }
                     ].map((step, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-2xl border border-gray-600/50">
+                      <div key={index} className="flex items-center space-x-4 p-4 bg-gradient-to-r from-[var(--cyber-bg-elevated)] to-[var(--cyber-bg-card)] rounded-cyber-2xl border border-[var(--cyber-border)]">
                         <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full text-white text-sm font-bold">
                           {index + 1}
                         </div>
@@ -709,7 +709,7 @@ const PaymentInterface: React.FC = () => {
 
                 {/* Expiry Information */}
                 {paymentData.expiry_date && (
-                  <div className="mt-6 text-center p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-2xl border border-yellow-500/20">
+                  <div className="mt-6 text-center p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-cyber-2xl border border-yellow-500/20">
                     <PNText color="muted" className="text-sm">
                       Virtual Account berlaku hingga: <span className="font-semibold text-yellow-300">{new Date(paymentData.expiry_date).toLocaleString('id-ID')}</span>
                     </PNText>
@@ -745,8 +745,8 @@ const PaymentInterface: React.FC = () => {
             </PNText>
             
             {/* Branding */}
-            <div className="pt-4 border-t border-white/10">
-              <div className="text-xs text-pink-300/60 font-medium tracking-wide">
+            <div className="pt-4 border-t border-[var(--cyber-border)]">
+              <div className="text-xs text-[var(--cyber-pink-secondary)]/60 font-medium tracking-wide">
                 Powered by JBalwikobra × Xendit
               </div>
             </div>

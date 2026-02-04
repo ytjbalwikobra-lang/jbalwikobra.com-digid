@@ -110,7 +110,7 @@ class AdminNotificationService {
     productName: string, 
     amount: number,
     type: 'new_order' | 'paid_order' | 'order_cancelled' | 'new_rent' | 'paid_rent' = 'new_order',
-    customerPhone?: string,
+    _customerPhone?: string,
     orderType?: 'purchase' | 'rental'
   ): Promise<void> {
     try {
@@ -423,7 +423,7 @@ class AdminNotificationService {
         return;
       }
       // First, check if notification exists and current state
-      const { data: beforeData, error: beforeError } = await supabase
+      const { data: _beforeData, error: beforeError } = await supabase
         .from('admin_notifications')
         .select('id, type, title, message, is_read, created_at, updated_at')
         .eq('id', notificationId)
@@ -435,7 +435,7 @@ class AdminNotificationService {
       }
       
       // Perform the update
-      const { data: updateData, error: updateError } = await supabase
+      const { data: _updateData, error: updateError } = await supabase
         .from('admin_notifications')
         .update({ is_read: true, updated_at: new Date().toISOString() })
         .eq('id', notificationId)
@@ -447,7 +447,7 @@ class AdminNotificationService {
       }
       
       // Verify the update
-      const { data: afterData, error: afterError } = await supabase
+      const { data: _afterData, error: afterError } = await supabase
         .from('admin_notifications')
         .select('id, type, title, message, is_read, created_at, updated_at')
         .eq('id', notificationId)

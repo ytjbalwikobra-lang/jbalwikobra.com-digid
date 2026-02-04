@@ -394,7 +394,7 @@ const AdminWhatsAppSettings: React.FC = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
             Konfigurasi WhatsApp
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-[var(--cyber-text-muted)] mt-1">
             {apiKey?.is_active ? '✓ Terhubung' : '✗ Tidak terhubung'} • {groups.length} grup tersedia
           </p>
         </div>
@@ -415,14 +415,14 @@ const AdminWhatsAppSettings: React.FC = () => {
           return (
             <div 
               key={idx}
-              className={`${card.bgColor} rounded-xl p-4 border border-gray-800 transition-all duration-300 hover:scale-[1.02]`}
+              className={`${card.bgColor} rounded-cyber-lg p-4 border border-[var(--cyber-border)] transition-all duration-300 hover:scale-[1.02]`}
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl bg-gradient-to-br ${card.color}`}>
+                <div className={`p-2 rounded-cyber-lg bg-gradient-to-br ${card.color}`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">{card.label}</p>
+                  <p className="text-xs text-[var(--cyber-text-muted)] uppercase tracking-wide">{card.label}</p>
                   <p className="text-lg font-bold text-white truncate">
                     {formatAnalyticsValue(card.value)}
                   </p>
@@ -434,24 +434,24 @@ const AdminWhatsAppSettings: React.FC = () => {
       </div>
 
       {/* Help Card */}
-      <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
+      <div className="bg-blue-500/10 rounded-cyber-lg p-4 border border-blue-500/20">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
+          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-blue-500 to-blue-600">
             <Info className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-white mb-2">Bantuan</h3>
-            <ul className="space-y-1 text-xs text-gray-300">
+            <ul className="space-y-1 text-xs text-[var(--cyber-text-secondary)]">
               <li>• <strong>Device offline:</strong> Scan QR di dashboard WooWA</li>
               <li>• <strong>API key invalid:</strong> Periksa akun NotifAPI</li>
             </ul>
             <div className="mt-3 flex gap-2">
               <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow"
-                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-medium hover:opacity-90">
+                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-gradient-to-r from-pink-500 to-purple-500 text-[var(--cyber-text-primary)] text-xs font-medium hover:opacity-90">
                 WooWA Docs
               </a>
               <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow"
-                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gray-700 text-white text-xs font-medium hover:bg-gray-600">
+                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-cyber-lg bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-primary)] text-xs font-medium hover:bg-[var(--cyber-bg-elevated)]">
                 NotifAPI
               </a>
             </div>
@@ -460,23 +460,23 @@ const AdminWhatsAppSettings: React.FC = () => {
       </div>
 
       {/* Current API Key Section */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
+          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-purple-500 to-purple-600">
             <Key className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">API Key Aktif</h2>
-            <p className="text-xs text-gray-400">Kunci API WooWA saat ini</p>
+            <p className="text-xs text-[var(--cyber-text-muted)]">Kunci API WooWA saat ini</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between flex-wrap gap-4 p-4 bg-gray-800/50 rounded-xl">
+        <div className="flex items-center justify-between flex-wrap gap-4 p-4 bg-[var(--cyber-bg-surface)]/50 rounded-cyber-lg">
           <div className="flex items-center gap-3">
             <div>
-              <p className="text-xs text-gray-400">API Key</p>
+              <p className="text-xs text-[var(--cyber-text-muted)]">API Key</p>
               <div className="flex items-center gap-2 mt-0.5">
-                <p className="font-mono text-sm text-white">
+                <p className="font-mono text-sm text-[var(--cyber-text-primary)]">
                   {apiKey ? (showApiKey ? apiKey.api_key : maskApiKey(apiKey.api_key)) : 'Belum dikonfigurasi'}
                 </p>
                 {apiKey && (
@@ -486,7 +486,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                       className="p-1 rounded hover:bg-white/10 transition-colors"
                       aria-label={showApiKey ? 'Hide' : 'Show'}
                     >
-                      {showApiKey ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
+                      {showApiKey ? <EyeOff className="w-4 h-4 text-[var(--cyber-text-muted)]" /> : <Eye className="w-4 h-4 text-[var(--cyber-text-muted)]" />}
                     </button>
                     <button
                       onClick={() => copyToClipboard(apiKey.api_key, () => {
@@ -496,12 +496,12 @@ const AdminWhatsAppSettings: React.FC = () => {
                       className="p-1 rounded hover:bg-white/10 transition-colors"
                       aria-label="Copy"
                     >
-                      {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                      {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-[var(--cyber-text-muted)]" />}
                     </button>
                   </>
                 )}
               </div>
-              <p className="text-xs mt-1 text-gray-400">
+              <p className="text-xs mt-1 text-[var(--cyber-text-muted)]">
                 Penggunaan: {apiKey?.usage_count?.toLocaleString() || '0'} pesan
               </p>
             </div>
@@ -513,32 +513,32 @@ const AdminWhatsAppSettings: React.FC = () => {
       </div>
 
       {/* Update API Key Section */}
-      <div className="bg-gray-900 rounded-xl border border-pink-500/30 p-6">
+      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-pink-500/30 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
+          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
             <Key className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Perbarui API Key</h2>
-            <p className="text-xs text-gray-400">Masukkan API key baru untuk menghubungkan</p>
+            <p className="text-xs text-[var(--cyber-text-muted)]">Masukkan API key baru untuk menghubungkan</p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="new-api-key" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="new-api-key" className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-1">
               API Key Baru <span className="text-red-500">*</span>
             </label>
             <input
               id="new-api-key"
               type="text"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl font-mono text-sm text-white placeholder-gray-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+              className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg font-mono text-sm text-[var(--cyber-text-primary)] placeholder-gray-500 focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
               value={newApiKey}
               onChange={(e) => setNewApiKey(e.target.value)}
               placeholder="Paste API key baru disini"
             />
-            <p className="text-xs mt-1.5 text-gray-400">
-              Dapatkan dari <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-500 hover:underline">WooWA</a> atau <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow" className="text-pink-500 hover:underline">NotifAPI</a>
+            <p className="text-xs mt-1.5 text-[var(--cyber-text-muted)]">
+              Dapatkan dari <a href="https://woo-wa.com" target="_blank" rel="noopener noreferrer nofollow" className="text-[var(--cyber-pink-primary)] hover:underline">WooWA</a> atau <a href="https://notifapi.com" target="_blank" rel="noopener noreferrer nofollow" className="text-[var(--cyber-pink-primary)] hover:underline">NotifAPI</a>
             </p>
           </div>
 
@@ -558,29 +558,29 @@ const AdminWhatsAppSettings: React.FC = () => {
       {apiKey?.is_active && (
         <>
           {/* Current Configuration Summary */}
-          <div className="bg-gray-900 rounded-xl border border-green-500/20 p-6">
+          <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-green-500/20 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
+              <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-green-500 to-green-600">
                 <Users className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-white">Konfigurasi Saat Ini</h2>
-                <p className="text-xs text-gray-400">Routing notifikasi aktif</p>
+                <p className="text-xs text-[var(--cyber-text-muted)]">Routing notifikasi aktif</p>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-800/50 rounded-xl mb-4">
-              <p className="text-xs text-gray-400">Default Group</p>
-              <p className="text-sm font-semibold text-white mt-0.5">
+            <div className="p-4 bg-[var(--cyber-bg-surface)]/50 rounded-cyber-lg mb-4">
+              <p className="text-xs text-[var(--cyber-text-muted)]">Default Group</p>
+              <p className="text-sm font-semibold text-[var(--cyber-text-primary)] mt-0.5">
                 {groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Belum diatur'}
               </p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {NOTIFICATION_TYPES.map(item => (
-                <div key={item.key} className="p-3 bg-gray-800/50 rounded-xl">
-                  <p className="text-xs text-gray-400">{item.label}</p>
-                  <p className="text-xs font-medium mt-0.5 text-white truncate">
+                <div key={item.key} className="p-3 bg-[var(--cyber-bg-surface)]/50 rounded-cyber-lg">
+                  <p className="text-xs text-[var(--cyber-text-muted)]">{item.label}</p>
+                  <p className="text-xs font-medium mt-0.5 text-[var(--cyber-text-primary)] truncate">
                     {groups.find(g => g.id === groupConfigurations[item.key])?.name || 'Default'}
                   </p>
                 </div>
@@ -591,15 +591,15 @@ const AdminWhatsAppSettings: React.FC = () => {
           {/* Select Groups */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Default Group */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
+                  <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-green-500 to-green-600">
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">Default Group</h2>
-                    <p className="text-xs text-gray-400">Tujuan notifikasi utama</p>
+                    <p className="text-xs text-[var(--cyber-text-muted)]">Tujuan notifikasi utama</p>
                   </div>
                 </div>
                 <AdminButton
@@ -615,7 +615,7 @@ const AdminWhatsAppSettings: React.FC = () => {
               
               <div className="space-y-4">
                 <select
-                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                  className="w-full px-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] text-sm focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
                   value={defaultGroupId}
                   onChange={(e) => setDefaultGroupId(e.target.value)}
                 >
@@ -625,7 +625,7 @@ const AdminWhatsAppSettings: React.FC = () => {
                   ))}
                 </select>
                 
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[var(--cyber-text-muted)]">
                   {groups.length > 0 ? `${groups.length} grup tersedia` : 'Klik "Discover" untuk memuat'}
                 </p>
 
@@ -641,12 +641,12 @@ const AdminWhatsAppSettings: React.FC = () => {
                 )}
 
                 <div>
-                  <label className="block text-xs font-medium mb-1.5 text-gray-400">
+                  <label className="block text-xs font-medium mb-1.5 text-[var(--cyber-text-muted)]">
                     Atau masukkan manual
                   </label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl font-mono text-xs text-white placeholder-gray-500 focus:border-pink-500"
+                    className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg font-mono text-xs text-[var(--cyber-text-primary)] placeholder-gray-500 focus:border-[var(--cyber-pink-primary)]"
                     value={defaultGroupId}
                     onChange={(e) => setDefaultGroupId(e.target.value)}
                     placeholder="120363405729592501@g.us"
@@ -656,25 +656,25 @@ const AdminWhatsAppSettings: React.FC = () => {
             </div>
 
             {/* Notification Routing */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
+                <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">Notification Routing</h2>
-                  <p className="text-xs text-gray-400">Grup per jenis notifikasi</p>
+                  <p className="text-xs text-[var(--cyber-text-muted)]">Grup per jenis notifikasi</p>
                 </div>
               </div>
               
               <div className="space-y-3">
                 {NOTIFICATION_TYPES.map(item => (
                   <div key={item.key}>
-                    <label className="block text-xs font-medium mb-1 text-gray-300">
+                    <label className="block text-xs font-medium mb-1 text-[var(--cyber-text-secondary)]">
                       {item.label}
                     </label>
                     <select
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:border-pink-500"
+                      className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-sm text-[var(--cyber-text-primary)] focus:border-[var(--cyber-pink-primary)]"
                       value={groupConfigurations[item.key]}
                       onChange={(e) => setGroupConfigurations(prev => ({
                         ...prev,
@@ -707,25 +707,25 @@ const AdminWhatsAppSettings: React.FC = () => {
       )}
 
       {/* Test Messaging */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500">
+          <div className="p-2 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-fuchsia-500">
             <Send className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Test Messaging</h2>
-            <p className="text-xs text-gray-400">Kirim pesan percobaan untuk verifikasi</p>
+            <p className="text-xs text-[var(--cyber-text-muted)]">Kirim pesan percobaan untuk verifikasi</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-gray-400">
+              <label className="block text-xs font-medium mb-1.5 text-[var(--cyber-text-muted)]">
                 Target Group (Opsional)
               </label>
               <select
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:border-pink-500"
+                className="w-full px-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] text-sm focus:border-[var(--cyber-pink-primary)]"
                 value={customGroupId}
                 onChange={(e) => setCustomGroupId(e.target.value)}
               >
@@ -737,11 +737,11 @@ const AdminWhatsAppSettings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-gray-400">
+              <label className="block text-xs font-medium mb-1.5 text-[var(--cyber-text-muted)]">
                 Template Pesan
               </label>
               <select
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:border-pink-500"
+                className="w-full px-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] text-sm focus:border-[var(--cyber-pink-primary)]"
                 value={selectedTemplate}
                 onChange={(e) => {
                   const template = MESSAGE_TEMPLATES.find(t => t.id === e.target.value);
@@ -760,23 +760,23 @@ const AdminWhatsAppSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-gray-400">
+            <label className="block text-xs font-medium mb-1.5 text-[var(--cyber-text-muted)]">
               Pesan Test
             </label>
             <textarea
-              className="w-full px-3 py-2.5 h-28 bg-gray-800 border border-gray-700 rounded-xl resize-none text-white placeholder-gray-500 focus:border-pink-500 font-mono text-xs"
+              className="w-full px-3 py-2.5 h-28 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg resize-none text-[var(--cyber-text-primary)] placeholder-gray-500 focus:border-[var(--cyber-pink-primary)] font-mono text-xs"
               value={testMessage}
               onChange={(e) => setTestMessage(e.target.value)}
               placeholder="Masukkan pesan test..."
             />
-            <p className="text-xs mt-1 text-gray-400">
+            <p className="text-xs mt-1 text-[var(--cyber-text-muted)]">
               Gunakan *bold*, _italic_ untuk formatting
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between flex-wrap gap-3 mt-4 pt-4 border-t border-gray-800">
-          <p className="text-xs text-gray-400">
+        <div className="flex items-center justify-between flex-wrap gap-3 mt-4 pt-4 border-t border-[var(--cyber-border)]">
+          <p className="text-xs text-[var(--cyber-text-muted)]">
             Target: {customGroupId 
               ? groups.find(g => g.id === customGroupId)?.name || 'Custom'
               : groups.find(g => g.id === defaultGroupId)?.name || defaultGroupId || 'Belum dipilih'
@@ -799,10 +799,10 @@ const AdminWhatsAppSettings: React.FC = () => {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && setResultModal(prev => ({ ...prev, isOpen: false }))}
         >
-          <div className={`relative w-full max-w-md bg-gray-900 rounded-xl border shadow-2xl ${resultModal.success ? 'border-green-500/30' : 'border-red-500/30'}`}>
+          <div className={`relative w-full max-w-md bg-[var(--cyber-bg-pure)] rounded-cyber-lg border shadow-2xl ${resultModal.success ? 'border-green-500/30' : 'border-red-500/30'}`}>
             <button
               onClick={() => setResultModal(prev => ({ ...prev, isOpen: false }))}
-              className="absolute top-3 right-3 p-1 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800"
+              className="absolute top-3 right-3 p-1 rounded-cyber-lg text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-surface)]"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -815,19 +815,19 @@ const AdminWhatsAppSettings: React.FC = () => {
             </div>
             
             <div className="px-5 pb-3 text-center">
-              <h3 className="text-lg font-semibold text-white mb-1">{resultModal.title}</h3>
-              <p className="text-gray-400 text-sm">{resultModal.message}</p>
+              <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)] mb-1">{resultModal.title}</h3>
+              <p className="text-[var(--cyber-text-muted)] text-sm">{resultModal.message}</p>
             </div>
             
             {resultModal.details && (
               <div className="px-5 pb-4">
-                <div className="bg-gray-800/50 rounded-xl p-3 space-y-2">
+                <div className="bg-[var(--cyber-bg-surface)]/50 rounded-cyber-lg p-3 space-y-2">
                   {resultModal.details.messageId && resultModal.details.messageId !== 'N/A' && (
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400 flex items-center gap-1.5">
+                      <span className="text-[var(--cyber-text-muted)] flex items-center gap-1.5">
                         <MessageCircle className="w-3.5 h-3.5" /> Message ID
                       </span>
-                      <span className="text-white font-mono bg-gray-700 px-1.5 py-0.5 rounded text-xs">
+                      <span className="text-[var(--cyber-text-primary)] font-mono bg-[var(--cyber-bg-elevated)] px-1.5 py-0.5 rounded text-xs">
                         {resultModal.details.messageId}
                       </span>
                     </div>
@@ -835,16 +835,16 @@ const AdminWhatsAppSettings: React.FC = () => {
                   
                   {resultModal.details.provider && (
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400 flex items-center gap-1.5">
+                      <span className="text-[var(--cyber-text-muted)] flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5" /> Provider
                       </span>
-                      <span className="text-white">{resultModal.details.provider}</span>
+                      <span className="text-[var(--cyber-text-primary)]">{resultModal.details.provider}</span>
                     </div>
                   )}
                   
                   {resultModal.details.responseTime !== undefined && resultModal.details.responseTime > 0 && (
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400 flex items-center gap-1.5">
+                      <span className="text-[var(--cyber-text-muted)] flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" /> Response
                       </span>
                       <span className="text-green-400">{resultModal.details.responseTime}ms</span>
@@ -853,19 +853,19 @@ const AdminWhatsAppSettings: React.FC = () => {
                   
                   {resultModal.details.groupId && (
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400 flex items-center gap-1.5">
+                      <span className="text-[var(--cyber-text-muted)] flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5" /> Group
                       </span>
-                      <span className="text-white text-xs truncate max-w-[180px]">
+                      <span className="text-[var(--cyber-text-primary)] text-xs truncate max-w-[180px]">
                         {groups.find(g => g.id === resultModal.details?.groupId)?.name || resultModal.details.groupId}
                       </span>
                     </div>
                   )}
                   
                   {resultModal.details.sentMessage && (
-                    <div className="pt-2 border-t border-gray-700">
-                      <p className="text-gray-400 text-xs mb-1">Pesan:</p>
-                      <p className="text-gray-300 text-xs font-mono bg-gray-900/50 p-2 rounded whitespace-pre-wrap">
+                    <div className="pt-2 border-t border-[var(--cyber-border)]">
+                      <p className="text-[var(--cyber-text-muted)] text-xs mb-1">Pesan:</p>
+                      <p className="text-[var(--cyber-text-secondary)] text-xs font-mono bg-[var(--cyber-bg-pure)]/50 p-2 rounded whitespace-pre-wrap">
                         {resultModal.details.sentMessage}
                       </p>
                     </div>

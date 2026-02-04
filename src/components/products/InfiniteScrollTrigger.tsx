@@ -14,7 +14,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Loader2, ChevronDown } from 'lucide-react';
-import { PNButton } from '../ui/PinkNeonDesignSystem';
+import { PNButton } from '../ui/CyberDesignSystem';
 
 interface InfiniteScrollTriggerProps {
   observerRef: React.RefObject<HTMLDivElement>;
@@ -51,7 +51,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
       >
         <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
           <div className="w-1.5 h-1.5 rounded-full bg-pink-500" aria-hidden="true"></div>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-[var(--cyber-text-muted)]">
             Menampilkan semua {totalItems} produk
           </p>
         </div>
@@ -91,7 +91,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
             className="w-8 h-8 text-pink-500 animate-spin" 
             aria-hidden="true"
           />
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-[var(--cyber-text-muted)]">
             Memuat produk...
           </p>
           {/* Screen reader only */}
@@ -101,7 +101,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
         <div className="flex flex-col items-center gap-4 w-full max-w-md">
           {/* Progress indicator (ISO 9241-110: Self-descriptiveness) */}
           <div className="text-center w-full">
-            <p className="text-sm text-gray-400 mb-2">
+            <p className="text-sm text-[var(--cyber-text-muted)] mb-2">
               Menampilkan {totalDisplayed} dari {totalItems} produk
             </p>
             <div 
@@ -138,7 +138,7 @@ export const InfiniteScrollTrigger: React.FC<InfiniteScrollTriggerProps> = ({
             </span>
           </PNButton>
           
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-[var(--cyber-text-muted)] text-center">
             Atau scroll ke bawah untuk memuat otomatis
           </p>
         </div>

@@ -195,7 +195,7 @@ const CheckoutBottomSheet: React.FC<CheckoutBottomSheetProps> = memo(({
                   key={item.id}
                   className="flex gap-3 p-2 rounded-xl bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)]"
                 >
-                  {/* Product Image */
+                  {/* Product Image */}
                   <div className="w-16 h-16 rounded-md overflow-hidden bg-[var(--cyber-bg-surface)] flex-shrink-0">
                     {item.imageUrl ? (
                       <img

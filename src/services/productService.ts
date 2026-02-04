@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { deletePublicUrls } from './storageService';
-import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types';
+import { Product, FlashSale, Tier, GameTitle } from '../types';
 
 // Global cache for ProductService
 const g = globalThis as any;
@@ -210,7 +210,7 @@ export class ProductService {
 
     try {
       // Test relational schema
-      const { data, error } = await supabase
+      const { data: _data, error } = await supabase
         .from('products')
         .select('id, game_title_id, tier_id')
         .limit(1);

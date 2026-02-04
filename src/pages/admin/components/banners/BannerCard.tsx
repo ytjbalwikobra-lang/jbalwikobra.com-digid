@@ -1,8 +1,8 @@
 import React from 'react';
-import { adminService, Banner } from '../../../../services/adminService';
-import { IOSCard, IOSButton } from '../../../../components/ios/IOSDesignSystemV2';
+import { Banner } from '../../../../services/adminService';
+import { PNCard, PNButton } from '../../../../components/ui/CyberDesignSystem';
 import { Image as ImageIcon, ExternalLink, Calendar, Activity, Eye, Edit2, Trash2 } from 'lucide-react';
-const cn = (...c: any[]) => c.filter(Boolean).join(' ');
+import { cn } from '../../../../utils/cn';
 
 interface BannerCardProps {
   banner: Banner;
@@ -26,19 +26,19 @@ export const BannerCard: React.FC<BannerCardProps> = ({
   const getStatusColor = (isActive: boolean) => {
     return isActive 
       ? 'bg-green-500/20 text-green-300 border-green-500/30'
-      : 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+      : 'bg-[var(--cyber-bg-elevated)]/20 text-[var(--cyber-text-muted)] border-[var(--cyber-border)]';
   };
 
   return (
-    <IOSCard className={cn(
-      'group bg-gradient-to-br from-black/60 to-gray-900/60 border-gray-500/20',
+    <PNCard className={cn(
+      'group bg-gradient-to-br from-black/60 to-[var(--cyber-bg-pure)]/60 border-[var(--cyber-border)]',
       'hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10',
       'transition-all duration-300',
       className
     )}>
       <div className="relative">
         {/* Banner Image */}
-        <div className="relative aspect-video bg-gray-800/50 rounded-t-2xl overflow-hidden">
+        <div className="relative aspect-video bg-[var(--cyber-bg-surface)]/50 rounded-t-cyber-2xl overflow-hidden">
           {banner.image_url ? (
             <img
               src={banner.image_url}
@@ -48,7 +48,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="w-12 h-12 text-gray-400" />
+              <ImageIcon className="w-12 h-12 text-[var(--cyber-text-muted)]" />
             </div>
           )}
           
@@ -80,7 +80,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
               {banner.title || 'Untitled Banner'}
             </h3>
             {banner.subtitle && (
-              <p className="text-sm text-gray-400 line-clamp-2">
+              <p className="text-sm text-[var(--cyber-text-muted)] line-clamp-2">
                 {banner.subtitle}
               </p>
             )}
@@ -92,7 +92,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             {banner.link_url && (
               <div className="flex items-center gap-2 text-sm">
                 <ExternalLink className="w-4 h-4 text-pink-500" />
-                <span className="text-gray-300 truncate">
+                <span className="text-[var(--cyber-text-muted)] truncate">
                   {banner.link_url}
                 </span>
               </div>
@@ -102,7 +102,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             {banner.created_at && (
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300">
+                <span className="text-[var(--cyber-text-muted)]">
                   {new Date(banner.created_at).toLocaleDateString()}
                 </span>
               </div>
@@ -112,7 +112,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">
+                <span className="text-[var(--cyber-text-muted)]">
                   Order: {banner.sort_order || 0}
                 </span>
               </div>
@@ -122,7 +122,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
           {/* Actions */}
           <div className="flex items-center justify-between pt-4 border-t border-white/10">
             {/* View Button */}
-            <IOSButton
+            <PNButton
               variant="ghost"
               size="sm"
               onClick={() => onView?.(banner)}
@@ -130,34 +130,34 @@ export const BannerCard: React.FC<BannerCardProps> = ({
             >
               <Eye className="w-4 h-4 mr-2" />
               View
-            </IOSButton>
+            </PNButton>
 
             {/* Action Buttons */}
             <div className="flex gap-2">
               {/* Edit */}
-              <IOSButton
+              <PNButton
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit?.(banner)}
                 className="border-yellow-500/30 hover:bg-yellow-500/20 text-yellow-400"
               >
                 <Edit2 className="w-4 h-4" />
-              </IOSButton>
+              </PNButton>
 
               {/* Delete */}
-              <IOSButton
+              <PNButton
                 variant="ghost"
                 size="sm"
                 onClick={() => onDelete?.(banner)}
                 className="border-red-500/30 hover:bg-red-500/20 text-red-400"
               >
                 <Trash2 className="w-4 h-4" />
-              </IOSButton>
+              </PNButton>
             </div>
           </div>
         </div>
       </div>
-    </IOSCard>
+    </PNCard>
   );
 };
 

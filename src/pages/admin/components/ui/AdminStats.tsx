@@ -1,6 +1,5 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { DataPanel } from '../../layout/DashboardPrimitives';
 
 export interface StatItem {
   id: string;
@@ -118,7 +117,7 @@ export const AdminStats: React.FC<AdminStatsProps> = ({
   return (
     <div className={`grid ${getGridCols()} gap-stack-lg`}>
       {stats.map(stat => (
-  <div key={stat.id} className="dashboard-data-panel padded rounded-xl p-stack-lg">
+  <div key={stat.id} className="dashboard-data-panel padded rounded-cyber-lg p-stack-lg">
           <div className={getPadding()}>
             <div className="flex items-start justify-between">
               <div className="flex-1">

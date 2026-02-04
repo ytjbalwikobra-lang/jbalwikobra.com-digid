@@ -10,7 +10,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
-import { PNCard, PNButton } from '../ui/PinkNeonDesignSystem';
+import { PNCard, PNButton } from '../ui/CyberDesignSystem';
 
 interface FlashSalesEmptyStateProps {
   /** Current search term - if provided, shows search-specific empty state */
@@ -43,7 +43,7 @@ const FlashSalesEmptyState: React.FC<FlashSalesEmptyStateProps> = ({
         </h3>
         
         {/* Description */}
-        <p className="text-gray-300 mb-6 text-sm">
+        <p className="text-[var(--cyber-text-secondary)] mb-6 text-sm">
           {isSearchEmpty ? 
             'Coba gunakan kata kunci lain atau lihat semua produk.' : 
             'Flash sale akan segera hadir. Pantau terus untuk penawaran terbaik!'

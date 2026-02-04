@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { WebsiteSettings } from '../types';
-import { uploadFile, deletePublicUrls } from './storageService';
+import { uploadFile } from './storageService';
 import { globalCache, cacheUtils } from './globalCacheManager';
 
 const DEFAULT_SETTINGS: WebsiteSettings = {
@@ -28,10 +28,8 @@ export class SettingsService {
 
   // Debug method to check current cache and database state
   static async debugStatus(): Promise<void> {
-    const cached = globalCache.get<WebsiteSettings>(SETTINGS_CACHE_KEY);
-    
     try {
-      const fresh = await this.forceRefresh();
+      await this.forceRefresh();
     } catch (e) {
       console.error('❌ Failed to fetch fresh data:', e);
     }
@@ -204,7 +202,7 @@ export class SettingsService {
           });
           
           if (response.ok) {
-            const result = await response.json();
+            await response.json();
             this.clearCache(); // Clear cache
             return await this.get(); // Return fresh data
           } else {

@@ -65,7 +65,7 @@ export const AdminFilterPanel: React.FC<AdminFilterPanelProps> = ({
   };
 
   return (
-  <div className="dashboard-data-panel padded rounded-xl p-stack-lg surface-glass-md">
+  <div className="dashboard-data-panel padded rounded-cyber-lg p-stack-lg surface-glass-md">
       {collapsible ? (
         <div className="p-stack-lg">
           <div className="flex items-center justify-between mb-stack-lg">

@@ -3,7 +3,7 @@ import { TrendingUp, Users, Package, Star, Clock, Zap } from 'lucide-react';
 import { AdminStats } from '../../../../services/adminService';
 // NOTE: MetricCard deprecated in favor of AdminStatCard
 import { AdminStatCard } from './AdminStatCard';
-import { formatMetrics, getMetricAccentColor } from './metricsUtils';
+import { formatMetrics } from './metricsUtils';
 import { cn } from '../../../../utils/cn';
 
 interface MetricsGridProps {
@@ -22,7 +22,7 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ stats, loading, classN
           <div 
             key={i} 
             className={cn(
-              'rounded-2xl h-40 bg-gradient-to-br from-pink-500/10 to-fuchsia-600/5 border border-pink-500/20',
+              'rounded-cyber-2xl h-40 bg-gradient-to-br from-pink-500/10 to-fuchsia-600/5 border border-pink-500/20',
               i === 0 && 'lg:col-span-2 h-48'
             )} 
           />

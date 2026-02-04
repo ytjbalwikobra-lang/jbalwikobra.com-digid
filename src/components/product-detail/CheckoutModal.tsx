@@ -5,12 +5,13 @@
  */
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { X, User, Mail, CreditCard, Shield, CheckCircle, Loader2, ChevronDown, AlertCircle } from 'lucide-react';
+import { X, User, Mail, CreditCard, Shield, CheckCircle, ChevronDown, AlertCircle } from 'lucide-react';
 import { RentalOption } from '../../types';
 import { formatCurrency } from '../../utils/helpers';
 import { Link } from 'react-router-dom';
 import PhoneInput from '../PhoneInput';
 import { PaymentMethods } from '../purchase-form';
+import { PNButton } from '../ui/CyberDesignSystem';
 
 interface Customer { name: string; email: string; phone: string; }
 
@@ -130,8 +131,8 @@ const CheckoutModal: React.FC<Props> = ({
   const price = isPurchase ? effectivePrice : selectedRental?.price || effectivePrice;
 
   // Input styling
-  const inputBase = "w-full h-12 px-4 pl-12 bg-white/5 border rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none transition-all duration-200";
-  const inputNormal = "border-white/10 focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20";
+  const inputBase = "w-full h-12 px-4 pl-12 bg-[var(--cyber-bg-card)] border rounded-cyber-lg text-[var(--cyber-text-primary)] text-sm placeholder-[var(--cyber-text-muted)] focus:outline-none transition-all duration-200";
+  const inputNormal = "border-[var(--cyber-border)] focus:border-[var(--cyber-pink-primary)]/50 focus:ring-2 focus:ring-[var(--cyber-pink-primary)]/20";
   const inputError = "border-red-500/50 bg-red-500/5 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20";
   const inputSuccess = "border-green-500/30 bg-green-500/5";
 
@@ -162,11 +163,11 @@ const CheckoutModal: React.FC<Props> = ({
               <h2 id="checkout-modal-title" className="text-xl font-bold text-white truncate">
                 {isPurchase ? 'Checkout' : 'Rental Checkout'}
               </h2>
-              <p className="text-sm text-gray-400 truncate">{productName}</p>
+              <p className="text-sm text-[var(--cyber-text-muted)] truncate">{productName}</p>
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 ml-3 w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+              className="flex-shrink-0 ml-3 w-11 h-11 min-h-[44px] min-w-[44px] rounded-cyber-lg bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] flex items-center justify-center text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] hover:bg-white/10 hover:border-white/20 transition-all duration-200"
               aria-label="Tutup"
             >
               <X size={20} />
@@ -175,7 +176,7 @@ const CheckoutModal: React.FC<Props> = ({
           
           {/* Price Badge */}
           <div id="checkout-modal-price" className="mt-4 flex items-center justify-between p-4 bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-xl">
-            <span className="text-sm text-gray-300 font-medium">Total Pembayaran</span>
+            <span className="text-sm text-[var(--cyber-text-secondary)] font-medium">Total Pembayaran</span>
             <span className="text-xl font-bold text-pink-400">{formatCurrency(price)}</span>
           </div>
         </div>
@@ -194,7 +195,7 @@ const CheckoutModal: React.FC<Props> = ({
             <div className="space-y-4">
               {/* Name */}
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
                   <User size={18} />
                 </div>
                 <input
@@ -214,7 +215,7 @@ const CheckoutModal: React.FC<Props> = ({
 
               {/* Email */}
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
                   <Mail size={18} />
                 </div>
                 <input
@@ -263,7 +264,7 @@ const CheckoutModal: React.FC<Props> = ({
               className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
                 isCustomerInfoValid
                   ? 'bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer'
-                  : 'bg-gray-900/50 border-gray-800 cursor-not-allowed opacity-50'
+                  : 'bg-[var(--cyber-bg-pure)]/50 border-[var(--cyber-bg-card)] cursor-not-allowed opacity-50'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -279,7 +280,7 @@ const CheckoutModal: React.FC<Props> = ({
                 <div className="text-left">
                   <h3 className="text-sm font-semibold text-white">Metode Pembayaran</h3>
                   {selectedPaymentMethod && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--cyber-text-muted)]">
                       {selectedPaymentMethod.toUpperCase().replace(/_/g, ' ')}
                     </p>
                   )}
@@ -287,7 +288,7 @@ const CheckoutModal: React.FC<Props> = ({
               </div>
               <ChevronDown 
                 size={18} 
-                className={`text-gray-400 transition-transform ${showPaymentSection ? 'rotate-180' : ''}`} 
+                className={`text-[var(--cyber-text-muted)] transition-transform ${showPaymentSection ? 'rotate-180' : ''}`} 
               />
             </button>
 
@@ -323,7 +324,7 @@ const CheckoutModal: React.FC<Props> = ({
                   {acceptedTerms && <CheckCircle size={12} className="text-white" />}
                 </div>
               </div>
-              <span className="text-sm text-gray-300 leading-relaxed">
+              <span className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed">
                 Saya menyetujui{' '}
                 <Link to="/terms" target="_blank" className="text-pink-400 hover:underline">
                   Syarat & Ketentuan
@@ -340,34 +341,27 @@ const CheckoutModal: React.FC<Props> = ({
         {/* Fixed Footer */}
         <div className="sticky bottom-0 bg-gray-950 border-t border-white/10 px-5 py-5 space-y-4">
           {/* Security Badge */}
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center justify-center gap-2 text-sm text-[var(--cyber-text-muted)]">
             <Shield size={16} className="text-green-400" />
             <span>Transaksi aman & terenkripsi</span>
           </div>
 
           {/* Submit Button */}
-          <button
+          <PNButton
             onClick={handleSubmit}
             disabled={!isFormComplete || creatingInvoice}
-            className={`w-full h-12 min-h-[48px] rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${
-              isFormComplete && !creatingInvoice
-                ? 'bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40'
-                : 'bg-gray-800 text-gray-400 cursor-not-allowed'
-            }`}
+            loading={creatingInvoice}
+            variant="primary"
+            size="lg"
+            fullWidth
+            className="min-h-[48px]"
           >
-            {creatingInvoice ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                <span>Memproses...</span>
-              </>
-            ) : (
-              <span>{isPurchase ? 'Bayar Sekarang' : 'Bayar Rental'}</span>
-            )}
-          </button>
+            {isPurchase ? 'Bayar Sekarang' : 'Bayar Rental'}
+          </PNButton>
 
           {/* Validation Summary */}
           {!isFormComplete && (
-            <div className="text-center text-xs text-gray-400">
+            <div className="text-center text-xs text-[var(--cyber-text-muted)]">
               {!isCustomerInfoValid && 'Lengkapi data pembeli'}
               {isCustomerInfoValid && !selectedPaymentMethod && 'Pilih metode pembayaran'}
               {isCustomerInfoValid && selectedPaymentMethod && !acceptedTerms && 'Setujui syarat & ketentuan'}

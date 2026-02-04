@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Package, Grid3X3, TrendingUp, ShoppingBag } from 'lucide-react';
 import { SEOHead, Breadcrumb, ItemListSchema, WebSiteSchema } from '../components/seo';
-import { PNSection, PNContainer, PNCard, PNButton, PNHeading, PNText } from '../components/ui/PinkNeonDesignSystem';
+import { PNSection, PNContainer, PNCard, PNButton, PNHeading, PNText } from '../components/ui/CyberDesignSystem';
 import { useCategories } from '../hooks/useCategories';
 import { useProductsByCategory } from '../hooks/useProductsByCategory';
 import { PNProductCard } from '../components/catalog';
@@ -87,12 +87,12 @@ const CategoryPage: React.FC = () => {
   // Loading state
   if (categoriesLoading) {
     return (
-      <main className="min-h-screen bg-gray-950">
+      <main className="min-h-screen bg-[var(--cyber-bg-pure)]">
         <PNContainer>
           <PNSection padding="lg">
             <div className="animate-pulse space-y-8">
-              <div className="h-10 bg-white/10 rounded-xl w-1/3" />
-              <div className="h-6 bg-white/5 rounded-xl w-2/3" />
+              <div className="h-10 bg-[var(--cyber-bg-card)] rounded-cyber-lg w-1/3" />
+              <div className="h-6 bg-[var(--cyber-bg-card)] rounded-cyber-lg w-2/3" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
@@ -108,7 +108,7 @@ const CategoryPage: React.FC = () => {
   // Category not found
   if (!category && !categoriesLoading && slug) {
     return (
-      <main className="min-h-screen bg-gray-950">
+      <main className="min-h-screen bg-[var(--cyber-bg-pure)]">
         <SEOHead
           title="Kategori Tidak Ditemukan"
           description="Kategori yang Anda cari tidak ditemukan."
@@ -116,7 +116,7 @@ const CategoryPage: React.FC = () => {
         />
         <PNContainer>
           <PNSection padding="lg" className="text-center">
-            <Package size={64} className="mx-auto text-gray-600 mb-4" />
+            <Package size={64} className="mx-auto text-[var(--cyber-text-disabled)] mb-4" />
             <PNHeading level={1} className="text-white mb-4">Kategori Tidak Ditemukan</PNHeading>
             <PNText color="secondary" className="mb-6">
               Kategori yang Anda cari tidak tersedia atau telah dihapus.
@@ -144,7 +144,7 @@ const CategoryPage: React.FC = () => {
   const pageDescription = seoContent.description;
 
   return (
-    <main className="min-h-screen bg-gray-950">
+    <main className="min-h-screen bg-[var(--cyber-bg-pure)]">
       {/* SEO */}
       <SEOHead
         title={pageTitle}
@@ -173,11 +173,11 @@ const CategoryPage: React.FC = () => {
 
         {/* Hero Section */}
         <PNSection padding="md">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500/20 via-purple-500/10 to-transparent border border-white/10 p-6 md:p-8">
+          <div className="relative overflow-hidden rounded-cyber-3xl bg-gradient-to-br from-pink-500/20 via-purple-500/10 to-transparent border border-[var(--cyber-border)] p-6 md:p-8">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-pink-500/10 via-transparent to-transparent" />
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
+                <div className="w-12 h-12 rounded-cyber-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
                   <Grid3X3 size={24} className="text-white" />
                 </div>
                 <div>
@@ -198,9 +198,9 @@ const CategoryPage: React.FC = () => {
                 {seoContent.benefits.map((benefit, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-gray-300"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-full text-xs text-[var(--cyber-text-secondary)]"
                   >
-                    <TrendingUp size={12} className="text-pink-500" />
+                    <TrendingUp size={12} className="text-[var(--cyber-pink-primary)]" />
                     {benefit}
                   </span>
                 ))}
@@ -217,7 +217,7 @@ const CategoryPage: React.FC = () => {
             </PNHeading>
             <Link 
               to={`/products?category=${category?.id || ''}`}
-              className="text-sm text-pink-300 hover:text-pink-200 transition-colors flex items-center gap-1"
+              className="text-sm text-[var(--cyber-pink-secondary)] hover:text-[var(--cyber-pink-primary)] transition-colors flex items-center gap-1"
             >
               Lihat Semua <ChevronRight size={16} />
             </Link>
@@ -240,7 +240,7 @@ const CategoryPage: React.FC = () => {
             </div>
           ) : products.length === 0 ? (
             <PNCard className="p-8 text-center">
-              <ShoppingBag size={48} className="mx-auto text-gray-600 mb-4" />
+              <ShoppingBag size={48} className="mx-auto text-[var(--cyber-text-disabled)] mb-4" />
               <PNText color="secondary" className="mb-4">
                 Belum ada produk di kategori ini.
               </PNText>
@@ -305,9 +305,9 @@ const CategoryPage: React.FC = () => {
                   to={`/kategori/${cat.slug}`}
                   className="group"
                 >
-                  <PNCard className="p-4 text-center hover:bg-white/10 hover:border-pink-500/30 transition-all">
-                    <Grid3X3 size={24} className="mx-auto text-pink-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <PNText className="text-white font-medium group-hover:text-pink-300 transition-colors">
+                  <PNCard className="p-4 text-center hover:bg-[var(--cyber-bg-card)] hover:border-[var(--cyber-pink-primary)]/30 transition-all">
+                    <Grid3X3 size={24} className="mx-auto text-[var(--cyber-pink-primary)] mb-2 group-hover:scale-110 transition-transform" />
+                    <PNText className="text-white font-medium group-hover:text-[var(--cyber-pink-secondary)] transition-colors">
                       {cat.name}
                     </PNText>
                   </PNCard>
@@ -323,7 +323,7 @@ const CategoryPage: React.FC = () => {
             <PNHeading level={2} className="text-white text-xl mb-4">
               Beli {categoryName} di JBALWIKOBRA
             </PNHeading>
-            <div className="text-gray-400 space-y-4">
+            <div className="text-[var(--cyber-text-muted)] space-y-4">
               <p>
                 JBALWIKOBRA adalah marketplace terpercaya untuk jual beli akun game di Indonesia. 
                 Kami menyediakan berbagai {categoryName.toLowerCase()} dengan harga terjangkau dan kualitas terjamin.

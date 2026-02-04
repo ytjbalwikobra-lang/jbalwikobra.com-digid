@@ -1,8 +1,7 @@
 // Optimized ProductService with pagination and caching
 // Uses centralized globalCacheManager for consistent caching across the app
 import { supabase } from './supabase';
-import { deletePublicUrls } from './storageService';
-import { Product, FlashSale, Tier, GameTitle } from '../types';
+import { Product, Tier, GameTitle } from '../types';
 import { globalCache, cacheUtils } from './globalCacheManager';
 
 interface PaginatedResponse<T> {

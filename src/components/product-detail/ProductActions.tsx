@@ -7,7 +7,7 @@ import React from 'react';
 import { Calendar, Shield, CheckCircle, MessageCircle, XCircle, Zap } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { RentalOption } from '../../types';
-import { PNButton, PNCard } from '../ui/PinkNeonDesignSystem';
+import { PNButton, PNCard } from '../ui/CyberDesignSystem';
 
 interface ProductActionsProps {
   // Product data
@@ -50,13 +50,13 @@ export const ProductActions = React.memo(({
     <div className="space-y-6">
       {/* Sold/Unavailable Notice */}
       {(soldChannel || !isActive) && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 animate-pulse">
-          <XCircle className="text-red-400 flex-shrink-0" size={20} />
+        <div className="bg-[var(--cyber-error)]/10 border border-[var(--cyber-error)]/30 rounded-cyber-lg p-4 flex items-center gap-3 animate-pulse">
+          <XCircle className="text-[var(--cyber-error)] flex-shrink-0" size={20} />
           <div>
-            <p className="text-red-300 font-medium">
+            <p className="text-[var(--cyber-error)] font-medium">
               {soldChannel ? `Produk ini sudah terjual via ${soldChannel === 'web' ? 'Website' : 'WhatsApp'}` : 'Produk tidak tersedia untuk saat ini'}
             </p>
-            <p className="text-red-400/70 text-sm">Silakan cek katalog kami untuk produk serupa lainnya.</p>
+            <p className="text-[var(--cyber-error)]/70 text-sm">Silakan cek katalog kami untuk produk serupa lainnya.</p>
           </div>
         </div>
       )}
@@ -93,46 +93,46 @@ export const ProductActions = React.memo(({
       </div>
 
       {/* Trust Badges - Modern Grid Layout */}
-      <PNCard className="mt-8 bg-white/5 border border-white/10 p-5 backdrop-blur-sm">
-        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Jaminan Keamanan & Layanan</h4>
+      <PNCard className="mt-8 bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] p-5 backdrop-blur-sm">
+        <h4 className="text-xs font-bold text-[var(--cyber-text-muted)] uppercase tracking-wider mb-4 text-center">Jaminan Keamanan & Layanan</h4>
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-            <div className="p-2 bg-green-500/10 rounded-full">
-              <Shield className="text-green-400" size={18} />
+          <div className="flex items-center gap-3 p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors">
+            <div className="p-2 bg-[var(--cyber-success)]/10 rounded-full">
+              <Shield className="text-[var(--cyber-success)]" size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-white">Garansi 100%</span>
-              <span className="text-[10px] text-gray-400">Uang kembali jika bermasalah</span>
+              <span className="text-xs font-bold text-[var(--cyber-text-primary)]">Garansi 100%</span>
+              <span className="text-[10px] text-[var(--cyber-text-muted)]">Uang kembali jika bermasalah</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-            <div className="p-2 bg-pink-500/10 rounded-full">
-              <CheckCircle className="text-pink-400" size={18} />
+          <div className="flex items-center gap-3 p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors">
+            <div className="p-2 bg-[var(--cyber-pink-subtle)] rounded-full">
+              <CheckCircle className="text-[var(--cyber-pink-primary)]" size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-white">Terverifikasi</span>
-              <span className="text-[10px] text-gray-400">Akun valid & aman</span>
+              <span className="text-xs font-bold text-[var(--cyber-text-primary)]">Terverifikasi</span>
+              <span className="text-[10px] text-[var(--cyber-text-muted)]">Akun valid & aman</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-            <div className="p-2 bg-orange-500/10 rounded-full">
-              <Zap className="text-orange-400" size={18} />
+          <div className="flex items-center gap-3 p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors">
+            <div className="p-2 bg-[var(--cyber-warning)]/10 rounded-full">
+              <Zap className="text-[var(--cyber-warning)]" size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-white">Kirim Otomatis</span>
-              <span className="text-[10px] text-gray-400">Langsung dikirim detik ini</span>
+              <span className="text-xs font-bold text-[var(--cyber-text-primary)]">Kirim Otomatis</span>
+              <span className="text-[10px] text-[var(--cyber-text-muted)]">Langsung dikirim detik ini</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-            <div className="p-2 bg-blue-500/10 rounded-full">
-              <MessageCircle className="text-blue-400" size={18} />
+          <div className="flex items-center gap-3 p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors">
+            <div className="p-2 bg-[var(--cyber-info)]/10 rounded-full">
+              <MessageCircle className="text-[var(--cyber-info)]" size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-white">Support 24/7</span>
-              <span className="text-[10px] text-gray-400">Bantuan kapan saja</span>
+              <span className="text-xs font-bold text-[var(--cyber-text-primary)]">Support 24/7</span>
+              <span className="text-[10px] text-[var(--cyber-text-muted)]">Bantuan kapan saja</span>
             </div>
           </div>
         </div>

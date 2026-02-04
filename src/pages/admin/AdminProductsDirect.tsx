@@ -12,7 +12,7 @@ import { useSoldViaWAModal } from './components/ui/SoldViaWAModal';
 import { AdminFilter } from './components/AdminFilter';
 import { AdminPagination } from './components/AdminPagination';
 import { adminService } from '../../services/adminService';
-import { formatNumberID, parseNumberID, formatCurrency } from '../../utils/helpers';
+import { formatCurrency } from '../../utils/helpers';
 import { usePriceInput } from '../../hooks/usePriceInput';
 import { useAbortController } from '../../hooks/useAbortController';
 import { useKeyboardShortcuts, createListShortcuts } from '../../hooks/useKeyboardShortcuts';
@@ -81,7 +81,7 @@ const AdminProductsDirect: React.FC = () => {
   });
 
   const { push } = useToast();
-  const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const { ConfirmModal } = useAdminConfirm();
   const { showSoldViaWAModal, SoldViaWAModalComponent } = useSoldViaWAModal();
   const { getSignal } = useAbortController(); // Request deduplication
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -310,7 +310,7 @@ const AdminProductsDirect: React.FC = () => {
   const getStatusStyle = (product: Product) => {
     if (product.sold_channel === 'wa') return 'bg-purple-500/20 text-purple-300';
     if (product.sold_channel === 'web') return 'bg-blue-500/20 text-blue-300';
-    if (!product.is_active) return 'bg-gray-500/20 text-gray-400';
+    if (!product.is_active) return 'bg-[var(--cyber-bg-elevated)]/20 text-[var(--cyber-text-muted)]';
     return 'bg-green-500/20 text-green-300';
   };
 
@@ -405,19 +405,19 @@ const AdminProductsDirect: React.FC = () => {
       />
 
       {/* Table */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-800/50 border-b border-gray-700">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Product</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tier</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Price</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Actions</th>
+              <tr className="bg-[var(--cyber-bg-surface)]/50 border-b border-[var(--cyber-border)]">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Product</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Tier</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Price</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-[var(--cyber-border)]">
               {loading ? (
                 <AdminLoadingState variant="skeleton-table" rows={5} columns={5} />
               ) : products.length === 0 ? (
@@ -445,7 +445,7 @@ const AdminProductsDirect: React.FC = () => {
                   return (
                   <tr 
                     key={product.id} 
-                    className={`hover:bg-gray-800/30 transition-all duration-300 ${
+                    className={`hover:bg-[var(--cyber-bg-surface)]/30 transition-all duration-300 ${
                       saving && editingId === product.id 
                         ? 'bg-pink-500/10 animate-pulse' 
                         : ''
@@ -458,15 +458,15 @@ const AdminProductsDirect: React.FC = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.image ? (
-                          <img src={product.image} alt={product.name} className="w-10 h-10 rounded-xl object-cover" />
+                          <img src={product.image} alt={product.name} className="w-10 h-10 rounded-cyber-lg object-cover" />
                         ) : (
-                          <div className="w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center">
-                            <Package className="w-5 h-5 text-gray-400" />
+                          <div className="w-10 h-10 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg flex items-center justify-center">
+                            <Package className="w-5 h-5 text-[var(--cyber-text-muted)]" />
                           </div>
                         )}
                         <div>
                           <div className="font-medium text-white">{product.name}</div>
-                          <div className="text-xs text-gray-400 truncate max-w-[200px]">
+                          <div className="text-xs text-[var(--cyber-text-muted)] truncate max-w-[200px]">
                             {product.description || 'No description'}
                           </div>
                         </div>
@@ -475,7 +475,7 @@ const AdminProductsDirect: React.FC = () => {
 
                     {/* Tier - Display tier_name which is preserved */}
                     <td className="px-4 py-3">
-                      <span className="text-sm text-gray-300">
+                      <span className="text-sm text-[var(--cyber-text-muted)]">
                         {product.tier_name || 'No tier'}
                       </span>
                     </td>
@@ -502,7 +502,7 @@ const AdminProductsDirect: React.FC = () => {
                                 cancelEditing();
                               }
                             }}
-                            className={`w-32 px-2 py-1 bg-gray-700 border rounded-xl text-white text-sm transition-all ${
+                            className={`w-32 px-2 py-1 bg-[var(--cyber-bg-elevated)] border rounded-cyber-lg text-white text-sm transition-all ${
                               saving 
                                 ? 'border-pink-500 opacity-50 cursor-not-allowed' 
                                 : 'border-pink-500 focus:border-pink-500 focus:ring-1 focus:ring-pink-500'
@@ -514,11 +514,11 @@ const AdminProductsDirect: React.FC = () => {
                           {saving && (
                             <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-500 animate-spin" />
                           )}
-                          <div className="text-xs text-gray-400 mt-1">Enter to save, Esc to cancel</div>
+                          <div className="text-xs text-[var(--cyber-text-muted)] mt-1">Enter to save, Esc to cancel</div>
                         </div>
                       ) : (
                         <div 
-                          className="cursor-pointer hover:bg-gray-700/50 rounded p-1 transition-colors"
+                          className="cursor-pointer hover:bg-[var(--cyber-bg-elevated)]/50 rounded p-1 transition-colors"
                           onClick={() => startEditing(product)}
                           title="Click to edit price"
                         >
@@ -543,13 +543,13 @@ const AdminProductsDirect: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewProduct(product)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
+                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-[var(--cyber-bg-surface)] text-[var(--cyber-text-muted)] hover:bg-[var(--cyber-bg-elevated)] transition-colors"
                         >
                           Lihat
                         </button>
                         <button
                           onClick={() => handleEditProduct(product)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
                         >
                           Edit
                         </button>
@@ -557,9 +557,9 @@ const AdminProductsDirect: React.FC = () => {
                         <button
                           onClick={() => markSoldViaWA(product)}
                           disabled={!!product.sold_channel || !product.is_active}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                          className={`px-3 py-1.5 rounded-cyber-lg text-xs font-semibold transition-colors ${
                             product.sold_channel || !product.is_active
-                              ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
+                              ? 'bg-[var(--cyber-bg-elevated)]/50 text-[var(--cyber-text-muted)] cursor-not-allowed'
                               : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
                           }`}
                           title={

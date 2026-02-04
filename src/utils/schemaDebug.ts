@@ -72,7 +72,6 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
       result.hasRelationalSchema = true;
 
       // Analyze data consistency
-      const withRelations = products?.filter(p => p.game_title_id || p.tier_id).length || 0;
   const withLegacyFields = 0; // legacy game_title column fully removed
 
       if (withLegacyFields > 0) {
@@ -113,7 +112,7 @@ export const comprehensiveSchemaCheck = async (): Promise<SchemaInfo> => {
     }
 
     // Check rental_options table
-    const { data: rentals, error: rentalsError } = await supabase
+    const { data: _rentals, error: rentalsError } = await supabase
       .from('rental_options')
       .select('id, product_id, duration, price')
       .limit(1);

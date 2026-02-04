@@ -39,7 +39,7 @@ WHERE created_at >= '2026-01-19T00:00:00';
 **Duplicates Found:**
 1. `cn()` utility function duplicated in:
    - `src/utils/cn.ts` (canonical)
-   - `src/components/ui/PinkNeonDesignSystem.tsx` 
+   - `src/components/ui/CyberDesignSystem.tsx` 
    - `src/pages/admin/components/AdminNotificationPanel.tsx` ❌
    - `src/pages/admin/AdminFloatingNotificationsV2.tsx` ❌
 

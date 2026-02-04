@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Zap } from 'lucide-react';
-import { PNSection, PNSectionHeader } from '../../ui/PinkNeonDesignSystem';
+import { PNSection, PNSectionHeader, PNContainer } from '../../ui/CyberDesignSystem';
 import { Product, FlashSale } from '../../../types';
 import FlashSaleCard from '../../shared/FlashSaleCard';
 
@@ -19,6 +19,7 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
   const list = products.slice(0, limit);
   return (
     <PNSection padding="md" aria-label="Flash sale produk">
+      <PNContainer>
       <PNSectionHeader
         title={
           <span className="flex items-center gap-2">
@@ -65,6 +66,7 @@ const PNFlashSalesSection: React.FC<Props> = ({ products, limit = 8 }) => {
           );
         })}
       </div>
+      </PNContainer>
     </PNSection>
   );
 };

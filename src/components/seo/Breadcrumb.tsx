@@ -58,14 +58,14 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
               {index > 0 && (
                 <ChevronRight 
                   size={14} 
-                  className="text-gray-400 mx-1 flex-shrink-0" 
+                  className="text-[var(--cyber-text-muted)] mx-1 flex-shrink-0" 
                   aria-hidden="true" 
                 />
               )}
               
               {item.current ? (
                 <span 
-                  className="text-gray-400 font-medium truncate max-w-[200px]"
+                  className="text-[var(--cyber-text-muted)] font-medium truncate max-w-[200px]"
                   aria-current="page"
                 >
                   {index === 0 ? (
@@ -80,7 +80,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
               ) : (
                 <Link
                   to={item.href}
-                  className="text-gray-400 hover:text-pink-400 transition-colors truncate max-w-[150px]"
+                  className="text-[var(--cyber-text-muted)] hover:text-[var(--cyber-pink-secondary)] transition-colors truncate max-w-[150px]"
                 >
                   {index === 0 ? (
                     <span className="flex items-center gap-1">

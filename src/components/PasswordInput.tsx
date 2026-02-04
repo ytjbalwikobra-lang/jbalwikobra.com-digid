@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 /**
- * PasswordInput - Consistent with PinkNeonDesignSystem PNInput
+ * PasswordInput - Consistent with CyberDesignSystem PNInput
  * 
  * Design Tokens:
  * - Min Height: 48px (touch target)
@@ -29,7 +29,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  // Consistent with PNInput from PinkNeonDesignSystem
+  // Consistent with PNInput from CyberDesignSystem
   const inputClassName = className || [
     'w-full px-4 py-3.5 pr-12 min-h-[48px]',
     'bg-white/5 border border-white/10 rounded-xl',

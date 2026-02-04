@@ -36,15 +36,15 @@ export const AdminEmptyState: React.FC<AdminEmptyStateProps> = ({
 }) => {
   const content = (
     <div className={cn("text-center py-12", className)}>
-      <div className="w-16 h-16 text-gray-600 mx-auto mb-4 flex items-center justify-center">
+      <div className="w-16 h-16 text-[var(--cyber-text-disabled)] mx-auto mb-4 flex items-center justify-center">
         {icon}
       </div>
-      <h3 className="text-xl font-semibold text-gray-400 mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold text-[var(--cyber-text-muted)] mb-2">{title}</h3>
       {description && (
-        <p className="text-gray-400 mb-4">{description}</p>
+        <p className="text-[var(--cyber-text-muted)] mb-4">{description}</p>
       )}
       {hasFilters && (
-        <p className="text-gray-400 text-sm mb-4">{filterHint}</p>
+        <p className="text-[var(--cyber-text-muted)] text-sm mb-4">{filterHint}</p>
       )}
       {action && (
         <button

@@ -229,7 +229,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                 required
               />
               <div className="flex items-center gap-3">
-                <span className="text-gray-400 text-sm">or</span>
+                <span className="text-[var(--cyber-text-muted)] text-sm">or</span>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -241,7 +241,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="inline-flex items-center gap-2 px-4 py-2 border text-gray-300 rounded-xl hover:text-white transition-all duration-200 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 border text-[var(--cyber-text-secondary)] rounded-cyber-lg hover:text-white transition-all duration-200 disabled:opacity-50"
                   style={{ backgroundColor: 'var(--admin-primary-light)', borderColor: 'var(--admin-border)' }}
                 >
                   {uploading ? (
@@ -258,12 +258,12 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                 </button>
               </div>
               {uploadError && (
-                <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/30">
+                <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-cyber-lg border border-red-500/30">
                   {uploadError}
                 </div>
               )}
               {formData.image_url && (
-                <div className="rounded-xl overflow-hidden border border-gray-700">
+                <div className="rounded-cyber-lg overflow-hidden border border-[var(--cyber-border)]">
                   <img
                     src={formData.image_url}
                     alt="Preview"
@@ -327,13 +327,13 @@ export const BannerForm: React.FC<BannerFormProps> = ({
             <button
               type="button"
               onClick={() => updateField('is_active', !formData.is_active)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-cyber-lg border transition-all duration-200 ${
                 formData.is_active 
                   ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' 
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
+                  : 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] text-[var(--cyber-text-muted)] hover:bg-[var(--cyber-bg-elevated)]'
               }`}
             >
-              <div className={`w-4 h-4 rounded-full ${formData.is_active ? 'bg-emerald-400' : 'bg-gray-400'}`} />
+              <div className={`w-4 h-4 rounded-full ${formData.is_active ? 'bg-emerald-400' : 'bg-[var(--cyber-text-muted)]'}`} />
               {formData.is_active ? 'Active' : 'Inactive'}
             </button>
           </div>

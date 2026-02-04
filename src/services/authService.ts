@@ -1,5 +1,3 @@
-import { supabase } from './supabase';
-
 export type UserProfile = {
   name?: string;
   email?: string;

@@ -24,7 +24,7 @@ import PublicPageHeader from '../components/shared/PublicPageHeader';
 import { 
   PNButton,
   PNContainer
-} from '../components/ui/PinkNeonDesignSystem';
+} from '../components/ui/CyberDesignSystem';
 import { SEOHead, Breadcrumb, ProductSchema } from '../components/seo';
 import { GEOAIHints } from '../components/seo/GEOSchemas';
 
@@ -77,7 +77,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
         <PNContainer>
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4 text-white">Produk Flash Sale Tidak Ditemukan</h1>
-            <p className="text-gray-300 mb-6">{error}</p>
+            <p className="text-[var(--cyber-text-secondary)] mb-6">{error}</p>
             <div className="flex gap-4 justify-center">
               <PNButton
                 onClick={handleBackToFlashSales}
@@ -99,7 +99,7 @@ const FlashSaleProductDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--cyber-bg-pure)] text-white">
       <SEOHead
         title={`${product.name} - Flash Sale | JBal WiKobra`}
         description={`FLASH SALE! ${product.name} dengan diskon spesial. ${product.description?.slice(0, 100) || 'Penawaran terbatas, segera dapatkan sebelum kehabisan!'}`}

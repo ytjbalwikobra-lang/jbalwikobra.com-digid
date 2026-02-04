@@ -103,7 +103,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       
       {/* Loading spinner for slow connections */}
       {!isLoaded && isVisible && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50">
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--cyber-bg-card)]/50">
           <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
         </div>
       )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
-import { PNCard, PNButton } from '../ui/PinkNeonDesignSystem';
+import { PNCard, PNButton } from '../ui/CyberDesignSystem';
 
 interface EmptyStateProps {
   title?: string;
@@ -20,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <Search className="text-pink-400" size={24} />
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-gray-300 mb-6 text-sm">{message}</p>
+        <p className="text-[var(--cyber-text-secondary)] mb-6 text-sm">{message}</p>
         {onReset && (
           <PNButton variant="primary" size="md" onClick={onReset}>
             Reset Filter

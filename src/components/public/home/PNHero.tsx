@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Rocket, Sparkles, Handshake } from 'lucide-react';
+import { ShoppingBag, Rocket, Sparkles, DollarSign, Phone } from 'lucide-react';
 import { PNSection, PNContainer, PNHeading, PNText, PNButton } from '../../ui/CyberDesignSystem';
 import { SettingsService } from '../../../services/settingsService';
 import { ensureUrlProtocol } from '../../../utils/helpers';
@@ -25,9 +25,14 @@ const PNHero: React.FC = () => {
   const topupGameUrl = ensureUrlProtocol(settings?.topupGameUrl || 'https://www.alwikobrastore.com');
   const jualAkunWhatsappUrl = ensureUrlProtocol(settings?.jualAkunWhatsappUrl || 'https://www.alwikobra.com');
   
+  // Format WhatsApp number for wa.me link (remove non-digits, ensure no leading 0)
+  const whatsappNumber = settings?.whatsappNumber || '6281234567890';
+  const cleanWhatsappNumber = whatsappNumber.replace(/\D/g, '').replace(/^0/, '62');
+  const whatsappChatUrl = `https://wa.me/${cleanWhatsappNumber}`;
+  
   // Use hero settings from admin settings
-  const heroTitle = settings?.heroTitle || 'Gaming Marketplace #1';
-  const heroSubtitle = settings?.heroSubtitle || 'Beli, jual, dan rental akun game favorit dengan aman, cepat, dan terpercaya';
+  const heroTitle = settings?.heroTitle || 'Jual Beli & Rental Akun Game';
+  const heroSubtitle = settings?.heroSubtitle || 'Aman, cepat, terpercaya';
 
   return (
     <PNSection padding="lg">
@@ -49,8 +54,8 @@ const PNHero: React.FC = () => {
             <PNHeading level={1} gradient className="mb-4">{heroTitle}</PNHeading>
             <PNText color="secondary" className="mb-8 text-base sm:text-lg leading-relaxed">{heroSubtitle}</PNText>
 
-            {/* Primary CTAs - Focused Actions */}
-            <div className="space-y-3 mb-4" role="navigation" aria-label="Menu utama">
+            {/* CTAs - Hybrid 4-button layout */}
+            <div className="space-y-3" role="navigation" aria-label="Menu utama">
               {/* Primary CTA - Top Up Game */}
               <a href={topupGameUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Top Up Semua Game - Murah! (membuka di tab baru)">
                 <PNButton variant="primary" size="lg" fullWidth className="flex items-center justify-center gap-2.5">
@@ -59,26 +64,33 @@ const PNHero: React.FC = () => {
                 </PNButton>
               </a>
               
-              {/* Secondary CTA - Browse Products */}
-              <Link to="/products" className="block">
-                <PNButton variant="secondary" size="lg" fullWidth className="flex items-center justify-center gap-2">
-                  <ShoppingBag size={18} aria-hidden="true" />
-                  <span>Lihat Katalog Produk</span>
+              {/* Secondary CTAs - 2-column grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Lihat Stok */}
+                <Link to="/products" className="block">
+                  <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
+                    <ShoppingBag size={16} aria-hidden="true" />
+                    <span>Lihat Stok</span>
+                  </PNButton>
+                </Link>
+                
+                {/* Jual Akun */}
+                <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Jual Akun (membuka di tab baru)">
+                  <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
+                    <DollarSign size={16} aria-hidden="true" />
+                    <span>Jual Akun</span>
+                  </PNButton>
+                </a>
+              </div>
+              
+              {/* Tertiary CTA - Nomor Resmi (full width) */}
+              <a href={whatsappChatUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Nomor Resmi - Chat WhatsApp (membuka di tab baru)">
+                <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
+                  <Phone size={16} aria-hidden="true" />
+                  <span>Nomor Resmi</span>
                 </PNButton>
-              </Link>
+              </a>
             </div>
-            
-            {/* Tertiary Link - Sell/Rekber */}
-            <a 
-              href={jualAkunWhatsappUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-flex items-center gap-2 text-sm text-[var(--cyber-pink-secondary)] hover:text-[var(--cyber-pink-primary)] transition-colors"
-              aria-label="Jual Akun atau Rekber - Hubungi Admin (membuka di tab baru)"
-            >
-              <Handshake size={16} aria-hidden="true" />
-              <span>Jual Akun atau Rekber →</span>
-            </a>
           </div>
         </div>
       </PNContainer>

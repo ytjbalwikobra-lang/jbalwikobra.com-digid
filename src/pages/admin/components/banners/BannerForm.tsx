@@ -1,12 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { RefreshCw, Plus, Edit, Upload, Loader } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RefreshCw, Plus, Edit } from 'lucide-react';
 import { BannerFormProps, BannerFormData } from './types';
 import { useModalForm } from '../../../../hooks/useModalForm';
-import { useKeyboardShortcuts, createModalShortcuts } from '../../../../hooks/useKeyboardShortcuts';
 import { bannerValidation } from '../../../../utils/adminValidation';
 import { AdminModal } from '../ui/AdminModal';
 import { AdminButton } from '../ui/AdminButton';
-import { uploadFiles, deletePublicUrls } from '../../../../services/storageService';
+import { AdminImageUpload } from '../ui/AdminImageUpload';
+import { deletePublicUrls } from '../../../../services/storageService';
 
 export const BannerForm: React.FC<BannerFormProps> = ({
   isOpen,
@@ -15,9 +15,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
   onSubmit,
   submitting
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
   
   // Track original image URL for cleanup when replacing
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
@@ -62,18 +60,6 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     }
   );
 
-  // Keyboard shortcuts (Ctrl+S to save, Escape to cancel)
-  useKeyboardShortcuts({
-    enabled: isOpen && !submitting,
-    shortcuts: createModalShortcuts({
-      onSave: () => {
-        const form = document.querySelector('form');
-        if (form) form.requestSubmit();
-      },
-      onCancel: onClose
-    })
-  });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -97,53 +83,21 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     onSubmit(formData);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadError(null);
+  // Handle image changes from AdminImageUpload
+  const handleImageChange = async (newImages: string[]) => {
+    const newUrl = newImages[0] || '';
+    const oldUrl = formData.image_url;
     
-    // Validate file
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('File size exceeds 5MB limit');
-      return;
-    }
-    
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('Only JPEG, PNG, and WebP images are allowed');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      console.log('[BannerForm] Starting upload for:', file.name, file.type, file.size);
-      const results = await uploadFiles([file], 'banners');
-      console.log('[BannerForm] Upload results:', results);
-      
-      if (results.length > 0 && results[0].url) {
-        // Delete old image if this is a replacement (not the original)
-        const currentUrl = formData.image_url;
-        if (currentUrl && currentUrl !== originalImageUrl) {
-          try {
-            await deletePublicUrls([currentUrl]);
-          } catch (err) {
-            console.warn('Failed to delete replaced image:', err);
-          }
-        }
-        updateField('image_url', results[0].url);
-      } else {
-        setUploadError('Upload succeeded but no URL returned. Please try again.');
+    // Delete old image if replaced (but not original for edit mode)
+    if (oldUrl && oldUrl !== originalImageUrl && oldUrl !== newUrl) {
+      try {
+        await deletePublicUrls([oldUrl]);
+      } catch (err) {
+        console.warn('Failed to delete replaced image:', err);
       }
-    } catch (error: any) {
-      console.error('Banner image upload failed:', error);
-      setUploadError(`Upload failed: ${error.message || 'Unknown error'}`);
-    } finally {
-      setUploading(false);
-      e.target.value = '';
     }
+    
+    updateField('image_url', newUrl);
   };
 
   const title = editingBanner ? 'Edit Banner' : 'Create New Banner';
@@ -155,7 +109,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
         type="button"
         onClick={onClose}
         variant="secondary"
-        disabled={submitting}
+        disabled={submitting || imageUploading}
       >
         Cancel
       </AdminButton>
@@ -163,7 +117,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
         type="submit"
         form="banner-form"
         variant="primary"
-        disabled={submitting || !formData.title || !formData.image_url}
+        disabled={submitting || imageUploading || !formData.title || !formData.image_url}
         icon={submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : editingBanner ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
       >
         {submitting ? 'Saving...' : editingBanner ? 'Update Banner' : 'Create Banner'}
@@ -179,7 +133,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
       size="lg"
       actions={modalActions}
     >
-      <form id="banner-form" onSubmit={handleSubmit} className="space-y-6">
+      <form id="banner-form" onSubmit={handleSubmit} className="space-y-3">
           {validationError && (
             <div className="admin-form-error" style={{padding: 'var(--admin-space-3)', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--admin-error)', borderRadius: 'var(--admin-radius-md)'}}>
               {validationError}
@@ -188,7 +142,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
           {/* Title */}
           <div>
             <label className="admin-label">
-              Title <span className="text-red-500">*</span>
+              Title <span className="text-[var(--admin-error)]">*</span>
             </label>
             <input
               type="text"
@@ -214,68 +168,21 @@ export const BannerForm: React.FC<BannerFormProps> = ({
             />
           </div>
 
-          {/* Image Upload */}
-          <div>
-            <label className="admin-label">
-              Banner Image <span className="text-red-500">*</span>
-            </label>
-            <div className="space-y-4">
-              <input
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => updateField('image_url', e.target.value)}
-                className="admin-input"
-                placeholder="Enter image URL or upload file..."
-                required
-              />
-              <div className="flex items-center gap-3">
-                <span className="text-[var(--cyber-text-muted)] text-sm">or</span>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="inline-flex items-center gap-2 px-4 py-2 border text-[var(--cyber-text-secondary)] rounded-cyber-lg hover:text-white transition-all duration-200 disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--admin-primary-light)', borderColor: 'var(--admin-border)' }}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      Upload Image
-                    </>
-                  )}
-                </button>
-              </div>
-              {uploadError && (
-                <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-cyber-lg border border-red-500/30">
-                  {uploadError}
-                </div>
-              )}
-              {formData.image_url && (
-                <div className="rounded-cyber-lg overflow-hidden border border-[var(--cyber-border)]">
-                  <img
-                    src={formData.image_url}
-                    alt="Preview"
-                    className="w-full h-32 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Image Upload - Using Compact AdminImageUpload */}
+          <AdminImageUpload
+            images={formData.image_url ? [formData.image_url] : []}
+            onChange={handleImageChange}
+            onUploadingChange={setImageUploading}
+            bucket="banners"
+            maxImages={1}
+            maxSizeMB={5}
+            accept="image/jpeg,image/png,image/webp"
+            disabled={submitting}
+            label="Banner Image *"
+            helpText="Upload 1 banner image (JPG, PNG, WebP). Max 5MB."
+            tileSize="lg"
+            showPrimaryBadge={false}
+          />
 
           {/* Link URL */}
           <div>
@@ -328,12 +235,12 @@ export const BannerForm: React.FC<BannerFormProps> = ({
               type="button"
               onClick={() => updateField('is_active', !formData.is_active)}
               className={`flex items-center gap-3 px-4 py-3 rounded-cyber-lg border transition-all duration-200 ${
-                formData.is_active 
-                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' 
-                  : 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] text-[var(--cyber-text-muted)] hover:bg-[var(--cyber-bg-elevated)]'
+                formData.is_active
+                  ? 'bg-[var(--admin-success)]/20 border-[var(--admin-success)]/30 text-[var(--admin-success)]'
+                  : 'bg-[var(--admin-bg-surface)] border-[var(--admin-border)] text-[var(--admin-text-muted)] hover:bg-[var(--admin-bg-elevated)]'
               }`}
             >
-              <div className={`w-4 h-4 rounded-full ${formData.is_active ? 'bg-emerald-400' : 'bg-[var(--cyber-text-muted)]'}`} />
+              <div className={`w-4 h-4 rounded-full ${formData.is_active ? 'bg-[var(--admin-success)]' : 'bg-[var(--admin-text-muted)]'}`} />
               {formData.is_active ? 'Active' : 'Inactive'}
             </button>
           </div>

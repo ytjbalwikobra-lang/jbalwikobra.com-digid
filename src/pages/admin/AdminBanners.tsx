@@ -4,29 +4,28 @@
  * Uses modal-based CRUD with real image upload
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, RefreshCw, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Plus, Image as ImageIcon, Eye, EyeOff, ExternalLink, ArrowUpDown, RefreshCw, Search } from 'lucide-react';
 import { Banner } from '../../types';
 import { useToast } from '../../components/Toast';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import { AdminButton } from './components/ui/AdminButton';
+import { AdminBentoCard, AdminBentoMetricCard } from './components/ui/AdminBentoCard';
+import { AdminHeroSection } from './components/ui/AdminHeroSection';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
-import { AdminPageHeader } from './components/ui/AdminPageHeader';
-import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
+import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminPagination } from './components/AdminPagination';
 import { BannerForm, BannerFormData } from './components/banners';
 import { adminService } from '../../services/adminService';
+import { useDebounce } from '../../hooks/useDebounce';
 // Design system: cyber-compact.css (loaded via index.css)
 
 const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [error, setError] = useState<string | null>(null);
   
   // Stats
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
@@ -36,29 +35,37 @@ const AdminBanners: React.FC = () => {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Search & Pagination (DNA from Products)
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
 
-  // Load banners with pagination
+  // Load all banners - no pagination for bento grid
   const loadBanners = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [result, statsResult] = await Promise.all([
-        adminService.getBanners(currentPage, itemsPerPage),
+        adminService.getBanners(1, 100), // Get first 100 banners
         adminService.getBannerStats()
       ]);
       
       setBanners(result.data as Banner[]);
-      setTotalCount(result.count);
-      setTotalPages(result.totalPages);
       setStats(statsResult);
-    } catch (error: any) {
-      console.error('[Banners] Load error:', error);
-      push('Gagal memuat banners', 'error');
+    } catch (err: any) {
+      const message = err?.message || 'Failed to load banners';
+      setError(message);
+      console.error('[Banners] Load error:', err);
+      push(message, 'error');
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, push]);
+  }, [push]);
 
   useEffect(() => {
     loadBanners();
@@ -125,57 +132,52 @@ const AdminBanners: React.FC = () => {
     }
   };
 
-  // Analytics stats config
-  const analyticsStats: AnalyticsStat[] = useMemo(() => [
+  // Compact metrics
+  const metricsData = useMemo(() => [
     {
-      label: 'Total Banners',
+      label: 'Total',
       value: stats.total,
-      icon: ImageIcon,
-      iconColor: 'text-blue-400',
-      iconBgColor: 'bg-blue-500/10',
-      format: 'number'
+      icon: <ImageIcon size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
       label: 'Aktif',
       value: stats.active,
-      icon: Eye,
-      iconColor: 'text-green-400',
-      iconBgColor: 'bg-green-500/10',
-      format: 'number'
+      icon: <Eye size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
       label: 'Nonaktif',
       value: stats.inactive,
-      icon: EyeOff,
-      iconColor: 'text-[var(--cyber-text-muted)]',
-      iconBgColor: 'bg-[var(--cyber-bg-elevated)]/10',
-      format: 'number'
+      icon: <EyeOff size={16} className="text-[var(--cyber-pink-primary)]" />
     }
   ], [stats]);
 
-  // Header actions
-  const headerActions = (
-    <>
-      <AdminButton
-        variant="secondary"
-        onClick={loadBanners}
-        disabled={loading}
-        icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-      >
-        Refresh
-      </AdminButton>
-      <AdminButton
-        variant="primary"
-        onClick={handleCreate}
-        icon={<Plus size={18} />}
-      >
-        Tambah Banner
-      </AdminButton>
-    </>
-  );
+  // Filter banners by search term (DNA from Products)
+  const filteredBanners = useMemo(() => {
+    if (!debouncedSearch) return banners;
+    
+    const term = debouncedSearch.toLowerCase();
+    return banners.filter(banner =>
+      banner.title?.toLowerCase().includes(term) ||
+      banner.link_url?.toLowerCase().includes(term) ||
+      banner.subtitle?.toLowerCase().includes(term) ||
+      banner.id?.toLowerCase().includes(term)
+    );
+  }, [banners, debouncedSearch]);
+
+  // Paginate filtered banners (DNA from Products)
+  const totalPages = Math.ceil(filteredBanners.length / itemsPerPage);
+  const paginatedBanners = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBanners.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBanners, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, itemsPerPage]);
 
   return (
-    <div className="admin-page space-y-8">
+    <div className="admin-page space-y-4">
       <ConfirmModal />
       
       {/* Banner Form Modal */}
@@ -187,144 +189,178 @@ const AdminBanners: React.FC = () => {
         submitting={submitting}
       />
 
-      {/* Header - Using AdminPageHeader */}
-      <AdminPageHeader
-        title="Manajemen Banner"
-        description={`${stats.active} banner aktif • ${stats.inactive} nonaktif`}
-        actions={headerActions}
-      />
-
-      {/* Analytics Cards - Using AdminAnalyticsCards */}
-      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={3} />
-
-      {/* Table */}
-      <div className="rounded-cyber-lg overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-light)', border: '1px solid var(--admin-border)' }}>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)', borderBottom: '1px solid var(--admin-border)' }}>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Gambar</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Judul</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Link</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Urutan</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y" style={{ borderColor: 'var(--admin-border)' }}>
-              {loading ? (
-                <AdminLoadingState variant="skeleton-table" rows={5} columns={6} />
-              ) : banners.length === 0 ? (
-                <AdminEmptyState 
-                  icon={<ImageIcon className="w-16 h-16" />}
-                  title="Belum ada Banner"
-                  description="Buat banner pertama Anda untuk menampilkan konten promosi."
-                  variant="table-row"
-                  colSpan={6}
-                  action={{
-                    label: "Tambah Banner",
-                    onClick: handleCreate,
-                    icon: <Plus size={18} />
-                  }}
-                />
-              ) : (
-                banners.map(banner => (
-                  <tr key={banner.id} className="hover:bg-white/5 transition-colors">
-                    {/* Image */}
-                    <td className="px-4 py-3">
-                      <div className="w-24 h-14 rounded-cyber-lg overflow-hidden" style={{ backgroundColor: 'var(--admin-primary-lighter)' }}>
-                        {banner.image_url ? (
-                          <img
-                            src={banner.image_url}
-                            alt={banner.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-[var(--cyber-text-disabled)]" />
-                          </div>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Title */}
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-white">{banner.title}</p>
-                        {banner.subtitle && (
-                          <p className="text-sm text-[var(--cyber-text-muted)]">{banner.subtitle}</p>
-                        )}
-                        {banner.cta_text && (
-                          <p className="text-xs text-[var(--cyber-pink-primary)] mt-1">{banner.cta_text}</p>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Link */}
-                    <td className="px-4 py-3">
-                      {banner.link_url ? (
-                        <a
-                          href={banner.link_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:text-blue-300 underline truncate block max-w-[150px]"
-                        >
-                          {banner.link_url}
-                        </a>
-                      ) : (
-                        <span className="text-[var(--cyber-text-muted)]">-</span>
-                      )}
-                    </td>
-
-                    {/* Sort Order */}
-                    <td className="px-4 py-3">
-                      <span className="text-white">{banner.sort_order}</span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-4 py-3">
-                      <AdminStatusBadge
-                        status={banner.is_active ? 'active' : 'inactive'}
-                        label={banner.is_active ? 'Aktif' : 'Nonaktif'}
-                      />
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(banner)}
-                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(banner)}
-                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Cyberpunk Hero Section */}
+      <AdminHeroSection
+        title="Banner Management"
+        subtitle={`${stats.active} aktif • ${stats.inactive} nonaktif`}
+        badge="Live"
+        badgeColor="success"
+      >
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          {/* Search Bar (DNA from Products) */}
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search banners by title, link..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
+            />
+          </div>
+          
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <AdminButton
+              variant="secondary"
+              onClick={loadBanners}
+              disabled={loading}
+              size="sm"
+              icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />}
+            >
+              Refresh
+            </AdminButton>
+            <AdminButton
+              variant="primary"
+              onClick={handleCreate}
+              size="sm"
+              icon={<Plus size={14} />}
+            >
+              Tambah
+            </AdminButton>
+          </div>
         </div>
+      </AdminHeroSection>
+
+      {/* Error Banner */}
+      {error && (
+        <AdminErrorState
+          variant="banner"
+          message={error}
+        />
+      )}
+
+      {/* Compact Metrics - Bento Grid */}
+      <div className="grid grid-cols-3 gap-3">
+        {metricsData.map((metric, idx) => (
+          <AdminBentoMetricCard
+            key={idx}
+            label={metric.label}
+            value={metric.value}
+            icon={metric.icon}
+          />
+        ))}
       </div>
 
-      {/* Pagination */}
-      {totalCount > 0 && totalPages > 1 && (
-        <AdminPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalCount}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          loading={loading}
+      {/* Banners Bento Grid */}
+      {loading ? (
+        <AdminLoadingState variant="skeleton-cards" cards={6} />
+      ) : filteredBanners.length === 0 ? (
+        <AdminEmptyState 
+          icon={<ImageIcon className="w-12 h-12" />}
+          title={debouncedSearch ? "No Banners Match" : "No Banners Found"}
+          description={debouncedSearch ? "Try different search terms" : "Create your first banner to get started"}
+          hasFilters={!!debouncedSearch}
         />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {paginatedBanners.map((banner) => (
+            <AdminBentoCard
+              key={banner.id}
+              onClick={() => handleEdit(banner)}
+              glowOnHover
+            >
+              {/* Banner Image - 16:9 aspect ratio */}
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-[var(--cyber-bg-elevated)] mb-2">
+                {banner.image_url ? (
+                  <img
+                    src={banner.image_url}
+                    alt={banner.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-[var(--cyber-text-muted)]" />
+                  </div>
+                )}
+                {/* Sort Order Badge */}
+                <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[10px] text-white flex items-center gap-0.5">
+                  <ArrowUpDown size={8} />
+                  {banner.sort_order}
+                </div>
+                {/* Status Badge */}
+                <div className="absolute top-1 right-1">
+                  <AdminStatusBadge
+                    status={banner.is_active ? 'active' : 'inactive'}
+                    label={banner.is_active ? 'Aktif' : 'Nonaktif'}
+                  />
+                </div>
+              </div>
+
+              {/* Banner Info */}
+              <div className="space-y-1">
+                <h3 className="text-xs font-semibold text-white truncate">
+                  {banner.title}
+                </h3>
+                {banner.subtitle && (
+                  <p className="text-[10px] text-[var(--cyber-text-muted)] truncate">
+                    {banner.subtitle}
+                  </p>
+                )}
+                {banner.cta_text && (
+                  <p className="text-[10px] text-[var(--cyber-pink-primary)] truncate">
+                    {banner.cta_text}
+                  </p>
+                )}
+                {banner.link_url && (
+                  <div className="flex items-center gap-1 pt-1 border-t border-[var(--cyber-border)]">
+                    <ExternalLink size={8} className="text-[var(--cyber-text-muted)]" />
+                    <span className="text-[10px] text-[var(--cyber-text-muted)] truncate">
+                      {banner.link_url.replace(/^https?:\/\//, '')}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex gap-1 mt-2 pt-2 border-t border-[var(--cyber-border)]">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(banner);
+                  }}
+                  className="flex-1 px-2 py-1 rounded text-[10px] font-semibold bg-[var(--cyber-info)]/20 text-[var(--cyber-info)] hover:bg-[var(--cyber-info)]/30 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(banner);
+                  }}
+                  className="flex-1 px-2 py-1 rounded text-[10px] font-semibold bg-[var(--cyber-error)]/20 text-[var(--cyber-error)] hover:bg-[var(--cyber-error)]/30 transition-colors"
+                >
+                  Hapus
+                </button>
+              </div>
+            </AdminBentoCard>
+          ))}
+        </div>
+
+        {/* Pagination (DNA from Products) */}
+        {totalPages > 1 && (
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            totalItems={filteredBanners.length}
+            itemsPerPage={itemsPerPage}
+          />
+        )}
+      </>
       )}
     </div>
   );

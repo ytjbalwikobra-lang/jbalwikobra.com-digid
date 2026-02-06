@@ -4,20 +4,22 @@
  * Refactored for egress efficiency using adminService
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useToast } from '../../components/Toast';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import { AdminButton } from './components/ui/AdminButton';
+import { AdminBentoCard, AdminBentoMetricCard } from './components/ui/AdminBentoCard';
+import { AdminHeroSection } from './components/ui/AdminHeroSection';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
-import { AdminPageHeader } from './components/ui/AdminPageHeader';
-import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
 import { AdminPagination } from './components/AdminPagination';
-import { Zap, TrendingUp, Clock, Package, Plus, RefreshCw } from 'lucide-react';
+import { Zap, TrendingUp, Clock, Package, Plus, Calendar, RefreshCw, Search } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { formatCurrency } from '../../utils/helpers';
 import FlashSaleModal from './components/FlashSaleModal';
+import { AdminErrorState } from './components/ui/AdminErrorState';
+import { useDebounce } from '../../hooks/useDebounce';
 // Design system: cyber-compact.css (loaded via index.css)
 
 interface FlashSaleRow {
@@ -41,10 +43,7 @@ interface FlashSaleRow {
 const AdminFlashSales: React.FC = () => {
   const [flashSales, setFlashSales] = useState<FlashSaleRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [error, setError] = useState<string | null>(null);
   
   // Stats
   const [stats, setStats] = useState({
@@ -59,30 +58,38 @@ const AdminFlashSales: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFlashSale, setSelectedFlashSale] = useState<FlashSaleRow | null>(null);
   
+  // Search & Pagination (DNA from Products)
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
 
-  // Load flash sales with pagination
+  // Load all flash sales - no pagination for bento grid
   const loadFlashSales = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Fetch data and stats in parallel for efficiency
+      // Fetch data and stats in parallel
       const [result, statsResult] = await Promise.all([
-        adminService.getFlashSales(currentPage, itemsPerPage),
+        adminService.getFlashSales(1, 100), // Get first 100
         adminService.getFlashSaleStats()
       ]);
       
       setFlashSales(result.data as FlashSaleRow[]);
-      setTotalCount(result.count);
-      setTotalPages(result.totalPages);
       setStats(statsResult);
-    } catch (error: any) {
-      console.error('[FlashSales] Load error:', error);
-      push('Gagal memuat flash sales', 'error');
+    } catch (err: any) {
+      const message = err?.message || 'Failed to load flash sales';
+      setError(message);
+      console.error('[FlashSales] Load error:', err);
+      push(message, 'error');
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, push]);
+  }, [push]);
 
   useEffect(() => {
     loadFlashSales();
@@ -161,222 +168,241 @@ const AdminFlashSales: React.FC = () => {
     push(selectedFlashSale ? 'Flash sale berhasil diperbarui!' : 'Flash sale berhasil dibuat!', 'success');
   };
 
-  // Analytics stats config
-  const analyticsStats: AnalyticsStat[] = useMemo(() => [
+  // Compact metrics
+  const metricsData = useMemo(() => [
     {
-      label: 'Total Flash Sales',
+      label: 'Total',
       value: stats.total,
-      icon: Package,
-      iconColor: 'text-blue-400',
-      iconBgColor: 'bg-blue-500/10',
-      format: 'number'
+      icon: <Package size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
-      label: 'Sedang Berlangsung',
+      label: 'Berlangsung',
       value: stats.ongoing,
-      icon: Zap,
-      iconColor: 'text-green-400',
-      iconBgColor: 'bg-green-500/10',
-      format: 'number'
+      icon: <Zap size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
       label: 'Terjadwal',
       value: stats.upcoming,
-      icon: Clock,
-      iconColor: 'text-orange-400',
-      iconBgColor: 'bg-orange-500/10',
-      format: 'number'
+      icon: <Clock size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
       label: 'Berakhir',
       value: stats.expired,
-      icon: TrendingUp,
-      iconColor: 'text-[var(--cyber-text-muted)]',
-      iconBgColor: 'bg-[var(--cyber-bg-elevated)]/10',
-      format: 'number'
+      icon: <TrendingUp size={16} className="text-[var(--cyber-pink-primary)]" />
     }
   ], [stats]);
 
-  // Header actions
-  const headerActions = (
-    <>
-      <AdminButton
-        variant="secondary"
-        onClick={loadFlashSales}
-        disabled={loading}
-        icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-      >
-        Refresh
-      </AdminButton>
-      <AdminButton
-        variant="primary"
-        icon={<Plus size={18} />}
-        onClick={handleCreate}
-      >
-        Buat Flash Sale
-      </AdminButton>
-    </>
-  );
+  // Filter flash sales by search term (DNA from Products)
+  const filteredFlashSales = useMemo(() => {
+    if (!debouncedSearch) return flashSales;
+    
+    const term = debouncedSearch.toLowerCase();
+    return flashSales.filter(sale =>
+      sale.products?.name?.toLowerCase().includes(term) ||
+      sale.id?.toLowerCase().includes(term)
+    );
+  }, [flashSales, debouncedSearch]);
+
+  // Paginate filtered flash sales (DNA from Products)
+  const totalPages = Math.ceil(filteredFlashSales.length / itemsPerPage);
+  const paginatedFlashSales = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredFlashSales.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredFlashSales, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, itemsPerPage]);
 
   return (
-    <div className="admin-page space-y-8">
+    <div className="admin-page space-y-4">
       <ConfirmModal />
       
-      {/* Header - Using AdminPageHeader */}
-      <AdminPageHeader
-        title="Manajemen Flash Sales"
-        description={`${stats.ongoing} sedang berlangsung • ${stats.upcoming} terjadwal`}
-        actions={headerActions}
-      />
-
-      {/* Analytics Cards - Using AdminAnalyticsCards */}
-      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
-
-      {/* Table */}
-      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[var(--cyber-bg-surface)]/50 border-b border-[var(--cyber-border)]">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Produk</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Harga</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Periode</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--cyber-border)]">
-              {loading ? (
-                <AdminLoadingState variant="skeleton-table" rows={5} columns={5} />
-              ) : flashSales.length === 0 ? (
-                <AdminEmptyState 
-                  icon={<Zap className="w-16 h-16" />}
-                  title="Belum ada Flash Sale"
-                  description="Buat flash sale pertama Anda untuk menarik lebih banyak pelanggan."
-                  variant="table-row"
-                  colSpan={5}
-                  action={{
-                    label: "Buat Flash Sale",
-                    onClick: handleCreate,
-                    icon: <Plus size={18} />
-                  }}
-                />
-              ) : (
-                flashSales.map(sale => {
-                  const displayStatus = getDisplayStatus(sale);
-                  const discount = sale.original_price > 0
-                    ? Math.round(((sale.original_price - sale.sale_price) / sale.original_price) * 100)
-                    : 0;
-
-                  return (
-                    <tr key={sale.id} className="hover:bg-[var(--cyber-bg-surface)]/30 transition-colors">
-                      {/* Product */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {sale.products?.image ? (
-                            <img 
-                              src={sale.products.image} 
-                              alt={sale.products?.name} 
-                              className="w-10 h-10 rounded-cyber-lg object-cover" 
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg flex items-center justify-center">
-                              <Package className="w-5 h-5 text-[var(--cyber-text-muted)]" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-white">
-                              {sale.products?.name || 'Unknown Product'}
-                            </p>
-                            <p className="text-xs text-[var(--cyber-text-muted)]">
-                              ID: {sale.product_id.slice(0, 8)}...
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Price */}
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="font-bold text-[var(--cyber-pink-primary)]">
-                            {formatCurrency(sale.sale_price)}
-                          </p>
-                          <p className="text-sm text-[var(--cyber-text-muted)] line-through">
-                            {formatCurrency(sale.original_price)}
-                          </p>
-                          {discount > 0 && (
-                            <span className="inline-block mt-1 px-2 py-0.5 bg-[var(--cyber-pink-primary)]/20 text-[var(--cyber-pink-primary)] text-xs font-semibold rounded-cyber-lg">
-                              -{discount}%
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Period */}
-                      <td className="px-4 py-3">
-                        <div className="text-sm space-y-1">
-                          <p className="text-[var(--cyber-text-muted)]">
-                            <span className="text-[var(--cyber-text-muted)]">Mulai:</span>{' '}
-                            {new Date(sale.start_time).toLocaleString('id-ID', { 
-                              dateStyle: 'short', 
-                              timeStyle: 'short' 
-                            })}
-                          </p>
-                          <p className="text-[var(--cyber-text-muted)]">
-                            <span className="text-[var(--cyber-text-muted)]">Selesai:</span>{' '}
-                            {new Date(sale.end_time).toLocaleString('id-ID', { 
-                              dateStyle: 'short', 
-                              timeStyle: 'short' 
-                            })}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3">
-                        <AdminStatusBadge
-                          status={displayStatus.status}
-                          label={displayStatus.label}
-                        />
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleEdit(sale)}
-                            className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(sale)}
-                            className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
-                          >
-                            Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {/* Cyberpunk Hero Section */}
+      <AdminHeroSection
+        title="Flash Sales"
+        subtitle={`${stats.ongoing} berlangsung • ${stats.upcoming} terjadwal`}
+        badge="Live"
+        badgeColor="warning"
+      >
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          {/* Search Bar (DNA from Products) */}
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by product name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
+            />
+          </div>
+          
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <AdminButton
+              variant="secondary"
+              onClick={loadFlashSales}
+              disabled={loading}
+              size="sm"
+              icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />}
+            >
+              Refresh
+            </AdminButton>
+            <AdminButton
+              variant="primary"
+              onClick={handleCreate}
+              size="sm"
+              icon={<Plus size={14} />}
+            >
+              Buat
+            </AdminButton>
+          </div>
         </div>
+      </AdminHeroSection>
+
+      {/* Error Banner */}
+      {error && (
+        <AdminErrorState
+          variant="banner"
+          message={error}
+        />
+      )}
+
+      {/* Compact Metrics - Bento Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {metricsData.map((metric, idx) => (
+          <AdminBentoMetricCard
+            key={idx}
+            label={metric.label}
+            value={metric.value}
+            icon={metric.icon}
+          />
+        ))}
       </div>
 
-      {/* Pagination */}
-      {totalCount > 0 && totalPages > 1 && (
-        <AdminPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalCount}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          loading={loading}
+      {/* Flash Sales Bento Grid */}
+      {loading ? (
+        <AdminLoadingState variant="skeleton-cards" cards={8} />
+      ) : filteredFlashSales.length === 0 ? (
+        <AdminEmptyState 
+          icon={<Zap className="w-12 h-12" />}
+          title={debouncedSearch ? "No Flash Sales Match" : "No Flash Sales"}
+          description={debouncedSearch ? "Try different search terms" : "Create your first flash sale"}
+          hasFilters={!!debouncedSearch}
         />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {paginatedFlashSales.map((sale) => {
+            const displayStatus = getDisplayStatus(sale);
+            const discount = Math.round((1 - sale.sale_price / sale.original_price) * 100);
+            
+            return (
+              <AdminBentoCard
+                key={sale.id}
+                onClick={() => handleEdit(sale)}
+                glowOnHover
+              >
+                {/* Product Image/Icon - 4:5 aspect ratio */}
+                <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-[var(--cyber-bg-elevated)] mb-2 flex items-center justify-center">
+                  {sale.products?.image ? (
+                    <img
+                      src={sale.products.image}
+                      alt={sale.products?.name || 'Product'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Zap className="w-12 h-12 text-[var(--cyber-pink-primary)]" />
+                  )}
+                  {/* Discount Badge */}
+                  <div className="absolute top-1 left-1 px-2 py-1 bg-[var(--cyber-error)]/90 backdrop-blur-sm rounded text-xs font-bold text-white">
+                    -{discount}%
+                  </div>
+                  {/* Status Badge */}
+                  <div className="absolute top-1 right-1">
+                    <AdminStatusBadge
+                      status={displayStatus.status}
+                      label={displayStatus.label}
+                    />
+                  </div>
+                </div>
+
+                {/* Product Info */}
+                <div className="space-y-1">
+                  <h3 className="text-xs font-semibold text-white truncate">
+                    {sale.products?.name || 'Unknown Product'}
+                  </h3>
+                  
+                  {/* Pricing */}
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-sm font-bold text-[var(--cyber-pink-primary)]">
+                      {formatCurrency(sale.sale_price)}
+                    </span>
+                    <span className="text-[10px] text-[var(--cyber-text-muted)] line-through">
+                      {formatCurrency(sale.original_price)}
+                    </span>
+                  </div>
+
+                  {/* Stock */}
+                  <div className="flex items-center gap-1 text-[10px] text-[var(--cyber-text-muted)]">
+                    <Package size={8} />
+                    <span>Stok: {sale.stock}</span>
+                  </div>
+
+                  {/* Period */}
+                  <div className="pt-1 border-t border-[var(--cyber-border)] space-y-0.5">
+                    <div className="flex items-center gap-1 text-[10px] text-[var(--cyber-text-muted)]">
+                      <Calendar size={8} />
+                      <span>{new Date(sale.start_time).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-[var(--cyber-text-muted)]">
+                      <Clock size={8} />
+                      <span>{new Date(sale.start_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {new Date(sale.end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="flex gap-1 mt-2 pt-2 border-t border-[var(--cyber-border)]">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(sale);
+                    }}
+                    className="flex-1 px-2 py-1 rounded text-[10px] font-semibold bg-[var(--cyber-info)]/20 text-[var(--cyber-info)] hover:bg-[var(--cyber-info)]/30 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(sale);
+                    }}
+                    className="flex-1 px-2 py-1 rounded text-[10px] font-semibold bg-[var(--cyber-error)]/20 text-[var(--cyber-error)] hover:bg-[var(--cyber-error)]/30 transition-colors"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </AdminBentoCard>
+            );
+          })}
+        </div>
+
+        {/* Pagination (DNA from Products) */}
+        {totalPages > 1 && (
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            totalItems={filteredFlashSales.length}
+            itemsPerPage={itemsPerPage}
+          />
+        )}
+      </>
       )}
 
       {/* Flash Sale Modal */}

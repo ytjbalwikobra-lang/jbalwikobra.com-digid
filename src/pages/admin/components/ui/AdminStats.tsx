@@ -29,11 +29,11 @@ export const AdminStats: React.FC<AdminStatsProps> = ({
   const getColorClasses = (color: StatItem['color'] = 'pink') => {
     const colors = {
       pink: 'text-surface-tint-pink',
-      blue: 'text-blue-400',
-      green: 'text-green-400',
-      yellow: 'text-yellow-400',
-      red: 'text-red-400',
-      purple: 'text-purple-400'
+      blue: 'text-[var(--admin-info)]',
+      green: 'text-[var(--admin-success)]',
+      yellow: 'text-[var(--admin-warning)]',
+      red: 'text-[var(--admin-error)]',
+      purple: 'text-[var(--admin-purple)]'
     };
     return colors[color];
   };
@@ -41,9 +41,9 @@ export const AdminStats: React.FC<AdminStatsProps> = ({
   const getChangeIcon = (type: 'increase' | 'decrease' | 'neutral') => {
     switch (type) {
       case 'increase':
-        return <TrendingUp size={14} className="text-green-400" />;
+        return <TrendingUp size={14} className="text-[var(--admin-success)]" />;
       case 'decrease':
-        return <TrendingDown size={14} className="text-red-400" />;
+        return <TrendingDown size={14} className="text-[var(--admin-error)]" />;
       case 'neutral':
         return <Minus size={14} className="text-surface-tint-gray" />;
     }
@@ -52,9 +52,9 @@ export const AdminStats: React.FC<AdminStatsProps> = ({
   const getChangeTextColor = (type: 'increase' | 'decrease' | 'neutral') => {
     switch (type) {
       case 'increase':
-        return 'text-green-400';
+        return 'text-[var(--admin-success)]';
       case 'decrease':
-        return 'text-red-400';
+        return 'text-[var(--admin-error)]';
       case 'neutral':
         return 'text-surface-tint-gray';
     }

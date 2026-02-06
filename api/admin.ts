@@ -293,29 +293,36 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
       return false;
     }
     
-    // If status changed to completed (admin manually marks as done), create a notification
-    // Note: 'paid' status is set automatically by Xendit webhook
-    const isCompleted = newStatus === 'completed';
-    const wasNotCompleted = oldStatus !== 'completed';
+    // Create notifications for relevant status changes
+    // 'paid' = payment confirmed (can be set by webhook or admin)
+    // 'completed' = order fulfilled/delivered
+    const isPaid = newStatus === 'paid' && oldStatus !== 'paid';
+    const isCompleted = newStatus === 'completed' && oldStatus !== 'completed';
     
-    if (isCompleted && wasNotCompleted) {
-      
+    if (isPaid || isCompleted) {
       try {
         // Get product name using shared utility
         const productName = await getProductName(supabase, order.product_id, order.order_type);
         
-        // Create the admin notification for completed order
+        // Always use 'paid_order' - createOrderNotification will auto-convert
+        // to 'paid_rent' when orderType is 'rental'
+        const notificationType = 'paid_order';
+        
+        // Create the admin notification
         await createOrderNotification(
           supabase,
           order.id,
           order.customer_name || 'Guest Customer',
           productName,
           Number(order.amount || 0),
-          'paid_order', // Use paid_order type since it means payment is complete
+          notificationType,
           order.customer_phone,
           order.order_type,
           order.rental_duration
         );
+        
+        const finalType = order.order_type === 'rental' ? 'paid_rent' : 'paid_order';
+        console.log(`[updateOrderStatus] Notification created: ${finalType} for order ${orderId}`);
       } catch (notificationError) {
         console.error('[updateOrderStatus] Failed to create notification:', notificationError);
         // Don't fail the update if notification fails

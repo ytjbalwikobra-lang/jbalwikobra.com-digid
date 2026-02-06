@@ -1,7 +1,6 @@
 import { adminCache } from './adminCache';
 import { dbRowToDomainProduct } from './mappers/productMapper';
 import { supabase } from './supabase';
-import { supabaseAdmin } from './supabaseAdmin';
 
 // Development mode detection
 const isDev = process.env.NODE_ENV === 'development';
@@ -265,6 +264,14 @@ export interface PaginatedResponse<T> {
   count: number;
   page: number;
   totalPages: number;
+  stats?: {
+    total?: number;
+    verified?: number;
+    admin?: number;
+    active?: number;
+    inactive?: number;
+    [key: string]: number | undefined;
+  };
 }
 
 export interface FeedPost {
@@ -342,8 +349,6 @@ export const adminService = {
   // Inline product update methods (previously in AdminService class)
   async updateProductFields(id: string, fields: Partial<Pick<Product,'price'|'stock'|'is_active'>>): Promise<Product | null> {
     try {
-      console.error('🚨 [adminService.updateProductFields] STARTING UPDATE:', { id, fields });
-      
       // Try to use the admin API first (has service role access)
       try {
         const response = await fetch('/api/admin', {
@@ -361,13 +366,9 @@ export const adminService = {
 
         if (response.ok) {
           const result = await response.json();
-          console.error('🚨 [adminService.updateProductFields] API RESPONSE:', result);
           if (result.success && result.data) {
-            console.error('🚨 [adminService.updateProductFields] ✅ UPDATED VIA API:', result.data);
             adminCache.invalidatePattern('admin:products');
             return result.data as Product;
-          } else {
-            console.error('🚨 [adminService.updateProductFields] API returned non-success:', result);
           }
         } else {
           const errorText = await response.text();
@@ -378,7 +379,7 @@ export const adminService = {
       }
 
       // Fallback to direct Supabase update
-      const client = supabaseAdmin || supabase;
+      const client = supabase;
       
       if (!client) {
         throw new Error('Supabase client not available');

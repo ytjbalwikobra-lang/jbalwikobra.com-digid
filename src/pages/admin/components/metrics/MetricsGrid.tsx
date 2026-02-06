@@ -17,12 +17,12 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ stats, loading, classN
 
   if (loading) {
     return (
-      <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse', className)}>
+      <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 animate-pulse', className)}>
         {Array.from({ length: 5 }).map((_, i) => (
           <div 
             key={i} 
             className={cn(
-              'rounded-cyber-2xl h-40 bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-[var(--cyber-pink-subtle)]/25 border border-[var(--cyber-pink-muted)]',
+              'rounded-cyber-2xl h-40 bg-gradient-to-br from-[var(--admin-accent-subtle)] to-[var(--admin-accent-subtle)]/25 border border-[var(--admin-accent-muted)]',
               i === 0 && 'lg:col-span-2 h-48'
             )} 
           />
@@ -32,7 +32,7 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ stats, loading, classN
   }
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6', className)}>
+    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3', className)}>
       <AdminStatCard
         size="large"
         variant="success"

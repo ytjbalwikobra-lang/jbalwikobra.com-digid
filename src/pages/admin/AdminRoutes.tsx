@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminShell } from './AdminShellWrapper';
 import AdminDashboard from './AdminDashboard';
 import AdminOrdersV2 from './AdminOrdersV2';
+import AdminOrderDetail from './AdminOrderDetail';
 // Use direct version that bypasses all caching
 import AdminProductsDirect from './AdminProductsDirect';
 import AdminUsersV2 from './AdminUsersV2';
@@ -19,6 +20,7 @@ const AdminRoutes: React.FC = () => {
         <Route path="/" element={<AdminDashboard />} />
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/orders" element={<AdminOrdersV2 />} />
+        <Route path="/orders/:orderId" element={<AdminOrderDetail />} />
         <Route path="/users" element={<AdminUsersV2 />} />
         <Route path="/products" element={<AdminProductsDirect />} />
         <Route path="/banners" element={<AdminBanners />} />

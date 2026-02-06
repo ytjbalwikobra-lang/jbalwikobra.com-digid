@@ -80,13 +80,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       >
         <div className="admin-card flex flex-col max-h-full overflow-hidden" style={{background: 'var(--admin-primary-light)', border: '1px solid var(--admin-border)'}}>
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b" style={{borderColor: 'var(--admin-border)'}}>
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
+          <div className="flex items-center justify-between px-4 py-2 border-b" style={{borderColor: 'var(--admin-border)'}}>
+            <h2 className="text-sm font-semibold text-white">{title}</h2>
             {showCloseButton && (
               <button
                 type="button"
                 onClick={onClose}
-                className="admin-btn-ghost p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors"
+                className="admin-btn-ghost p-1.5 rounded-cyber-lg hover:bg-[var(--admin-bg-elevated)] transition-colors"
                 aria-label="Close modal"
               >
                 <X size={20} />
@@ -95,13 +95,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-4 py-3 cyber-scrollbar">
             {children}
           </div>
 
           {/* Actions */}
           {actions && (
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t" style={{borderColor: 'var(--admin-border)'}}>
+            <div className="flex items-center justify-end gap-2 px-4 py-2 border-t" style={{borderColor: 'var(--admin-border)'}}>
               {actions}
             </div>
           )}

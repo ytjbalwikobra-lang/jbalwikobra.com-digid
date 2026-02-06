@@ -1,13 +1,13 @@
 /**
  * Modern Admin Status Badge Component
  * WCAG 2.1 AA Compliant
+ * Uses CSS variables from cyber-compact.css (--admin-* namespace)
  * 
  * @description Reusable status badge with consistent styling and accessibility
  */
 
 import React from 'react';
 import { Clock, CreditCard, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react';
-import { AdminStatusColors } from '../../design-tokens';
 
 export type StatusType = 
   | 'pending' 
@@ -25,41 +25,42 @@ interface StatusBadgeProps {
   className?: string;
 }
 
+// Map status to icons, labels, and explicit Tailwind classes
 const statusConfig = {
   pending: {
     icon: Clock,
     defaultLabel: 'Pending',
-    colors: AdminStatusColors.pending,
+    classes: 'bg-[var(--admin-warning-bg)] border-[var(--admin-warning-border)] text-[var(--admin-warning-light)]',
   },
   processing: {
     icon: Loader,
     defaultLabel: 'Processing',
-    colors: AdminStatusColors.processing,
+    classes: 'bg-[var(--admin-info-bg)] border-[var(--admin-info-border)] text-[var(--admin-info-light)]',
   },
   paid: {
     icon: CreditCard,
     defaultLabel: 'Paid',
-    colors: AdminStatusColors.processing,
+    classes: 'bg-[var(--admin-info-bg)] border-[var(--admin-info-border)] text-[var(--admin-info-light)]',
   },
   completed: {
     icon: CheckCircle,
     defaultLabel: 'Completed',
-    colors: AdminStatusColors.completed,
+    classes: 'bg-[var(--admin-success-bg)] border-[var(--admin-success-border)] text-[var(--admin-success-light)]',
   },
   cancelled: {
     icon: XCircle,
     defaultLabel: 'Cancelled',
-    colors: AdminStatusColors.cancelled,
+    classes: 'bg-[var(--admin-error-bg)] border-[var(--admin-error-border)] text-[var(--admin-error-light)]',
   },
   active: {
     icon: CheckCircle,
     defaultLabel: 'Active',
-    colors: AdminStatusColors.active,
+    classes: 'bg-[var(--admin-success-bg)] border-[var(--admin-success-border)] text-[var(--admin-success-light)]',
   },
   inactive: {
     icon: AlertCircle,
     defaultLabel: 'Inactive',
-    colors: AdminStatusColors.inactive,
+    classes: 'bg-[var(--admin-muted-bg)] border-[var(--admin-muted-border)] text-[var(--admin-muted-light)]',
   },
 };
 
@@ -75,20 +76,12 @@ export const AdminStatusBadge: React.FC<StatusBadgeProps> = ({
 
   return (
     <span 
-      className={`admin-badge inline-flex items-center gap-2 ${className}`}
-      style={{
-        backgroundColor: config.colors.bg,
-        borderColor: config.colors.border,
-        color: config.colors.text,
-        border: `1px solid ${config.colors.border}`,
-      }}
+      className={`admin-badge inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wide border ${config.classes} ${className}`}
       role="status"
       aria-label={`Status: ${displayLabel}`}
     >
       {showIcon && <Icon size={12} aria-hidden="true" />}
-      <span className="font-medium uppercase tracking-wide text-xs">
-        {displayLabel}
-      </span>
+      <span>{displayLabel}</span>
     </span>
   );
 };

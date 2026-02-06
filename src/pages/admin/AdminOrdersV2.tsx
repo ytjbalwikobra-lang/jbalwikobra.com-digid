@@ -1,29 +1,31 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
 import { 
   ShoppingCart, 
-  Eye,
   Package,
   Clock,
   RefreshCw,
-  Calendar,
-  DollarSign
+  DollarSign,
+  User,
+  Search
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { adminService, type Order as AdminOrder } from '../../services/adminService';
+import { supabase } from '../../services/supabase';
 import { AdminButton } from './components/ui/AdminButton';
-import { AdminCard, AdminCardBody } from './components/ui/AdminCard';
 import { AdminStatusBadge } from './components/ui/AdminStatusBadge';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
-import { AdminPageHeader } from './components/ui/AdminPageHeader';
-import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
+import { AdminBentoCard, AdminBentoMetricCard } from './components/ui/AdminBentoCard';
+import { AdminHeroSection } from './components/ui/AdminHeroSection';
 import { AdminPagination } from './components/AdminPagination';
-import { OrderDetailsModal } from '../../components/admin/OrderDetailsModal';
-import { formatCurrency, formatDate } from '../../utils/helpers';
+import { formatCurrency } from '../../utils/helpers';
+import { cn } from '../../utils/cn';
+import { useDebounce } from '../../hooks/useDebounce';
 // Design system: cyber-compact.css (loaded via index.css)
+// Cyberpunk Compact Redesign
 
 type OrderStatus = 'pending' | 'paid' | 'completed' | 'cancelled';
 
@@ -50,7 +52,6 @@ const mapOrderStatus = (status: OrderStatus): 'pending' | 'processing' | 'comple
 
 // Main Orders Page Component
 const AdminOrdersV2: React.FC = () => {
-  const navigate = useNavigate();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [realStats, setRealStats] = useState<OrderStats>({
     total: 0,
@@ -64,14 +65,14 @@ const AdminOrdersV2: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const { push } = useToast();
+  const navigate = useNavigate();
 
-  // Pagination states
+  // Search & Pagination (DNA from Products)
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Order details modal state
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Cache for instant loading between page navigations
   const [cachedData, setCachedData] = useState<{
@@ -138,71 +139,145 @@ const AdminOrdersV2: React.FC = () => {
     loadOrders();
   }, [loadOrders]);
 
-  // View order details handler
+  // REALTIME SUBSCRIPTIONS: Listen to order changes for live updates
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          const newOrder = payload.new as AdminOrder;
+          const today = new Date().toDateString();
+          
+          // Only add if it's today's order
+          if (new Date(newOrder.created_at).toDateString() === today) {
+            setOrders(prev => [newOrder, ...prev]);
+            
+            // Update stats
+            setRealStats(prev => ({
+              ...prev,
+              total: prev.total + 1,
+              [newOrder.status]: prev[newOrder.status as keyof OrderStats] + 1,
+              totalRevenue: (newOrder.status === 'paid' || newOrder.status === 'completed') 
+                ? prev.totalRevenue + (newOrder.amount || 0) 
+                : prev.totalRevenue,
+              todayOrders: prev.todayOrders + 1
+            }));
+
+            push('🔔 Order baru diterima!', 'success');
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          const updatedOrder = payload.new as AdminOrder;
+          const oldOrder = payload.old as AdminOrder;
+          
+          setOrders(prev => prev.map(order => 
+            order.id === updatedOrder.id ? updatedOrder : order
+          ));
+
+          // Recalculate stats if status changed
+          if (oldOrder.status !== updatedOrder.status) {
+            setRealStats(prev => {
+              const newStats = { ...prev };
+              
+              // Decrease old status count
+              if (oldOrder.status in newStats) {
+                newStats[oldOrder.status as keyof OrderStats] = Math.max(0, prev[oldOrder.status as keyof OrderStats] - 1);
+              }
+              
+              // Increase new status count
+              if (updatedOrder.status in newStats) {
+                newStats[updatedOrder.status as keyof OrderStats] = prev[updatedOrder.status as keyof OrderStats] + 1;
+              }
+
+              // Update revenue if needed
+              if ((updatedOrder.status === 'paid' || updatedOrder.status === 'completed') &&
+                  (oldOrder.status !== 'paid' && oldOrder.status !== 'completed')) {
+                newStats.totalRevenue = prev.totalRevenue + (updatedOrder.amount || 0);
+              }
+
+              return newStats;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [push]);
+
+  // View order details handler - navigate to detail page
   const handleViewOrder = (orderId: string) => {
-    setSelectedOrderId(orderId);
-    setDetailsModalOpen(true);
+    navigate(`/admin/orders/${orderId}`);
   };
 
-  // Close details modal handler
-  const handleCloseDetailsModal = () => {
-    setDetailsModalOpen(false);
-    setSelectedOrderId(null);
-  };
+  // Filter orders by search term (DNA from Products)
+  const filteredOrders = useMemo(() => {
+    if (!debouncedSearch) return orders;
+    
+    const term = debouncedSearch.toLowerCase();
+    return orders.filter(order => 
+      order.customer_name?.toLowerCase().includes(term) ||
+      order.customer_phone?.includes(term) ||
+      order.id?.toLowerCase().includes(term) ||
+      order.status?.toLowerCase().includes(term)
+    );
+  }, [orders, debouncedSearch]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(orders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedOrders = orders.slice(startIndex, endIndex);
+  // Paginate filtered orders (DNA from Products)
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredOrders, currentPage, itemsPerPage]);
 
-  // Analytics stats config
-  const analyticsStats: AnalyticsStat[] = useMemo(() => [
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, itemsPerPage]);
+
+  // Compact metric cards
+  const metricsData = useMemo(() => [
     {
-      label: 'Total Orders',
+      label: 'Orders',
       value: realStats.total,
-      icon: ShoppingCart,
-      iconColor: 'text-blue-400',
-      iconBgColor: 'bg-blue-500/10',
-      format: 'number'
+      icon: <ShoppingCart size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
-      label: "Today's Orders",
-      value: realStats.todayOrders,
-      icon: Calendar,
-      iconColor: 'text-green-400',
-      iconBgColor: 'bg-green-500/10',
-      format: 'number'
+      label: 'Revenue',
+      value: formatCurrency(realStats.totalRevenue),
+      icon: <DollarSign size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
-      label: 'Total Revenue',
-      value: realStats.totalRevenue,
-      icon: DollarSign,
-      iconColor: 'text-[var(--cyber-pink-primary)]',
-      iconBgColor: 'bg-[var(--cyber-pink-subtle)]',
-      format: 'currency'
-    },
-    {
-      label: 'Pending Orders',
+      label: 'Pending',
       value: realStats.pending,
-      icon: Clock,
-      iconColor: 'text-orange-400',
-      iconBgColor: 'bg-orange-500/10',
-      format: 'number'
+      icon: <Clock size={16} className="text-[var(--cyber-pink-primary)]" />
+    },
+    {
+      label: 'Completed',
+      value: realStats.completed,
+      icon: <Package size={16} className="text-[var(--cyber-pink-primary)]" />
     }
   ], [realStats]);
-
-  // Header actions
-  const headerActions = (
-    <AdminButton
-      variant="secondary"
-      onClick={() => loadOrders()}
-      disabled={loading}
-      icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}
-    >
-      Refresh
-    </AdminButton>
-  );
 
   if (error) {
     return (
@@ -218,138 +293,152 @@ const AdminOrdersV2: React.FC = () => {
   }
 
   return (
-    <div className="admin-page space-y-8">
-      {/* Header - Using AdminPageHeader */}
-      <AdminPageHeader
-        title="Orders (Today)"
-        description="Ringkasan pesanan hari ini saja"
-        actions={headerActions}
-      />
-
-      {/* Stats Cards - Using AdminAnalyticsCards */}
-      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
-
-        {/* Orders Table */}
-        <AdminCard>
-          <AdminCardBody>
-            <div className="overflow-x-auto">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Order Details</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th className="text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {loading ? (
-                  <AdminLoadingState variant="skeleton-table" rows={5} columns={6} />
-                ) : orders.length === 0 ? (
-                  <AdminEmptyState 
-                    icon={<Package className="w-16 h-16" />}
-                    title="No Orders Today"
-                    hasFilters={false}
-                    variant="table-row"
-                    colSpan={6}
-                  />
-                ) : (
-                  paginatedOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-[var(--cyber-bg-pure)]/50 transition-colors duration-150">
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <div className="font-semibold text-white">{order.customer_name}</div>
-                          <div className="text-sm text-[var(--cyber-text-muted)]">{order.customer_email}</div>
-                          <div className="text-xs text-[var(--cyber-text-muted)]">{formatPhoneNumber(order.customer_phone)}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              order.order_type === 'purchase'
-                                ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
-                                : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
-                            }`}>
-                              {order.order_type === 'purchase' ? 'Purchase' : 'Rental'}
-                            </span>
-                            {order.order_type === 'rental' && (order as any).rental_duration && (
-                              <span className="text-xs text-[var(--cyber-text-muted)]">⏰ {(order as any).rental_duration}</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-[var(--cyber-text-muted)]">Order ID: {order.id.slice(0, 8)}...</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-lg font-bold text-white">
-                          {formatCurrency(order.amount)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <AdminStatusBadge 
-                          status={mapOrderStatus(order.status as OrderStatus)} 
-                          label={order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-[var(--cyber-text-secondary)]">
-                          {formatDate(order.created_at)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button 
-                            onClick={() => handleViewOrder(order.id)}
-                            className="p-2 text-[var(--cyber-text-secondary)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-colors"
-                            title="View order details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => {
-                              if (order.product_id) {
-                                navigate(`/products/${order.product_id}`);
-                              } else {
-                                push('Product ID tidak tersedia', 'error');
-                              }
-                            }}
-                            className="cyber-btn cyber-btn-primary cyber-btn-sm"
-                          >
-                            Lihat Produk
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+    <div className="admin-page space-y-4">
+      {/* Cyberpunk Hero Section */}
+      <AdminHeroSection
+        title="Orders Today"
+        subtitle={`${realStats.total} orders • ${formatCurrency(realStats.totalRevenue)} revenue`}
+        badge="Live"
+        badgeColor="success"
+      >
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          {/* Search Bar (DNA from Products) */}
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by name, phone, ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
+            />
           </div>
-          </AdminCardBody>
-        </AdminCard>
+          
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <AdminButton
+              variant="secondary"
+              onClick={() => loadOrders(true)}
+              disabled={loading}
+              size="sm"
+              icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />}
+            >
+              Refresh
+            </AdminButton>
+          </div>
+        </div>
+      </AdminHeroSection>
 
-      {/* Pagination */}
-      {orders.length > 0 && (
-        <AdminPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={orders.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          loading={loading}
-        />
-      )}
-
-      {/* Order Details Modal */}
-      <OrderDetailsModal
-        isOpen={detailsModalOpen}
-        onClose={handleCloseDetailsModal}
-        orderId={selectedOrderId}
-      />
+      {/* Compact Metrics - Bento Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {metricsData.map((metric, idx) => (
+          <AdminBentoMetricCard
+            key={idx}
+            label={metric.label}
+            value={metric.value}
+            icon={metric.icon}
+          />
+        ))}
       </div>
+
+      {/* Orders Bento Grid */}
+      {loading ? (
+        <AdminLoadingState variant="skeleton-cards" cards={8} />
+      ) : filteredOrders.length === 0 ? (
+        <AdminEmptyState 
+          icon={<Package className="w-12 h-12" />}
+          title={debouncedSearch ? "No Orders Match" : "No Orders Today"}
+          description={debouncedSearch ? "Try different search terms" : "Orders will appear here when customers make purchases"}
+          hasFilters={!!debouncedSearch}
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {paginatedOrders.map((order) => (
+            <AdminBentoCard
+              key={order.id}
+              onClick={() => handleViewOrder(order.id)}
+              glowOnHover
+            >
+              {/* Order Header */}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--cyber-pink-subtle)] flex items-center justify-center flex-shrink-0">
+                    <ShoppingCart size={14} className="text-[var(--cyber-pink-primary)]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-white truncate">
+                      {order.customer_name}
+                    </p>
+                    <p className="text-[10px] text-[var(--cyber-text-muted)] truncate">
+                      #{order.id.slice(0, 8)}
+                    </p>
+                  </div>
+                </div>
+                <AdminStatusBadge 
+                  status={mapOrderStatus(order.status as OrderStatus)} 
+                  label={order.status}
+                />
+              </div>
+
+              {/* Order Details */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[var(--cyber-text-muted)]">Amount</span>
+                  <span className="text-sm font-bold text-[var(--cyber-pink-primary)]">
+                    {formatCurrency(order.amount)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[var(--cyber-text-muted)]">Type</span>
+                  <span className={cn(
+                    'text-[10px] px-1.5 py-0.5 rounded-full',
+                    order.order_type === 'purchase'
+                      ? 'bg-[var(--cyber-info)]/10 text-[var(--cyber-info)]'
+                      : 'bg-[var(--cyber-purple)]/10 text-[var(--cyber-purple)]'
+                  )}>
+                    {order.order_type}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[var(--cyber-text-muted)]">Time</span>
+                  <span className="text-[10px] text-[var(--cyber-text-secondary)]">
+                    {new Date(order.created_at).toLocaleTimeString('id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Customer Contact */}
+              <div className="mt-2 pt-2 border-t border-[var(--cyber-border)]">
+                <div className="flex items-center gap-1.5">
+                  <User size={10} className="text-[var(--cyber-text-muted)]" />
+                  <span className="text-[10px] text-[var(--cyber-text-muted)] truncate">
+                    {formatPhoneNumber(order.customer_phone)}
+                  </span>
+                </div>
+              </div>
+            </AdminBentoCard>
+          ))}
+        </div>
+
+        {/* Pagination (DNA from Products) */}
+        {totalPages > 1 && (
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            totalItems={filteredOrders.length}
+            itemsPerPage={itemsPerPage}
+          />
+        )}
+      </>
+      )}
+    </div>
   );
 };
 

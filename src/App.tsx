@@ -9,7 +9,6 @@ import { CartProvider } from './contexts/CartContext';
 import { CyberBottomNav } from './components/mobile';
 import { CartIntegration } from './components/CartIntegration';
 import PNFooter from './components/public/layout/PNFooter';
-import './App.css';
 // Design system: cyber-compact.css (loaded via index.css)
 import { forceFixedPositioning } from './utils/forceFixedPositioning';
 import RequireAdmin from './components/RequireAdmin';

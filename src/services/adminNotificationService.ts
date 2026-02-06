@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { supabaseAdmin } from './supabaseAdmin';
 import { globalCache } from './globalCacheManager';
 import { formatCurrency } from '../utils/helpers';
 
@@ -244,50 +243,35 @@ class AdminNotificationService {
     }
   }
 
-  // Mark notification as read - MUST use admin client for write operations
+  // Mark notification as read via API
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      // CRITICAL: Admin operations MUST use service key to bypass RLS
-      if (!supabaseAdmin) {
-        // Use server API
-        try {
-          const sessionToken = localStorage.getItem('session_token');
-          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-          if (sessionToken) {
-            headers['Authorization'] = `Bearer ${sessionToken}`;
-          }
-          
-          const resp = await fetch('/api/admin-notifications?action=mark-read', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ id: notificationId })
-          });
-          if (!resp.ok) throw new Error(`API ${resp.status}`);
-          globalCache.clear();
-          return;
-        } catch (apiErr) {
-          // Fallback to direct client if API fails
-          if (supabase) {
-            const updatePayload = { is_read: true, updated_at: new Date().toISOString() };
-            const { error } = await supabase
-              .from('admin_notifications')
-              .update(updatePayload)
-              .eq('id', notificationId);
-            if (error) throw error;
-            globalCache.clear();
-            return;
-          }
-          throw apiErr;
-        }
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
       }
       
-      // Use Admin client (Service Key)
-      const { error } = await supabaseAdmin
-        .from('admin_notifications')
-        .update({ is_read: true, updated_at: new Date().toISOString() })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      const resp = await fetch('/api/admin-notifications?action=mark-read', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ id: notificationId })
+      });
+      
+      if (!resp.ok) {
+        // Fallback to direct client if API fails
+        if (supabase) {
+          const updatePayload = { is_read: true, updated_at: new Date().toISOString() };
+          const { error } = await supabase
+            .from('admin_notifications')
+            .update(updatePayload)
+            .eq('id', notificationId);
+          if (error) throw error;
+          globalCache.clear();
+          return;
+        }
+        throw new Error(`API ${resp.status}`);
+      }
       this.invalidateCache();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -295,21 +279,9 @@ class AdminNotificationService {
     }
   }
 
-  // Mark all as read - MUST use admin client for write operations  
+  // Mark all as read via API
   async markAllAsRead(): Promise<void> {
     try {
-      // Prefer service-role client if available, else fallback to API
-      if (supabaseAdmin) {
-        const { error } = await supabaseAdmin
-          .from('admin_notifications')
-          .update({ is_read: true, updated_at: new Date().toISOString() })
-          .eq('is_read', false);
-        if (error) throw error;
-        this.invalidateCache();
-        return;
-      }
-
-      // API fallback
       const sessionToken = localStorage.getItem('session_token');
       const headers: Record<string, string> = {};
       if (sessionToken) {
@@ -409,61 +381,9 @@ class AdminNotificationService {
     globalCache.invalidateByTags([this.cacheTag]);
   }
 
-  // Clear cache manually (for debugging)
+  // Clear cache manually
   clearCache(): void {
     globalCache.invalidateByTags([this.cacheTag]);
-  }
-
-  // Debug method to test mark as read functionality
-  async debugMarkAsRead(notificationId: string): Promise<void> {
-    
-    try {
-      if (!supabase) {
-        console.error('Supabase client not available');
-        return;
-      }
-      // First, check if notification exists and current state
-      const { data: _beforeData, error: beforeError } = await supabase
-        .from('admin_notifications')
-        .select('id, type, title, message, is_read, created_at, updated_at')
-        .eq('id', notificationId)
-        .single();
-      
-      if (beforeError) {
-        console.error('❌ DEBUG: Notification not found:', beforeError);
-        return;
-      }
-      
-      // Perform the update
-      const { data: _updateData, error: updateError } = await supabase
-        .from('admin_notifications')
-        .update({ is_read: true, updated_at: new Date().toISOString() })
-        .eq('id', notificationId)
-        .select();
-      
-      if (updateError) {
-        console.error('❌ DEBUG: Update failed:', updateError);
-        return;
-      }
-      
-      // Verify the update
-      const { data: _afterData, error: afterError } = await supabase
-        .from('admin_notifications')
-        .select('id, type, title, message, is_read, created_at, updated_at')
-        .eq('id', notificationId)
-        .single();
-      
-      if (afterError) {
-        console.error('❌ DEBUG: Failed to verify update:', afterError);
-        return;
-      }
-      
-      // Clear cache
-      this.invalidateCache();
-      
-    } catch (error) {
-      console.error('❌ DEBUG: Mark as read test failed:', error);
-    }
   }
 }
 

@@ -1,19 +1,20 @@
 /**
  * Admin Shell - Consistent Layout Wrapper
  * Provides navigation and consistent layout for all admin pages
+ * Uses CSS variables from cyber-compact.css (--admin-* namespace)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminNavigation } from './components/AdminNavigation';
 import { Menu, Bell, LogOut } from 'lucide-react';
-import { AdminColors } from './design-tokens';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/TraditionalAuthContext';
 import { AdminToastProvider } from './components/ui/AdminToast';
 import AdminNotificationPanel from './components/AdminNotificationPanel';
 import AdminFloatingNotifications from './AdminFloatingNotifications';
 import { useAdminRealtimeNotifications } from '../../hooks/useAdminRealtimeNotifications';
 import { AdminDataProvider } from '../../contexts/AdminDataContext';
+import { prefetchManager } from '../../services/intelligentPrefetch';
 // Design system: cyber-compact.css (loaded via index.css)
 
 interface AdminShellProps {
@@ -24,10 +25,17 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
 
   // Use unified realtime notifications hook - single subscription pattern
   const { unreadCount } = useAdminRealtimeNotifications({ limit: 50 });
+
+  // Track page changes for intelligent prefetching
+  useEffect(() => {
+    const pageName = location.pathname.split('/').pop() || 'dashboard';
+    prefetchManager.setCurrentPage(pageName);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -45,7 +53,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   return (
     <AdminDataProvider>
       <AdminToastProvider>
-        <div className="min-h-screen" style={{ backgroundColor: AdminColors.primary.DEFAULT }}>
+        <div className="min-h-screen bg-black text-white">
           {/* Navigation Sidebar */}
           <AdminNavigation
             mobileOpen={mobileMenuOpen}
@@ -55,21 +63,15 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
         {/* Main Content Area */}
         <div className="lg:ml-64">
           {/* Top Header Bar */}
-          <header
-            className="sticky top-0 z-40 border-b"
-            style={{
-              backgroundColor: AdminColors.primary.light,
-              borderColor: AdminColors.border.DEFAULT,
-            }}
-          >
+          <header className="sticky top-0 z-40 border-b bg-black/80 backdrop-blur-md border-white/10">
             <div className="flex items-center justify-between px-4 lg:px-6 h-16">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors"
+              className="lg:hidden p-2 rounded-full hover:bg-white/5 transition-colors"
               aria-label="Open menu"
             >
-              <Menu size={24} style={{ color: AdminColors.text.primary }} />
+              <Menu size={24} className="text-white/60" />
             </button>
 
             {/* Desktop: Empty space for alignment */}
@@ -81,18 +83,13 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               <div className="relative">
                 <button
                   onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                  className="relative p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors"
+                  className="relative p-2 rounded-full hover:bg-white/5 transition-colors"
                   aria-label="Notifications"
                 >
-                  <Bell size={20} style={{ color: AdminColors.text.secondary }} />
+                  <Bell size={20} className="text-white/60" />
                   {unreadCount > 0 && (
                     <span
-                      className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold"
-                      style={{ 
-                        backgroundColor: AdminColors.error.DEFAULT,
-                        color: 'white',
-                        padding: '0 4px'
-                      }}
+                      className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold bg-[var(--admin-error)] text-white px-1"
                       aria-label={`${unreadCount} unread notifications`}
                     >
                       {unreadCount > 99 ? '99+' : unreadCount}
@@ -110,18 +107,18 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-colors"
+                className="p-2 rounded-full hover:bg-white/5 transition-colors"
                 aria-label="Logout"
                 title="Logout"
               >
-                <LogOut size={20} style={{ color: AdminColors.text.secondary }} />
+                <LogOut size={20} className="text-white/60" />
               </button>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-4 lg:p-6">
+        {/* Page Content - Compact spacing */}
+        <main className="p-3 lg:p-4">
           {children}
         </main>
         </div>

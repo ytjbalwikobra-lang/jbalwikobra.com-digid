@@ -59,29 +59,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const storedToken = localStorage.getItem('session_token');
         const storedUser = localStorage.getItem('user_data');
+        
+        // DEBUG: Auth initialization trace
+        console.log('[AUTH DEBUG] initAuth started', {
+          hasToken: !!storedToken,
+          tokenPreview: storedToken ? storedToken.substring(0, 8) + '...' : null,
+          hasUser: !!storedUser
+        });
 
         if (storedToken && storedUser) {
           const userData = JSON.parse(storedUser);
+          console.log('[AUTH DEBUG] Stored user data:', { id: userData.id, isAdmin: userData.isAdmin, name: userData.name });
           
           // Validate session
           const isValid = await validateSession(storedToken);
+          console.log('[AUTH DEBUG] Session validation result:', isValid);
+          
           if (isValid) {
             setUser(userData);
             setSession({
               expiresAt: localStorage.getItem('session_expires') || '',
               lastActivity: new Date().toISOString()
             });
+            console.log('[AUTH DEBUG] ✅ User authenticated successfully');
           } else {
             // Clear invalid session
+            console.log('[AUTH DEBUG] ❌ Session invalid, clearing localStorage');
             localStorage.removeItem('session_token');
             localStorage.removeItem('user_data');
             localStorage.removeItem('session_expires');
           }
+        } else {
+          console.log('[AUTH DEBUG] No stored credentials found');
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('[AUTH DEBUG] Auth initialization error:', error);
       } finally {
         setLoading(false);
+        console.log('[AUTH DEBUG] initAuth complete, loading=false');
       }
     };
 
@@ -349,6 +364,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const validateSession = async (token: string): Promise<boolean> => {
+    console.log('[AUTH DEBUG] validateSession called with token:', token.substring(0, 8) + '...');
     try {
       const response = await fetch('/api/auth?action=validate-session', {
         method: 'POST',
@@ -357,9 +373,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         body: JSON.stringify({ session_token: token }),
       });
+      
+      console.log('[AUTH DEBUG] validate-session response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[AUTH DEBUG] validate-session response data:', {
+          success: data.success,
+          hasUser: !!data.user,
+          isAdmin: data.user?.is_admin
+        });
+        
         if (data.success && data.user) {
           // Map backend field names to frontend
           const mappedUser = {
@@ -375,13 +399,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Update user data with latest from server
           localStorage.setItem('user_data', JSON.stringify(mappedUser));
           setUser(mappedUser);
+          console.log('[AUTH DEBUG] ✅ Session validated, mapped isAdmin:', mappedUser.isAdmin);
         }
         return true;
       }
       
+      console.log('[AUTH DEBUG] ❌ validate-session failed with status:', response.status);
       return false;
     } catch (error) {
-      console.error('Session validation error:', error);
+      console.error('[AUTH DEBUG] Session validation error:', error);
       return false;
     }
   };

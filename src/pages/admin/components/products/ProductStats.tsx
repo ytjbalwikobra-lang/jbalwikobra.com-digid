@@ -33,26 +33,26 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ products, loading })
     {
       label: 'Total Produk',
       value: products.length.toString(),
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-400/20',
+      color: 'text-[var(--admin-info)]',
+      bgColor: 'bg-[var(--admin-info)]/20',
     },
     {
       label: 'Produk Aktif',
       value: activeProducts.length.toString(),
-      color: 'text-green-400',
-      bgColor: 'bg-green-400/20',
+      color: 'text-[var(--admin-success)]',
+      bgColor: 'bg-[var(--admin-success)]/20',
     },
     {
       label: 'Produk Diarsipkan',
       value: archivedProducts.length.toString(),
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-400/20',
+      color: 'text-[var(--admin-warning)]',
+      bgColor: 'bg-[var(--admin-warning)]/20',
     },
     {
       label: 'Rata-rata Harga',
       value: formatCurrency(Math.round(averagePrice)),
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-400/20',
+      color: 'text-[var(--admin-purple)]',
+      bgColor: 'bg-[var(--admin-purple)]/20',
     },
   ];
 

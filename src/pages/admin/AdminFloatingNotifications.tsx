@@ -3,6 +3,7 @@
  * 
  * Displays toast-style floating notifications for new orders/payments.
  * Follows Admin Design System V3 with WCAG 2.1 AA compliance.
+ * Uses CSS variables from cyber-compact.css (--admin-* namespace)
  * 
  * @accessibility
  * - ARIA live regions for screen reader announcements
@@ -17,12 +18,11 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Check, ExternalLink } from 'lucide-react';
 import { AdminNotification } from '../../services/adminNotificationService';
 import { useAdminRealtimeNotifications } from '../../hooks/useAdminRealtimeNotifications';
-import { AdminColors } from './design-tokens';
 import { formatCurrency } from '../../utils/helpers';
-import { OrderDetailsModal } from '../../components/admin/OrderDetailsModal';
 import { 
   getNotificationIcon, 
   getNotificationStyle, 
@@ -32,6 +32,15 @@ import {
   getStatusLabel,
   isOrderNotification
 } from './utils/notificationUtils';
+
+// Border color mapping - uses CSS variable values
+const BORDER_COLORS = {
+  info: 'rgba(59, 130, 246, 0.3)',      // --admin-info-border
+  success: 'rgba(16, 185, 129, 0.3)',   // --admin-success-border
+  error: 'rgba(239, 68, 68, 0.3)',      // --admin-error-border
+  warning: 'rgba(245, 158, 11, 0.3)',   // --admin-warning-border
+  accent: 'rgba(245, 0, 87, 0.25)',    // --admin-accent with 25% opacity
+};
 
 // ========================================
 // CONSTANTS
@@ -65,10 +74,7 @@ const AdminFloatingNotifications: React.FC = () => {
   });
 
   const [floatingNotifs, setFloatingNotifs] = useState<FloatingNotification[]>([]);
-  
-  // Modal state for order details - ISO 9241-110: Dialog principles
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   
   // Refs for processed IDs tracking
   const processedIdsRef = useRef<Set<string>>(new Set());
@@ -148,25 +154,18 @@ const AdminFloatingNotifications: React.FC = () => {
     }
   }, [handleMarkAsRead, handleDismiss]);
 
-  // Handle notification click - open modal for order-related notifications
+  // Handle notification click - navigate to order page for order-related notifications
   const handleNotificationClick = useCallback((notification: FloatingNotification) => {
-    // Only open modal for order-related notifications with order_id
+    // Only navigate for order-related notifications with order_id
     if (notification.order_id && isOrderNotification(notification)) {
       // Mark as read first
       if (!notification.is_read) {
         handleMarkAsRead(notification.id);
       }
-      // Open modal
-      setSelectedOrderId(notification.order_id);
-      setIsModalOpen(true);
+      // Navigate to order detail page
+      navigate(`/admin/orders/${notification.order_id}`);
     }
-  }, [handleMarkAsRead]);
-
-  // Close modal handler
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedOrderId(null);
-  }, []);
+  }, [handleMarkAsRead, navigate]);
 
   // ========================================
   // COMPUTED VALUES
@@ -187,7 +186,7 @@ const AdminFloatingNotifications: React.FC = () => {
 
   return (
     <div 
-      className="admin-floating-notifications"
+      className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"
       role="region"
       aria-label={`${visibleNotifications.length} notifikasi belum dibaca`}
       aria-live="polite"
@@ -215,53 +214,66 @@ const AdminFloatingNotifications: React.FC = () => {
               }
             }}
             onClick={() => isClickable && handleNotificationClick(notification)}
-            className={`admin-floating-notification ${isClickable ? 'admin-floating-notification--clickable' : ''}`}
+            className={`
+              pointer-events-auto
+              flex items-start gap-2 p-3 
+              bg-[#0a0a0a] border border-pink-500/30 rounded-lg
+              backdrop-blur-xl
+              transition-all duration-300
+              hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]
+              hover:border-pink-500/50
+              animate-in slide-in-from-right-full
+              ${isClickable ? 'cursor-pointer' : ''}
+            `}
             style={{
               animationDelay: `${index * 100}ms`,
-              borderColor: style.border.includes('blue') ? AdminColors.info.border :
-                          style.border.includes('emerald') ? AdminColors.success.border :
-                          style.border.includes('red') ? AdminColors.error.border :
-                          style.border.includes('yellow') || style.border.includes('amber') ? AdminColors.warning.border :
-                          AdminColors.accent.DEFAULT + '40',
+              borderColor: style.border.includes('blue') ? BORDER_COLORS.info :
+                          style.border.includes('emerald') ? BORDER_COLORS.success :
+                          style.border.includes('red') ? BORDER_COLORS.error :
+                          style.border.includes('yellow') || style.border.includes('amber') ? BORDER_COLORS.warning :
+                          BORDER_COLORS.accent,
             }}
           >
             {/* Icon */}
-            <div className="admin-floating-notification__icon">
+            <div className="relative flex items-center justify-center w-8 h-8 flex-shrink-0">
               {getNotificationIcon(notification.type)}
               {/* Pulse indicator */}
-              <span className="admin-floating-notification__pulse" aria-hidden="true" />
+              <span 
+                className="absolute top-0 right-0 w-2 h-2 bg-pink-500 rounded-full animate-ping" 
+                aria-hidden="true" 
+              />
             </div>
 
             {/* Content - Tier 1: Minimal copy for quick scanning */}
-            <div className="admin-floating-notification__content">
-              <div className="admin-floating-notification__header">
-                <h4 className="admin-floating-notification__title">
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <h4 className="text-xs font-semibold text-white truncate">
                   {floatingTitle}
                 </h4>
-                <span className="admin-floating-notification__time">
+                <span className="text-[10px] text-white/40 whitespace-nowrap flex-shrink-0">
                   {formatRelativeTime(notification.created_at)}
                 </span>
               </div>
               
               {/* Tier 1: Show only customer/product name */}
-              <p className="admin-floating-notification__message">
+              <p className="text-xs text-white/70 line-clamp-2">
                 {floatingCopy}
               </p>
 
               {/* Tier 1 Meta: Status badge + Amount only */}
               {notification.amount && (
-                <div className="admin-floating-notification__meta">
-                  <span className="admin-floating-notification__status">
+                <div className="flex items-center gap-2">
+                  <span className="px-1.5 py-0.5 text-[10px] font-semibold text-pink-400 bg-pink-500/10 rounded uppercase">
                     {statusLabel}
                   </span>
-                  <span className="admin-floating-notification__amount">
+                  <span className="text-xs font-semibold text-pink-400">
                     {formatCurrency(notification.amount)}
                   </span>
                 </div>
               )}
 
               {/* Actions */}
-              <div className="admin-floating-notification__actions" role="group" aria-label="Aksi notifikasi">
+              <div className="flex items-center gap-1 pt-1" role="group" aria-label="Aksi notifikasi">
                 {isClickable && (
                   <button
                     onClick={(e) => {
@@ -269,10 +281,10 @@ const AdminFloatingNotifications: React.FC = () => {
                       handleNotificationClick(notification);
                     }}
                     aria-label={`Lihat detail pesanan`}
-                    className="admin-floating-notification__btn admin-floating-notification__btn--view"
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-pink-400 bg-pink-500/10 rounded hover:bg-pink-500/20 transition-colors"
                   >
-                    <ExternalLink size={14} aria-hidden="true" />
-                    <span>Lihat Detail</span>
+                    <ExternalLink size={12} aria-hidden="true" />
+                    <span>Detail</span>
                   </button>
                 )}
                 <button
@@ -281,9 +293,9 @@ const AdminFloatingNotifications: React.FC = () => {
                     handleMarkAsRead(notification.id);
                   }}
                   aria-label={`Tandai "${notification.title}" sebagai sudah dibaca`}
-                  className="admin-floating-notification__btn admin-floating-notification__btn--primary"
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-white bg-pink-500 rounded hover:bg-pink-600 transition-colors"
                 >
-                  <Check size={14} aria-hidden="true" />
+                  <Check size={12} aria-hidden="true" />
                   <span>Dibaca</span>
                 </button>
                 
@@ -293,9 +305,9 @@ const AdminFloatingNotifications: React.FC = () => {
                     handleDismiss(notification.id);
                   }}
                   aria-label={`Tutup "${notification.title}"`}
-                  className="admin-floating-notification__btn admin-floating-notification__btn--dismiss"
+                  className="flex items-center justify-center w-6 h-6 rounded hover:bg-white/10 transition-colors"
                 >
-                  <X size={16} aria-hidden="true" />
+                  <X size={14} className="text-white/60" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -303,12 +315,6 @@ const AdminFloatingNotifications: React.FC = () => {
         );
       })}
 
-      {/* Order Details Modal - ISO 9241-110: Dialog principles */}
-      <OrderDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        orderId={selectedOrderId}
-      />
     </div>
   );
 };

@@ -44,23 +44,23 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
   const hasActiveFilters = filters.searchTerm || filters.ratingFilter !== 'all' || filters.dateFilter !== 'all';
 
   return (
-    <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
+    <div className="bg-[var(--admin-primary)] border border-[var(--admin-border)] rounded-cyber-2xl p-6">
       {/* Filter Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-[var(--cyber-bg-card)]">
-            <Filter className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
+          <div className="p-2 rounded-xl bg-[var(--admin-tertiary)]">
+            <Filter className="w-5 h-5 text-[var(--admin-accent)]" />
           </div>
           <h3 className="text-lg font-semibold text-white">Search & Filters</h3>
           {hasActiveFilters && (
-            <div className="px-2 py-1 bg-[var(--cyber-pink-muted)] border border-[var(--cyber-pink-muted)] rounded-xl text-xs text-[var(--cyber-pink-primary)]">
+            <div className="px-2 py-1 bg-[var(--admin-accent-muted)] border border-[var(--admin-accent-muted)] rounded-xl text-xs text-[var(--admin-accent)]">
               Filtered
             </div>
           )}
         </div>
         <button
           onClick={onToggleFilters}
-          className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-elevated)] rounded-xl transition-all duration-200"
+          className="p-2 text-[var(--admin-text-muted)] hover:text-white hover:bg-[var(--admin-primary-lighter)] rounded-xl transition-all duration-200"
         >
           <TrendingDown className={`w-5 h-5 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
         </button>
@@ -68,27 +68,27 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
       {/* Search Bar */}
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--cyber-text-muted)]" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--admin-text-muted)]" />
         <input
           type="text"
           placeholder="Search reviews by customer name, product, or content..."
           value={filters.searchTerm}
           onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-[var(--cyber-bg-surface)]/50 border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] focus:border-transparent transition-all duration-200"
+          className="w-full pl-12 pr-4 py-3 bg-[var(--admin-secondary)]/50 border border-[var(--admin-border)] rounded-cyber-lg text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)] focus:border-transparent transition-all duration-200"
         />
       </div>
 
       {/* Expandable Filters */}
       {showFilters && (
-        <div className="space-y-6 border-t border-[var(--cyber-border)] pt-6">
+        <div className="space-y-6 border-t border-[var(--admin-border)] pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Rating Filter */}
             <div>
-              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">Rating</label>
+              <label className="block text-sm font-medium text-[var(--admin-text-secondary)] mb-3">Rating</label>
               <select
                 value={filters.ratingFilter}
                 onChange={(e) => handleFilterChange('ratingFilter', e.target.value as any)}
-                className="w-full px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200"
+                className="w-full px-4 py-3 bg-[var(--admin-secondary)] border border-[var(--admin-border)] rounded-cyber-lg text-[var(--admin-text)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)] transition-all duration-200"
               >
                 <option value="all">All Ratings</option>
                 <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
@@ -103,11 +103,11 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
             {/* Date Filter */}
             <div>
-              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">Time Period</label>
+              <label className="block text-sm font-medium text-[var(--admin-text-secondary)] mb-3">Time Period</label>
               <select
                 value={filters.dateFilter}
                 onChange={(e) => handleFilterChange('dateFilter', e.target.value as any)}
-                className="w-full px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200"
+                className="w-full px-4 py-3 bg-[var(--admin-secondary)] border border-[var(--admin-border)] rounded-cyber-lg text-[var(--admin-text)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)] transition-all duration-200"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -120,12 +120,12 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
             {/* Sort Options */}
             <div>
-              <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-3">Sort By</label>
+              <label className="block text-sm font-medium text-[var(--admin-text-secondary)] mb-3">Sort By</label>
               <div className="flex gap-2">
                 <select
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value as any)}
-                  className="flex-1 px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] transition-all duration-200"
+                  className="flex-1 px-4 py-3 bg-[var(--admin-secondary)] border border-[var(--admin-border)] rounded-cyber-lg text-[var(--admin-text)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)] transition-all duration-200"
                 >
                   <option value="created_at">Date Created</option>
                   <option value="rating">Rating</option>
@@ -134,7 +134,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                 </select>
                 <button
                   onClick={() => handleFilterChange('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-4 py-3 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-cyber-lg text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200 flex items-center gap-2"
+                  className="px-4 py-3 bg-[var(--admin-secondary)] border border-[var(--admin-border)] rounded-cyber-lg text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] hover:bg-[var(--admin-primary-lighter)] transition-all duration-200 flex items-center gap-2"
                 >
                   {filters.sortOrder === 'asc' ? (
                     <>
@@ -154,8 +154,8 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
 
           {/* Results Count and Clear Filters */}
           {typeof resultCount === 'number' && (
-            <div className="flex items-center justify-between pt-6 mt-6 border-t border-[var(--cyber-border)]">
-              <div className="text-sm text-[var(--cyber-text-muted)]">
+            <div className="flex items-center justify-between pt-6 mt-6 border-t border-[var(--admin-border)]">
+              <div className="text-sm text-[var(--admin-text-muted)]">
                 {resultCount === 0 ? (
                   'No reviews match the current filters'
                 ) : (
@@ -166,11 +166,11 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
               {/* Active Filter Pills */}
               <div className="flex flex-wrap items-center gap-2">
                 {filters.searchTerm && (
-                  <div className="flex items-center gap-1 px-3 py-1 bg-[var(--cyber-pink-muted)] border border-[var(--cyber-pink-muted)] rounded-xl text-sm text-[var(--cyber-pink-primary)]">
+                  <div className="flex items-center gap-1 px-3 py-1 bg-[var(--admin-accent-muted)] border border-[var(--admin-accent-muted)] rounded-xl text-sm text-[var(--admin-accent)]">
                     <span>Search: "{filters.searchTerm}"</span>
                     <button
                       onClick={() => handleFilterChange('searchTerm', '')}
-                      className="text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)]"
+                      className="text-[var(--admin-accent)] hover:text-[var(--admin-accent-light)]"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -203,7 +203,7 @@ export const ReviewsFiltersComponent: React.FC<ReviewsFiltersComponentProps> = (
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="px-3 py-1 bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg text-sm transition-all duration-200"
+                    className="px-3 py-1 bg-[var(--admin-primary-lighter)] text-[var(--admin-text-secondary)] hover:text-white hover:bg-[var(--admin-tertiary)] rounded-cyber-lg text-sm transition-all duration-200"
                   >
                     Clear All
                   </button>

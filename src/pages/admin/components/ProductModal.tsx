@@ -10,7 +10,6 @@ import { AdminImageUpload } from './ui/AdminImageUpload';
 import { formatNumberID, parseNumberID, formatCurrency } from '../../../utils/helpers';
 import { supabase } from '../../../services/supabase';
 import { useAdminData } from '../../../contexts/AdminDataContext';
-import { useKeyboardShortcuts, createModalShortcuts } from '../../../hooks/useKeyboardShortcuts';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -51,7 +50,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const { push } = useToast();
   const { showConfirm, ConfirmModal } = useAdminConfirm();
   const [loading, setLoading] = useState(false);
-  
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isOriginalPriceDirty, setIsOriginalPriceDirty] = useState(false);
+
   // Track original images for cleanup on save
   const [originalImages, setOriginalImages] = useState<string[]>([]);
   
@@ -79,18 +80,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
     is_active: true,
     has_rental: false,
     rental_options: []
-  });
-
-  // Keyboard shortcuts for power users
-  useKeyboardShortcuts({
-    enabled: isOpen && mode !== 'view',
-    shortcuts: createModalShortcuts({
-      onSave: () => {
-        const form = document.querySelector('form');
-        if (form) form.requestSubmit();
-      },
-      onCancel: onClose
-    })
   });
 
   // Load dropdown data and populate form
@@ -143,6 +132,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             
             // Track original images for cleanup
             setOriginalImages(productImages);
+            setIsOriginalPriceDirty(false);
           } else if (mode === 'create') {
             // Reset form for new product
             setFormData({
@@ -161,6 +151,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               rental_options: []
             });
             setOriginalImages([]);
+            setIsOriginalPriceDirty(false);
           }
         } catch (error) {
           console.error('Error initializing modal:', error);
@@ -171,9 +162,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
     }
   }, [isOpen, product, mode]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitProduct = async () => {
     if (mode === 'view') return;
+
+    // Debug log for validation
+    console.log('[ProductModal] handleSubmit - formData.images:', formData.images);
+    console.log('[ProductModal] handleSubmit - formData.image:', formData.image);
 
     // Validation
     if (!formData.name.trim()) {
@@ -185,6 +179,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       return;
     }
     if (formData.images.length === 0 && !formData.image) {
+      console.error('[ProductModal] Image validation failed - images:', formData.images, 'image:', formData.image);
       push('Minimal satu gambar produk diperlukan', 'error');
       return;
     }
@@ -279,14 +274,24 @@ const ProductModal: React.FC<ProductModalProps> = ({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitProduct();
+  };
+
   // Image handling functions
   // Handle image changes from AdminImageUpload
   const handleImagesChange = useCallback((newImages: string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      images: newImages,
-      image: newImages.length > 0 ? newImages[0] : ''
-    }));
+    console.log('[ProductModal] handleImagesChange called with:', newImages);
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        images: newImages,
+        image: newImages.length > 0 ? newImages[0] : ''
+      };
+      console.log('[ProductModal] Updated formData.images:', updated.images);
+      return updated;
+    });
   }, []);
 
   // Helper functions for thousand separator in inputs
@@ -301,6 +306,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
     const numericValue = parseNumberID(value);
     
     if (field === 'original_price') {
+      setIsOriginalPriceDirty(true);
       setFormData(prev => ({ 
         ...prev, 
         [field]: value === '' || numericValue === 0 ? undefined : numericValue 
@@ -310,8 +316,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
       setFormData(prev => {
         const updatedData = { ...prev, [field]: numericValue };
         
-        // Auto-fill original_price if it's empty/zero and main price has a value
-        if (numericValue > 0 && (!prev.original_price || prev.original_price === 0)) {
+        // Auto-sync original_price until user edits it manually
+        if (numericValue > 0 && !isOriginalPriceDirty) {
           updatedData.original_price = numericValue;
         }
         
@@ -322,6 +328,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   const isReadOnly = mode === 'view';
   const title = mode === 'create' ? 'Tambah Produk Baru' : mode === 'edit' ? 'Edit Produk' : 'Detail Produk';
+
+  // Handle save button click with event stopping
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    submitProduct();
+  };
 
   // Modal actions
   const modalActions = !isReadOnly ? (
@@ -335,13 +348,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
         Cancel
       </AdminButton>
       <AdminButton
-        type="submit"
-        form="product-form"
+        type="button"
         variant="primary"
-        disabled={loading}
+        disabled={loading || isUploadingImages}
         icon={loading ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        onClick={handleSaveClick}
       >
-        {loading ? 'Saving...' : mode === 'create' ? 'Buat Produk' : 'Simpan'}
+        {loading ? 'Saving...' : isUploadingImages ? 'Uploading images...' : mode === 'create' ? 'Buat Produk' : 'Simpan'}
       </AdminButton>
     </>
   ) : undefined;
@@ -356,12 +369,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
         size="lg"
         actions={modalActions}
       >
-        <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form id="product-form" onSubmit={handleSubmit} className="space-y-3" noValidate>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Product Name */}
             <div className="md:col-span-2">
               <label className="admin-label">
-                Product Name <span className="text-red-500">*</span>
+                Product Name <span className="text-[var(--admin-error)]">*</span>
               </label>
               <input
                 type="text"
@@ -392,7 +405,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             {/* Price */}
             <div>
               <label className="admin-label">
-                Price <span className="text-red-500">*</span>
+                Price <span className="text-[var(--admin-error)]">*</span>
               </label>
                 <input
                   type="text"
@@ -405,7 +418,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   disabled={isReadOnly}
                 />
                 {isReadOnly && (
-                  <p className="text-sm text-[var(--cyber-text-muted)] mt-1">{formatCurrency(formData.price)}</p>
+                  <p className="text-sm text-[var(--admin-text-muted)] mt-1">{formatCurrency(formData.price)}</p>
                 )}
               </div>
 
@@ -424,68 +437,65 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   disabled={isReadOnly}
                 />
                 {isReadOnly && formData.original_price && (
-                  <p className="text-sm text-[var(--cyber-text-muted)] mt-1">{formatCurrency(formData.original_price)}</p>
+                  <p className="text-sm text-[var(--admin-text-muted)] mt-1">{formatCurrency(formData.original_price)}</p>
                 )}
               </div>
 
-              {/* Category */}
-              <div>
-                <label className="admin-label">
-                  Category
-                </label>
-                <select
-                  value={formData.category_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                  className="admin-select"
-                  disabled={isReadOnly || categoriesLoading}
-                >
-                  <option value="">{categoriesLoading ? 'Loading...' : 'Select Category'}</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Category, Game Title, Tier - 3 Column Layout */}
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Category */}
+                <div>
+                  <label className="admin-label">Category</label>
+                  <select
+                    value={formData.category_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
+                    className="admin-select"
+                    disabled={isReadOnly || categoriesLoading}
+                  >
+                    <option value="">{categoriesLoading ? 'Loading...' : 'Select Category'}</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Game Title */}
-              <div>
-                <label className="admin-label">
-                  Game Title
-                </label>
-                <select
-                  value={formData.game_title_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, game_title_id: e.target.value }))}
-                  className="admin-select"
-                  disabled={isReadOnly || gameTitlesLoading}
-                >
-                  <option value="">{gameTitlesLoading ? 'Loading...' : 'Select Game Title'}</option>
-                  {gameTitles.map(game => (
-                    <option key={game.id} value={game.id}>{game.name}</option>
-                  ))}
-                </select>
-              </div>
+                {/* Game Title */}
+                <div>
+                  <label className="admin-label">Game Title</label>
+                  <select
+                    value={formData.game_title_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, game_title_id: e.target.value }))}
+                    className="admin-select"
+                    disabled={isReadOnly || gameTitlesLoading}
+                  >
+                    <option value="">{gameTitlesLoading ? 'Loading...' : 'Select Game Title'}</option>
+                    {gameTitles.map(game => (
+                      <option key={game.id} value={game.id}>{game.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Tier */}
-              <div>
-                <label className="admin-label">
-                  Tier
-                </label>
-                <select
-                  value={formData.tier_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tier_id: e.target.value }))}
-                  className="admin-select"
-                  disabled={isReadOnly || tiersLoading}
-                >
-                  <option value="">{tiersLoading ? 'Loading...' : 'Select Tier'}</option>
-                  {tiers.map(tier => (
-                    <option key={tier.id} value={tier.id}>{tier.name}</option>
-                  ))}
-                </select>
+                {/* Tier */}
+                <div>
+                  <label className="admin-label">Tier</label>
+                  <select
+                    value={formData.tier_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tier_id: e.target.value }))}
+                    className="admin-select"
+                    disabled={isReadOnly || tiersLoading}
+                  >
+                    <option value="">{tiersLoading ? 'Loading...' : 'Select Tier'}</option>
+                    {tiers.map(tier => (
+                      <option key={tier.id} value={tier.id}>{tier.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Rental Options */}
               <div className="md:col-span-2">
-                <div className="flex items-center justify-between mb-4">
-                  <label htmlFor="has_rental" className="text-sm font-medium text-[var(--cyber-text-secondary)]">
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="has_rental" className="text-xs font-medium text-[var(--admin-text-secondary)]">
                     Enable Rental Options
                   </label>
                   {/* Modern Toggle Switch */}
@@ -493,10 +503,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type="button"
                     onClick={() => !isReadOnly && setFormData(prev => ({ ...prev, has_rental: !prev.has_rental }))}
                     disabled={isReadOnly}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-primary)] focus:ring-offset-2 focus:ring-offset-[var(--cyber-bg-surface)] ${
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)] focus:ring-offset-2 focus:ring-offset-[var(--admin-bg-surface)] ${
                       formData.has_rental 
-                        ? 'bg-[var(--cyber-pink-primary)]' 
-                        : 'bg-[var(--cyber-border)]'
+                        ? 'bg-[var(--admin-accent)]' 
+                        : 'bg-[var(--admin-border)]'
                     } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-opacity-80'}`}
                   >
                     <span
@@ -508,9 +518,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
 
                 {formData.has_rental && (
-                  <div className="space-y-4 p-4 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg border border-[var(--cyber-border)]">
+                  <div className="space-y-4 p-4 bg-[var(--admin-bg-elevated)] rounded-cyber-lg border border-[var(--admin-border)]">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-[var(--cyber-text-secondary)]">Rental Options</h4>
+                      <h4 className="text-sm font-medium text-[var(--admin-text-secondary)]">Rental Options</h4>
                       {!isReadOnly && (
                         <button
                           type="button"
@@ -529,11 +539,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     </div>
 
                     {formData.rental_options.length === 0 ? (
-                      <p className="text-[var(--cyber-text-muted)] text-sm">No rental options configured</p>
+                      <p className="text-[var(--admin-text-muted)] text-sm">No rental options configured</p>
                     ) : (
                       <div className="space-y-3">
                         {formData.rental_options.map((option, index) => (
-                          <div key={index} className="grid grid-cols-12 gap-2 items-start">
+                          <div key={index} className="grid grid-cols-12 gap-2 items-center">
                             <div className="col-span-3">
                               <input
                                 type="text"
@@ -544,7 +554,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                   setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                 }}
                                 placeholder="Duration (e.g., 1 day, 1 week)"
-                                className="w-full px-2 py-1 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
+                                className="w-full px-2 py-1 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-[var(--admin-accent)]"
                                 disabled={isReadOnly}
                               />
                             </div>
@@ -559,7 +569,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                   setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                 }}
                                 placeholder="Rp 0"
-                                className="w-full px-2 py-1 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded text-[var(--cyber-text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
+                                className="w-full px-2 py-1 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded text-[var(--admin-text)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--admin-accent)]"
                                 disabled={isReadOnly}
                               />
                             </div>
@@ -573,19 +583,19 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                   setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                 }}
                                 placeholder="Description (optional)"
-                                className="w-full px-2 py-1 bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] rounded text-[var(--cyber-text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--cyber-pink-primary)]"
+                                className="w-full px-2 py-1 bg-[var(--admin-bg-elevated)] border border-[var(--admin-border)] rounded text-[var(--admin-text)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--admin-accent)]"
                                 disabled={isReadOnly}
                               />
                             </div>
                             {!isReadOnly && (
-                              <div className="col-span-1">
+                              <div className="col-span-1 flex items-center justify-center">
                                 <button
                                   type="button"
                                   onClick={() => {
                                     const newOptions = formData.rental_options.filter((_, i) => i !== index);
                                     setFormData(prev => ({ ...prev, rental_options: newOptions }));
                                   }}
-                                  className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                                  className="p-1.5 rounded-lg text-[var(--admin-error)] hover:bg-[var(--admin-error)]/10 hover:text-[var(--admin-error)]/80 transition-all duration-200 flex items-center justify-center"
                                   title="Remove rental option"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -605,30 +615,18 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 <AdminImageUpload
                   images={formData.images}
                   onChange={handleImagesChange}
+                  onUploadingChange={setIsUploadingImages}
                   bucket="products"
                   maxImages={15}
                   maxSizeMB={5}
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   readOnly={isReadOnly}
                   showPrimaryBadge={true}
-                  gridCols={5}
+                  tileSize="md"
                   label={`Product Images ${isReadOnly && formData.images.length > 0 ? `(${formData.images.length})` : ''}`}
-                  helpText="Upload up to 15 images. First image is primary. Drag to reorder."
+                  helpText="Upload up to 15 images (JPG, PNG, WebP, GIF). First image is primary. Drag to reorder."
                   disabled={loading}
                 />
-              </div>
-
-              {/* Active Status */}
-              <div className="md:col-span-2">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                    className="w-4 h-4 text-[var(--cyber-accent)] bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] rounded focus:ring-[var(--cyber-accent)] focus:ring-2"
-                    disabled={isReadOnly}
-                  />
-                  <span className="text-sm font-medium text-[var(--cyber-text-muted)]">Active Product</span>
-                </label>
               </div>
             </div>
         </form>

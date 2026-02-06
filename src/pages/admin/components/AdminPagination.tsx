@@ -55,11 +55,11 @@ export const AdminPagination: React.FC<AdminPaginationProps> = ({
     <div className="admin-pagination">
       {/* Items per page */}
       <div className="admin-pagination-info">
-        <span className="text-slate-400 text-sm">
+        <span className="text-[var(--admin-text-secondary)] text-sm">
           Showing {startItem} to {endItem} of {totalItems} results
         </span>
         <div className="flex items-center gap-2 ml-4">
-          <label className="text-slate-400 text-sm">Per page:</label>
+          <label className="text-[var(--admin-text-secondary)] text-sm">Per page:</label>
           <select
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}

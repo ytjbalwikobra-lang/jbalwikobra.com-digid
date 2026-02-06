@@ -46,7 +46,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
       key: 'category',
       header: 'Kategori',
       render: (_, p) => (
-        <span className="inline-flex px-2 py-0.5 rounded-full bg-[var(--cyber-pink-primary)]/10 text-[var(--cyber-pink-secondary)] text-[11px] font-medium capitalize">
+        <span className="inline-flex px-2 py-0.5 rounded-full bg-[var(--admin-accent)]/10 text-[var(--admin-accent-hover)] text-[11px] font-medium capitalize">
           {(p as any).categoryData?.name || (p as any).category || '—'}
         </span>
       ),
@@ -58,7 +58,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
       render: (_, p) => (
         (p as any).tiers ? (
           <span
-            className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium shadow-sm border border-[var(--cyber-border)]"
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium shadow-sm border border-[var(--admin-border)]"
             style={{
               background: (p as any).tiers.background_gradient || 'linear-gradient(135deg, #1e1e1e, #2a2a2a)',
               color: '#fff'
@@ -81,7 +81,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
             value={draft.price||''}
             onChange={e=>setDraft(d=>({...d,price:e.target.value}))}
             onKeyDown={(e)=>{ if(e.key==='Enter') saveEdit(p.id); if(e.key==='Escape') cancelEdit(); }}
-            className="form-control control-h-lg w-28 text-xs px-2"
+            className="admin-input w-28 text-xs !py-1.5 !min-h-[32px]"
           />
         ) : (
           <button onClick={()=>startEdit(p)} className="text-left text-ds-pink hover:opacity-80 focus:outline-none">
@@ -97,13 +97,15 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
       render: (_, p) => (
         editingId === p.id ? (
           <input
+            type="number"
+            min="0"
             value={draft.stock||''}
             onChange={e=>setDraft(d=>({...d,stock:e.target.value.replace(/[^0-9]/g,'')}))}
             onKeyDown={(e)=>{ if(e.key==='Enter') saveEdit(p.id); if(e.key==='Escape') cancelEdit(); }}
-            className="form-control control-h-lg w-20 text-xs px-2"
+            className="admin-input w-20 text-xs !py-1.5 !min-h-[32px]"
           />
         ) : (
-          <button onClick={()=>startEdit(p)} className={`text-left ${p.stock && p.stock>0 ? 'text-emerald-400' : 'text-rose-400'} hover:opacity-80`}>{p.stock ?? 0}</button>
+          <button onClick={()=>startEdit(p)} className={`text-left ${p.stock && p.stock>0 ? 'text-[var(--admin-success)]' : 'text-[var(--admin-error)]'} hover:opacity-80`}>{p.stock ?? 0}</button>
         )
       ),
       width: '10%'
@@ -114,7 +116,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
       render: (_, p) => (
         <button
           onClick={()=> onQuickUpdate && onQuickUpdate(p.id,{ is_active: !p.is_active })}
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors border ${p.is_active ? 'bg-emerald-500/10 text-emerald-400 border-emerald-600/30 hover:bg-emerald-500/20' : 'bg-surface-tint-light text-ds-text-secondary border-surface-tint-light hover:bg-surface-tint-light/80'}`}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors border ${p.is_active ? 'bg-[var(--admin-success)]/10 text-[var(--admin-success)] border-[var(--admin-success)]/30 hover:bg-[var(--admin-success)]/20' : 'bg-surface-tint-light text-ds-text-secondary border-surface-tint-light hover:bg-surface-tint-light/80'}`}
           aria-pressed={p.is_active}
           aria-label={p.is_active ? 'Deactivate product' : 'Activate product'}
         >

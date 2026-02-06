@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, CheckCircle, XCircle, X } from 'lucide-react';
 
 export type ConfirmationType = 'danger' | 'warning' | 'info' | 'success';
@@ -38,8 +39,8 @@ export const AdminConfirmModal: React.FC<ConfirmModalProps> = ({
   // Focus trap and keyboard navigation
   useEffect(() => {
     if (isOpen) {
-      // Focus the cancel button when modal opens
-      cancelButtonRef.current?.focus();
+      // Focus the cancel button when modal opens (prevent scroll jump)
+      cancelButtonRef.current?.focus({ preventScroll: true });
 
       // Prevent body scroll
       document.body.style.overflow = 'hidden';
@@ -87,7 +88,8 @@ export const AdminConfirmModal: React.FC<ConfirmModalProps> = ({
     }
   };
 
-  return (
+  // Use portal to render at document root to avoid scroll issues from nested modals
+  return createPortal(
     <div
       className="admin-confirm-overlay"
       onClick={handleOverlayClick}
@@ -150,7 +152,8 @@ export const AdminConfirmModal: React.FC<ConfirmModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

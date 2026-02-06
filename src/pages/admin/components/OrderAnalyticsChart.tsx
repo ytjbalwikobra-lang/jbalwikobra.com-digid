@@ -6,6 +6,14 @@ import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { formatCurrency } from '../../../utils/helpers';
 import { formatAnalyticsValue } from '../../../utils/adminUtils';
 
+// Chart color tokens - matches CSS variables in cyber-compact.css
+const CHART_COLORS = {
+  primary: '#F50057',    // var(--admin-chart-primary)
+  secondary: '#10b981',  // var(--admin-chart-secondary)
+  grid: '#374151',       // var(--admin-chart-grid)
+  axis: '#9ca3af',       // var(--admin-chart-axis)
+};
+
 interface OrderChartData {
   date: string;
   totalOrders: number;
@@ -20,7 +28,7 @@ interface OrderAnalyticsChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[var(--cyber-bg-surface)]/95 border border-[var(--cyber-border)] rounded-cyber-lg p-4 shadow-xl backdrop-blur-sm">
+      <div className="bg-[var(--admin-bg-surface)]/95 border border-[var(--admin-border)] rounded-cyber-lg p-4 shadow-xl backdrop-blur-sm">
         <p className="text-white font-medium mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center space-x-2 text-sm">
@@ -28,7 +36,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               className="w-3 h-3 rounded-full" 
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-[var(--cyber-text-secondary)]">{entry.name}:</span>
+            <span className="text-[var(--admin-text-secondary)]">{entry.name}:</span>
             <span className="text-white font-medium">
               {entry.dataKey === 'revenue' 
                 ? formatCurrency(entry.value || 0)
@@ -175,31 +183,31 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
 
   if (loading || isLoading) {
     return (
-      <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
+      <div className="bg-[var(--admin-bg-pure)] border border-[var(--admin-border)] rounded-cyber-2xl p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-[var(--cyber-bg-elevated)] rounded w-48 mb-4" />
-          <div className="h-64 bg-[var(--cyber-bg-elevated)] rounded" />
+          <div className="h-6 bg-[var(--admin-bg-elevated)] rounded w-48 mb-4" />
+          <div className="h-64 bg-[var(--admin-bg-elevated)] rounded" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
+    <div className="bg-[var(--admin-bg-pure)] border border-[var(--admin-border)] rounded-cyber-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <div className="p-2 bg-[var(--cyber-pink-subtle)] rounded-cyber-lg">
-            <TrendingUp className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
+          <div className="p-2 bg-[var(--admin-accent-subtle)] rounded-cyber-lg">
+            <TrendingUp className="w-5 h-5 text-[var(--admin-accent)]" />
           </div>
           <h3 className="text-lg font-semibold text-white">Order Analytics</h3>
         </div>
         
         <div className="flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-[var(--cyber-text-muted)]" />
+          <Calendar className="w-4 h-4 text-[var(--admin-text-muted)]" />
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d')}
-            className="bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)] rounded-cyber-lg px-3 py-1 text-sm text-white focus:border-[var(--cyber-pink-primary)] focus:outline-none"
+            className="bg-[var(--admin-bg-elevated)] border border-[var(--admin-border)] rounded-cyber-lg px-3 py-1 text-sm text-white focus:border-[var(--admin-accent)] focus:outline-none"
           >
             {timeRangeOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -215,18 +223,18 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
           <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <defs>
               <linearGradient id="totalOrdersGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#ec4899" stopOpacity={0.05} />
+                <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0.05} />
               </linearGradient>
               <linearGradient id="paidOrdersGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                <stop offset="5%" stopColor={CHART_COLORS.secondary} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={CHART_COLORS.secondary} stopOpacity={0.05} />
               </linearGradient>
             </defs>
             
             <CartesianGrid 
               strokeDasharray="3 3" 
-              stroke="#374151" 
+              stroke={CHART_COLORS.grid} 
               opacity={0.3} 
             />
             
@@ -234,13 +242,13 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: '#9ca3af', fontSize: 12 }}
+              tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
             />
             
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: '#9ca3af', fontSize: 12 }}
+              tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
             />
             
             <Tooltip content={<CustomTooltip />} />
@@ -253,7 +261,7 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
             <Area
               type="monotone"
               dataKey="totalOrders"
-              stroke="#ec4899"
+              stroke={CHART_COLORS.primary}
               strokeWidth={2}
               fill="url(#totalOrdersGradient)"
               name="Total Orders"
@@ -262,7 +270,7 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
             <Area
               type="monotone"
               dataKey="paidOrders"
-              stroke="#10b981"
+              stroke={CHART_COLORS.secondary}
               strokeWidth={2}
               fill="url(#paidOrdersGradient)"
               name="Paid Orders"
@@ -272,24 +280,24 @@ export const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ loadin
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--cyber-border)]" role="group" aria-label="Order summary statistics">
+      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--admin-border)]" role="group" aria-label="Order summary statistics">
         <div className="text-center">
           <p className="text-lg font-semibold text-white">
             {formatAnalyticsValue(chartData.reduce((sum, day) => sum + day.totalOrders, 0))}
           </p>
-          <p className="text-xs text-[var(--cyber-text-muted)]">Total Orders</p>
+          <p className="text-xs text-[var(--admin-text-muted)]">Total Orders</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-green-400">
+          <p className="text-lg font-semibold text-[var(--admin-success)]">
             {formatAnalyticsValue(chartData.reduce((sum, day) => sum + day.paidOrders, 0))}
           </p>
-          <p className="text-xs text-[var(--cyber-text-muted)]">Paid Orders</p>
+          <p className="text-xs text-[var(--admin-text-muted)]">Paid Orders</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold text-[var(--cyber-pink-primary)]">
+          <p className="text-lg font-semibold text-[var(--admin-accent)]">
             {formatCurrency(actualTotalRevenue)}
           </p>
-          <p className="text-xs text-[var(--cyber-text-muted)]">Total Revenue</p>
+          <p className="text-xs text-[var(--admin-text-muted)]">Total Revenue</p>
         </div>
       </div>
     </div>

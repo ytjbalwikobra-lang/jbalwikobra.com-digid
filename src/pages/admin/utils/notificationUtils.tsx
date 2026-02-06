@@ -1,6 +1,7 @@
 /**
  * Shared Notification Utilities for Admin Panel
  * Consolidates notification icon and style helpers used across components
+ * Uses CSS variables from cyber-compact.css (--admin-* namespace)
  * 
  * @module notificationUtils
  * @description Central utilities for admin notification display and logic
@@ -8,7 +9,18 @@
 
 import React from 'react';
 import { ShoppingBag, CreditCard, User, XCircle, Star, AlertCircle, Home, Info, DollarSign } from 'lucide-react';
-import { AdminColors } from '../design-tokens';
+
+// Color constants matching CSS variables in cyber-compact.css
+const ADMIN_COLORS = {
+  success: '#10b981',        // --admin-success
+  successBg: 'rgba(16, 185, 129, 0.082)', // ~15 hex opacity
+  warning: '#f59e0b',        // --admin-warning
+  warningBg: 'rgba(245, 158, 11, 0.082)', // ~15 hex opacity
+  error: '#ef4444',          // --admin-error
+  errorBg: 'rgba(239, 68, 68, 0.082)',    // ~15 hex opacity
+  textSecondary: '#a1a1aa',  // --admin-text-secondary (zinc-400)
+  primaryLighter: '#1a1a1a', // --admin-primary-lighter
+};
 
 // Re-export formatCurrency for convenience
 export { formatCurrency } from '../../../utils/helpers';
@@ -81,23 +93,23 @@ export interface StatusBadge {
 export const getNotificationIcon = (type: AdminNotificationType): React.ReactNode => {
   switch (type) {
     case 'new_order':
-      return <ShoppingBag className="w-5 h-5 text-blue-400" />;
+      return <ShoppingBag className="w-5 h-5 text-[var(--admin-info)]" />;
     case 'paid_order':
-      return <CreditCard className="w-5 h-5 text-emerald-400" />;
+      return <CreditCard className="w-5 h-5 text-[var(--admin-success)]" />;
     case 'new_rent':
-      return <Home className="w-5 h-5 text-orange-400" />;
+      return <Home className="w-5 h-5 text-[var(--admin-orange)]" />;
     case 'paid_rent':
-      return <DollarSign className="w-5 h-5 text-emerald-400" />;
+      return <DollarSign className="w-5 h-5 text-[var(--admin-success)]" />;
     case 'order_cancelled':
-      return <XCircle className="w-5 h-5 text-red-400" />;
+      return <XCircle className="w-5 h-5 text-[var(--admin-error)]" />;
     case 'new_user':
-      return <User className="w-5 h-5 text-purple-400" />;
+      return <User className="w-5 h-5 text-[var(--admin-purple)]" />;
     case 'new_review':
-      return <Star className="w-5 h-5 text-yellow-400" />;
+      return <Star className="w-5 h-5 text-[var(--admin-warning)]" />;
     case 'system':
-      return <AlertCircle className="w-5 h-5 text-[var(--cyber-text-muted)]" />;
+      return <AlertCircle className="w-5 h-5 text-[var(--admin-text-muted)]" />;
     default:
-      return <Info className="w-5 h-5 text-[var(--cyber-text-muted)]" />;
+      return <Info className="w-5 h-5 text-[var(--admin-text-muted)]" />;
   }
 };
 
@@ -112,83 +124,83 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
   switch (type) {
     case 'new_order':
       return {
-        gradient: 'from-blue-500/20 to-cyan-500/10',
-        border: 'border-blue-500/30',
-        icon: 'bg-gradient-to-br from-blue-500 to-cyan-600',
-        badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-        glow: 'shadow-blue-500/20',
-        bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
-        pulse: 'bg-blue-500',
+        gradient: 'from-pink-500/20 to-rose-500/10',
+        border: 'border-[var(--admin-accent)]/30',
+        icon: 'bg-gradient-to-br from-pink-500 to-rose-600',
+        badge: 'bg-[var(--admin-accent)]/20 text-[var(--admin-accent)] border-[var(--admin-accent)]/30',
+        glow: 'shadow-pink-500/20',
+        bg: 'bg-gradient-to-br from-pink-500/20 to-rose-500/20',
+        pulse: 'bg-[var(--admin-accent)]',
       };
     case 'paid_order':
       return {
-        gradient: 'from-emerald-500/20 to-green-500/10',
-        border: 'border-emerald-500/30',
-        icon: 'bg-gradient-to-br from-emerald-500 to-green-600',
-        badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+        gradient: 'from-emerald-500/20 to-emerald-600/10',
+        border: 'border-[var(--admin-success)]/30',
+        icon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+        badge: 'bg-[var(--admin-success)]/20 text-[var(--admin-success)] border-[var(--admin-success)]/30',
         glow: 'shadow-emerald-500/20',
-        bg: 'bg-gradient-to-br from-emerald-500/20 to-green-500/20',
-        pulse: 'bg-emerald-500',
+        bg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20',
+        pulse: 'bg-[var(--admin-success)]',
       };
     case 'new_rent':
       return {
         gradient: 'from-orange-500/20 to-amber-500/10',
-        border: 'border-orange-500/30',
+        border: 'border-[var(--admin-orange)]/30',
         icon: 'bg-gradient-to-br from-orange-500 to-amber-600',
-        badge: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+        badge: 'bg-[var(--admin-orange)]/20 text-[var(--admin-orange)] border-[var(--admin-orange)]/30',
         glow: 'shadow-orange-500/20',
         bg: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
-        pulse: 'bg-orange-500',
+        pulse: 'bg-[var(--admin-orange)]',
       };
     case 'paid_rent':
       return {
         gradient: 'from-yellow-500/20 to-emerald-500/10',
-        border: 'border-yellow-500/30',
+        border: 'border-[var(--admin-warning)]/30',
         icon: 'bg-gradient-to-br from-yellow-500 to-emerald-600',
-        badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+        badge: 'bg-[var(--admin-warning)]/20 text-[var(--admin-warning)] border-[var(--admin-warning)]/30',
         glow: 'shadow-yellow-500/20',
         bg: 'bg-gradient-to-br from-yellow-500/20 to-emerald-500/20',
-        pulse: 'bg-yellow-500',
+        pulse: 'bg-[var(--admin-warning)]',
       };
     case 'order_cancelled':
       return {
-        gradient: 'from-red-500/20 to-rose-500/10',
-        border: 'border-red-500/30',
-        icon: 'bg-gradient-to-br from-red-500 to-rose-600',
-        badge: 'bg-red-500/20 text-red-300 border-red-500/30',
-        glow: 'shadow-red-500/20',
-        bg: 'bg-gradient-to-br from-red-500/20 to-rose-500/20',
-        pulse: 'bg-red-500',
+        gradient: 'from-pink-500/20 to-rose-500/10',
+        border: 'border-[var(--admin-error)]/30',
+        icon: 'bg-gradient-to-br from-pink-500 to-rose-600',
+        badge: 'bg-[var(--admin-error)]/20 text-[var(--admin-error)] border-[var(--admin-error)]/30',
+        glow: 'shadow-pink-500/20',
+        bg: 'bg-gradient-to-br from-pink-500/20 to-rose-500/20',
+        pulse: 'bg-[var(--admin-error)]',
       };
     case 'new_user':
       return {
-        gradient: 'from-purple-500/20 to-violet-500/10',
-        border: 'border-purple-500/30',
-        icon: 'bg-gradient-to-br from-purple-500 to-violet-600',
-        badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-        glow: 'shadow-purple-500/20',
-        bg: 'bg-gradient-to-br from-purple-500/20 to-violet-500/20',
-        pulse: 'bg-purple-500',
+        gradient: 'from-pink-500/20 to-fuchsia-500/10',
+        border: 'border-[var(--admin-accent)]/30',
+        icon: 'bg-gradient-to-br from-pink-500 to-fuchsia-600',
+        badge: 'bg-[var(--admin-accent)]/20 text-[var(--admin-accent)] border-[var(--admin-accent)]/30',
+        glow: 'shadow-pink-500/20',
+        bg: 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20',
+        pulse: 'bg-[var(--admin-accent)]',
       };
     case 'new_review':
       return {
         gradient: 'from-yellow-500/20 to-amber-500/10',
-        border: 'border-yellow-500/30',
+        border: 'border-[var(--admin-warning)]/30',
         icon: 'bg-gradient-to-br from-yellow-500 to-amber-600',
-        badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+        badge: 'bg-[var(--admin-warning)]/20 text-[var(--admin-warning)] border-[var(--admin-warning)]/30',
         glow: 'shadow-yellow-500/20',
         bg: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
-        pulse: 'bg-amber-500',
+        pulse: 'bg-[var(--admin-warning)]',
       };
     default:
       return {
-        gradient: 'from-[var(--cyber-bg-card)] to-slate-500/10',
-        border: 'border-[var(--cyber-border)]',
-        icon: 'bg-gradient-to-br from-gray-500 to-slate-600',
-        badge: 'bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] border-[var(--cyber-border)]',
+        gradient: 'from-[var(--admin-bg-card)] to-zinc-500/10',
+        border: 'border-[var(--admin-border)]',
+        icon: 'bg-gradient-to-br from-zinc-500 to-zinc-600',
+        badge: 'bg-[var(--admin-bg-card)] text-[var(--admin-text-secondary)] border-[var(--admin-border)]',
         glow: 'shadow-gray-500/20',
-        bg: 'bg-gradient-to-br from-[var(--cyber-pink-muted)] to-[var(--cyber-pink-muted)]',
-        pulse: 'bg-[var(--cyber-pink-primary)]',
+        bg: 'bg-gradient-to-br from-[var(--admin-accent-muted)] to-[var(--admin-accent-muted)]',
+        pulse: 'bg-[var(--admin-accent)]',
       };
   }
 };
@@ -289,28 +301,28 @@ export const getStatusBadge = (notification: AdminNotificationData): StatusBadge
   if (['paid_order', 'paid_rent'].includes(notification.type)) {
     return { 
       label: 'Paid', 
-      color: AdminColors.success.DEFAULT, 
-      bg: `${AdminColors.success.DEFAULT}15` 
+      color: ADMIN_COLORS.success, 
+      bg: ADMIN_COLORS.successBg
     };
   }
   if (['new_order', 'new_rent'].includes(notification.type)) {
     return { 
       label: 'Pending', 
-      color: AdminColors.warning.DEFAULT, 
-      bg: `${AdminColors.warning.DEFAULT}15` 
+      color: ADMIN_COLORS.warning, 
+      bg: ADMIN_COLORS.warningBg
     };
   }
   if (notification.type === 'order_cancelled') {
     return { 
       label: 'Cancelled', 
-      color: AdminColors.error.DEFAULT, 
-      bg: `${AdminColors.error.DEFAULT}15` 
+      color: ADMIN_COLORS.error, 
+      bg: ADMIN_COLORS.errorBg
     };
   }
   return { 
     label: 'Info', 
-    color: AdminColors.text.secondary, 
-    bg: AdminColors.primary.lighter 
+    color: ADMIN_COLORS.textSecondary, 
+    bg: ADMIN_COLORS.primaryLighter
   };
 };
 

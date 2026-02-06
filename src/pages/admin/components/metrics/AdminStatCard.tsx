@@ -13,38 +13,38 @@ export interface AdminStatCardProps {
 
 const variantStyles: Record<string, { container: string; iconWrap: string; gradient: string; ring: string; }>= {
   default: {
-    container: 'surface-glass-md bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-pink-subtle)]/50 to-[var(--cyber-pink-subtle)]/25',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--admin-accent-subtle)] via-[var(--admin-accent-subtle)]/50 to-[var(--admin-accent-subtle)]/25',
     iconWrap: 'bg-accent-soft ring-accent text-accent',
     gradient: 'from-white to-pink-100',
     ring: 'ring-1 ring-inset ring-white/10'
   },
   success: {
-    container: 'surface-glass-md bg-gradient-to-br from-emerald-500/10 via-emerald-600/5 to-emerald-700/5',
-    iconWrap: 'bg-emerald-500/15 ring-1 ring-emerald-400/40 text-emerald-300',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--admin-success)]/10 via-[var(--admin-success)]/5 to-[var(--admin-success)]/5',
+    iconWrap: 'bg-[var(--admin-success)]/15 ring-1 ring-[var(--admin-success)]/40 text-[var(--admin-success)]',
     gradient: 'from-white to-emerald-100',
     ring: 'ring-1 ring-inset ring-white/10'
   },
   info: {
-    container: 'surface-glass-md bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-blue-700/5',
-    iconWrap: 'bg-blue-500/15 ring-1 ring-blue-400/40 text-blue-300',
-    gradient: 'from-white to-blue-100',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--admin-info)]/10 via-[var(--admin-info)]/5 to-[var(--admin-info)]/5',
+    iconWrap: 'bg-[var(--admin-info)]/15 ring-1 ring-[var(--admin-info)]/40 text-[var(--admin-info)]',
+    gradient: 'from-white to-cyan-100',
     ring: 'ring-1 ring-inset ring-white/10'
   },
   warning: {
-    container: 'surface-glass-md bg-gradient-to-br from-amber-500/15 via-amber-600/10 to-amber-700/5',
-    iconWrap: 'bg-amber-500/20 ring-1 ring-amber-400/40 text-amber-300',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--admin-warning)]/15 via-[var(--admin-warning)]/10 to-[var(--admin-warning)]/5',
+    iconWrap: 'bg-[var(--admin-warning)]/20 ring-1 ring-[var(--admin-warning)]/40 text-[var(--admin-warning)]',
     gradient: 'from-white to-amber-100',
     ring: 'ring-1 ring-inset ring-white/10'
   },
   danger: {
-    container: 'surface-glass-md bg-gradient-to-br from-red-500/15 via-red-600/10 to-red-700/5',
-    iconWrap: 'bg-red-500/20 ring-1 ring-red-400/40 text-red-300',
-    gradient: 'from-white to-red-100',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--admin-error)]/15 via-[var(--admin-error)]/10 to-[var(--admin-error)]/5',
+    iconWrap: 'bg-[var(--admin-error)]/20 ring-1 ring-[var(--admin-error)]/40 text-[var(--admin-error)]',
+    gradient: 'from-white to-pink-100',
     ring: 'ring-1 ring-inset ring-white/10'
   },
   neutral: {
-    container: 'surface-glass-md bg-gradient-to-br from-gray-600/10 via-gray-700/5 to-gray-800/5',
-    iconWrap: 'bg-[var(--cyber-bg-surface)]/20 ring-1 ring-[var(--cyber-border)]/30 text-[var(--cyber-text-muted)]',
+    container: 'surface-glass-md bg-gradient-to-br from-[var(--admin-bg-surface)]/10 via-[var(--admin-bg-surface)]/5 to-[var(--admin-bg-card)]/5',
+    iconWrap: 'bg-[var(--admin-bg-surface)]/20 ring-1 ring-[var(--admin-border)]/30 text-[var(--admin-text-muted)]',
     gradient: 'from-white to-gray-200',
     ring: 'ring-1 ring-inset ring-white/10'
   }

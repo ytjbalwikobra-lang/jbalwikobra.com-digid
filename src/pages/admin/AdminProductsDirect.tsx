@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Package, RefreshCw, Plus, ShoppingCart, MessageCircle, DollarSign } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Package, RefreshCw, Plus, ShoppingCart, MessageCircle, DollarSign, Eye, Edit2, CheckCircle, Search, List, Grid3x3 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
-import { AdminPageHeader } from './components/ui/AdminPageHeader';
-import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
 import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import { useSoldViaWAModal } from './components/ui/SoldViaWAModal';
-import { AdminFilter } from './components/AdminFilter';
-import { AdminPagination } from './components/AdminPagination';
 import { adminService } from '../../services/adminService';
+import { adminCache } from '../../services/adminCache';
 import { formatCurrency } from '../../utils/helpers';
 import { usePriceInput } from '../../hooks/usePriceInput';
 import { useAbortController } from '../../hooks/useAbortController';
-import { useKeyboardShortcuts, createListShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { AdminErrorState } from './components/ui/AdminErrorState';
+import { AdminHeroSection } from './components/ui/AdminHeroSection';
+import { AdminBentoCard } from './components/ui/AdminBentoCard';
+import { AdminPagination } from './components/AdminPagination';
 // Design system: cyber-compact.css (loaded via index.css)
 
 interface Product {
@@ -47,12 +47,14 @@ interface Product {
 const AdminProductsDirect: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(20); // Pagination enabled
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list'); // Default to list view
   
   // Analytics stats
   const [stats, setStats] = useState<{
@@ -109,6 +111,7 @@ const AdminProductsDirect: React.FC = () => {
   const loadProducts = useCallback(async () => {
     const signal = getSignal(); // Cancel previous requests (TODO: Pass signal to adminService)
     setLoading(true);
+    setError(null);
 
     try {
       // Fetch products and stats in parallel for efficiency
@@ -123,13 +126,15 @@ const AdminProductsDirect: React.FC = () => {
       const mapped = (result.data || []).map(mapProduct);
 
       setProducts(mapped);
-      setTotalCount(result.count || 0);
       setTotalPages(result.totalPages || 1);
+      setTotalCount(result.count || 0);
       setStats(statsResult);
     } catch (err: any) {
       // Ignore abort errors
       if (err.name === 'AbortError') return;
-      push(`Failed to load: ${err.message}`, 'error');
+      const message = err?.message || 'Failed to load products';
+      setError(message);
+      push(message, 'error');
     } finally {
       if (!signal.aborted) {
         setLoading(false);
@@ -137,22 +142,14 @@ const AdminProductsDirect: React.FC = () => {
     }
   }, [currentPage, itemsPerPage, debouncedSearch, mapProduct, push, getSignal]);
 
-  // Keyboard shortcuts for power users
-  useKeyboardShortcuts({
-    shortcuts: createListShortcuts({
-      onCreate: () => setModalState({ isOpen: true, mode: 'create', product: null }),
-      onRefresh: loadProducts,
-      onSearch: () => searchInputRef.current?.focus()
-    })
-  });
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearch, itemsPerPage]);
-
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Reset page to 1 when search or itemsPerPage changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, itemsPerPage]);
 
   // START EDITING - store raw numeric value but will display formatted
   const startEditing = (product: Product) => {
@@ -194,6 +191,13 @@ const AdminProductsDirect: React.FC = () => {
     // Set saving first to prevent blur from canceling
     setSaving(true);
 
+    // OPTIMISTIC UPDATE: Update UI immediately for instant feel
+    const previousPrice = products.find(p => p.id === editingId)?.price;
+    setProducts(prev => prev.map(p => 
+      p.id === editingId ? { ...p, price: newPrice } : p
+    ));
+    cancelEditing(); // Exit edit mode instantly
+
     try {
       // Use API endpoint which has service role (bypasses RLS)
       const sessionToken = localStorage.getItem('session_token') || '';
@@ -217,24 +221,24 @@ const AdminProductsDirect: React.FC = () => {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        // ROLLBACK on error
+        setProducts(prev => prev.map(p => 
+          p.id === editingId ? { ...p, price: previousPrice || p.price } : p
+        ));
         push(`Gagal menyimpan: ${result.error || 'Unknown error'}`, 'error');
         return;
       }
 
-      // Update price in local state - PRESERVE tier_name!
-      setProducts(prev => prev.map(p => 
-        p.id === editingId 
-          ? { 
-              ...p, // Keep ALL existing fields including tier_name
-              price: newPrice
-            }
-          : p
-      ));
+      // Invalidate product cache to ensure fresh data on next load
+      adminCache.invalidatePattern('admin:products');
 
       push('Perubahan berhasil disimpan!', 'success');
-      cancelEditing();
 
     } catch (err: any) {
+      // ROLLBACK on error
+      setProducts(prev => prev.map(p => 
+        p.id === editingId ? { ...p, price: previousPrice || p.price } : p
+      ));
       push(`Gagal menyimpan: ${err.message}`, 'error');
     } finally {
       setSaving(false);
@@ -308,10 +312,10 @@ const AdminProductsDirect: React.FC = () => {
   };
 
   const getStatusStyle = (product: Product) => {
-    if (product.sold_channel === 'wa') return 'bg-purple-500/20 text-purple-300';
-    if (product.sold_channel === 'web') return 'bg-blue-500/20 text-blue-300';
-    if (!product.is_active) return 'bg-[var(--cyber-bg-elevated)]/20 text-[var(--cyber-text-muted)]';
-    return 'bg-green-500/20 text-green-300';
+    if (product.sold_channel === 'wa') return 'bg-[var(--admin-purple)]/20 text-[var(--admin-purple)]';
+    if (product.sold_channel === 'web') return 'bg-[var(--admin-info)]/20 text-[var(--admin-info)]';
+    if (!product.is_active) return 'bg-[var(--admin-bg-elevated)]/20 text-[var(--admin-text-muted)]';
+    return 'bg-[var(--admin-success)]/20 text-[var(--admin-success)]';
   };
 
   // Modal handlers
@@ -334,108 +338,174 @@ const AdminProductsDirect: React.FC = () => {
   };
 
   // Analytics cards config - memoized to prevent unnecessary re-renders
-  const analyticsStats: AnalyticsStat[] = useMemo(() => [
-    {
-      label: 'Total Produk',
-      value: stats.total,
-      icon: Package,
-      iconColor: 'text-blue-400',
-      iconBgColor: 'bg-blue-500/10',
-      format: 'number'
-    },
-    {
-      label: 'Terjual via Web',
-      value: stats.soldViaWeb,
-      icon: ShoppingCart,
-      iconColor: 'text-green-400',
-      iconBgColor: 'bg-green-500/10',
-      format: 'number'
-    },
-    {
-      label: 'Terjual via WA',
-      value: stats.soldViaWA,
-      icon: MessageCircle,
-      iconColor: 'text-purple-400',
-      iconBgColor: 'bg-purple-500/10',
-      format: 'number'
-    },
-    {
-      label: 'Total Nilai Produk',
-      value: stats.totalValue,
-      icon: DollarSign,
-      iconColor: 'text-[var(--cyber-pink-primary)]',
-      iconBgColor: 'bg-[var(--cyber-pink-subtle)]',
-      format: 'currency'
-    }
-  ], [stats]);
-
-  // Header actions
-  const headerActions = (
-    <>
-      <AdminButton variant="secondary" onClick={loadProducts} disabled={loading} icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={18} />}>
-        Refresh
-      </AdminButton>
-      <AdminButton variant="primary" onClick={handleCreateProduct} icon={<Plus size={18} />}>
-        Add Product
-      </AdminButton>
-    </>
-  );
-
   return (
-    <div className="admin-page space-y-8">
+    <div className="space-y-4">
       <ConfirmModal />
       
-      {/* Header - Using AdminPageHeader */}
-      <AdminPageHeader
+      {/* Cyberpunk Hero Section */}
+      <AdminHeroSection
         title="Manajemen Produk"
-        description={`${stats.active} produk aktif • ${stats.soldViaWeb + stats.soldViaWA} terjual`}
-        actions={headerActions}
-      />
+        badge={`${stats.active} Aktif • ${stats.soldViaWeb + stats.soldViaWA} Terjual`}
+        badgeColor="success"
+      >
+        {/* Search, View Toggle, and Actions Row */}
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mt-4">
+          {/* Inline Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Cari produk..."
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:border-pink-500/50 focus:outline-none focus:ring-1 focus:ring-pink-500/50 transition-all"
+            />
+          </div>
+          
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg border border-white/10">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-medium transition-all ${
+                viewMode === 'list'
+                  ? 'bg-pink-500 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white/80'
+              }`}
+            >
+              <List size={14} />
+              <span>List</span>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-medium transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-pink-500 text-white shadow-lg'
+                  : 'text-white/60 hover:text-white/80'
+              }`}
+            >
+              <Grid3x3 size={14} />
+              <span>Grid</span>
+            </button>
+          </div>
+          
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <AdminButton 
+              variant="secondary" 
+              onClick={loadProducts} 
+              disabled={loading}
+              size="sm"
+              icon={<RefreshCw className={loading ? 'animate-spin' : ''} size={14} />}
+            >
+              Refresh
+            </AdminButton>
+            <AdminButton 
+              variant="primary" 
+              onClick={handleCreateProduct}
+              size="sm"
+              icon={<Plus size={14} />}
+            >
+              Tambah Produk
+            </AdminButton>
+          </div>
+        </div>
+      </AdminHeroSection>
 
-      {/* Analytics Cards - Using AdminAnalyticsCards */}
-      <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
+      {/* Error Banner */}
+      {error && (
+        <AdminErrorState
+          variant="banner"
+          title="Error Loading Products"
+          message={error}
+          onRetry={loadProducts}
+          retryLabel="Try Again"
+        />
+      )}
 
-      {/* Search - Using shared AdminFilter */}
-      <AdminFilter
-        ref={searchInputRef}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search products..."
-        loading={loading}
-      />
+      {/* Compact Metrics - 4 columns */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminBentoCard>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+              <Package size={16} className="text-pink-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-white/40 uppercase tracking-wide">Total Produk</p>
+              <p className="text-lg font-bold text-white">{stats.total}</p>
+            </div>
+          </div>
+        </AdminBentoCard>
 
-      {/* Table */}
-      <div className="bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[var(--cyber-bg-surface)]/50 border-b border-[var(--cyber-border)]">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Product</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Tier</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Price</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Status</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--cyber-text-muted)] uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--cyber-border)]">
-              {loading ? (
-                <AdminLoadingState variant="skeleton-table" rows={5} columns={5} />
-              ) : products.length === 0 ? (
-                <AdminEmptyState 
-                  icon={<Package className="w-16 h-16" />}
-                  title={debouncedSearch ? "No Products Found" : "No Products Yet"}
-                  description={debouncedSearch ? undefined : "No products have been created yet."}
-                  hasFilters={!!debouncedSearch}
-                  variant="table-row"
-                  colSpan={5}
-                  action={!debouncedSearch ? {
-                    label: "Add Product",
-                    onClick: handleCreateProduct,
-                    icon: <Plus size={18} />
-                  } : undefined}
-                />
-              ) : (
-                products.map(product => {
+        <AdminBentoCard>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+              <ShoppingCart size={16} className="text-emerald-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-white/40 uppercase tracking-wide">Terjual via Web</p>
+              <p className="text-lg font-bold text-white">{stats.soldViaWeb}</p>
+            </div>
+          </div>
+        </AdminBentoCard>
+
+        <AdminBentoCard>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+              <MessageCircle size={16} className="text-pink-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-white/40 uppercase tracking-wide">Terjual via WA</p>
+              <p className="text-lg font-bold text-white">{stats.soldViaWA}</p>
+            </div>
+          </div>
+        </AdminBentoCard>
+
+        <AdminBentoCard>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+              <DollarSign size={16} className="text-pink-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-white/40 uppercase tracking-wide">Total Nilai</p>
+              <p className="text-lg font-bold text-white">{formatCurrency(stats.totalValue)}</p>
+            </div>
+          </div>
+        </AdminBentoCard>
+      </div>
+
+      {/* Products View - List or Grid */}
+      {loading ? (
+        <AdminLoadingState variant={viewMode === 'grid' ? "skeleton-cards" : "skeleton-table"} columns={viewMode === 'grid' ? 4 : 5} rows={5} />
+      ) : products.length === 0 ? (
+        <AdminEmptyState 
+          icon={<Package className="w-16 h-16" />}
+          title={debouncedSearch ? "Produk Tidak Ditemukan" : "Belum Ada Produk"}
+          description={debouncedSearch ? "Coba kata kunci lain" : "Belum ada produk yang dibuat."}
+          hasFilters={!!debouncedSearch}
+          variant="centered"
+          action={!debouncedSearch ? {
+            label: "Tambah Produk",
+            onClick: handleCreateProduct,
+            icon: <Plus size={18} />
+          } : undefined}
+        />
+      ) : viewMode === 'list' ? (
+        /* LIST VIEW - Compact table-style layout */
+        <div className="bg-[#0a0a0a] border border-white/10 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5">
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold text-white/60 uppercase tracking-wide">Produk</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold text-white/60 uppercase tracking-wide">Tier</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold text-white/60 uppercase tracking-wide">Harga</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-semibold text-white/60 uppercase tracking-wide">Status</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-semibold text-white/60 uppercase tracking-wide">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map(product => {
                   const term = debouncedSearch.toLowerCase();
                   const isMatch = !!debouncedSearch && (
                     product.name?.toLowerCase().includes(term) ||
@@ -443,154 +513,282 @@ const AdminProductsDirect: React.FC = () => {
                   );
 
                   return (
-                  <tr 
-                    key={product.id} 
-                    className={`hover:bg-[var(--cyber-bg-surface)]/30 transition-all duration-300 ${
-                      saving && editingId === product.id 
-                        ? 'bg-[var(--cyber-pink-subtle)] animate-pulse' 
-                        : ''
-                    }`}
-                    style={{
-                      background: isMatch ? 'rgba(236, 72, 153, 0.08)' : undefined
-                    }}
-                  >
-                    {/* Product Info */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {product.image ? (
-                          <img src={product.image} alt={product.name} className="w-10 h-10 rounded-cyber-lg object-cover" />
+                    <tr 
+                      key={product.id}
+                      className={`border-b border-white/5 transition-all duration-300 hover:bg-white/5 ${
+                        isMatch ? 'bg-pink-500/10' : ''
+                      } ${
+                        saving && editingId === product.id ? 'animate-pulse' : ''
+                      }`}
+                    >
+                      {/* Product Info */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+                            {product.image ? (
+                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package size={16} className="text-white/20" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-white truncate">{product.name}</p>
+                            <p className="text-[10px] text-white/40 truncate max-w-[200px]">{product.description || 'No description'}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Tier */}
+                      <td className="px-4 py-3">
+                        <span className="text-xs text-white/60">{product.tier_name || 'No tier'}</span>
+                      </td>
+
+                      {/* Price - Inline Editable */}
+                      <td className="px-4 py-3">
+                        {editingId === product.id ? (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={priceInput.formatted ? `Rp ${priceInput.formatted}` : ''}
+                              onChange={(e) => priceInput.handleChange(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  saveEdit();
+                                }
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              onBlur={() => {
+                                if (!saving && !saveTriggeredRef.current) {
+                                  cancelEditing();
+                                }
+                              }}
+                              className={`w-32 px-2 py-1 bg-white/5 border rounded-lg text-white text-xs ${
+                                saving 
+                                  ? 'border-pink-500 opacity-50 cursor-not-allowed' 
+                                  : 'border-pink-500 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500'
+                              }`}
+                              placeholder="Rp 0"
+                              autoFocus
+                              disabled={saving}
+                            />
+                            {saving && (
+                              <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-pink-400 animate-spin" />
+                            )}
+                          </div>
                         ) : (
-                          <div className="w-10 h-10 bg-[var(--cyber-bg-elevated)] rounded-cyber-lg flex items-center justify-center">
-                            <Package className="w-5 h-5 text-[var(--cyber-text-muted)]" />
+                          <div 
+                            className="cursor-pointer hover:bg-white/5 rounded px-2 py-1 transition-colors inline-block"
+                            onClick={() => startEditing(product)}
+                            title="Klik untuk edit harga"
+                          >
+                            <p className="text-sm font-bold text-pink-400">{formatCurrency(product.price ?? 0)}</p>
                           </div>
                         )}
-                        <div>
-                          <div className="font-medium text-white">{product.name}</div>
-                          <div className="text-xs text-[var(--cyber-text-muted)] truncate max-w-[200px]">
-                            {product.description || 'No description'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Tier - Display tier_name which is preserved */}
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-[var(--cyber-text-muted)]">
-                        {product.tier_name || 'No tier'}
-                      </span>
-                    </td>
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${getStatusStyle(product)}`}>
+                          {getStatusLabel(product)}
+                        </span>
+                      </td>
 
-                    {/* Price - INLINE EDITABLE */}
-                    <td className="px-4 py-3">
-                      {editingId === product.id ? (
-                        <div className="relative">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={priceInput.formatted ? `Rp ${priceInput.formatted}` : ''}
-                            onChange={(e) => priceInput.handleChange(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                saveEdit();
-                              }
-                              if (e.key === 'Escape') cancelEditing();
-                            }}
-                            onBlur={() => {
-                              // Only cancel if save wasn't triggered by Enter key
-                              if (!saving && !saveTriggeredRef.current) {
-                                cancelEditing();
-                              }
-                            }}
-                            className={`w-32 px-2 py-1 bg-[var(--cyber-bg-elevated)] border rounded-cyber-lg text-white text-sm transition-all ${
-                              saving 
-                                ? 'border-[var(--cyber-pink-primary)] opacity-50 cursor-not-allowed' 
-                                : 'border-[var(--cyber-pink-primary)] focus:border-[var(--cyber-pink-primary)] focus:ring-1 focus:ring-[var(--cyber-pink-primary)]'
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleViewProduct(product)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/5 text-white/70 hover:bg-white/10 transition-colors"
+                          >
+                            <Eye size={12} />
+                            <span>Lihat</span>
+                          </button>
+                          <button
+                            onClick={() => handleEditProduct(product)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                          >
+                            <Edit2 size={12} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => markSoldViaWA(product)}
+                            disabled={!!product.sold_channel || !product.is_active}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
+                              product.sold_channel || !product.is_active
+                                ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                : 'bg-pink-600/20 text-pink-400 hover:bg-pink-600/30'
                             }`}
-                            placeholder="Rp 0"
-                            autoFocus
-                            disabled={saving}
-                          />
-                          {saving && (
-                            <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--cyber-pink-primary)] animate-spin" />
-                          )}
-                          <div className="text-xs text-[var(--cyber-text-muted)] mt-1">Enter to save, Esc to cancel</div>
+                            title={
+                              product.sold_channel === 'web'
+                                ? 'Sudah terjual via Web'
+                                : product.sold_channel === 'wa'
+                                  ? 'Sudah terjual via WA'
+                                  : !product.is_active
+                                    ? 'Produk tidak aktif'
+                                    : 'Tandai terjual via WhatsApp'
+                            }
+                          >
+                            <CheckCircle size={12} />
+                            <span>WA</span>
+                          </button>
                         </div>
-                      ) : (
-                        <div 
-                          className="cursor-pointer hover:bg-[var(--cyber-bg-elevated)]/50 rounded p-1 transition-colors"
-                          onClick={() => startEditing(product)}
-                          title="Click to edit price"
-                        >
-                          <div className="font-bold text-white">
-                            {formatCurrency(product.price ?? 0)}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(product)}`}
-                      >
-                        {getStatusLabel(product)}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleViewProduct(product)}
-                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-[var(--cyber-bg-surface)] text-[var(--cyber-text-muted)] hover:bg-[var(--cyber-bg-elevated)] transition-colors"
-                        >
-                          Lihat
-                        </button>
-                        <button
-                          onClick={() => handleEditProduct(product)}
-                          className="px-3 py-1.5 rounded-cyber-lg text-xs font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        {/* Disable "Terjual via WA" button if product is already sold */}
-                        <button
-                          onClick={() => markSoldViaWA(product)}
-                          disabled={!!product.sold_channel || !product.is_active}
-                          className={`px-3 py-1.5 rounded-cyber-lg text-xs font-semibold transition-colors ${
-                            product.sold_channel || !product.is_active
-                              ? 'bg-[var(--cyber-bg-elevated)]/50 text-[var(--cyber-text-muted)] cursor-not-allowed'
-                              : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
-                          }`}
-                          title={
-                            product.sold_channel === 'web' 
-                              ? 'Produk sudah terjual via Web' 
-                              : product.sold_channel === 'wa'
-                                ? 'Produk sudah terjual via WA'
-                                : !product.is_active
-                                  ? 'Produk tidak aktif'
-                                  : 'Tandai sebagai terjual via WhatsApp'
-                          }
-                        >
-                          {product.sold_channel === 'web' 
-                            ? 'Terjual Web' 
-                            : product.sold_channel === 'wa' 
-                              ? 'Terjual WA'
-                              : 'Terjual via WA'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-              )}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* GRID VIEW - Responsive bento grid with 4:5 aspect ratio images */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          {products.map(product => {
+            const term = debouncedSearch.toLowerCase();
+            const isMatch = !!debouncedSearch && (
+              product.name?.toLowerCase().includes(term) ||
+              product.description?.toLowerCase().includes(term)
+            );
+
+            return (
+              <AdminBentoCard
+                key={product.id}
+                className={isMatch ? 'ring-2 ring-pink-500/50' : ''}
+              >
+                {/* Product Image - 4:5 aspect ratio */}
+                <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-white/5">
+                  {product.image ? (
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package size={32} className="text-white/20" />
+                    </div>
+                  )}
+                  
+                  {/* Status Badge */}
+                  <div className="absolute top-2 right-2">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${getStatusStyle(product)}`}>
+                      {getStatusLabel(product)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Product Info */}
+                <div className="space-y-2">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white truncate">{product.name}</h3>
+                    <p className="text-[10px] text-white/40 truncate">
+                      {product.tier_name || 'No tier'} • {product.description || 'No description'}
+                    </p>
+                  </div>
+
+                  {/* Price - Inline Editable */}
+                  {editingId === product.id ? (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={priceInput.formatted ? `Rp ${priceInput.formatted}` : ''}
+                        onChange={(e) => priceInput.handleChange(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            saveEdit();
+                          }
+                          if (e.key === 'Escape') cancelEditing();
+                        }}
+                        onBlur={() => {
+                          if (!saving && !saveTriggeredRef.current) {
+                            cancelEditing();
+                          }
+                        }}
+                        className={`w-full px-2 py-1 bg-white/5 border rounded-lg text-white text-xs ${
+                          saving 
+                            ? 'border-pink-500 opacity-50 cursor-not-allowed' 
+                            : 'border-pink-500 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500'
+                        }`}
+                        placeholder="Rp 0"
+                        autoFocus
+                        disabled={saving}
+                      />
+                      {saving && (
+                        <RefreshCw className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-pink-400 animate-spin" />
+                      )}
+                      <p className="text-[9px] text-white/40 mt-0.5">Enter = simpan, Esc = batal</p>
+                    </div>
+                  ) : (
+                    <div 
+                      className="cursor-pointer hover:bg-white/5 rounded p-1 transition-colors"
+                      onClick={() => startEditing(product)}
+                      title="Klik untuk edit harga"
+                    >
+                      <p className="text-lg font-bold text-pink-400">
+                        {formatCurrency(product.price ?? 0)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <button
+                      onClick={() => handleViewProduct(product)}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-white/5 text-white/70 hover:bg-white/10 transition-colors"
+                    >
+                      <Eye size={12} />
+                      <span>Lihat</span>
+                    </button>
+                    <button
+                      onClick={() => handleEditProduct(product)}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                    >
+                      <Edit2 size={12} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => markSoldViaWA(product)}
+                      disabled={!!product.sold_channel || !product.is_active}
+                      className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-colors ${
+                        product.sold_channel || !product.is_active
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          : 'bg-pink-600/20 text-pink-400 hover:bg-pink-600/30'
+                      }`}
+                      title={
+                        product.sold_channel === 'web'
+                          ? 'Sudah terjual via Web'
+                          : product.sold_channel === 'wa'
+                            ? 'Sudah terjual via WA'
+                            : !product.is_active
+                              ? 'Produk tidak aktif'
+                              : 'Tandai terjual via WhatsApp'
+                      }
+                    >
+                      <CheckCircle size={12} />
+                      <span>
+                        {product.sold_channel === 'web'
+                          ? 'Web'
+                          : product.sold_channel === 'wa'
+                            ? 'WA'
+                            : 'WA'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </AdminBentoCard>
+            );
+          })}
+        </div>
+      )}
 
       {/* Pagination */}
-      {totalCount > 0 && totalPages > 1 && (
+      {!loading && totalCount > 0 && totalPages > 1 && (
         <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}

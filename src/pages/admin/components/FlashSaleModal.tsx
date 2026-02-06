@@ -13,7 +13,6 @@ import { AdminModal } from './ui/AdminModal';
 import { AdminButton } from './ui/AdminButton';
 import { formatCurrency } from '../../../utils/helpers';
 import { usePriceInput } from '../../../hooks/usePriceInput';
-import { useKeyboardShortcuts, createModalShortcuts } from '../../../hooks/useKeyboardShortcuts';
 import { flashSaleValidation } from '../../../utils/adminValidation';
 import { useAdminProducts } from '../../../contexts/AdminDataContext';
 
@@ -67,18 +66,6 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-
-  // Keyboard shortcuts for power users
-  useKeyboardShortcuts({
-    enabled: isOpen,
-    shortcuts: createModalShortcuts({
-      onSave: () => {
-        const form = document.querySelector('form');
-        if (form) form.requestSubmit();
-      },
-      onCancel: onClose
-    })
-  });
 
   useEffect(() => {
     if (isOpen) {
@@ -243,11 +230,11 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
         actions={modalActions}
       >
         {/* Form */}
-        <form id="flash-sale-form" onSubmit={handleSubmit} className="space-y-6">
+        <form id="flash-sale-form" onSubmit={handleSubmit} className="space-y-3">
           {/* Product Selection */}
           <div>
             <label className="admin-label">
-              Produk <span className="text-red-500">*</span>
+              Produk <span className="text-[var(--admin-error)]">*</span>
             </label>
             {flashSale ? (
               // Edit mode - show selected product as read-only
@@ -281,7 +268,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="admin-label">
-                Harga Asli <span className="text-red-500">*</span>
+                Harga Asli <span className="text-[var(--admin-error)]">*</span>
               </label>
               <input
                 type="text"
@@ -301,7 +288,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
 
             <div>
               <label className="admin-label">
-                Harga Sale <span className="text-red-500">*</span>
+                Harga Sale <span className="text-[var(--admin-error)]">*</span>
               </label>
               <input
                 type="text"
@@ -329,7 +316,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="admin-label">
-                Waktu Mulai <span className="text-red-500">*</span>
+                Waktu Mulai <span className="text-[var(--admin-error)]">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -344,7 +331,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
 
             <div>
               <label className="admin-label">
-                Waktu Selesai <span className="text-red-500">*</span>
+                Waktu Selesai <span className="text-[var(--admin-error)]">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -365,7 +352,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => handleChange('isActive', e.target.checked)}
-              className="w-5 h-5 text-[var(--cyber-pink-primary)] border-slate-300 rounded focus:ring-[var(--cyber-pink-primary)]"
+              className="w-5 h-5 text-[var(--admin-accent)] border-[var(--admin-border)] rounded-cyber-sm bg-[var(--admin-bg-elevated)] focus:ring-[var(--admin-accent)] accent-[var(--admin-accent)]"
             />
             <label htmlFor="isActive" className="admin-label" style={{marginBottom: 0}}>
               Aktif (Flash sale akan ditampilkan ke pelanggan)

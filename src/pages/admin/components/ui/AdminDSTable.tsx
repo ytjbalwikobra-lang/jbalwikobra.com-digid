@@ -62,7 +62,7 @@ function actionBtnClass(variant: DSTableAction['variant']) {
     case 'primary':
       return `${base} bg-ds-pink text-white hover:bg-ds-pink/90`;
     case 'danger':
-      return `${base} bg-red-500 text-white hover:bg-red-600`;
+      return `${base} bg-[var(--admin-error)] text-white hover:bg-[var(--admin-error)]/80`;
     case 'secondary':
     default:
       return `${base} bg-[var(--bg-tertiary)] text-ds-text-secondary hover:text-ds-text hover:bg-[var(--bg-secondary)]`;

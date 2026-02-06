@@ -44,21 +44,21 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
             className={`w-4 h-4 ${
               i < rating
                 ? 'text-yellow-400 fill-yellow-400'
-                : 'text-[var(--cyber-text-muted)]'
+                : 'text-[var(--admin-text-muted)]'
             }`}
           />
         ))}
-        <span className="ml-1 text-sm text-[var(--cyber-text-muted)]">({rating})</span>
+        <span className="ml-1 text-sm text-[var(--admin-text-muted)]">({rating})</span>
       </div>
     );
   };
 
   if (loading) {
     return (
-      <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-6">
+      <div className="bg-[var(--admin-primary)] border border-[var(--admin-border)] rounded-cyber-2xl p-6">
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 bg-[var(--cyber-bg-card)] rounded-cyber-lg animate-pulse" />
+            <div key={i} className="h-16 bg-[var(--admin-tertiary)] rounded-cyber-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -67,42 +67,42 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
 
   if (!reviews.length) {
     return (
-      <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl p-12">
+      <div className="bg-[var(--admin-primary)] border border-[var(--admin-border)] rounded-cyber-2xl p-12">
         <div className="text-center">
-          <div className="w-16 h-16 bg-[var(--cyber-bg-card)]/50 border border-[var(--cyber-border)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-8 h-8 text-[var(--cyber-text-muted)]" />
+          <div className="w-16 h-16 bg-[var(--admin-tertiary)]/50 border border-[var(--admin-border)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageSquare className="w-8 h-8 text-[var(--admin-text-muted)]" />
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">No Reviews Found</h3>
-          <p className="text-[var(--cyber-text-muted)]">No customer reviews match your current filters.</p>
+          <p className="text-[var(--admin-text-muted)]">No customer reviews match your current filters.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-2xl overflow-hidden">
+    <div className="bg-[var(--admin-primary)] border border-[var(--admin-border)] rounded-cyber-2xl overflow-hidden">
       {/* Desktop Table View */}
       <div className="hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[var(--cyber-bg-pure)]/50 border-b border-[var(--cyber-border)]">
+            <thead className="bg-[var(--admin-primary)]/50 border-b border-[var(--admin-border)]">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--cyber-text-secondary)]">Customer</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--cyber-text-secondary)]">Product</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--cyber-text-secondary)]">Rating</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--cyber-text-secondary)]">Review</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--cyber-text-secondary)]">Date</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-[var(--cyber-text-secondary)]">Actions</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--admin-text-secondary)]">Customer</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--admin-text-secondary)]">Product</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--admin-text-secondary)]">Rating</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--admin-text-secondary)]">Review</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-[var(--admin-text-secondary)]">Date</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-[var(--admin-text-secondary)]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--cyber-border)]">
+            <tbody className="divide-y divide-[var(--admin-border)]">
               {reviews.map((review) => (
-                <tr key={review.id} className="hover:bg-[var(--cyber-bg-card)]/30 transition-colors duration-200">
+                <tr key={review.id} className="hover:bg-[var(--admin-tertiary)]/30 transition-colors duration-200">
                   {/* Customer */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[var(--cyber-bg-card)] rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-[var(--cyber-text-muted)]" />
+                      <div className="w-10 h-10 bg-[var(--admin-tertiary)] rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-[var(--admin-text-muted)]" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-white">
@@ -118,7 +118,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
                   {/* Product */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-[var(--cyber-text-muted)]" />
+                      <Package className="w-4 h-4 text-[var(--admin-text-muted)]" />
                       <span className="text-sm text-white font-medium">
                         {review.product_name || 'produk akun game'}
                       </span>
@@ -133,7 +133,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
                   {/* Review */}
                   <td className="px-6 py-4">
                     <div className="max-w-xs">
-                      <p className="text-sm text-[var(--cyber-text-secondary)] truncate">
+                      <p className="text-sm text-[var(--admin-text-secondary)] truncate">
                         {review.comment}
                       </p>
                       {review.helpful_count && review.helpful_count > 0 && (
@@ -146,7 +146,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
 
                   {/* Date */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2 text-sm text-[var(--cyber-text-muted)]">
+                    <div className="flex items-center gap-2 text-sm text-[var(--admin-text-muted)]">
                       <Calendar className="w-4 h-4" />
                       {formatDate(review.created_at)}
                     </div>
@@ -157,19 +157,19 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onView(review)}
-                        className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-all duration-200"
+                        className="p-2 text-[var(--admin-text-muted)] hover:text-white hover:bg-[var(--admin-tertiary)] rounded-cyber-lg transition-all duration-200"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onEdit(review)}
-                        className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-all duration-200"
+                        className="p-2 text-[var(--admin-text-muted)] hover:text-white hover:bg-[var(--admin-tertiary)] rounded-cyber-lg transition-all duration-200"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(review)}
-                        className="p-2 text-[var(--cyber-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-cyber-lg transition-all duration-200"
+                        className="p-2 text-[var(--admin-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-cyber-lg transition-all duration-200"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -185,18 +185,18 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
       {/* Mobile Card View */}
       <div className="lg:hidden p-4 space-y-4">
         {reviews.map((review) => (
-          <div key={review.id} className="bg-[var(--cyber-bg-card)]/30 rounded-cyber-lg p-4 border border-[var(--cyber-border)]">
+          <div key={review.id} className="bg-[var(--admin-tertiary)]/30 rounded-cyber-lg p-4 border border-[var(--admin-border)]">
             {/* Mobile Review Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[var(--cyber-bg-card)] rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-[var(--cyber-text-muted)]" />
+                <div className="w-10 h-10 bg-[var(--admin-tertiary)] rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-[var(--admin-text-muted)]" />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-white">
                     {review.user_name || 'Unknown User'}
                   </div>
-                  <div className="text-xs text-[var(--cyber-text-muted)]">
+                  <div className="text-xs text-[var(--admin-text-muted)]">
                     {formatDate(review.created_at)}
                   </div>
                   {review.is_verified && (
@@ -209,7 +209,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
 
             {/* Product Info */}
             <div className="flex items-center gap-2 mb-3">
-              <Package className="w-4 h-4 text-[var(--cyber-text-muted)]" />
+              <Package className="w-4 h-4 text-[var(--admin-text-muted)]" />
               <span className="text-sm text-white font-medium">
                 {review.product_name || 'produk akun game'}
               </span>
@@ -217,7 +217,7 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
 
             {/* Review Text */}
             <div className="mb-4">
-              <p className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--admin-text-secondary)] leading-relaxed">
                 {review.comment}
               </p>
               {review.helpful_count && review.helpful_count > 0 && (
@@ -231,20 +231,20 @@ export const ReviewsTable: React.FC<ReviewsTableProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onView(review)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[var(--cyber-bg-card)] text-[var(--cyber-text-secondary)] rounded-cyber-lg hover:bg-[var(--cyber-bg-elevated)] transition-all duration-200"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[var(--admin-tertiary)] text-[var(--admin-text-secondary)] rounded-cyber-lg hover:bg-[var(--admin-primary-lighter)] transition-all duration-200"
               >
                 <Eye className="w-4 h-4" />
                 View
               </button>
               <button
                 onClick={() => onEdit(review)}
-                className="p-2 text-[var(--cyber-text-muted)] hover:text-white hover:bg-[var(--cyber-bg-card)] rounded-cyber-lg transition-all duration-200"
+                className="p-2 text-[var(--admin-text-muted)] hover:text-white hover:bg-[var(--admin-tertiary)] rounded-cyber-lg transition-all duration-200"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDelete(review)}
-                className="p-2 text-[var(--cyber-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-cyber-lg transition-all duration-200"
+                className="p-2 text-[var(--admin-text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-cyber-lg transition-all duration-200"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

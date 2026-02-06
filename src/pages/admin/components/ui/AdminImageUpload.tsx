@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Upload, X, RefreshCw, GripVertical, AlertCircle } from 'lucide-react';
+import { Plus, X, RefreshCw, GripVertical, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { uploadFiles, UploadResult } from '../../../../services/storageService';
 // Design system: cyber-compact.css (loaded via index.css)
 
@@ -37,17 +37,16 @@ export interface AdminImageUploadProps {
   readOnly?: boolean;
   /** Show primary image badge on first image */
   showPrimaryBadge?: boolean;
-  /** Grid columns for image display */
-  gridCols?: number;
+  /** Size of image tiles: 'sm' (h-20 w-20), 'md' (h-24 w-24), 'lg' (h-32 w-32) */
+  tileSize?: 'sm' | 'md' | 'lg';
 }
 
 /**
- * Unified Admin Image Upload Component
- * - Follows admin design system v3
- * - Drag and drop support
- * - Multi-file upload with progress
- * - Reorder via drag
- * - Error handling with retry
+ * Compact Admin Image Upload Component - Shopee-Style Grid
+ * - Horizontal scrollable grid of small squares
+ * - First square is the "Add Photo" button
+ * - Subsequent squares are uploaded images with remove/reorder
+ * - Follows Cyber Compact design system
  */
 export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   images,
@@ -59,17 +58,29 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   disabled = false,
   onUploadingChange,
   label,
-  helpText = 'Drag & drop or click to upload. Max size per file: 5MB',
+  helpText,
   readOnly = false,
   showPrimaryBadge = true,
-  gridCols = 6,
+  tileSize = 'md',
 }) => {
   const [localImages, setLocalImages] = useState<ImageItem[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragItemIndex = useRef<number | null>(null);
+
+  // CRITICAL: Use ref to track latest images prop to avoid stale closure issues
+  const imagesRef = useRef<string[]>(images);
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
+  // Tile size classes
+  const tileSizeClass = {
+    sm: 'h-20 w-20',
+    md: 'h-24 w-24',
+    lg: 'h-32 w-32',
+  }[tileSize];
 
   // Generate unique ID
   const generateId = () => `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -111,10 +122,16 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
     onUploadingChange?.(uploading);
   }, [uploading, onUploadingChange]);
 
-  // Cleanup blob URLs on unmount
+  // Use ref to track localImages for cleanup to avoid stale closure
+  const localImagesRef = useRef<ImageItem[]>(localImages);
+  useEffect(() => {
+    localImagesRef.current = localImages;
+  }, [localImages]);
+
+  // Cleanup blob URLs on unmount - using ref to get current value
   useEffect(() => {
     return () => {
-      localImages.forEach((li) => {
+      localImagesRef.current.forEach((li) => {
         if (li.tempUrl?.startsWith('blob:')) {
           URL.revokeObjectURL(li.tempUrl);
         }
@@ -130,20 +147,39 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       const acceptedTypes = accept.split(',').map((t) => t.trim());
 
       const remaining = maxImages - images.length;
+      console.log('[AdminImageUpload] validateFiles - remaining slots:', remaining, 'files to validate:', files.length);
+
       if (files.length > remaining) {
         errors.push(`Can only add ${remaining} more image(s)`);
         files = files.slice(0, remaining);
       }
 
       files.forEach((file) => {
-        if (!acceptedTypes.some((t) => file.type === t || t === '*')) {
+        console.log('[AdminImageUpload] Validating file:', file.name, 'type:', file.type, 'size:', file.size);
+
+        // Normalize MIME type - browsers can report different types for same format
+        const normalizedType = file.type.toLowerCase();
+        const isValidType = acceptedTypes.some((t) => {
+          const acceptType = t.toLowerCase();
+          if (normalizedType === acceptType) return true;
+          if (acceptType === 'image/jpeg' && (normalizedType === 'image/jpg' || normalizedType === 'image/pjpeg')) return true;
+          if (acceptType === '*' || acceptType === 'image/*') return true;
+          const ext = file.name.split('.').pop()?.toLowerCase();
+          if (ext && acceptType.includes(ext)) return true;
+          return false;
+        });
+
+        if (!isValidType) {
+          console.warn('[AdminImageUpload] File rejected - invalid type:', file.name, file.type);
           errors.push(`${file.name}: Invalid file type`);
           return;
         }
         if (file.size > maxBytes) {
+          console.warn('[AdminImageUpload] File rejected - too large:', file.name, file.size);
           errors.push(`${file.name}: Exceeds ${maxSizeMB}MB limit`);
           return;
         }
+        console.log('[AdminImageUpload] File accepted:', file.name);
         valid.push(file);
       });
 
@@ -156,6 +192,7 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
     if (files.length === 0) return;
 
     const { valid, errors } = validateFiles(files);
+
     if (errors.length > 0) {
       setError(errors.join('. '));
       setTimeout(() => setError(null), 5000);
@@ -194,16 +231,25 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
         }
       );
 
-      // Update local items with results
       const successfulUrls: string[] = [];
+      const uploadErrors: string[] = [];
+
+      results.forEach((result, idx) => {
+        const file = valid[idx];
+        if (result?.success && result?.url) {
+          successfulUrls.push(result.url);
+        } else if (result?.error) {
+          uploadErrors.push(`${file?.name || 'Unknown'}: ${result.error}`);
+        }
+      });
+
       setLocalImages((prev) =>
         prev.map((li) => {
           if (li.file && li.status === 'uploading') {
             const idx = valid.indexOf(li.file);
             if (idx !== -1) {
               const result = results[idx];
-              if (result?.url) {
-                successfulUrls.push(result.url);
+              if (result?.success && result?.url) {
                 return { ...li, url: result.url, status: 'success', progress: 100 };
               } else {
                 return { ...li, status: 'error', progress: 0 };
@@ -214,9 +260,14 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
         })
       );
 
-      // Update parent with new URLs
+      if (uploadErrors.length > 0) {
+        setError(uploadErrors.join('. '));
+        setTimeout(() => setError(null), 10000);
+      }
+
       if (successfulUrls.length > 0) {
-        onChange([...images, ...successfulUrls]);
+        const currentImages = imagesRef.current;
+        onChange([...currentImages, ...successfulUrls]);
       }
     } catch (err) {
       console.error('[AdminImageUpload] Upload failed:', err);
@@ -237,25 +288,31 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
       prev.map((li) => (li.id === id ? { ...li, status: 'uploading', progress: 0 } : li))
     );
     setUploading(true);
+    setError(null);
 
     try {
       const [result] = await uploadFiles([item.file], bucket);
-      if (result?.url) {
+      if (result?.success && result?.url) {
         setLocalImages((prev) =>
           prev.map((li) =>
             li.id === id ? { ...li, url: result.url, status: 'success', progress: 100 } : li
           )
         );
-        onChange([...images, result.url]);
+        const currentImages = imagesRef.current;
+        onChange([...currentImages, result.url]);
       } else {
         setLocalImages((prev) =>
           prev.map((li) => (li.id === id ? { ...li, status: 'error', progress: 0 } : li))
         );
+        setError(result?.error || 'Upload failed.');
+        setTimeout(() => setError(null), 10000);
       }
     } catch {
       setLocalImages((prev) =>
         prev.map((li) => (li.id === id ? { ...li, status: 'error', progress: 0 } : li))
       );
+      setError('Upload failed.');
+      setTimeout(() => setError(null), 10000);
     } finally {
       setUploading(false);
     }
@@ -265,14 +322,12 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
     const item = localImages.find((li) => li.id === id);
     if (!item) return;
 
-    // Revoke blob URL if exists
     if (item.tempUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(item.tempUrl);
     }
 
     setLocalImages((prev) => prev.filter((li) => li.id !== id));
 
-    // Remove from parent if it was successful
     if (item.status === 'success' && item.url) {
       onChange(images.filter((url) => url !== item.url));
     }
@@ -284,7 +339,6 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   const handleDragStart = (e: React.DragEvent, index: number) => {
     dragItemIndex.current = index;
     e.dataTransfer.effectAllowed = 'move';
-    // Add drag image styling
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '0.5';
     }
@@ -323,13 +377,11 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   const handleDragEnd = (e: React.DragEvent) => {
     dragItemIndex.current = null;
     setDragOverIndex(null);
-    // Reset opacity
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '1';
     }
   };
 
-  // File input handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       handleUpload(Array.from(e.target.files));
@@ -337,51 +389,37 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
     }
   };
 
-  // Drop zone handlers
-  const handleDropZoneDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files.length > 0) {
-      handleUpload(Array.from(e.dataTransfer.files));
-    }
-  };
-
   const successfulImages = localImages.filter((li) => li.status === 'success');
   const uploadingImages = localImages.filter((li) => li.status === 'uploading' || li.status === 'pending');
   const errorImages = localImages.filter((li) => li.status === 'error');
+  const canAddMore = images.length < maxImages && !disabled;
 
-  // Dynamic grid columns class
-  const gridColsClass = {
-    3: 'grid-cols-3',
-    4: 'grid-cols-3 sm:grid-cols-4',
-    5: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5',
-    6: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6',
-  }[gridCols] || 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6';
-
-  // View-only mode: just display images
+  // View-only mode: just display images in a compact grid
   if (readOnly) {
     return (
-      <div className="space-y-4">
-        {label && <label className="admin-label">{label}</label>}
+      <div className="space-y-2">
+        {label && <label className="admin-label text-sm">{label}</label>}
         
         {successfulImages.length === 0 ? (
-          <p className="text-[var(--cyber-text-muted)] text-sm">No images</p>
+          <div className="flex items-center gap-2 text-[var(--admin-text-muted)] text-sm">
+            <ImageIcon size={16} />
+            <span>No images</span>
+          </div>
         ) : (
-          <div className={`grid ${gridColsClass} gap-3`}>
+          <div className="flex flex-wrap gap-2">
             {successfulImages.map((item, index) => (
               <div
                 key={item.id}
-                className="relative aspect-square rounded-cyber-lg overflow-hidden bg-[var(--cyber-bg-elevated)] border border-[var(--cyber-border)]"
+                className={`relative ${tileSizeClass} rounded-lg overflow-hidden bg-[var(--admin-bg-elevated)] border border-[var(--admin-border)] flex-shrink-0`}
               >
                 <img
                   src={item.url}
                   alt={`Image ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
-                {/* Primary badge */}
                 {showPrimaryBadge && index === 0 && (
-                  <div className="absolute top-1 left-1 bg-[var(--cyber-pink-primary)] text-white text-xs px-2 py-0.5 rounded">
-                    Primary
+                  <div className="absolute top-1 left-1 bg-[var(--admin-accent)] text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                    Main
                   </div>
                 )}
               </div>
@@ -393,169 +431,170 @@ export const AdminImageUpload: React.FC<AdminImageUploadProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {label && <label className="admin-label">{label}</label>}
+    <div className="space-y-2">
+      {label && <label className="admin-label text-sm">{label}</label>}
 
-      {/* Drop Zone */}
-      <div
-        className={`
-          border-2 border-dashed rounded-cyber-lg p-6 text-center transition-all cursor-pointer
-          ${dragOver ? 'border-[var(--cyber-pink-primary)] bg-[var(--cyber-pink-primary)]/10' : 'border-[var(--cyber-text-disabled)] bg-[var(--cyber-bg-elevated)]/50'}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[var(--cyber-pink-primary)]/50 hover:bg-[var(--cyber-bg-elevated)]'}
-        `}
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (!disabled) setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDropZoneDrop}
-        onClick={() => !disabled && inputRef.current?.click()}
-      >
-        <Upload className="h-8 w-8 text-[var(--cyber-text-muted)] mx-auto mb-3" />
-        <p className="text-[var(--cyber-text-secondary)] mb-2">
-          {uploading ? 'Uploading...' : 'Drag & drop images here'}
-        </p>
-        <button
-          type="button"
-          className="admin-btn admin-btn-primary"
-          disabled={disabled || uploading}
-          onClick={(e) => {
-            e.stopPropagation();
-            inputRef.current?.click();
-          }}
-        >
-          Select Images
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          multiple
-          className="hidden"
-          onChange={handleFileChange}
-          disabled={disabled}
-        />
-        <p className="text-xs text-[var(--cyber-text-muted)] mt-2">
-          {helpText} ({images.length}/{maxImages})
-        </p>
+      {/* Compact Horizontal Grid - Shopee Style */}
+      <div className="flex flex-wrap gap-2">
+        {/* Add Photo Button - First Tile */}
+        {canAddMore && (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={disabled || uploading}
+            className={`
+              ${tileSizeClass} flex-shrink-0
+              flex flex-col items-center justify-center gap-1
+              border-2 border-dashed rounded-lg
+              transition-all duration-200 cursor-pointer
+              ${uploading
+                ? 'border-[var(--admin-accent)] bg-[var(--admin-accent)]/10 cursor-wait'
+                : 'border-[var(--admin-border-light)] hover:border-[var(--admin-accent)] hover:bg-[var(--admin-accent)]/5'
+              }
+              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+          >
+            <Plus 
+              size={24} 
+              className={`${uploading ? 'text-[var(--admin-accent)] animate-pulse' : 'text-[var(--admin-text-muted)]'}`} 
+            />
+            <span className="text-[10px] text-[var(--admin-text-muted)] font-medium">
+              {uploading ? 'Uploading...' : `Add (${images.length}/${maxImages})`}
+            </span>
+          </button>
+        )}
+
+        {/* Successful Images */}
+        {successfulImages.map((item, index) => (
+          <div
+            key={item.id}
+            className={`
+              relative ${tileSizeClass} flex-shrink-0 rounded-lg overflow-hidden
+              bg-[var(--admin-bg-elevated)] border group cursor-move transition-all duration-150
+              ${dragOverIndex === index ? 'border-[var(--admin-accent)] border-2 scale-105 shadow-lg' : 'border-[var(--admin-border)]'}
+              ${dragItemIndex.current === index ? 'opacity-50' : ''}
+            `}
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={handleDragLeaveImage}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragEnd={handleDragEnd}
+          >
+            <img
+              src={item.url}
+              alt={`Image ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <GripVertical className="absolute top-1 left-1 h-4 w-4 text-white/70" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove(item.id);
+                }}
+                className="p-1.5 bg-gradient-to-br from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 rounded shadow-lg transition-all duration-200 hover:scale-110 text-white flex items-center justify-center"
+                title="Remove"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* Primary badge */}
+            {showPrimaryBadge && index === 0 && (
+              <div className="absolute top-1 left-1 bg-[var(--admin-accent)] text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                Main
+              </div>
+            )}
+            {/* Index badge */}
+            <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
+              {index + 1}
+            </div>
+          </div>
+        ))}
+
+        {/* Uploading Tiles */}
+        {uploadingImages.map((item) => (
+          <div
+            key={item.id}
+            className={`relative ${tileSizeClass} flex-shrink-0 rounded-lg overflow-hidden bg-[var(--admin-bg-elevated)] border border-[var(--admin-border)]`}
+          >
+            {item.tempUrl && (
+              <img src={item.tempUrl} alt="Uploading" className="w-full h-full object-cover opacity-50" />
+            )}
+            {/* Progress Overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+              <div className="w-3/4 h-1.5 bg-[var(--admin-bg-card)] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[var(--admin-accent)] transition-all duration-300"
+                  style={{ width: `${item.progress}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-white mt-1">{item.progress}%</span>
+            </div>
+          </div>
+        ))}
+
+        {/* Error Tiles */}
+        {errorImages.map((item) => (
+          <div
+            key={item.id}
+            className={`relative ${tileSizeClass} flex-shrink-0 rounded-lg overflow-hidden bg-[var(--admin-error)]/10 border border-[var(--admin-error)]/30`}
+          >
+            {item.tempUrl && (
+              <img src={item.tempUrl} alt="Failed" className="w-full h-full object-cover opacity-30" />
+            )}
+            {/* Error Overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+              <AlertCircle className="h-5 w-5 text-[var(--admin-error)]" />
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleRetry(item.id)}
+                  className="p-1 bg-[var(--admin-bg-card)] hover:bg-[var(--admin-bg-elevated)] rounded text-[var(--admin-text-secondary)] flex items-center justify-center"
+                  title="Retry"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(item.id)}
+                  className="p-1 bg-[var(--admin-bg-card)] hover:bg-[var(--admin-error)] rounded text-[var(--admin-text-secondary)] flex items-center justify-center"
+                  title="Remove"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Error message */}
+      {/* Hidden File Input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={disabled}
+      />
+
+      {/* Error Message */}
       {error && (
-        <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-cyber-lg">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+        <div className="flex items-center gap-2 text-[var(--admin-error)] text-xs bg-[var(--admin-error)]/10 px-3 py-2 rounded-lg">
+          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Uploading items */}
-      {uploadingImages.length > 0 && (
-        <div className="space-y-2">
-          {uploadingImages.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 bg-[var(--cyber-bg-elevated)] p-3 rounded-cyber-lg">
-              <div className="w-12 h-12 bg-[var(--cyber-bg-card)] rounded overflow-hidden">
-                {item.tempUrl && (
-                  <img src={item.tempUrl} alt="Uploading" className="w-full h-full object-cover" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="h-2 bg-[var(--cyber-bg-card)] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[var(--cyber-pink-primary)] transition-all duration-300"
-                    style={{ width: `${item.progress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-[var(--cyber-text-muted)] mt-1">Uploading... {item.progress}%</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Error items */}
-      {errorImages.length > 0 && (
-        <div className="space-y-2">
-          {errorImages.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 bg-red-500/10 p-3 rounded-cyber-lg border border-red-500/30">
-              <div className="w-12 h-12 bg-[var(--cyber-bg-card)] rounded overflow-hidden">
-                {item.tempUrl && (
-                  <img src={item.tempUrl} alt="Failed" className="w-full h-full object-cover opacity-50" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-red-400">Upload failed</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleRetry(item.id)}
-                  className="p-2 bg-[var(--cyber-bg-card)] hover:bg-[var(--cyber-bg-elevated)] rounded-cyber-lg text-[var(--cyber-text-secondary)]"
-                  title="Retry"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(item.id)}
-                  className="p-2 bg-[var(--cyber-bg-card)] hover:bg-red-600 rounded-cyber-lg text-[var(--cyber-text-secondary)]"
-                  title="Remove"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Successful images grid */}
-      {successfulImages.length > 0 && (
-        <div className={`grid ${gridColsClass} gap-3`}>
-          {successfulImages.map((item, index) => (
-            <div
-              key={item.id}
-              className={`
-                relative aspect-square rounded-cyber-lg overflow-hidden bg-[var(--cyber-bg-elevated)] border group cursor-move transition-all
-                ${dragOverIndex === index ? 'border-[var(--cyber-pink-primary)] border-2 scale-105' : 'border-[var(--cyber-border)]'}
-                ${dragItemIndex.current === index ? 'opacity-50' : ''}
-              `}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragLeave={handleDragLeaveImage}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
-            >
-              <img
-                src={item.url}
-                alt={`Image ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <GripVertical className="h-5 w-5 text-white/70 absolute top-2 left-2" />
-                <button
-                  type="button"
-                  onClick={() => handleRemove(item.id)}
-                  className="p-2 bg-red-600 hover:bg-red-700 rounded-cyber-lg text-white"
-                  title="Remove image"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              {/* Primary badge */}
-              {showPrimaryBadge && index === 0 && (
-                <div className="absolute top-1 left-1 bg-[var(--cyber-pink-primary)] text-white text-xs px-2 py-0.5 rounded">
-                  Primary
-                </div>
-              )}
-              {/* Index badge */}
-              <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
-                {index + 1}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Help Text */}
+      {helpText && (
+        <p className="text-[10px] text-[var(--admin-text-muted)]">
+          {helpText}
+        </p>
       )}
     </div>
   );

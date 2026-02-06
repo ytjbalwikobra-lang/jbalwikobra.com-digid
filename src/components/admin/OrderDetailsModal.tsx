@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { X, Package, User, Calendar, CreditCard, Phone } from 'lucide-react';
-import { AdminColors } from '../../pages/admin/design-tokens';
 import { cn } from '../../utils/cn';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
 import { formatCurrency } from '../../utils/helpers';
@@ -147,13 +146,13 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     switch (status) {
       case 'paid':
       case 'completed':
-        return AdminColors.success.DEFAULT;
+        return 'var(--admin-success)';
       case 'pending':
-        return AdminColors.warning.DEFAULT;
+        return 'var(--admin-warning)';
       case 'cancelled':
-        return AdminColors.error.DEFAULT;
+        return 'var(--admin-error)';
       default:
-        return AdminColors.text.secondary;
+        return 'var(--admin-text-secondary)';
     }
   };
 
@@ -176,75 +175,75 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
   return (
     <>
-      {/* Backdrop - ISO 9241-151: Modal overlay */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal - ISO 9241-110: Dialog container */}
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      {/* Modal Container - Same behavior as AdminModal */}
+      <div 
+        className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="order-details-title"
       >
-        <div
-          className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl"
-          style={{
-            background: AdminColors.primary.DEFAULT,
-            border: `2px solid ${AdminColors.border.DEFAULT}`,
-            boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px ${AdminColors.accent.DEFAULT}20`
-          }}
-          onClick={(e) => e.stopPropagation()}
+        <div 
+          className="w-full max-w-2xl max-h-[85vh] my-auto flex flex-col animate-in fade-in-0 zoom-in-95 duration-200"
         >
+          <div
+            className="flex flex-col max-h-full overflow-hidden rounded-xl lg:rounded-2xl shadow-2xl"
+            style={{
+              background: 'var(--admin-primary)',
+              border: '2px solid var(--admin-border)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(236, 72, 153, 0.125)'
+            }}
+          >
           {/* Header */}
           <div
-            className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b"
+            className="flex items-center justify-between px-4 py-2 border-b"
             style={{
-              background: `linear-gradient(135deg, ${AdminColors.primary.DEFAULT} 0%, ${AdminColors.primary.light} 100%)`,
-              borderColor: AdminColors.border.DEFAULT,
-              backdropFilter: 'blur(10px)'
+              background: 'linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-light) 100%)',
+              borderColor: 'var(--admin-border)'
             }}
           >
             <div className="flex items-center gap-3">
               <div
-                className="p-2 rounded-cyber-lg"
+                className="p-1.5 rounded-cyber-lg flex items-center justify-center"
                 style={{
-                  background: AdminColors.primary.lighter,
-                  color: AdminColors.primary.DEFAULT
+                  background: 'var(--admin-primary-lighter)',
+                  color: 'var(--admin-primary)'
                 }}
               >
-                <Package size={20} />
+                <Package size={16} />
               </div>
               <h2
                 id="order-details-title"
                 className="text-lg font-semibold"
-                style={{ color: AdminColors.text.primary }}
+                style={{ color: 'var(--admin-text)' }}
               >
                 Detail Order
               </h2>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 rounded-cyber-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="p-1.5 rounded-cyber-lg transition-all duration-200 hover:bg-[var(--admin-bg-elevated)] flex items-center justify-center"
               style={{
-                background: `${AdminColors.accent.DEFAULT}15`,
-                color: AdminColors.accent.DEFAULT,
-                border: `1px solid ${AdminColors.accent.DEFAULT}30`
+                background: 'rgba(236, 72, 153, 0.082)',
+                color: 'var(--admin-accent)',
+                border: '1px solid rgba(236, 72, 153, 0.188)'
               }}
               aria-label="Tutup modal"
             >
-              <X size={20} />
+              <X size={16} />
             </button>
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
+          <div className="flex-1 overflow-y-auto p-4 cyber-scrollbar">
             {loading && (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: AdminColors.primary.DEFAULT }} />
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: 'var(--admin-primary)' }} />
               </div>
             )}
 
@@ -252,8 +251,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <div
                 className="p-4 rounded-xl text-center"
                 style={{
-                  background: AdminColors.error.bg,
-                  color: AdminColors.error.DEFAULT
+                  background: 'var(--admin-error-bg)',
+                  color: 'var(--admin-error)'
                 }}
               >
                 {error.message || 'Gagal memuat detail order'}
@@ -261,7 +260,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             )}
 
             {order && !loading && (
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {/* Product Image & Basic Info */}
                 <div className="flex gap-4">
                   {/* Egress optimization: Use thumbnail or placeholder if no image */}
@@ -270,25 +269,25 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       src={order.product_image}
                       alt={order.product_name}
                       className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
-                      style={{ border: `1px solid ${AdminColors.border.DEFAULT}` }}
+                      style={{ border: '1px solid var(--admin-border)' }}
                       loading="lazy"
                     />
                   ) : (
                     <div
                       className="w-24 h-24 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: AdminColors.background.secondary,
-                        border: `1px solid ${AdminColors.border.DEFAULT}`
+                        background: 'var(--admin-primary-light)',
+                        border: '1px solid var(--admin-border)'
                       }}
                     >
-                      <Package size={32} style={{ color: AdminColors.text.tertiary }} />
+                      <Package size={32} style={{ color: 'var(--admin-text-tertiary)' }} />
                     </div>
                   )}
 
                   <div className="flex-1 min-w-0">
                     <h3
                       className="text-lg font-semibold mb-1"
-                      style={{ color: AdminColors.text.primary }}
+                      style={{ color: 'var(--admin-text)' }}
                     >
                       {order.product_name}
                     </h3>
@@ -297,11 +296,11 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         className="px-3 py-1 rounded-full text-xs font-medium"
                         style={{
                           background: order.order_type === 'rental' 
-                            ? `${AdminColors.info.DEFAULT}20`
-                            : `${AdminColors.success.DEFAULT}20`,
+                            ? 'rgba(59, 130, 246, 0.125)'
+                            : 'rgba(16, 185, 129, 0.125)',
                           color: order.order_type === 'rental' 
-                            ? AdminColors.info.DEFAULT
-                            : AdminColors.success.DEFAULT
+                            ? 'var(--admin-info)'
+                            : 'var(--admin-success)'
                         }}
                       >
                         {order.order_type === 'rental' ? '🎮 RENTAL' : '🛒 PURCHASE'}
@@ -318,7 +317,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     </div>
                     <p
                       className="text-2xl font-bold"
-                      style={{ color: AdminColors.success.DEFAULT }}
+                      style={{ color: 'var(--admin-success)' }}
                     >
                       {formatCurrency(order.amount)}
                     </p>
@@ -330,13 +329,13 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   <div
                     className="p-4 rounded-cyber-lg"
                     style={{
-                      background: AdminColors.info.bg,
-                      border: `1px solid ${AdminColors.info.border}`
+                      background: 'var(--admin-info-bg)',
+                      border: '1px solid var(--admin-info-border)'
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Calendar size={16} style={{ color: AdminColors.info.DEFAULT }} />
-                      <span className="text-sm font-medium" style={{ color: AdminColors.info.DEFAULT }}>
+                      <Calendar size={16} style={{ color: 'var(--admin-info)' }} />
+                      <span className="text-sm font-medium" style={{ color: 'var(--admin-info)' }}>
                         Durasi Rental: {order.rental_duration}
                       </span>
                     </div>
@@ -347,17 +346,17 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <div>
                   <h4
                     className="text-sm font-semibold mb-3 flex items-center gap-2"
-                    style={{ color: AdminColors.text.primary }}
+                    style={{ color: 'var(--admin-text)' }}
                   >
                     <User size={16} />
                     Informasi Customer
                   </h4>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <User size={16} className="mt-1 flex-shrink-0" style={{ color: AdminColors.text.tertiary }} />
+                      <User size={16} className="mt-1 flex-shrink-0" style={{ color: 'var(--admin-text-tertiary)' }} />
                       <div>
-                        <p className="text-xs" style={{ color: AdminColors.text.tertiary }}>Nama</p>
-                        <p className="text-sm font-medium" style={{ color: AdminColors.text.primary }}>
+                        <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>Nama</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
                           {order.customer_name}
                         </p>
                       </div>
@@ -365,10 +364,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
                     {order.customer_phone && (
                       <div className="flex items-start gap-3">
-                        <Phone size={16} className="mt-1 flex-shrink-0" style={{ color: AdminColors.text.tertiary }} />
+                        <Phone size={16} className="mt-1 flex-shrink-0" style={{ color: 'var(--admin-text-tertiary)' }} />
                         <div>
-                          <p className="text-xs" style={{ color: AdminColors.text.tertiary }}>Telepon</p>
-                          <p className="text-sm font-medium" style={{ color: AdminColors.text.primary }}>
+                          <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>Telepon</p>
+                          <p className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
                             {formatPhoneNumber(order.customer_phone)}
                           </p>
                         </div>
@@ -381,7 +380,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <div>
                   <h4
                     className="text-sm font-semibold mb-3 flex items-center gap-2"
-                    style={{ color: AdminColors.text.primary }}
+                    style={{ color: 'var(--admin-text)' }}
                   >
                     <CreditCard size={16} />
                     Informasi Pembayaran
@@ -389,10 +388,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   <div className="space-y-3">
                     {order.payment_method && (
                       <div className="flex items-start gap-3">
-                        <CreditCard size={16} className="mt-1 flex-shrink-0" style={{ color: AdminColors.text.tertiary }} />
+                        <CreditCard size={16} className="mt-1 flex-shrink-0" style={{ color: 'var(--admin-text-tertiary)' }} />
                         <div>
-                          <p className="text-xs" style={{ color: AdminColors.text.tertiary }}>Metode</p>
-                          <p className="text-sm font-medium uppercase" style={{ color: AdminColors.text.primary }}>
+                          <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>Metode</p>
+                          <p className="text-sm font-medium uppercase" style={{ color: 'var(--admin-text)' }}>
                             {order.payment_method}
                           </p>
                         </div>
@@ -400,10 +399,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     )}
 
                     <div className="flex items-start gap-3">
-                      <Calendar size={16} className="mt-1 flex-shrink-0" style={{ color: AdminColors.text.tertiary }} />
+                      <Calendar size={16} className="mt-1 flex-shrink-0" style={{ color: 'var(--admin-text-tertiary)' }} />
                       <div>
-                        <p className="text-xs" style={{ color: AdminColors.text.tertiary }}>Tanggal Order</p>
-                        <p className="text-sm font-medium" style={{ color: AdminColors.text.primary }}>
+                        <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>Tanggal Order</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
                           {formatDate(order.created_at)}
                         </p>
                       </div>
@@ -411,10 +410,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
                     {order.updated_at !== order.created_at && (
                       <div className="flex items-start gap-3">
-                        <Calendar size={16} className="mt-1 flex-shrink-0" style={{ color: AdminColors.text.tertiary }} />
+                        <Calendar size={16} className="mt-1 flex-shrink-0" style={{ color: 'var(--admin-text-tertiary)' }} />
                         <div>
-                          <p className="text-xs" style={{ color: AdminColors.text.tertiary }}>Terakhir Diperbarui</p>
-                          <p className="text-sm font-medium" style={{ color: AdminColors.text.primary }}>
+                          <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>Terakhir Diperbarui</p>
+                          <p className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
                             {formatDate(order.updated_at)}
                           </p>
                         </div>
@@ -427,12 +426,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <div
                   className="p-3 rounded-cyber-lg"
                   style={{
-                    background: AdminColors.background.secondary,
-                    border: `1px solid ${AdminColors.border.DEFAULT}`
+                    background: 'var(--admin-primary-light)',
+                    border: '1px solid var(--admin-border)'
                   }}
                 >
-                  <p className="text-xs mb-1" style={{ color: AdminColors.text.tertiary }}>Order ID</p>
-                  <p className="text-xs font-mono break-all" style={{ color: AdminColors.text.secondary }}>
+                  <p className="text-xs mb-1" style={{ color: 'var(--admin-text-tertiary)' }}>Order ID</p>
+                  <p className="text-xs font-mono break-all" style={{ color: 'var(--admin-text-secondary)' }}>
                     {order.id}
                   </p>
                 </div>
@@ -442,7 +441,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   {actionError && (
                     <div
                       className="p-3 rounded-xl text-sm"
-                      style={{ background: AdminColors.error.bg, color: AdminColors.error.DEFAULT }}
+                      style={{ background: 'var(--admin-error-bg)', color: 'var(--admin-error)' }}
                       role="alert"
                     >
                       {actionError}
@@ -459,10 +458,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       )}
                       style={{
                         background: updating
-                          ? `${AdminColors.accent.DEFAULT}25`
-                          : `linear-gradient(135deg, ${AdminColors.accent.DEFAULT}, ${AdminColors.accent.dark})`,
+                          ? 'rgba(236, 72, 153, 0.145)'
+                          : 'linear-gradient(135deg, var(--admin-accent), var(--admin-accent-dark))',
                         color: 'white',
-                        border: `1px solid ${AdminColors.accent.DEFAULT}40`
+                        border: '1px solid rgba(236, 72, 153, 0.25)'
                       }}
                       aria-label="Tandai order selesai"
                     >
@@ -477,9 +476,9 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         'opacity-70 cursor-not-allowed'
                       )}
                       style={{
-                        background: `${AdminColors.success.DEFAULT}20`,
-                        color: AdminColors.success.DEFAULT,
-                        border: `1px solid ${AdminColors.success.DEFAULT}40`
+                        background: 'rgba(16, 185, 129, 0.125)',
+                        color: 'var(--admin-success)',
+                        border: '1px solid rgba(16, 185, 129, 0.25)'
                       }}
                       aria-label="Order sudah selesai"
                     >
@@ -491,6 +490,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             )}
           </div>
         </div>
+      </div>
       </div>
     </>
   );

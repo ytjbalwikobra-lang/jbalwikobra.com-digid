@@ -1,8 +1,10 @@
 /**
- * Admin Dashboard - V3 Design System
- * WCAG 2.1 AA Compliant | ISO Standard UI/UX
- * 
- * Uses shared components: DashboardMetricsOverview, OrderAnalyticsChart
+ * Admin Dashboard - Cyberpunk Compact Design
+ * Redesigned to match public pages DNA:
+ * - Ultra-compact spacing (gap-3, p-2)
+ * - Bento grid layout (4 columns)
+ * - Cyberpunk hero section with glow
+ * - Pink accent interactions
  */
 
 import React from 'react';
@@ -17,28 +19,26 @@ import {
 } from 'lucide-react';
 import { DashboardMetricsOverview } from './components/DashboardMetricsOverview';
 import { OrderAnalyticsChart } from './components/OrderAnalyticsChart';
+import { AdminHeroSection } from './components/ui/AdminHeroSection';
+import { AdminBentoCard } from './components/ui/AdminBentoCard';
 // Design system: cyber-compact.css (loaded via index.css)
 
 interface QuickActionProps {
   to: string;
   icon: React.ReactNode;
   label: string;
-  color: string;
 }
 
-const QuickAction: React.FC<QuickActionProps> = ({ to, icon, label, color }) => (
-  <Link
-    to={to}
-    className="group relative overflow-hidden bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg p-4 text-center hover:border-[var(--cyber-pink-primary)]/30 transition-all duration-300 hover:transform hover:scale-[1.02]"
-    aria-label={label}
-  >
-    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-    <div className="relative z-10">
-      <div className="mx-auto mb-3 w-12 h-12 rounded-cyber-lg bg-[var(--cyber-bg-surface)] flex items-center justify-center group-hover:bg-[var(--cyber-bg-elevated)] transition-colors">
-        {icon}
+const QuickAction: React.FC<QuickActionProps> = ({ to, icon, label }) => (
+  <Link to={to}>
+    <AdminBentoCard glowOnHover>
+      <div className="flex flex-col items-center text-center gap-2">
+        <div className="w-8 h-8 rounded-lg bg-[var(--cyber-pink-subtle)] flex items-center justify-center">
+          {icon}
+        </div>
+        <p className="text-[10px] font-medium text-white leading-tight">{label}</p>
       </div>
-      <p className="font-medium text-white text-sm">{label}</p>
-    </div>
+    </AdminBentoCard>
   </Link>
 );
 
@@ -46,72 +46,62 @@ const AdminDashboard: React.FC = () => {
   const quickActions = [
     {
       to: '/admin/orders',
-      icon: <ShoppingCart className="w-6 h-6 text-blue-400" />,
-      label: 'Kelola Pesanan',
-      color: 'from-blue-500 to-cyan-500'
+      icon: <ShoppingCart size={16} className="text-[var(--cyber-pink-primary)]" />,
+      label: 'Pesanan'
     },
     {
       to: '/admin/products',
-      icon: <Package className="w-6 h-6 text-purple-400" />,
-      label: 'Kelola Produk',
-      color: 'from-purple-500 to-violet-500'
+      icon: <Package size={16} className="text-[var(--cyber-pink-primary)]" />,
+      label: 'Produk'
     },
     {
       to: '/admin/users',
-      icon: <Users className="w-6 h-6 text-[var(--cyber-pink-primary)]" />,
-      label: 'Kelola Pengguna',
-      color: 'from-[var(--cyber-pink-primary)] to-rose-500'
+      icon: <Users size={16} className="text-[var(--cyber-pink-primary)]" />,
+      label: 'Pengguna'
     },
     {
       to: '/admin/flash-sales',
-      icon: <Zap className="w-6 h-6 text-amber-400" />,
-      label: 'Flash Sales',
-      color: 'from-amber-500 to-orange-500'
+      icon: <Zap size={16} className="text-[var(--cyber-pink-primary)]" />,
+      label: 'Flash Sales'
     },
     {
       to: '/admin/banners',
-      icon: <Image className="w-6 h-6 text-emerald-400" />,
-      label: 'Kelola Banner',
-      color: 'from-emerald-500 to-green-500'
+      icon: <Image size={16} className="text-[var(--cyber-pink-primary)]" />,
+      label: 'Banner'
     },
     {
       to: '/admin/settings',
-      icon: <Settings className="w-6 h-6 text-[var(--cyber-text-muted)]" />,
-      label: 'Pengaturan',
-      color: 'from-gray-500 to-slate-500'
+      icon: <Settings size={16} className="text-[var(--cyber-pink-primary)]" />,
+      label: 'Settings'
     }
   ];
 
   return (
-    <div className="admin-page space-y-8">
-      {/* Header */}
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-            Dashboard Admin
-          </h1>
-          <p className="text-[var(--cyber-text-muted)] mt-1">
-            Ringkasan statistik dan aktivitas terkini
-          </p>
-        </div>
-      </header>
+    <div className="admin-page space-y-4">
+      {/* Cyberpunk Hero Section */}
+      <AdminHeroSection
+        title="Dashboard Admin"
+        subtitle="Ringkasan statistik dan aktivitas terkini"
+        badge="Live Updates"
+        badgeColor="pink"
+      />
 
-      {/* Metrics Overview - Uses MetricsGrid with data loading */}
+      {/* Metrics Overview - Compact spacing */}
       <DashboardMetricsOverview />
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
+      {/* Main Content - Compact Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+        {/* Quick Actions - Now takes 1 column, 4-col grid inside */}
         <section 
-          className="lg:col-span-1 bg-[var(--cyber-bg-pure)] rounded-cyber-lg border border-[var(--cyber-border)] p-6"
+          className="lg:col-span-1 bg-[var(--admin-bg-pure)] rounded-cyber-lg border border-[var(--admin-border)] p-3"
           aria-label="Aksi Cepat"
         >
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[var(--cyber-pink-primary)]" />
+          <h2 className="text-xs font-semibold text-white mb-2 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[var(--admin-accent)]" />
             Aksi Cepat
           </h2>
           <nav aria-label="Navigasi Aksi Cepat">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {quickActions.map((action, index) => (
                 <QuickAction key={index} {...action} />
               ))}
@@ -119,8 +109,8 @@ const AdminDashboard: React.FC = () => {
           </nav>
         </section>
 
-        {/* Order Analytics Chart */}
-        <div className="lg:col-span-2">
+        {/* Order Analytics Chart - Takes 3 columns */}
+        <div className="lg:col-span-3">
           <OrderAnalyticsChart />
         </div>
       </div>

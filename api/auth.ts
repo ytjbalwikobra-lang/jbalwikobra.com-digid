@@ -64,33 +64,124 @@ const USER_SAFE_FIELDS = 'id,email,phone,name,is_admin,is_active,phone_verified,
 const USER_AUTH_FIELDS = 'id,email,phone,name,password_hash,is_admin,is_active,profile_completed';
 
 // ============================================================================
-// SINGLETON SUPABASE CLIENT
+// SINGLETON SUPABASE CLIENT - BULLETPROOF VERSION
 // ============================================================================
 
 let supabaseClient: SupabaseClient | null = null;
+let configurationLogged = false;
 
+/**
+ * Resolve an environment variable with fallback chain.
+ * Handles quotes, CRLF characters, and whitespace.
+ */
+function resolveEnvVar(primaryKey: string, ...fallbacks: string[]): string {
+  const keys = [primaryKey, ...fallbacks];
+  
+  for (const key of keys) {
+    const value = process.env[key];
+    if (value) {
+      // Clean the value: remove quotes, CRLF, trim whitespace
+      const cleaned = value.replace(/^["']|["']$/g, '').replace(/[\r\n]/g, '').trim();
+      if (cleaned && !cleaned.startsWith('YOUR_') && !cleaned.startsWith('${')) {
+        if (!configurationLogged) {
+          console.log(`[Auth] ✅ ${primaryKey}: Found via ${key}`);
+        }
+        return cleaned;
+      }
+    }
+  }
+  
+  if (!configurationLogged) {
+    console.error(`[Auth] ❌ ${primaryKey}: NOT FOUND (checked: ${keys.join(', ')})`);
+  }
+  return '';
+}
+
+/**
+ * Get Supabase client with verbose debugging.
+ * Throws with detailed error message if configuration is missing.
+ */
 function getSupabase(): SupabaseClient {
   if (supabaseClient) return supabaseClient;
   
-  const supabaseUrl = (process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '').trim();
-  const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  console.log('[Auth] ========================================');
+  console.log('[Auth] Initializing Supabase Client...');
+  console.log('[Auth] ========================================');
   
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing Supabase configuration');
+  // Resolve environment variables with fallback chains
+  const supabaseUrl = resolveEnvVar(
+    'SUPABASE_URL',
+    'VITE_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'REACT_APP_SUPABASE_URL'
+  );
+  
+  const supabaseServiceKey = resolveEnvVar(
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_KEY'
+  );
+  
+  // Log all SUPABASE* env vars for debugging (values hidden)
+  const supabaseEnvVars = Object.keys(process.env).filter(k => 
+    k.toUpperCase().includes('SUPABASE')
+  );
+  console.log('[Auth] Available SUPABASE* environment variables:', supabaseEnvVars.length > 0 ? supabaseEnvVars.join(', ') : 'NONE');
+  
+  // Log final resolution status
+  console.log('[Auth] ----------------------------------------');
+  console.log('[Auth] Resolution Summary:');
+  console.log(`[Auth]   SUPABASE_URL: ${supabaseUrl ? supabaseUrl.substring(0, 40) + '...' : '❌ MISSING'}`);
+  console.log(`[Auth]   SERVICE_KEY:  ${supabaseServiceKey ? supabaseServiceKey.substring(0, 20) + '...' : '❌ MISSING'}`);
+  console.log('[Auth] ----------------------------------------');
+  
+  configurationLogged = true;
+  
+  // Validate configuration
+  const errors: string[] = [];
+  
+  if (!supabaseUrl) {
+    errors.push('SUPABASE_URL is missing. Add it to your .env.local file.');
+  } else if (!supabaseUrl.includes('.supabase.co')) {
+    errors.push(`SUPABASE_URL appears invalid: ${supabaseUrl}`);
   }
   
-  supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    },
-    global: {
-      headers: { 'x-client-info': 'jbalwikobra-auth-api' }
-    },
-    db: { schema: 'public' }
-  });
+  if (!supabaseServiceKey) {
+    errors.push('SUPABASE_SERVICE_ROLE_KEY is missing. Add it to your .env.local file.');
+  } else if (supabaseServiceKey.length < 100) {
+    errors.push('SUPABASE_SERVICE_ROLE_KEY appears too short. Verify it is the full key.');
+  }
   
-  return supabaseClient;
+  if (errors.length > 0) {
+    console.error('[Auth] ❌ Configuration Errors:');
+    errors.forEach(err => console.error(`[Auth]   - ${err}`));
+    console.error('[Auth] ');
+    console.error('[Auth] 💡 Fix: Ensure your .env.local contains:');
+    console.error('[Auth]   SUPABASE_URL=https://your-project.supabase.co');
+    console.error('[Auth]   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+    console.error('[Auth] ');
+    console.error('[Auth] 💡 Then run: vercel env pull .env.local --environment=development');
+    throw new Error(`Missing Supabase configuration: ${errors.join('; ')}`);
+  }
+  
+  // Create client
+  try {
+    supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      },
+      global: {
+        headers: { 'x-client-info': 'jbalwikobra-auth-api' }
+      },
+      db: { schema: 'public' }
+    });
+    
+    console.log('[Auth] ✅ Supabase client initialized successfully');
+    return supabaseClient;
+  } catch (error) {
+    console.error('[Auth] ❌ Failed to create Supabase client:', error);
+    throw error;
+  }
 }
 
 // ============================================================================

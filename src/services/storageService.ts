@@ -5,9 +5,13 @@ const BUCKET = process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images'
 export interface UploadResult {
   path: string;
   url: string;
+  error?: string;
+  success: boolean;
 }
 
 export async function uploadFile(file: File, folder = 'products'): Promise<UploadResult> {
+  console.log('[StorageService] uploadFile called:', { fileName: file.name, folder, bucket: BUCKET });
+
   if (!supabase) {
     const error = new Error('Supabase not initialized');
     console.error('[StorageService] Supabase client not available:', error);
@@ -87,10 +91,13 @@ export async function uploadFile(file: File, folder = 'products'): Promise<Uploa
     if (!urlData?.publicUrl) {
       throw new Error('Failed to get public URL for uploaded file');
     }
-    
+
+    console.log('[StorageService] Upload successful:', { path: uploadData.path, url: urlData.publicUrl });
+
     return {
       path: uploadData.path,
-      url: urlData.publicUrl
+      url: urlData.publicUrl,
+      success: true
     };
   } catch (error) {
     console.error('[StorageService] Upload file error:', {
@@ -115,19 +122,25 @@ export async function uploadFiles(
   const results: UploadResult[] = [];
   const total = files.length;
   let done = 0;
-  
+
   for (const file of files) {
     try {
       const result = await uploadFile(file, folder);
       results.push(result);
     } catch (error) {
       console.error('Failed to upload file:', file.name, error);
-      // Continue with other files
+      // CRITICAL FIX: Push error result to maintain index alignment
+      results.push({
+        path: '',
+        url: '',
+        error: error instanceof Error ? error.message : 'Upload failed',
+        success: false
+      });
     }
-    
+
     done += 1;
-    try { 
-      onProgress?.(done, total); 
+    try {
+      onProgress?.(done, total);
     } catch (cbErr) {
       // Intentionally ignore progress callback errors to avoid breaking uploads
       if (process.env.NODE_ENV === 'development') {
@@ -135,7 +148,7 @@ export async function uploadFiles(
       }
     }
   }
-  
+
   return results;
 }
 

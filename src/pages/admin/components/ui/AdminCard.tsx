@@ -75,8 +75,7 @@ export const AdminCardHeader: React.FC<AdminCardHeaderProps> = ({
       <div className="flex items-start gap-3 flex-1">
         {icon && (
           <div 
-            className="flex-shrink-0 w-10 h-10 rounded-cyber-lg flex items-center justify-center"
-            style={{ backgroundColor: 'rgba(236, 72, 153, 0.2)' }}
+            className="flex-shrink-0 w-10 h-10 rounded-cyber-lg flex items-center justify-center bg-[var(--admin-accent-subtle)]"
             aria-hidden="true"
           >
             {icon}
@@ -85,10 +84,7 @@ export const AdminCardHeader: React.FC<AdminCardHeaderProps> = ({
         <div className="flex-1 min-w-0">
           <h3 className="admin-card-title">{title}</h3>
           {subtitle && (
-            <p 
-              className="text-sm mt-1"
-              style={{ color: 'var(--admin-text-tertiary)' }}
-            >
+            <p className="text-sm mt-1 text-[var(--admin-text-tertiary)]">
               {subtitle}
             </p>
           )}
@@ -119,10 +115,7 @@ export const AdminCardFooter: React.FC<AdminCardFooterProps> = ({
   className = '',
 }) => {
   return (
-    <div 
-      className={`mt-6 pt-6 border-t ${className}`}
-      style={{ borderColor: 'var(--admin-border)' }}
-    >
+    <div className={`mt-6 pt-6 border-t border-[var(--admin-border)] ${className}`}>
       {children}
     </div>
   );

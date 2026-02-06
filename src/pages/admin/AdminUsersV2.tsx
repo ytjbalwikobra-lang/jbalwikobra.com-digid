@@ -1,31 +1,27 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Users, UserCheck, Shield, Clock, Plus, Edit, Eye, Mail, Phone, Calendar, RotateCcw, TrendingUp, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Users, UserCheck, Shield, Phone, RefreshCw, User as UserIcon, Search } from 'lucide-react';
 import { adminService, User } from '../../services/adminService';
 import { useToast } from '../../components/Toast';
-import { AdminCard } from './components/ui/AdminCard';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
 import { AdminErrorState } from './components/ui/AdminErrorState';
-import { AdminPageHeader } from './components/ui/AdminPageHeader';
-import { AdminAnalyticsCards, AnalyticsStat } from './components/ui/AdminAnalyticsCards';
 import { AdminButton } from './components/ui/AdminButton';
-import { AdminFilter } from './components/AdminFilter';
+import { AdminBentoCard, AdminBentoMetricCard } from './components/ui/AdminBentoCard';
+import { AdminHeroSection } from './components/ui/AdminHeroSection';
+import { AdminPagination } from './components/AdminPagination';
 import { AdminUserModal } from './components/AdminUserModal';
 import { formatDate as formatDateHelper } from '../../utils/helpers';
 import { formatPhoneNumber } from '../../utils/phoneUtils';
+import { cn } from '../../utils/cn';
+import { useDebounce } from '../../hooks/useDebounce';
 // Design system: cyber-compact.css (loaded via index.css)
+// Cyberpunk Compact Redesign
 
 interface UserStats {
   total: number;
   active: number;
   admin: number;
   recent: number;
-}
-
-interface UserFilters {
-  role: 'all' | 'admin' | 'user';
-  status: 'all' | 'active' | 'inactive';
-  search: string;
 }
 
 // Remove old MetricCard - now using AdminCard from V3
@@ -41,16 +37,15 @@ const AdminUsersV2: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   
-  // Pagination state
+  // Search & Pagination (DNA from Products) - SERVER-SIDE
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const PAGE_SIZE = 50;
-  const [filters, setFilters] = useState<UserFilters>({
-    role: 'all',
-    status: 'all',
-    search: ''
-  });
+  
+  // Stats
   const [realStats, setRealStats] = useState<UserStats>({
     total: 0,
     active: 0,
@@ -59,86 +54,46 @@ const AdminUsersV2: React.FC = () => {
   });
   const { push } = useToast();
 
-  // Cache for instant loading between page navigations
-  const [cachedData, setCachedData] = useState<{
-    users: User[];
-    stats: UserStats;
-    timestamp: number;
-  } | null>(null);
-  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+  // No client-side filtering - server handles it
+  const paginatedUsers = users;
 
-  // Filter users based on current filters
-  const filteredUsers = useMemo(() => {
-    return users.filter(user => {
-      // Role filter
-      if (filters.role === 'admin' && !user.is_admin) return false;
-      if (filters.role === 'user' && user.is_admin) return false;
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
-      // Status filter
-      if (filters.status === 'active' && !user.last_login) return false;
-      if (filters.status === 'inactive' && user.last_login) return false;
-
-      // Search filter
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        return (
-          user.name?.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower) ||
-          user.phone?.toLowerCase().includes(searchLower)
-        );
-      }
-
-      return true;
-    });
-  }, [users, filters]);
-
-  const loadUsers = useCallback(async (forceRefresh = false, page = currentPage) => {
-    // Use cache if available and not expired (only for page 1)
-    const now = Date.now();
-    if (!forceRefresh && page === 1 && cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-      setUsers(cachedData.users);
-      setRealStats(cachedData.stats);
-      setTotalCount(cachedData.stats.total);
-      setTotalPages(Math.ceil(cachedData.stats.total / PAGE_SIZE));
-      setLoading(false);
-      return;
-    }
-
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      // Fetch paginated users with actual count
-      const usersResult = await adminService.getUsers(page, PAGE_SIZE);
+      // SERVER-SIDE PAGINATION: Only fetch current page (20 users)
+      const usersResult = await adminService.getUsers(currentPage, itemsPerPage, debouncedSearch);
       const usersData = usersResult.data || [];
-      const actualTotal = usersResult.count || 0;
 
-      // Calculate stats from loaded data (approximation for current page)
-      const adminCount = usersData.filter(u => u.is_admin).length;
-      const activeCount = usersData.filter(u => u.last_login).length;
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentCount = usersData.filter(u => new Date(u.created_at) > thirtyDaysAgo).length;
-
-      // Use actual total from database, not usersData.length
-      const stats: UserStats = {
-        total: actualTotal,
-        admin: adminCount,
-        active: activeCount,
-        recent: recentCount
-      };
-      
-      setRealStats(stats);
       setUsers(usersData);
-      setTotalCount(actualTotal);
-      setTotalPages(usersResult.totalPages || Math.ceil(actualTotal / PAGE_SIZE));
-      setCurrentPage(page);
-      
-      // Cache page 1 results
-      if (page === 1) {
-        setCachedData({
-          users: usersData,
-          stats,
-          timestamp: now
+      setTotalPages(usersResult.totalPages || 1);
+
+      // Use stats from API response if available, otherwise calculate
+      if (usersResult.stats) {
+        setRealStats({
+          total: usersResult.stats.total || 0,
+          admin: usersResult.stats.admin || 0,
+          active: usersResult.stats.active || 0,
+          recent: usersResult.stats.recent || 0
+        });
+      } else {
+        // Fallback: calculate from current page (not accurate for total)
+        const adminCount = usersData.filter(u => u.is_admin).length;
+        const activeCount = usersData.filter(u => u.last_login).length;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentCount = usersData.filter(u => u.created_at && new Date(u.created_at) > thirtyDaysAgo).length;
+
+        setRealStats({
+          total: usersResult.count || usersData.length,
+          admin: adminCount,
+          active: activeCount,
+          recent: recentCount
         });
       }
     } catch (err: any) {
@@ -148,7 +103,7 @@ const AdminUsersV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [cachedData, push, currentPage, PAGE_SIZE]);
+  }, [currentPage, itemsPerPage, debouncedSearch, push]);
 
   useEffect(() => {
     loadUsers();
@@ -156,20 +111,8 @@ const AdminUsersV2: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadUsers(true); // Force refresh
+    await loadUsers();
     setRefreshing(false);
-  };
-
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setModalMode('edit');
-    setModalOpen(true);
-  };
-
-  const handleViewUser = (user: User) => {
-    setSelectedUser(user);
-    setModalMode('view');
-    setModalOpen(true);
   };
 
   const handleModalClose = () => {
@@ -178,62 +121,35 @@ const AdminUsersV2: React.FC = () => {
   };
 
   const handleModalSuccess = () => {
-    loadUsers(true); // Force refresh to get updated data
+    loadUsers();
   };
 
-  // Use shared formatter from utils/helpers
-  const formatLastLogin = (lastLogin?: string) => lastLogin ? formatDateHelper(lastLogin) : 'Never';
-
-  // Analytics stats config
-  const analyticsStats: AnalyticsStat[] = useMemo(() => [
+  // Compact metrics data
+  const metricsData = useMemo(() => [
     {
-      label: 'Total Users',
+      label: 'Total',
       value: realStats.total,
-      icon: Users,
-      iconColor: 'text-blue-400',
-      iconBgColor: 'bg-blue-500/10',
-      format: 'number'
+      icon: <Users size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
-      label: 'Active Users',
+      label: 'Active',
       value: realStats.active,
-      icon: UserCheck,
-      iconColor: 'text-green-400',
-      iconBgColor: 'bg-green-500/10',
-      format: 'number'
+      icon: <UserCheck size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
-      label: 'Admin Users',
+      label: 'Admin',
       value: realStats.admin,
-      icon: Shield,
-      iconColor: 'text-purple-400',
-      iconBgColor: 'bg-purple-500/10',
-      format: 'number'
+      icon: <Shield size={16} className="text-[var(--cyber-pink-primary)]" />
     },
     {
-      label: 'New This Month',
+      label: 'Recent',
       value: realStats.recent,
-      icon: Clock,
-      iconColor: 'text-orange-400',
-      iconBgColor: 'bg-orange-500/10',
-      format: 'number'
+      icon: <UserIcon size={16} className="text-[var(--cyber-pink-primary)]" />
     }
   ], [realStats]);
 
-  // Header actions
-  const headerActions = (
-    <AdminButton
-      variant="secondary"
-      onClick={handleRefresh}
-      disabled={refreshing}
-      icon={<RotateCcw className={refreshing ? 'animate-spin' : ''} size={18} />}
-    >
-      Refresh
-    </AdminButton>
-  );
-
   return (
-    <div className="admin-page space-y-8">
+    <div className="admin-page space-y-4">
       {/* User Edit Modal */}
       <AdminUserModal
         isOpen={modalOpen}
@@ -243,256 +159,156 @@ const AdminUsersV2: React.FC = () => {
         mode={modalMode}
       />
       
-      {/* Dashboard-Style Header - Using AdminPageHeader */}
-      <AdminPageHeader
+      {/* Cyberpunk Hero Section */}
+      <AdminHeroSection
         title="User Management"
-        description="Manage user accounts, permissions and analytics"
-        actions={headerActions}
-      />
-
-        {/* Error Display */}
-        {error && (
-          <AdminErrorState 
-            variant="banner"
-            message={error}
-          />
-        )}
-
-        {/* Modern Metrics Grid - Using AdminAnalyticsCards */}
-        <AdminAnalyticsCards stats={analyticsStats} loading={loading} columns={4} />
-
-        {/* Quick Actions Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="lg:col-span-1">
-            <AdminCard>
-              <div className="flex items-center space-x-2 mb-6">
-                <div className="p-2 bg-[var(--cyber-pink-subtle)] rounded-cyber-lg">
-                  <TrendingUp className="w-5 h-5 text-[var(--cyber-pink-primary)]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)]">Quick Actions</h3>
-              </div>
-              <div className="space-y-3">
-                <button
-                  onClick={() => push('Add user functionality coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-[var(--cyber-pink-subtle)] hover:border-[var(--cyber-pink-primary)]/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-pink-primary)] transition-all duration-200"
-                >
-                  <Plus className="w-5 h-5" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium">Add New User</p>
-                    <p className="text-xs text-[var(--cyber-text-muted)]">Create a new user account</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => push('Export functionality coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-blue-500/10 hover:border-blue-500/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-blue-400 transition-all duration-200"
-                >
-                  <Mail className="w-5 h-5" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium">Export Users</p>
-                    <p className="text-xs text-[var(--cyber-text-muted)]">Download user data</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => push('Bulk actions coming soon!', 'info')}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-cyber-lg bg-[var(--cyber-bg-elevated)]/50 hover:bg-green-500/10 hover:border-green-500/30 border border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:text-green-400 transition-all duration-200"
-                >
-                  <Shield className="w-5 h-5" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium">Manage Permissions</p>
-                    <p className="text-xs text-[var(--cyber-text-muted)]">Bulk permission updates</p>
-                  </div>
-                </button>
-              </div>
-            </AdminCard>
+        subtitle={`${realStats.total} users • ${realStats.active} active`}
+        badge="Live"
+        badgeColor="info"
+      >
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          {/* Search Bar (DNA from Products) */}
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by name, email, phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
+            />
           </div>
-
-          {/* User Analytics Preview */}
-          <div className="lg:col-span-2">
-            <AdminCard>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-500/10 rounded-cyber-lg">
-                    <Users className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-[var(--cyber-text-primary)]">User Analytics</h3>
-                </div>
-                <button className="flex items-center space-x-2 text-sm text-[var(--cyber-pink-primary)] hover:text-[var(--cyber-pink-secondary)] transition-colors">
-                  <span>View Details</span>
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg">
-                  <p className="text-2xl font-bold text-[var(--cyber-text-primary)] mb-1">{Math.round((realStats.active / realStats.total) * 100) || 0}%</p>
-                  <p className="text-sm text-[var(--cyber-text-muted)]">Activity Rate</p>
-                </div>
-                <div className="text-center p-4 bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg">
-                  <p className="text-2xl font-bold text-[var(--cyber-text-primary)] mb-1">{Math.round((realStats.admin / realStats.total) * 100) || 0}%</p>
-                  <p className="text-sm text-[var(--cyber-text-muted)]">Admin Ratio</p>
-                </div>
-                <div className="text-center p-4 bg-[var(--cyber-bg-pure)] border border-[var(--cyber-border)] rounded-cyber-lg">
-                  <p className="text-2xl font-bold text-[var(--cyber-text-primary)] mb-1">{Math.round((realStats.recent / realStats.total) * 100) || 0}%</p>
-                  <p className="text-sm text-[var(--cyber-text-muted)]">Growth Rate</p>
-                </div>
-              </div>
-            </AdminCard>
+          
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <AdminButton
+              variant="secondary"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              size="sm"
+              icon={<RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />}
+            >
+              Refresh
+            </AdminButton>
           </div>
         </div>
+      </AdminHeroSection>
 
-        {/* Filters */}
-        <AdminFilter
-          searchTerm={filters.search}
-          onSearchChange={(value) => setFilters(prev => ({ ...prev, search: value }))}
-          searchPlaceholder="Search users by name, email, or phone..."
-          filters={[
-            {
-              label: 'Role',
-              value: filters.role,
-              onChange: (value) => setFilters(prev => ({ ...prev, role: value as any })),
-              options: [
-                { value: 'all', label: 'All Roles' },
-                { value: 'admin', label: 'Admin Only' },
-                { value: 'user', label: 'Users Only' }
-              ]
-            },
-            {
-              label: 'Status',
-              value: filters.status,
-              onChange: (value) => setFilters(prev => ({ ...prev, status: value as any })),
-              options: [
-                { value: 'all', label: 'All Status' },
-                { value: 'active', label: 'Active Only' },
-                { value: 'inactive', label: 'Inactive Only' }
-              ]
-            }
-          ]}
-          onRefresh={handleRefresh}
-          loading={refreshing}
+      {/* Error Display */}
+      {error && (
+        <AdminErrorState 
+          variant="banner"
+          message={error}
         />
-        
-        {/* Results Count & Pagination */}
-        <div className="flex items-center justify-between px-6 py-3 bg-slate-800/30 rounded-cyber-lg">
-          <span className="text-slate-400 text-sm">
-            Showing <span className="font-semibold text-white">{filteredUsers.length}</span> of <span className="font-semibold text-white">{totalCount.toLocaleString()}</span> users
-            {totalPages > 1 && <span className="ml-2">(Page {currentPage} of {totalPages})</span>}
-          </span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => loadUsers(true, currentPage - 1)}
-                disabled={currentPage <= 1 || loading}
-                className="px-3 py-1.5 text-sm bg-[var(--cyber-bg-elevated)] hover:bg-[var(--cyber-bg-elevated)] disabled:opacity-50 disabled:cursor-not-allowed rounded-cyber-lg text-[var(--cyber-text-primary)] transition-colors"
-              >
-                Previous
-              </button>
-              <span className="text-[var(--cyber-text-muted)] text-sm px-2">{currentPage}/{totalPages}</span>
-              <button
-                onClick={() => loadUsers(true, currentPage + 1)}
-                disabled={currentPage >= totalPages || loading}
-                className="cyber-btn cyber-btn-primary cyber-btn-sm"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+      )}
 
-        {/* Users Grid */}
-        {loading ? (
-          <AdminLoadingState variant="skeleton-cards" cards={6} message="Loading users..." />
-        ) : filteredUsers.length === 0 ? (
-          <AdminEmptyState 
-            icon={<Users className="w-16 h-16" />}
-            title="No Users Found"
-            hasFilters={!!(filters.search || filters.role !== 'all' || filters.status !== 'all')}
-            variant="centered"
+      {/* Compact Metrics - Bento Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {metricsData.map((metric, idx) => (
+          <AdminBentoMetricCard
+            key={idx}
+            label={metric.label}
+            value={metric.value}
+            icon={metric.icon}
           />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user) => (
-              <AdminCard key={user.id} hover>
-                {/* User Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {user.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.name}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-[var(--cyber-bg-elevated)] rounded-full flex items-center justify-center">
-                        <Users className="h-6 w-6 text-[var(--cyber-text-muted)]" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="text-white font-semibold">{user.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {user.is_admin && (
-                          <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
-                            Admin
-                          </span>
-                        )}
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          user.last_login
-                            ? 'bg-green-500/20 text-green-300'
-                            : 'bg-[var(--cyber-bg-elevated)]/20 text-[var(--cyber-text-muted)]'
-                        }`}>
-                          {user.last_login ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                    </div>
+        ))}
+      </div>
+
+      {/* Users Bento Grid */}
+      {loading ? (
+        <AdminLoadingState variant="skeleton-cards" cards={12} />
+      ) : users.length === 0 ? (
+        <AdminEmptyState 
+          icon={<Users className="w-12 h-12" />}
+          title={debouncedSearch ? "No Users Match" : "No Users Found"}
+          description={debouncedSearch ? "Try different search terms" : "Users will appear here when they register"}
+          hasFilters={!!debouncedSearch}
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            {paginatedUsers.map((user) => (
+            <AdminBentoCard
+              key={user.id}
+              onClick={() => {
+                setSelectedUser(user);
+                setModalMode('view');
+                setModalOpen(true);
+              }}
+              glowOnHover
+            >
+              {/* User Avatar */}
+              <div className="flex flex-col items-center text-center gap-2">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-[var(--cyber-pink-subtle)] rounded-full flex items-center justify-center">
+                    <UserIcon size={20} className="text-[var(--cyber-pink-primary)]" />
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleViewUser(user)}
-                      className="p-2 bg-[var(--cyber-bg-surface)] hover:bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-cyber-lg transition-colors"
-                      title="View user details"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleEditUser(user)}
-                      className="p-2 bg-[var(--cyber-bg-surface)] hover:bg-[var(--cyber-pink-primary)] text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text-primary)] rounded-cyber-lg transition-colors"
-                      title="Edit user"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
+                )}
+                
+                {/* User Info */}
+                <div className="min-w-0 w-full">
+                  <p className="text-xs font-medium text-white truncate">
+                    {user.name}
+                  </p>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {user.is_admin && (
+                      <span className="px-1.5 py-0.5 bg-[var(--cyber-purple)]/10 text-[var(--cyber-purple)] text-[10px] rounded-full flex items-center gap-0.5">
+                        <Shield size={8} />
+                      </span>
+                    )}
+                    <span className={cn(
+                      'px-1.5 py-0.5 text-[10px] rounded-full',
+                      user.last_login
+                        ? 'bg-[var(--cyber-success)]/10 text-[var(--cyber-success)]'
+                        : 'bg-[var(--cyber-text-muted)]/10 text-[var(--cyber-text-muted)]'
+                    )}>
+                      {user.last_login ? '●' : '○'}
+                    </span>
                   </div>
                 </div>
 
-                {/* User Details */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
-                    <Mail className="h-4 w-4" />
-                    <span>{user.email}</span>
-                  </div>
-                  
+                {/* Contact Info */}
+                <div className="w-full mt-1 pt-1 border-t border-[var(--cyber-border)]">
                   {user.phone && (
-                    <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
-                      <Phone className="h-4 w-4" />
-                      <span>{formatPhoneNumber(user.phone)}</span>
+                    <div className="flex items-center gap-1 justify-center">
+                      <Phone size={8} className="text-[var(--cyber-text-muted)]" />
+                      <span className="text-[10px] text-[var(--cyber-text-muted)] truncate">
+                        {formatPhoneNumber(user.phone).slice(0, 12)}...
+                      </span>
                     </div>
                   )}
-                  
-                  <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
-                    <Calendar className="h-4 w-4" />
-                    <span>Joined {formatDateHelper(user.created_at)}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-[var(--cyber-text-muted)] text-sm">
-                    <Clock className="h-4 w-4" />
-                    <span>Last login: {formatLastLogin(user.last_login)}</span>
-                  </div>
+                  {user.last_login && (
+                    <p className="text-[10px] text-[var(--cyber-text-muted)] mt-0.5">
+                      {formatDateHelper(user.last_login).split(' ')[0]}
+                    </p>
+                  )}
                 </div>
-              </AdminCard>
-            ))}
-          </div>
+              </div>
+            </AdminBentoCard>
+          ))}
+        </div>
+
+        {/* Pagination (DNA from Products) */}
+        {totalPages > 1 && (
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            totalItems={realStats.total}
+            itemsPerPage={itemsPerPage}
+          />
         )}
-      </div>
+      </>
+      )}
+    </div>
   );
 };
 

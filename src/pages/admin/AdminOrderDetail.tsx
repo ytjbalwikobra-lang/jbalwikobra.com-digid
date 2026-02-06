@@ -25,6 +25,7 @@ interface OrderDetails {
   rental_duration?: string;
   status: 'pending' | 'paid' | 'completed' | 'cancelled';
   payment_method?: string;
+  payment_channel?: string;
   created_at: string;
   updated_at: string;
 }
@@ -335,7 +336,7 @@ const AdminOrderDetail: React.FC = () => {
                 <div>
                   <p className="text-xs" style={{ color: 'var(--admin-text-tertiary)' }}>Metode</p>
                   <p className="text-sm font-medium uppercase" style={{ color: 'var(--admin-text)' }}>
-                    {order.payment_method}
+                    {order.payment_channel || order.payment_method}
                   </p>
                 </div>
               </div>

@@ -152,12 +152,12 @@ const AdminWhatsAppSettings: React.FC = () => {
   // DATA LOADING
   // ========================================
 
-  const loadSettings = useCallback(async () => {
+  const loadSettings = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     
     try {
       const [settings, groupsData] = await Promise.all([
-        adminService.getWhatsAppSettings(),
+        adminService.getWhatsAppSettings(forceRefresh),
         adminService.getWhatsAppGroups().catch(() => [])
       ]);
 
@@ -347,14 +347,14 @@ const AdminWhatsAppSettings: React.FC = () => {
       {/* Hero Section */}
       <AdminHeroSection
         title="WhatsApp Configuration"
-        subtitle={`${apiKey?.is_active ? '✓ Connected' : '✗ Disconnected'} • ${groups.length} groups available`}
-        badge={apiKey?.is_active ? 'Active' : 'Inactive'}
-        badgeColor={apiKey?.is_active ? 'success' : 'warning'}
+        subtitle={`${provider && apiKey ? '✓ Connected' : provider ? '⚠ API Key Missing' : '✗ Not Configured'} • ${groups.length} groups available`}
+        badge={provider && apiKey ? 'Active' : provider ? 'Key Missing' : 'Inactive'}
+        badgeColor={provider && apiKey ? 'success' : 'warning'}
       >
         <div className="flex gap-2 mt-3">
           <AdminButton
             variant="secondary"
-            onClick={loadSettings}
+            onClick={() => loadSettings(true)}
             disabled={loading}
             size="sm"
             icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />}
@@ -377,8 +377,8 @@ const AdminWhatsAppSettings: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <AdminBentoMetricCard
           label="Connection"
-          value={apiKey?.is_active ? 'Connected' : 'Disconnected'}
-          icon={apiKey?.is_active ? <CheckCircle size={16} className="text-emerald-400" /> : <AlertCircle size={16} className="text-red-400" />}
+          value={provider && apiKey ? 'Connected' : provider ? 'Key Missing' : 'Disconnected'}
+          icon={provider && apiKey ? <CheckCircle size={16} className="text-emerald-400" /> : <AlertCircle size={16} className="text-red-400" />}
         />
         <AdminBentoMetricCard
           label="Groups"

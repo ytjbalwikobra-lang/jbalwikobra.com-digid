@@ -78,7 +78,7 @@ const PNHero: React.FC = () => {
                 <a href={jualAkunWhatsappUrl} target="_blank" rel="noopener noreferrer" className="block" aria-label="Jual Akun (membuka di tab baru)">
                   <PNButton variant="secondary" size="md" fullWidth className="flex items-center justify-center gap-2">
                     <DollarSign size={16} aria-hidden="true" />
-                    <span>Jual Akun</span>
+                    <span>Jual Akunmu</span>
                   </PNButton>
                 </a>
               </div>

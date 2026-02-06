@@ -63,6 +63,7 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       amount: order.amount,
       status: 'pending',
       payment_method: 'xendit',
+      payment_channel: order.payment_channel || null, // Record actual payment channel if provided
       rental_duration: order.rental_duration || null,
       user_id: order.user_id || null,
       client_external_id: clientExternalId || null,

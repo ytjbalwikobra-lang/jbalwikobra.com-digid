@@ -2251,7 +2251,7 @@ export const adminService = {
    * Get WhatsApp settings (provider, API key, groups)
    * Cached for 2 minutes
    */
-  async getWhatsAppSettings(): Promise<{
+  async getWhatsAppSettings(skipCache = false): Promise<{
     provider: {
       id: string;
       name: string;
@@ -2278,11 +2278,13 @@ export const adminService = {
     } | null;
   }> {
     const CACHE_KEY = 'admin:whatsapp:settings';
-    const cached = adminCache.get<{
-      provider: any;
-      apiKey: any;
-    }>(CACHE_KEY);
-    if (cached) return cached;
+    if (!skipCache) {
+      const cached = adminCache.get<{
+        provider: any;
+        apiKey: any;
+      }>(CACHE_KEY);
+      if (cached) return cached;
+    }
 
     const sessionToken = localStorage.getItem('session_token');
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };

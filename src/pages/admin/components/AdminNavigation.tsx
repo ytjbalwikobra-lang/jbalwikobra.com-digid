@@ -22,6 +22,7 @@ import {
   Settings,
   X,
   MessageCircle,
+  Bell,
 } from 'lucide-react';
 import { adminCache } from '../../../services/adminCache';
 import { adminService } from '../../../services/adminService';
@@ -40,6 +41,7 @@ const navigationItems: NavItem[] = [
   { path: '/admin/flash-sales', label: 'Flash Sales', icon: Zap },
   { path: '/admin/banners', label: 'Banners', icon: Image },
   { path: '/admin/whatsapp', label: 'WhatsApp', icon: MessageCircle },
+  { path: '/admin/notifications', label: 'Notifications', icon: Bell },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -110,36 +110,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return respond(res, 200, { success: true, count: (data || []).length });
     }
 
-    // Create a demo notification for testing the floating UI
-    if (action === 'create-demo' && req.method === 'POST') {
-      const token = (req.headers['x-admin-notif-token'] as string) || (req.body && (req.body as any).token);
-      const expected = process.env.ADMIN_NOTIF_TEST_TOKEN || process.env.ADMIN_TEST_TOKEN;
-      if (!expected || token !== expected) {
-        return respond(res, 401, { error: 'unauthorized' });
+    // Enhancement D: Server-side notification creation from admin client
+    if (action === 'create' && req.method === 'POST') {
+      const { type, title, message, order_id, user_id, customer_name, product_name, amount, metadata } = (req.body || {}) as any;
+      
+      if (!type || !title || !message) {
+        return respond(res, 400, { error: 'missing_fields', message: 'type, title, and message are required' });
       }
-
-      const now = new Date();
-      const payload = {
-        type: 'new_order',
-        title: 'Notifikasi Pesanan Baru',
-        message: `Pesanan baru dari Demo User, produk Paket Premium senilai Rp150.000, pesanan belum dibayar, mohon tunggu pembayaran.`,
-        order_id: null,
-        customer_name: 'Demo User',
-        product_name: 'Paket Premium',
-        amount: 150000,
-        is_read: false,
-        created_at: now.toISOString(),
-        metadata: { priority: 'normal', category: 'order' }
-      } as any;
-
+      
+      const validTypes = ['new_order', 'paid_order', 'new_user', 'order_cancelled', 'new_review', 'system', 'new_rent', 'paid_rent'];
+      if (!validTypes.includes(type)) {
+        return respond(res, 400, { error: 'invalid_type', message: `type must be one of: ${validTypes.join(', ')}` });
+      }
+      
       const { data, error } = await sb
         .from('admin_notifications')
-        .insert(payload)
+        .insert({
+          type,
+          title: String(title).slice(0, 200),
+          message: String(message).slice(0, 1000),
+          order_id: order_id || null,
+          user_id: user_id || null,
+          customer_name: customer_name ? String(customer_name).slice(0, 100) : null,
+          product_name: product_name ? String(product_name).slice(0, 200) : null,
+          amount: typeof amount === 'number' ? amount : null,
+          is_read: false,
+          metadata: metadata || { priority: 'normal' },
+        })
         .select('id, created_at')
         .single();
-
+      
       if (error) return respond(res, 500, { error: 'db_error', details: error.message });
-      return respond(res, 200, { success: true, id: data?.id, created_at: data?.created_at });
+      return respond(res, 201, { success: true, id: data?.id, created_at: data?.created_at });
+    }
+
+    // Enhancement D: Server-side notification deletion
+    if (action === 'delete' && req.method === 'POST') {
+      const { id } = (req.body || {}) as { id?: string };
+      if (!id) return respond(res, 400, { error: 'missing_id' });
+      
+      const { error } = await sb
+        .from('admin_notifications')
+        .delete()
+        .eq('id', id);
+      
+      if (error) return respond(res, 500, { error: 'db_error', details: error.message });
+      return respond(res, 200, { success: true });
     }
 
     return respond(res, 400, { error: 'unknown_action' });

@@ -149,6 +149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           amount: order.amount,
           status: 'pending',
           payment_method: 'xendit',
+          payment_channel: channelCode, // Record actual payment channel (BRI, QRIS, MANDIRI, etc.)
           rental_duration: order.rental_duration || null,
           user_id: order.user_id || null,
           client_external_id: external_id,
@@ -321,7 +322,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // This ensures the webhook can find the order later
         const orderUpdateData = {
           xendit_invoice_id: xenditData.id,
-          xendit_invoice_url: paymentSpecificData.invoice_url || paymentSpecificData.payment_url || null
+          xendit_invoice_url: paymentSpecificData.invoice_url || paymentSpecificData.payment_url || null,
+          payment_channel: channelCode, // Ensure payment channel is set even if order existed before
         };
 
         if (createdOrder?.id) {

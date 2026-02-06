@@ -2,17 +2,17 @@
  * Admin Shell - Consistent Layout Wrapper
  * Provides navigation and consistent layout for all admin pages
  * Uses CSS variables from cyber-compact.css (--admin-* namespace)
+ * Enhanced with realtime connection status indicator and admin presence
  */
 
 import React, { useState, useEffect } from 'react';
 import { AdminNavigation } from './components/AdminNavigation';
-import { Menu, Bell, LogOut } from 'lucide-react';
+import { Menu, Bell, LogOut, Wifi, WifiOff, RefreshCw, Users } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/TraditionalAuthContext';
 import { AdminToastProvider } from './components/ui/AdminToast';
-import AdminNotificationPanel from './components/AdminNotificationPanel';
 import AdminFloatingNotifications from './AdminFloatingNotifications';
-import { useAdminRealtimeNotifications } from '../../hooks/useAdminRealtimeNotifications';
+import { useAdminRealtimeNotifications, ConnectionStatus } from '../../hooks/useAdminRealtimeNotifications';
 import { AdminDataProvider } from '../../contexts/AdminDataContext';
 import { ConfirmDialogProvider } from '../../contexts/ConfirmDialogContext';
 import { prefetchManager } from '../../services/intelligentPrefetch';
@@ -22,15 +22,58 @@ interface AdminShellProps {
   children: React.ReactNode;
 }
 
+// Enhancement E: Connection Status Indicator Component
+const ConnectionStatusIndicator: React.FC<{ status: ConnectionStatus }> = ({ status }) => {
+  if (status === 'connected') {
+    return (
+      <div 
+        className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20"
+        title="Realtime connected"
+        role="status"
+        aria-label="Koneksi realtime aktif"
+      >
+        <Wifi size={12} className="text-emerald-400" />
+        <span className="hidden sm:inline text-[10px] font-medium text-emerald-400">Live</span>
+      </div>
+    );
+  }
+  
+  if (status === 'reconnecting') {
+    return (
+      <div 
+        className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse"
+        title="Reconnecting to realtime..."
+        role="status"
+        aria-label="Sedang menghubungkan ulang"
+      >
+        <RefreshCw size={12} className="text-amber-400 animate-spin" />
+        <span className="hidden sm:inline text-[10px] font-medium text-amber-400">Reconnecting</span>
+      </div>
+    );
+  }
+  
+  // offline
+  return (
+    <div 
+      className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/10 border border-red-500/20"
+      title="Realtime disconnected — using polling fallback"
+      role="status"
+      aria-label="Koneksi realtime terputus, menggunakan polling"
+    >
+      <WifiOff size={12} className="text-red-400" />
+      <span className="hidden sm:inline text-[10px] font-medium text-red-400">Offline</span>
+    </div>
+  );
+};
+
 export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
 
   // Use unified realtime notifications hook - single subscription pattern
-  const { unreadCount } = useAdminRealtimeNotifications({ limit: 50 });
+  const { unreadCount, connectionStatus, onlineAdmins } = useAdminRealtimeNotifications({ limit: 50 });
 
   // Track page changes for intelligent prefetching
   useEffect(() => {
@@ -81,30 +124,38 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
-              {/* Notifications */}
-              <div className="relative">
-                <button
-                  onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                  className="relative p-2 rounded-full hover:bg-white/5 transition-colors"
-                  aria-label="Notifications"
+              {/* Enhancement E: Connection Status Indicator */}
+              <ConnectionStatusIndicator status={connectionStatus} />
+              
+              {/* Enhancement F: Online Admins Indicator */}
+              {onlineAdmins.length > 0 && (
+                <div 
+                  className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 border border-white/10"
+                  title={`Admin online: ${onlineAdmins.map(a => a.name).join(', ')}`}
                 >
-                  <Bell size={20} className="text-white/60" />
-                  {unreadCount > 0 && (
-                    <span
-                      className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold bg-[var(--admin-error)] text-white px-1"
-                      aria-label={`${unreadCount} unread notifications`}
-                    >
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-                
-                {/* Notification Panel */}
-                <AdminNotificationPanel
-                  isOpen={notificationPanelOpen}
-                  onClose={() => setNotificationPanelOpen(false)}
-                />
-              </div>
+                  <Users size={14} className="text-emerald-400" />
+                  <span className="text-[10px] font-medium text-white/60">
+                    {onlineAdmins.length}
+                  </span>
+                </div>
+              )}
+
+              {/* Notifications */}
+              <button
+                onClick={() => navigate('/admin/notifications')}
+                className="relative p-2 rounded-full hover:bg-white/5 transition-colors"
+                aria-label="Notifications"
+              >
+                <Bell size={20} className="text-white/60" />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold bg-[var(--admin-error)] text-white px-1"
+                    aria-label={`${unreadCount} unread notifications`}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
 
               {/* Logout */}
               <button

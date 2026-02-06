@@ -102,7 +102,46 @@ class AdminNotificationService {
     }, { ttl: 300_000, tags: [this.cacheTag] }); // 5 minutes cache to reduce egress
   }
 
-  // Create new order notification
+  /**
+   * Create notification via server API (Enhancement D: Server-only creation)
+   * All notification creation now goes through the API to ensure proper
+   * server-side validation and avoid client-side RLS bypass.
+   */
+  async createNotificationViaAPI(payload: {
+    type: string;
+    title: string;
+    message: string;
+    order_id?: string;
+    user_id?: string;
+    customer_name?: string;
+    product_name?: string;
+    amount?: number;
+    metadata?: Record<string, any>;
+  }): Promise<void> {
+    try {
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+
+      const resp = await fetch('/api/admin-notifications?action=create', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`API ${resp.status}: ${await resp.text()}`);
+      }
+      this.invalidateCache();
+    } catch (error) {
+      console.error('Failed to create notification via API:', error);
+      throw error;
+    }
+  }
+
+  // Create new order notification (server-side)
   async createOrderNotification(
     orderId: string, 
     customerName: string, 
@@ -112,135 +151,85 @@ class AdminNotificationService {
     _customerPhone?: string,
     orderType?: 'purchase' | 'rental'
   ): Promise<void> {
-    try {
-      const isRental = orderType === 'rental';
-      
-      // Map types to rental-specific types when orderType is rental
-      let finalType = type;
-      if (isRental) {
-        if (type === 'new_order') finalType = 'new_rent';
-        else if (type === 'paid_order') finalType = 'paid_rent';
-      }
-      
-      const titles: Record<string, string> = {
-        new_order: 'Pesanan Pembelian Baru',
-        paid_order: 'Pembayaran Pembelian Diterima',
-        new_rent: 'Pesanan Penyewaan Baru',
-        paid_rent: 'Pembayaran Penyewaan Diterima',
-        order_cancelled: isRental 
-          ? 'Pesanan Penyewaan Dibatalkan' 
-          : 'Pesanan Pembelian Dibatalkan'
-      };
-
-      const messages: Record<string, string> = {
-        new_order: `${customerName} memesan ${productName} senilai ${formatCurrency(amount)}. Menunggu pembayaran.`,
-        paid_order: `${customerName} telah membayar pesanan ${productName} senilai ${formatCurrency(amount)}.`,
-        new_rent: `${customerName} menyewa ${productName} senilai ${formatCurrency(amount)}. Menunggu pembayaran.`,
-        paid_rent: `${customerName} telah membayar sewa ${productName} senilai ${formatCurrency(amount)}.`,
-        order_cancelled: `${customerName} membatalkan pesanan ${productName}.`
-      };
-
-      if (!supabase) {
-        console.error('Supabase client not available');
-        return;
-      }
-
-      // Determine if this is a payment notification
-      const isPaidNotification = finalType === 'paid_order' || finalType === 'paid_rent';
-
-      const { error } = await supabase
-        .from('admin_notifications')
-        .insert({
-          type: finalType,
-          title: titles[finalType],
-          message: messages[finalType],
-          order_id: orderId,
-          customer_name: customerName,
-          product_name: productName,
-          amount,
-          is_read: false,
-          metadata: {
-            priority: isPaidNotification ? 'high' : 'normal',
-            category: isPaidNotification ? 'payment' : 'order',
-            order_type: orderType || 'purchase'
-          }
-        });
-
-      if (error) throw error;
-      this.invalidateCache();
-    } catch (error) {
-      console.error('Failed to create order notification:', error);
+    const isRental = orderType === 'rental';
+    let finalType = type;
+    if (isRental) {
+      if (type === 'new_order') finalType = 'new_rent';
+      else if (type === 'paid_order') finalType = 'paid_rent';
     }
+
+    const isPaidNotification = finalType === 'paid_order' || finalType === 'paid_rent';
+    const titles: Record<string, string> = {
+      new_order: 'Pesanan Pembelian Baru',
+      paid_order: 'Pembayaran Pembelian Diterima',
+      new_rent: 'Pesanan Penyewaan Baru',
+      paid_rent: 'Pembayaran Penyewaan Diterima',
+      order_cancelled: isRental ? 'Pesanan Penyewaan Dibatalkan' : 'Pesanan Pembelian Dibatalkan'
+    };
+    const messages: Record<string, string> = {
+      new_order: `${customerName} memesan ${productName} senilai ${formatCurrency(amount)}. Menunggu pembayaran.`,
+      paid_order: `${customerName} telah membayar pesanan ${productName} senilai ${formatCurrency(amount)}.`,
+      new_rent: `${customerName} menyewa ${productName} senilai ${formatCurrency(amount)}. Menunggu pembayaran.`,
+      paid_rent: `${customerName} telah membayar sewa ${productName} senilai ${formatCurrency(amount)}.`,
+      order_cancelled: `${customerName} membatalkan pesanan ${productName}.`
+    };
+
+    await this.createNotificationViaAPI({
+      type: finalType,
+      title: titles[finalType],
+      message: messages[finalType],
+      order_id: orderId,
+      customer_name: customerName,
+      product_name: productName,
+      amount,
+      metadata: {
+        priority: isPaidNotification ? 'high' : 'normal',
+        category: isPaidNotification ? 'payment' : 'order',
+        order_type: orderType || 'purchase'
+      }
+    });
   }
 
-  // Create new user signup notification
+  // Create new user signup notification (server-side)
   async createUserSignupNotification(
     userId: string,
     userName: string,
     userPhone: string,
     email?: string
   ): Promise<void> {
-    try {
-      if (!supabase) {
-        console.error('Supabase client not available');
-        return;
+    await this.createNotificationViaAPI({
+      type: 'new_user',
+      title: 'Pengguna Baru Terdaftar',
+      message: `${userName} mendaftar dengan nomor telepon ${userPhone}.`,
+      user_id: userId,
+      customer_name: userName,
+      metadata: {
+        email,
+        phone: userPhone,
+        priority: 'normal',
+        category: 'user'
       }
-      const { error } = await supabase
-        .from('admin_notifications')
-        .insert({
-          type: 'new_user',
-          title: 'Pengguna Baru Terdaftar',
-          message: `${userName} mendaftar dengan nomor telepon ${userPhone}.`,
-          user_id: userId,
-          customer_name: userName,
-          is_read: false,
-          metadata: {
-            email,
-            phone: userPhone,
-            priority: 'normal',
-            category: 'user'
-          }
-        });
-
-      if (error) throw error;
-      this.invalidateCache();
-    } catch (error) {
-      console.error('Failed to create user signup notification:', error);
-    }
+    });
   }
 
-  // Create review notification
+  // Create review notification (server-side)
   async createReviewNotification(
     productName: string,
     customerName: string,
     rating: number
   ): Promise<void> {
-    try {
-      if (!supabase) {
-        console.error('Supabase client not available');
-        return;
+    await this.createNotificationViaAPI({
+      type: 'new_review',
+      title: 'Ulasan Produk Baru',
+      message: `${customerName} memberikan ulasan ${rating} bintang untuk ${productName}.`,
+      product_name: productName,
+      customer_name: customerName,
+      metadata: {
+        rating,
+        priority: 'low',
+        category: 'review'
       }
-      const { error } = await supabase
-        .from('admin_notifications')
-        .insert({
-          type: 'new_review',
-          title: 'Ulasan Produk Baru',
-          message: `${customerName} memberikan ulasan ${rating} bintang untuk ${productName}.`,
-          product_name: productName,
-          customer_name: customerName,
-          is_read: false,
-          metadata: {
-            rating,
-            priority: 'low',
-            category: 'review'
-          }
-        });
-
-      if (error) throw error;
-      this.invalidateCache();
-    } catch (error) {
-      console.error('Failed to create review notification:', error);
-    }
+    });
   }
 
   // Mark notification as read via API
@@ -318,22 +307,38 @@ class AdminNotificationService {
     }, { ttl: 20_000, tags: [this.cacheTag] });
   }
 
-  // Delete notification
+  // Delete notification via API (Enhancement D: Server-only operations)
   async deleteNotification(notificationId: string): Promise<void> {
     try {
-      if (!supabase) {
-        console.error('Supabase client not available');
-        return;
+      const sessionToken = localStorage.getItem('session_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
       }
-      const { error } = await supabase
-        .from('admin_notifications')
-        .delete()
-        .eq('id', notificationId);
 
-      if (error) throw error;
+      const resp = await fetch('/api/admin-notifications?action=delete', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ id: notificationId }),
+      });
+
+      if (!resp.ok) {
+        // Fallback to direct Supabase delete if API fails
+        if (supabase) {
+          const { error } = await supabase
+            .from('admin_notifications')
+            .delete()
+            .eq('id', notificationId);
+          if (error) throw error;
+          this.invalidateCache();
+          return;
+        }
+        throw new Error(`API ${resp.status}`);
+      }
       this.invalidateCache();
     } catch (error) {
       console.error('Failed to delete notification:', error);
+      throw error;
     }
   }
 

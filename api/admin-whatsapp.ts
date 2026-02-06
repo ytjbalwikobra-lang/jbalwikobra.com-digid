@@ -12,17 +12,22 @@ function respond(res: VercelResponse, status: number, body: any) {
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  // CRITICAL: Only use service role key — anon key is blocked by RLS on whatsapp_api_keys
+  // This was causing the admin page to show "Inactive" because api_key query returned null
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !key) {
+    console.error('[admin-whatsapp] Missing SUPABASE_SERVICE_ROLE_KEY — cannot access WhatsApp config');
+    return null;
+  }
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }});
 }
 
 async function handleValidation(sb: any, res: VercelResponse) {
   try {
-    // Get active provider
+    // Get active provider - select ALL fields needed for validation checks
     const { data: provider, error: pErr } = await sb
       .from('whatsapp_providers')
-      .select('id, name, api_url, is_active, created_at')
+      .select('id, name, display_name, base_url, is_active, settings, send_message_endpoint, async_send_message_endpoint, phone_field_name, key_field_name, message_field_name, message_id_field, success_status_field, success_status_value')
       .eq('is_active', true)
       .order('name')
       .limit(1)
@@ -194,7 +199,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .limit(1)
         .maybeSingle();
       
-      if (kErr) return respond(res, 500, { error: kErr.message });
+      if (kErr) {
+        console.error('[admin-whatsapp] API key query error:', kErr.message);
+        return respond(res, 500, { error: kErr.message });
+      }
+      
+      if (!apiKey) {
+        console.warn('[admin-whatsapp] No active API key found for provider:', provider.id, provider.name);
+      }
       
       return respond(res, 200, {
         provider: {

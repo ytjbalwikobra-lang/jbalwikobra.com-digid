@@ -97,6 +97,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
         created_at,
         paid_at,
         payment_method,
+        payment_channel,
         product_id,
         products:product_id (
           id,
@@ -161,8 +162,8 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     const productId = order.product_id;
     const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
     
-    // Get payment channel and timestamp
-    const paymentChannel = order.payment_method || 'Xendit';
+    // Get payment channel and timestamp (prefer actual channel over generic gateway name)
+    const paymentChannel = order.payment_channel || order.payment_method || 'Xendit';
     const paidTimestamp = order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID', {
       day: '2-digit',
       month: 'long',
@@ -334,23 +335,30 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
     // Idempotency: if already sent for this order+status, skip
     const alreadySentGroup = await wa.hasMessageLog('order-paid-group', contextId);
     if (!alreadySentGroup) {
-      const settings = await wa.getActiveProviderSettings();
+      const providerConfig = await wa.getActiveProviderSettings();
+      // CRITICAL FIX: getActiveProviderSettings() returns the full provider row.
+      // The actual settings (default_group_id, group_configurations) are nested inside .settings
+      const providerSettings = providerConfig?.settings || {};
       
       // Determine appropriate group based on order type and group configurations
-      let groupId = settings?.default_group_id; // fallback
+      let groupId = providerSettings?.default_group_id; // fallback
       
-      if (settings?.group_configurations) {
-        const groupConfigs = settings.group_configurations;
+      if (providerSettings?.group_configurations) {
+        const groupConfigs = providerSettings.group_configurations;
         
         if (isRental && groupConfigs.rental_orders) {
           groupId = groupConfigs.rental_orders;
+          console.log('[WhatsApp] Routing to rental_orders group:', groupId);
         } else if (!isRental && groupConfigs.purchase_orders) {
           groupId = groupConfigs.purchase_orders;
+          console.log('[WhatsApp] Routing to purchase_orders group:', groupId);
         }
-        // For other order types, we could add flash_sales check here
-        // else if (order.order_type === 'flash_sale' && groupConfigs.flash_sales) {
-        //   groupId = groupConfigs.flash_sales;
-        // }
+      }
+      
+      if (!groupId) {
+        console.warn('[WhatsApp] ⚠️ No group ID resolved. Check provider settings: default_group_id and group_configurations');
+      } else {
+        console.log('[WhatsApp] Sending to group:', groupId, 'isRental:', isRental);
       }
       
       const resp = await wa.sendGroupMessage({
@@ -360,8 +368,9 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         contextId
       });
       if (resp.success) {
+        console.log('[WhatsApp] ✅ Admin group notification sent successfully');
       } else {
-        console.error('[WhatsApp] Admin group notification failed:', resp.error);
+        console.error('[WhatsApp] ❌ Admin group notification failed:', resp.error);
       }
     } else {
     }

@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Save, Loader, User, Shield, ShieldOff, AlertTriangle } from 'lucide-react';
 import { User as UserType } from '../../../services/adminService';
 import { useToast } from '../../../components/Toast';
-import { useAdminConfirm } from './ui/AdminConfirmModal';
+import { useConfirmDialog } from '../../../contexts/ConfirmDialogContext';
 import { AdminModal } from './ui/AdminModal';
 import { AdminButton } from './ui/AdminButton';
 import PhoneInput from '../../../components/PhoneInput';
@@ -43,7 +43,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const { push } = useToast();
-  const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const confirm = useConfirmDialog();
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -61,7 +61,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
   // Handle close with dirty state check
   const handleCloseWithCheck = useCallback(async () => {
     if (isDirty && mode === 'edit') {
-      const confirmed = await showConfirm({
+      const confirmed = await confirm({
         title: 'Unsaved Changes',
         message: 'You have unsaved changes. Are you sure you want to close without saving?',
         type: 'danger',
@@ -72,7 +72,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
       if (!confirmed) return;
     }
     onClose();
-  }, [isDirty, mode, showConfirm, onClose]);
+  }, [isDirty, mode, confirm, onClose]);
 
   // Initialize form data when modal opens
   useEffect(() => {
@@ -139,7 +139,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
     // Show confirmation for admin role changes
     if (user.is_admin !== formData.is_admin) {
       const action = formData.is_admin ? 'grant' : 'revoke';
-      const confirmed = await showConfirm({
+      const confirmed = await confirm({
         title: 'Confirm Role Change',
         message: `You are about to ${action} admin access for "${formData.name}".\n\nContinue?`,
         type: formData.is_admin ? 'info' : 'danger',
@@ -192,7 +192,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
   const handleDeactivate = async () => {
     if (!user) return;
 
-    const confirmed = await showConfirm({
+    const confirmed = await confirm({
       title: 'Deactivate User',
       message: `You are about to deactivate "${user.name}".\n\nThe user will not be able to login after deactivation.\n\nContinue?`,
       type: 'danger',
@@ -276,15 +276,13 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
   );
 
   return (
-    <>
-      <ConfirmModal />
-      <AdminModal
-        isOpen={isOpen}
-        onClose={handleCloseWithCheck}
-        title={title}
-        size="md"
-        actions={modalActions}
-      >
+    <AdminModal
+      isOpen={isOpen}
+      onClose={handleCloseWithCheck}
+      title={title}
+      size="md"
+      actions={modalActions}
+    >
         <form id="user-form" onSubmit={handleSubmit} className="space-y-3">
           {/* Dirty State Warning */}
           {isDirty && mode === 'edit' && (
@@ -429,8 +427,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
             </button>
           </div>
         </form>
-      </AdminModal>
-    </>
+    </AdminModal>
   );
 };
 

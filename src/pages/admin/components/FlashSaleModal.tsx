@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Loader } from 'lucide-react';
 import { ProductService } from '../../../services/productService';
 import { useToast } from '../../../components/Toast';
-import { useAdminConfirm } from './ui/AdminConfirmModal';
+import { useConfirmDialog } from '../../../contexts/ConfirmDialogContext';
 import { AdminModal } from './ui/AdminModal';
 import { AdminButton } from './ui/AdminButton';
 import { formatCurrency } from '../../../utils/helpers';
@@ -50,7 +50,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
   const { products, productsLoading } = useAdminProducts();
   const [loading, setLoading] = useState(false);
   const { push } = useToast();
-  const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const confirm = useConfirmDialog();
 
   // Use price input hooks for better formatting
   const salePriceInput = usePriceInput(0, { prefix: true });
@@ -125,7 +125,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
     const productName = selectedProduct?.name || 'Unknown';
     const actionText = flashSale ? 'menyimpan perubahan' : 'membuat';
 
-    const confirmed = await showConfirm({
+    const confirmed = await confirm({
       title: flashSale ? 'Konfirmasi Perubahan' : 'Konfirmasi Buat Flash Sale',
       message: `Anda akan ${actionText} flash sale untuk produk "${productName}".\n\nHarga Sale: ${formatCurrency(formData.salePrice)}\nDiskon: ${discount}%\n\nLanjutkan?`,
       type: 'info',
@@ -220,15 +220,13 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
   );
 
   return (
-    <>
-      <ConfirmModal />
-      <AdminModal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={title}
-        size="lg"
-        actions={modalActions}
-      >
+    <AdminModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size="lg"
+      actions={modalActions}
+    >
         {/* Form */}
         <form id="flash-sale-form" onSubmit={handleSubmit} className="space-y-3">
           {/* Product Selection */}
@@ -359,8 +357,7 @@ export const FlashSaleModal: React.FC<FlashSaleModalProps> = ({
             </label>
           </div>
         </form>
-      </AdminModal>
-    </>
+    </AdminModal>
   );
 };
 

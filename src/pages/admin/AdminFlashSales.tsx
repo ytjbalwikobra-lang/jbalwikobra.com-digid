@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useToast } from '../../components/Toast';
-import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { useConfirmDialog } from '../../contexts/ConfirmDialogContext';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminBentoCard, AdminBentoMetricCard } from './components/ui/AdminBentoCard';
 import { AdminHeroSection } from './components/ui/AdminHeroSection';
@@ -66,7 +66,7 @@ const AdminFlashSales: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   
   const { push } = useToast();
-  const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const confirm = useConfirmDialog();
 
   // Load all flash sales - no pagination for bento grid
   const loadFlashSales = useCallback(async () => {
@@ -119,7 +119,7 @@ const AdminFlashSales: React.FC = () => {
   // Handle delete
   const handleDelete = async (sale: FlashSaleRow) => {
     const productName = sale.products?.name || 'Unknown';
-    const confirmed = await showConfirm({
+    const confirmed = await confirm({
       title: 'Hapus Flash Sale',
       message: `Anda akan menghapus flash sale untuk produk "${productName}".\n\nTindakan ini tidak dapat dibatalkan.\n\nLanjutkan?`,
       type: 'danger',
@@ -165,7 +165,7 @@ const AdminFlashSales: React.FC = () => {
     setModalOpen(false);
     setSelectedFlashSale(null);
     loadFlashSales();
-    push(selectedFlashSale ? 'Flash sale berhasil diperbarui!' : 'Flash sale berhasil dibuat!', 'success');
+    // Note: Toast is already shown by FlashSaleModal, no need to show duplicate
   };
 
   // Compact metrics
@@ -217,7 +217,6 @@ const AdminFlashSales: React.FC = () => {
 
   return (
     <div className="admin-page space-y-4">
-      <ConfirmModal />
       
       {/* Cyberpunk Hero Section */}
       <AdminHeroSection

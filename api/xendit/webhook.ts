@@ -353,7 +353,6 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         // }
       }
       
-      const start = Date.now();
       const resp = await wa.sendGroupMessage({
         message,
         groupId,
@@ -384,12 +383,7 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         }
 
         // Generate customer notification message (different for rental vs purchase)
-        // Get product URL - currently unused but kept for future use
-        const _productId = order.product_id;
-        const _productUrl = _productId ? `https://jbalwikobra.com/products/${_productId}` : 'https://jbalwikobra.com/products';
-        
-        // Get payment channel from order - currently unused but kept for future use
-        const _paymentChannel = order.payment_method || 'Xendit';
+        // Note: Product URL and payment channel can be added to message template if needed
         
         // Format timestamp
         const paidTimestamp = order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID', {
@@ -744,7 +738,6 @@ export default async function handler(req: any, res: any) {
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling
     
-    let _ordersUpdated = 0;
     let paymentsUpdated = 0;
     const updateErrors: string[] = [];
 

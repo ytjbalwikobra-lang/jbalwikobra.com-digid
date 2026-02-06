@@ -166,9 +166,6 @@ async function listOrders(page: number, limit: number, status?: string) {
   
   if (!supabase) return { data: [], count: 0, page };
   
-  // FIRST: Test raw count without any filters
-  const _rawTest = await supabase.from('orders').select('id', { count: 'exact', head: true });
-  
   const from = (page - 1) * limit; const to = from + limit - 1;
   
   // First get orders - only select columns that exist in the table
@@ -342,9 +339,6 @@ async function listUsers(page: number, limit: number, search?: string) {
     return { data: [], count: 0, page };
   }
   
-  // FIRST: Test raw count without any filters
-  const _rawTest = await supabase.from('users').select('id', { count: 'exact', head: true });
-  
   const from = (page - 1) * limit; 
   const to = from + limit - 1;
   
@@ -479,6 +473,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const { id, fields } = req.body || {};
         
+        console.log('[Admin API] updateProduct called:', { id, fields: JSON.stringify(fields) });
+        
         if (!id || !fields) {
           return respond(res, 400, { error: 'missing_parameters' });
         }
@@ -495,6 +491,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('[Admin API] Product update error:', error);
           return respond(res, 400, { error: 'update_failed', details: error.message });
         }
+        
+        console.log('[Admin API] Product updated successfully:', { id, price: data?.price });
         return respond(res, 200, { success: true, data });
       } catch (e: any) {
         console.error('[Admin API] Exception:', e);

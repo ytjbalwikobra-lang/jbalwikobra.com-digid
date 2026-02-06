@@ -14,6 +14,7 @@ import AdminNotificationPanel from './components/AdminNotificationPanel';
 import AdminFloatingNotifications from './AdminFloatingNotifications';
 import { useAdminRealtimeNotifications } from '../../hooks/useAdminRealtimeNotifications';
 import { AdminDataProvider } from '../../contexts/AdminDataContext';
+import { ConfirmDialogProvider } from '../../contexts/ConfirmDialogContext';
 import { prefetchManager } from '../../services/intelligentPrefetch';
 // Design system: cyber-compact.css (loaded via index.css)
 
@@ -52,6 +53,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
 
   return (
     <AdminDataProvider>
+      <ConfirmDialogProvider>
       <AdminToastProvider>
         <div className="min-h-screen bg-black text-white">
           {/* Navigation Sidebar */}
@@ -127,6 +129,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
         <AdminFloatingNotifications />
       </div>
       </AdminToastProvider>
+      </ConfirmDialogProvider>
     </AdminDataProvider>
   );
 };

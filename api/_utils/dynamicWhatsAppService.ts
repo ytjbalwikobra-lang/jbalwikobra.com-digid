@@ -269,7 +269,7 @@ export class DynamicWhatsAppService {
       if (!apiConfig) {
         return { success: false, error: 'No active WhatsApp API configuration found' };
       }
-      const { api_key, key_id, provider_config } = apiConfig;
+      const { api_key, provider_config } = apiConfig;
       const provider = provider_config;
 
       // Resolve group send endpoint & field names from settings or sensible defaults

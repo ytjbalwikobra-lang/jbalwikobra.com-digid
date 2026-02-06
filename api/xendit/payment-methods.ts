@@ -76,52 +76,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-function _getDefaultDescription(type: string, name: string): string {
-  const descriptions: Record<string, string> = {
-    'EWALLET': `Pembayaran instant dengan ${name}`,
-    'VIRTUAL_ACCOUNT': `Transfer melalui Virtual Account ${name}`,
-    'CREDIT_CARD': 'Pembayaran dengan kartu kredit/debit',
-    'QRIS': 'Scan QR Code untuk bayar',
-    'BANK': `Transfer bank melalui ${name}`,
-    'RETAIL_OUTLET': `Bayar di outlet ${name}`
-  };
-
-  return descriptions[type] || `Pembayaran melalui ${name}`;
-}
-
-function _getProcessingTime(type: string): string {
-  const processingTimes: Record<string, string> = {
-    'EWALLET': 'Instant',
-    'QRIS': 'Instant',
-    'CREDIT_CARD': 'Instant',
-    'VIRTUAL_ACCOUNT': '1-15 menit',
-    'BANK': '1-15 menit',
-    'RETAIL_OUTLET': '1-60 menit'
-  };
-
-  return processingTimes[type] || '1-15 menit';
-}
-
-function _isPopularMethod(id: string, type: string): boolean {
-  const popularMethods = [
-    'ovo', 'dana', 'gopay', 'qris', 'bca', 'bni', 'mandiri'
-  ];
-  
-  return popularMethods.includes(id.toLowerCase()) || type === 'QRIS';
-}
-
-function _isAmountValid(amount: number, method: PaymentMethodResponse): boolean {
-  if (method.min_amount && amount < method.min_amount) {
-    return false;
-  }
-  
-  if (method.max_amount && amount > method.max_amount) {
-    return false;
-  }
-  
-  return true;
-}
-
 function getStaticFallbackMethods(amount?: number) {
   const staticMethods = [
     {

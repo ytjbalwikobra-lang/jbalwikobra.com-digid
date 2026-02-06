@@ -4,10 +4,9 @@
  * 
  * @module notificationService
  * @description Creates admin notifications for order events (new, paid, cancelled)
+ * 
+ * Supported notification types: new_order, paid_order, order_cancelled, new_rent, paid_rent
  */
-
-// Type definition for notification types (used for documentation)
-type _NotificationType = 'new_order' | 'paid_order' | 'order_cancelled' | 'new_rent' | 'paid_rent';
 
 /**
  * Format currency to Indonesian Rupiah

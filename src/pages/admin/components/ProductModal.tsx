@@ -3,7 +3,7 @@ import { Plus, Trash2, Loader, Save } from 'lucide-react';
 import { adminService, Product } from '../../../services/adminService';
 import { deletePublicUrls } from '../../../services/storageService';
 import { useToast } from '../../../components/Toast';
-import { useAdminConfirm } from './ui/AdminConfirmModal';
+import { useConfirmDialog } from '../../../contexts/ConfirmDialogContext';
 import { AdminModal } from './ui/AdminModal';
 import { AdminButton } from './ui/AdminButton';
 import { AdminImageUpload } from './ui/AdminImageUpload';
@@ -48,7 +48,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   onSuccess
 }) => {
   const { push } = useToast();
-  const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const confirm = useConfirmDialog();
   const [loading, setLoading] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isOriginalPriceDirty, setIsOriginalPriceDirty] = useState(false);
@@ -186,7 +186,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
     // Show confirmation dialog
     const actionText = mode === 'create' ? 'membuat' : 'menyimpan perubahan';
-    const confirmed = await showConfirm({
+    const confirmed = await confirm({
       title: mode === 'create' ? 'Konfirmasi Buat Produk' : 'Konfirmasi Simpan Perubahan',
       message: `Anda akan ${actionText} produk "${formData.name}".\n\nHarga: ${formatCurrency(formData.price)}\n\nLanjutkan?`,
       type: 'info',
@@ -222,10 +222,15 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
       let savedProduct: any;
       if (mode === 'create') {
+        console.log('[ProductModal] Creating product with data:', JSON.stringify(submitData, null, 2));
         savedProduct = await adminService.createProduct(submitData);
         push('Produk berhasil dibuat!', 'success');
       } else if (mode === 'edit' && product) {
+        console.log('[ProductModal] Updating product:', product.id);
+        console.log('[ProductModal] Current formData.price:', formData.price);
+        console.log('[ProductModal] submitData:', JSON.stringify(submitData, null, 2));
         savedProduct = await adminService.updateProduct(product.id, submitData);
+        console.log('[ProductModal] Update response:', JSON.stringify(savedProduct, null, 2));
         push('Produk berhasil diperbarui!', 'success');
       }
 
@@ -360,19 +365,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
   ) : undefined;
 
   return (
-    <>
-      <ConfirmModal />
-      <AdminModal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={title}
-        size="lg"
-        actions={modalActions}
-      >
-        <form id="product-form" onSubmit={handleSubmit} className="space-y-3" noValidate>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Product Name */}
-            <div className="md:col-span-2">
+    <AdminModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size="lg"
+      actions={modalActions}
+    >
+      <form id="product-form" onSubmit={handleSubmit} className="space-y-3" noValidate>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Product Name */}
+          <div className="md:col-span-2">
               <label className="admin-label">
                 Product Name <span className="text-[var(--admin-error)]">*</span>
               </label>
@@ -630,8 +633,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </div>
             </div>
         </form>
-      </AdminModal>
-    </>
+    </AdminModal>
   );
 };
 

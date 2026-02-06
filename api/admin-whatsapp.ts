@@ -17,18 +17,6 @@ function getSupabase() {
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }});
 }
 
-async function _getActiveProvider(supabase: any) {
-  const { data, error } = await supabase
-    .from('whatsapp_providers')
-    .select('id, name, api_url, is_active, created_at')
-    .eq('is_active', true)
-    .order('name')
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data || null;
-}
-
 async function handleValidation(sb: any, res: VercelResponse) {
   try {
     // Get active provider

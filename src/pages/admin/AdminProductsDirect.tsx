@@ -5,7 +5,6 @@ import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminLoadingState } from './components/ui/AdminLoadingState';
 import { AdminEmptyState } from './components/ui/AdminEmptyState';
-import { useAdminConfirm } from './components/ui/AdminConfirmModal';
 import { useSoldViaWAModal } from './components/ui/SoldViaWAModal';
 import { adminService } from '../../services/adminService';
 import { adminCache } from '../../services/adminCache';
@@ -83,7 +82,6 @@ const AdminProductsDirect: React.FC = () => {
   });
 
   const { push } = useToast();
-  const { ConfirmModal } = useAdminConfirm();
   const { showSoldViaWAModal, SoldViaWAModalComponent } = useSoldViaWAModal();
   const { getSignal } = useAbortController(); // Request deduplication
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -334,13 +332,12 @@ const AdminProductsDirect: React.FC = () => {
   const handleModalSuccess = async () => {
     await loadProducts();
     setModalState({ isOpen: false, mode: 'create', product: null });
-    push(modalState.mode === 'create' ? 'Produk berhasil dibuat!' : 'Produk berhasil diperbarui!', 'success');
+    // Note: Toast is already shown by ProductModal, no need to show duplicate
   };
 
   // Analytics cards config - memoized to prevent unnecessary re-renders
   return (
     <div className="space-y-4">
-      <ConfirmModal />
       
       {/* Cyberpunk Hero Section */}
       <AdminHeroSection
@@ -351,7 +348,7 @@ const AdminProductsDirect: React.FC = () => {
         {/* Search, View Toggle, and Actions Row */}
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mt-4">
           {/* Inline Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
             <input
               ref={searchInputRef}

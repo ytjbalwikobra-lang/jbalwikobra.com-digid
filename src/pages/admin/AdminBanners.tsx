@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Plus, Image as ImageIcon, Eye, EyeOff, ExternalLink, ArrowUpDown, RefreshCw, Search } from 'lucide-react';
 import { Banner } from '../../types';
 import { useToast } from '../../components/Toast';
-import { useAdminConfirm } from './components/ui/AdminConfirmModal';
+import { useConfirmDialog } from '../../contexts/ConfirmDialogContext';
 import { AdminButton } from './components/ui/AdminButton';
 import { AdminBentoCard, AdminBentoMetricCard } from './components/ui/AdminBentoCard';
 import { AdminHeroSection } from './components/ui/AdminHeroSection';
@@ -43,7 +43,7 @@ const AdminBanners: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const { push } = useToast();
-  const { showConfirm, ConfirmModal } = useAdminConfirm();
+  const confirm = useConfirmDialog();
 
   // Load all banners - no pagination for bento grid
   const loadBanners = useCallback(async () => {
@@ -108,7 +108,7 @@ const AdminBanners: React.FC = () => {
 
   // Handle delete
   const handleDelete = async (banner: Banner) => {
-    const confirmed = await showConfirm({
+    const confirmed = await confirm({
       title: 'Hapus Banner',
       message: `Anda akan menghapus banner "${banner.title}".\n\nTindakan ini tidak dapat dibatalkan.\n\nLanjutkan?`,
       type: 'danger',
@@ -178,7 +178,6 @@ const AdminBanners: React.FC = () => {
 
   return (
     <div className="admin-page space-y-4">
-      <ConfirmModal />
       
       {/* Banner Form Modal */}
       <BannerForm

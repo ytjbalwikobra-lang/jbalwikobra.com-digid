@@ -92,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Get existing payment - Optimized: Select only required fields
     const { data: existingPayment, error: fetchError } = await supabase
       .from('payments')
-      .select('id, xendit_id, payment_data, status')
+      .select('id, xendit_id, payment_data, status, expiry_date')
       .eq('xendit_id', paymentId)
       .single();
 

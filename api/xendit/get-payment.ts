@@ -285,7 +285,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           formattedData.bank_code = data.payment_method.virtual_account.channel_code;
         }
         if (data.actions?.length > 0) {
-          const authAction = data.actions.find(action => action.action === 'AUTH');
+          const authAction = data.actions.find((action: { action: string; url?: string }) => action.action === 'AUTH');
           if (authAction) {
             formattedData.payment_url = authAction.url;
             formattedData.action_type = authAction.action;

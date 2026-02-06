@@ -17,7 +17,6 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 // Log which key is being used (for debugging)
 if (supabase) {
-  const keyType = supabaseServiceKey ? 'SERVICE_ROLE' : 'ANON';
   if (!supabaseServiceKey) {
     console.warn('[admin.ts] WARNING: Using ANON key instead of SERVICE_ROLE key - RLS policies will apply!');
   }
@@ -168,7 +167,7 @@ async function listOrders(page: number, limit: number, status?: string) {
   if (!supabase) return { data: [], count: 0, page };
   
   // FIRST: Test raw count without any filters
-  const rawTest = await supabase.from('orders').select('id', { count: 'exact', head: true });
+  const _rawTest = await supabase.from('orders').select('id', { count: 'exact', head: true });
   
   const from = (page - 1) * limit; const to = from + limit - 1;
   
@@ -191,7 +190,7 @@ async function listOrders(page: number, limit: number, status?: string) {
   
   // Get payment data for these orders
   const orderRows = orders || [];
-  const externalIds = orderRows.map(order => order.client_external_id).filter(Boolean);
+  const externalIds = orderRows.map((order: any) => order.client_external_id).filter(Boolean);
   let paymentsMap: { [key: string]: any } = {};
   
   if (externalIds.length > 0) {
@@ -208,7 +207,7 @@ async function listOrders(page: number, limit: number, status?: string) {
   }
   
   // Get product names for orders that have product_id
-  const productIds = Array.from(new Set(orderRows.map(order => order.product_id).filter(Boolean)));
+  const productIds = Array.from(new Set(orderRows.map((order: any) => order.product_id).filter(Boolean)));
   let productsMap: { [key: string]: string } = {};
   
   if (productIds.length > 0) {
@@ -344,7 +343,7 @@ async function listUsers(page: number, limit: number, search?: string) {
   }
   
   // FIRST: Test raw count without any filters
-  const rawTest = await supabase.from('users').select('id', { count: 'exact', head: true });
+  const _rawTest = await supabase.from('users').select('id', { count: 'exact', head: true });
   
   const from = (page - 1) * limit; 
   const to = from + limit - 1;

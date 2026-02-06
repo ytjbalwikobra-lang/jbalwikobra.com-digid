@@ -363,12 +363,12 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
     const session = await createSession(user.id, req);
 
     // Update last login (fire and forget - don't wait)
-    getSupabase()
-      .from('users')
-      .update({ last_login_at: new Date().toISOString() })
-      .eq('id', user.id)
-      .then(() => {})
-      .catch(err => console.error('[Auth] Failed to update last_login_at:', err));
+    Promise.resolve(
+      getSupabase()
+        .from('users')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', user.id)
+    ).then(() => {}).catch((err: Error) => console.error('[Auth] Failed to update last_login_at:', err));
 
     // Return safe user data
     const { password_hash, ...safeUser } = user;
@@ -463,12 +463,12 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
     const expiresAt = getVerificationExpiry();
 
     // Delete old verifications (fire and forget)
-    getSupabase()
-      .from('phone_verifications')
-      .delete()
-      .eq('user_id', userId)
-      .then(() => {})
-      .catch(err => console.error('[Auth] Failed to cleanup old verifications:', err));
+    Promise.resolve(
+      getSupabase()
+        .from('phone_verifications')
+        .delete()
+        .eq('user_id', userId)
+    ).then(() => {}).catch((err: Error) => console.error('[Auth] Failed to cleanup old verifications:', err));
 
     // Create verification
     const { error: verificationError } = await getSupabase()
@@ -543,12 +543,12 @@ async function handleVerifyPhone(req: VercelRequest, res: VercelResponse) {
     }
 
     // Mark as used (fire and forget)
-    getSupabase()
-      .from('phone_verifications')
-      .update({ is_used: true, verified_at: new Date().toISOString() })
-      .eq('id', verification.id)
-      .then(() => {})
-      .catch(err => console.error('[Auth] Failed to mark verification as used:', err));
+    Promise.resolve(
+      getSupabase()
+        .from('phone_verifications')
+        .update({ is_used: true, verified_at: new Date().toISOString() })
+        .eq('id', verification.id)
+    ).then(() => {}).catch((err: Error) => console.error('[Auth] Failed to mark verification as used:', err));
 
     // Update user
     const { data: user, error: userError } = await getSupabase()

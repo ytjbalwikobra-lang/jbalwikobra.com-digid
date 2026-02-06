@@ -6,11 +6,8 @@
  * @description Creates admin notifications for order events (new, paid, cancelled)
  */
 
-interface NotificationType {
-  new_order: string;
-  paid_order: string;
-  order_cancelled: string;
-}
+// Type definition for notification types (used for documentation)
+type _NotificationType = 'new_order' | 'paid_order' | 'order_cancelled' | 'new_rent' | 'paid_rent';
 
 /**
  * Format currency to Indonesian Rupiah

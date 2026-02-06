@@ -96,7 +96,7 @@ export class DynamicWhatsAppService {
             api_key: keyRow.api_key,
             key_id: keyRow.id,
             provider_config: provider
-          } as WhatsAppApiKey;
+          } as unknown as WhatsAppApiKey;
         } catch (fallbackErr) {
           console.error('Fallback getActiveApiKey error:', fallbackErr);
           return null;
@@ -694,7 +694,7 @@ Ada pertanyaan? Balas pesan ini! 💬`;
   // Optimized: Select only required fields to reduce egress
   const { data, error } = await sb
         .from('whatsapp_providers')
-        .select('id, name, display_name, base_url, is_active, settings, key_field_name, send_message_endpoint')
+        .select('id, name, display_name, base_url, is_active, settings, key_field_name, send_message_endpoint, async_send_message_endpoint, phone_field_name, message_field_name, success_status_field, success_status_value, message_id_field')
         .eq('is_active', true)
         .order('name');
 
@@ -703,7 +703,7 @@ Ada pertanyaan? Balas pesan ini! 💬`;
         return [];
       }
 
-      return data || [];
+      return (data || []) as WhatsAppProvider[];
     } catch (error) {
       console.error('Error in getProviders:', error);
       return [];

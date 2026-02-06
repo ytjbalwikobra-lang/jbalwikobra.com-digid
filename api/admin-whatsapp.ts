@@ -17,7 +17,7 @@ function getSupabase() {
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false }});
 }
 
-async function getActiveProvider(supabase: any) {
+async function _getActiveProvider(supabase: any) {
   const { data, error } = await supabase
     .from('whatsapp_providers')
     .select('id, name, api_url, is_active, created_at')
@@ -227,7 +227,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Optimized: Select only required fields for update operation
       const { data: provider, error: pErr } = await sb
         .from('whatsapp_providers')
-        .select('id, name, settings')
+        .select('id, name, display_name, base_url, settings')
         .eq('is_active', true)
         .order('name')
         .limit(1)

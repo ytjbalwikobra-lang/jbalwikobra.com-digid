@@ -360,7 +360,6 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         contextType: 'order-paid-group',
         contextId
       });
-      const duration = Date.now() - start;
       if (resp.success) {
       } else {
         console.error('[WhatsApp] Admin group notification failed:', resp.error);
@@ -385,12 +384,12 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         }
 
         // Generate customer notification message (different for rental vs purchase)
-        // Get product URL
-        const productId = order.product_id;
-        const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
+        // Get product URL - currently unused but kept for future use
+        const _productId = order.product_id;
+        const _productUrl = _productId ? `https://jbalwikobra.com/products/${_productId}` : 'https://jbalwikobra.com/products';
         
-        // Get payment channel from order
-        const paymentChannel = order.payment_method || 'Xendit';
+        // Get payment channel from order - currently unused but kept for future use
+        const _paymentChannel = order.payment_method || 'Xendit';
         
         // Format timestamp
         const paidTimestamp = order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID', {
@@ -745,7 +744,7 @@ export default async function handler(req: any, res: any) {
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling
     
-    let ordersUpdated = 0;
+    let _ordersUpdated = 0;
     let paymentsUpdated = 0;
     const updateErrors: string[] = [];
 
@@ -804,7 +803,8 @@ export default async function handler(req: any, res: any) {
         }
       }
     } catch (paymentException) {
-      const error = `Exception updating payments table: ${paymentException.message || paymentException}`;
+      const err = paymentException as Error;
+      const error = `Exception updating payments table: ${err.message || paymentException}`;
       console.error(`[Webhook] ❌ ${error}`);
       updateErrors.push(error);
     }

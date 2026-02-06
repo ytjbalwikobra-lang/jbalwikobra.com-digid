@@ -42,11 +42,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    let paymentMethods: PaymentMethodResponse[] = [];
     let apiCallSuccessful = false;
 
     if (response.ok) {
-      const data = await response.json();
+      await response.json();
       apiCallSuccessful = true;
     } else {
       const errorText = await response.text();
@@ -63,9 +62,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error) {
     console.error('[Xendit Payment Methods] Error:', error);
+    const err = error as Error;
     console.error('[Xendit Payment Methods] Error details:', {
-      message: error.message,
-      stack: error.stack
+      message: err.message,
+      stack: err.stack
     });
     
     // Return fallback methods on error
@@ -76,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-function getDefaultDescription(type: string, name: string): string {
+function _getDefaultDescription(type: string, name: string): string {
   const descriptions: Record<string, string> = {
     'EWALLET': `Pembayaran instant dengan ${name}`,
     'VIRTUAL_ACCOUNT': `Transfer melalui Virtual Account ${name}`,
@@ -89,7 +89,7 @@ function getDefaultDescription(type: string, name: string): string {
   return descriptions[type] || `Pembayaran melalui ${name}`;
 }
 
-function getProcessingTime(type: string): string {
+function _getProcessingTime(type: string): string {
   const processingTimes: Record<string, string> = {
     'EWALLET': 'Instant',
     'QRIS': 'Instant',
@@ -102,7 +102,7 @@ function getProcessingTime(type: string): string {
   return processingTimes[type] || '1-15 menit';
 }
 
-function isPopularMethod(id: string, type: string): boolean {
+function _isPopularMethod(id: string, type: string): boolean {
   const popularMethods = [
     'ovo', 'dana', 'gopay', 'qris', 'bca', 'bni', 'mandiri'
   ];
@@ -110,7 +110,7 @@ function isPopularMethod(id: string, type: string): boolean {
   return popularMethods.includes(id.toLowerCase()) || type === 'QRIS';
 }
 
-function isAmountValid(amount: number, method: PaymentMethodResponse): boolean {
+function _isAmountValid(amount: number, method: PaymentMethodResponse): boolean {
   if (method.min_amount && amount < method.min_amount) {
     return false;
   }

@@ -307,7 +307,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           description: description || 'Payment'
         };
 
-        const { data: savedPayment, error: saveError } = await supabase
+        const { error: saveError } = await supabase
           .from('payments')
           .upsert(paymentRecord, { onConflict: 'xendit_id' })
           .select()
@@ -315,7 +315,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (saveError) {
           console.error('[Payment] Failed to save payment:', saveError);
-        } else {
         }
 
         // CRITICAL FIX: Always link order to Xendit invoice ID
@@ -390,7 +389,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           
           // Determine if it's rental or purchase
           const isRental = order.order_type === 'rental';
-          const orderType = isRental ? 'RENTAL' : 'PURCHASE';
           
           // Get expiry time in hours
           const expiryHours = xenditData.expiry_date 

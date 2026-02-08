@@ -1,6 +1,6 @@
 # JB AlWikobra E-commerce Platform
 
-A modern e-commerce platform for digital product sales, built with React, TypeScript, and Supabase.
+A modern e-commerce platform for digital product sales and game account rentals, built with React, TypeScript, Supabase, and Vercel.
 
 ## 🚀 Quick Start
 
@@ -47,38 +47,104 @@ npm run preview        # Preview production build locally
 
 ```
 jbalwikobra.com-digid/
-├── src/                    # Source code
+├── src/                    # Frontend source code
 │   ├── components/         # Reusable React components
-│   ├── pages/              # Page components
+│   ├── pages/              # Page components (public + admin)
 │   ├── features/           # Feature modules
-│   ├── services/           # API services
+│   ├── services/           # API & data services
+│   │   ├── customerNotificationService.ts  # Customer notification client
+│   │   ├── adminNotificationService.ts     # Admin notification client
+│   │   ├── adminService.ts                 # Admin panel API service
+│   │   ├── productService.ts               # Product CRUD operations
+│   │   └── ...
 │   ├── hooks/              # Custom React hooks
 │   ├── contexts/           # React contexts
 │   ├── layouts/            # Layout components
+│   ├── styles/             # CSS & design system (cyber-compact.css)
 │   ├── utils/              # Utility functions
 │   └── types/              # TypeScript types
-├── api/                    # Serverless API endpoints
-│   ├── __tests__/          # API test files
+├── api/                    # Vercel Serverless API endpoints
 │   ├── _config/            # API configuration
-│   ├── _middleware/        # API middleware
-│   └── _utils/             # API utilities
-├── scripts/                # Utility scripts
-│   ├── tests/              # Test scripts
-│   ├── monitoring/         # Monitoring & diagnostic scripts
-│   └── maintenance/        # Maintenance & migration scripts
+│   ├── _middleware/        # Auth & CORS middleware
+│   ├── _utils/             # Shared utilities
+│   │   ├── adminNotificationService.ts  # Backend notification creation
+│   │   ├── cacheControl.ts              # Cache headers
+│   │   ├── corsConfig.ts               # CORS configuration
+│   │   └── dynamicWhatsAppService.ts   # WhatsApp integration
+│   ├── xendit/             # Payment gateway (Xendit webhooks)
+│   ├── cron/               # Scheduled jobs
+│   └── admin.ts            # Admin API endpoint
+├── scripts/                # Utility & maintenance scripts
+├── migrations/             # Database migrations (SQL)
 ├── docs/                   # Documentation
-│   ├── admin/              # Admin panel documentation
-│   ├── features/           # Feature documentation
-│   ├── architecture/       # Architecture documentation
-│   ├── deployment/         # Deployment guides
-│   ├── security/           # Security documentation
-│   ├── troubleshooting/    # Troubleshooting guides
-│   ├── guides/             # How-to guides
-│   └── INDEX.md            # Documentation index
-├── migrations/             # Database migrations
 ├── public/                 # Static assets
-└── supabase/              # Supabase configuration
+└── supabase/              # Supabase migrations & config
 ```
+
+## 🗄️ Database Architecture
+
+### Supabase Tables
+
+| Table | Purpose |
+|---|---|
+| `products` | Product catalog (purchases & rentals) |
+| `orders` | All customer orders |
+| `payments` | Xendit payment records |
+| `users` / `profiles` | User accounts |
+| `admin_notifications` | Admin panel notifications (new orders, payments, etc.) |
+| `customer_notifications` | Customer-facing notifications (payment confirmations, promos) |
+| `customer_notification_reads` | Tracks read status for global customer notifications |
+| `whatsapp_providers` | WhatsApp Business API configuration |
+| `reviews` | Product reviews |
+| `flash_sales` | Flash sale campaigns |
+
+### RPC Functions
+- `get_unread_notification_count(uuid)` — Count unread customer notifications
+- `mark_notification_read(uuid, uuid)` — Mark single notification as read
+- `mark_all_notifications_read(uuid)` — Mark all notifications as read
+
+### Notification System
+
+The platform uses two separate notification systems:
+
+1. **Admin Notifications** (`admin_notifications` table)
+   - Created by: Xendit webhook, invoice creation API
+   - Service: `api/_utils/adminNotificationService.ts` (backend)
+   - Client: `src/services/adminNotificationService.ts` (frontend)
+   - Types: `new_order`, `paid_order`, `new_rent`, `paid_rent`, `order_cancelled`
+
+2. **Customer Notifications** (`customer_notifications` table)
+   - Created by: Xendit webhook (on payment confirmation)
+   - Client: `src/services/customerNotificationService.ts`
+   - Types: `payment`, `order`, `product`, `system`, `promo`, `feed_post`
+   - Realtime: Supabase Realtime subscriptions for instant toast notifications
+
+> **Note**: Backward-compatibility views `notifications` and `notification_reads` exist as aliases for `customer_notifications` and `customer_notification_reads`.
+
+## 💳 Payment Flow
+
+```
+Customer → Create Invoice (api/xendit/create-invoice.ts)
+         → Xendit processes payment
+         → Webhook callback (api/xendit/webhook.ts)
+           ├── Update order status → 'paid'
+           ├── Create admin notification (admin_notifications)
+           ├── Create customer notification (customer_notifications)
+           ├── Send WhatsApp to admin group
+           └── Send WhatsApp to customer
+```
+
+## 🎨 Design System
+
+The admin panel uses the **Cyber Compact Design System V3** defined in `src/styles/cyber-compact.css`.
+
+All styling uses CSS custom properties (`--admin-*` namespace):
+- Colors: `--admin-accent`, `--admin-success`, `--admin-error`, `--admin-warning`, `--admin-info`, `--admin-orange`, `--admin-purple`
+- Backgrounds: `--admin-bg-pure`, `--admin-bg-surface`, `--admin-bg-card`, `--admin-bg-elevated`
+- Text: `--admin-text`, `--admin-text-secondary`, `--admin-text-tertiary`, `--admin-text-muted`
+- Borders: `--admin-border`, `--admin-border-light`, `--admin-border-lighter`
+
+**Rule**: No hardcoded Tailwind color classes (e.g., `text-pink-500`, `bg-emerald-400`) in admin components. Always use `var(--admin-*)` tokens.
 
 ## 📚 Documentation
 
@@ -166,21 +232,25 @@ Test scripts are available in `scripts/tests/`:
 ## 📦 Features
 
 ### Customer Features
-- Product catalog with search and filters
+- Product catalog with search, filters, and instant search dropdown
 - Shopping cart with real-time updates
-- Multiple payment methods (QRIS, Bank Transfer, E-wallet)
+- Multiple payment methods via Xendit (QRIS, Bank Transfer, E-wallet, Indomaret)
 - Order tracking and history
-- WhatsApp notifications
-- Purchase notification ticker
+- In-app payment confirmation notifications (realtime)
+- WhatsApp order confirmation messages
+- Game account rental system
+- Flash sale campaigns
+- Product reviews
 
 ### Admin Features
-- Comprehensive admin dashboard
-- Product management (CRUD)
-- Order management
-- Real-time notifications
-- WhatsApp group integration
-- Analytics and reporting
+- Comprehensive admin dashboard with analytics
+- Product management (CRUD) with image upload
+- Order management with status tracking
+- Real-time floating notifications (new orders, payments)
+- Full notification center page with filters, search, and bulk actions
+- WhatsApp group integration (separate groups for purchases & rentals)
 - User management
+- Intelligent data prefetching
 
 ## 🔧 Maintenance
 
@@ -195,10 +265,14 @@ See [Maintenance Mode Guide](docs/deployment/maintenance-mode-guide.md) for deta
 
 ### Database Migrations
 
-Migrations are stored in `/migrations/` and should be run in order:
+Migrations are stored in `/migrations/` (manual SQL) and `/supabase/migrations/` (Supabase CLI):
+
 ```bash
-# Run migration
-npm run migrate
+# Migrations should be run in chronological order against Supabase SQL Editor
+# Key recent migrations:
+# - 2026-02-08_rename_customer_notifications.sql    (table rename + RPC functions)
+# - 2026-02-08_add_payment_type_check.sql           (add payment/order types)
+# - 2026-02-08_add_notifications_compat_view.sql    (backward-compat views)
 ```
 
 ## 📊 Monitoring

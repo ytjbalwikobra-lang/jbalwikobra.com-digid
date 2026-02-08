@@ -196,14 +196,14 @@ const AdminNotificationsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-2 mt-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-muted)]" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Cari nama customer, produk..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
+              className="w-full h-9 pl-9 pr-3 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-lg text-xs text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)]/50 transition-colors"
             />
           </div>
 
@@ -248,8 +248,8 @@ const AdminNotificationsPage: React.FC = () => {
             className={cn(
               'px-3 py-1.5 text-[11px] font-semibold rounded-lg whitespace-nowrap transition-all duration-200 border',
               filter === opt.value
-                ? 'bg-[var(--admin-accent)] text-white border-[var(--admin-accent)] shadow-lg shadow-pink-500/30'
-                : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white/70'
+                ? 'bg-[var(--admin-accent)] text-white border-[var(--admin-accent)] shadow-lg shadow-[var(--admin-accent)]/30'
+                : 'bg-[var(--admin-bg-card)] text-[var(--admin-text-secondary)] border-[var(--admin-border)] hover:bg-[var(--admin-bg-elevated)] hover:text-[var(--admin-text)]'
             )}
           >
             {opt.label}
@@ -286,19 +286,19 @@ const AdminNotificationsPage: React.FC = () => {
                     notification.order_id && 'cursor-pointer',
                     !notification.is_read
                       ? `bg-gradient-to-r ${style.gradient} ${style.border}`
-                      : 'bg-white/[0.02] border-white/[0.06]',
-                    isSelected && 'ring-1 ring-pink-500/50',
-                    'hover:bg-white/[0.04]'
+                      : 'bg-[var(--admin-bg-card)]/30 border-[var(--admin-border)]',
+                    isSelected && 'ring-1 ring-[var(--admin-accent)]/50',
+                    'hover:bg-[var(--admin-bg-elevated)]'
                   )}
                 >
                   {/* Select checkbox */}
                   <button
                     onClick={(e) => toggleSelect(e, notification.id)}
                     className={cn(
-                      'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all mt-0.5',
+                      'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 mt-0.5',
                       isSelected
-                        ? 'bg-pink-500 border-pink-500'
-                        : 'border-white/20 hover:border-white/40 bg-transparent'
+                        ? 'bg-[var(--admin-accent)] border-[var(--admin-accent)]'
+                        : 'border-[var(--admin-border-lighter)] hover:border-[var(--admin-text-tertiary)] bg-transparent'
                     )}
                     aria-label="Select"
                   >
@@ -308,12 +308,12 @@ const AdminNotificationsPage: React.FC = () => {
                   {/* Type-colored Icon */}
                   <div className={cn(
                     'flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm transition-transform',
-                    !notification.is_read ? style.icon : 'bg-white/[0.06]',
+                    !notification.is_read ? style.icon : 'bg-[var(--admin-bg-elevated)]',
                     'group-hover:scale-105'
                   )}>
                     {React.cloneElement(getNotificationIcon(notification.type) as React.ReactElement, {
                       size: 18,
-                      className: !notification.is_read ? 'text-white' : 'text-white/40'
+                      className: !notification.is_read ? 'text-[var(--admin-text)]' : 'text-[var(--admin-text-muted)]'
                     })}
                   </div>
 
@@ -323,12 +323,12 @@ const AdminNotificationsPage: React.FC = () => {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={cn(
                         'px-2 py-0.5 text-[9px] font-bold rounded uppercase border leading-none',
-                        !notification.is_read ? style.badge : 'bg-white/5 text-white/30 border-white/10'
+                        !notification.is_read ? style.badge : 'bg-[var(--admin-bg-card)] text-[var(--admin-text-muted)] border-[var(--admin-border)]'
                       )}>
                         {typeLabel}
                       </span>
                       {orderBadge && (
-                        <span className="px-2 py-0.5 text-[9px] font-bold text-pink-400 bg-pink-500/15 rounded border border-pink-500/25 uppercase leading-none">
+                        <span className="px-2 py-0.5 text-[9px] font-bold text-[var(--admin-accent-light)] bg-[var(--admin-accent-subtle)] rounded border border-[var(--admin-accent)]/25 uppercase leading-none">
                           {orderBadge}
                         </span>
                       )}
@@ -345,14 +345,14 @@ const AdminNotificationsPage: React.FC = () => {
                         </span>
                       )}
                       {!notification.is_read && (
-                        <span className="w-2 h-2 rounded-full bg-pink-500 flex-shrink-0 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-[var(--admin-accent)] flex-shrink-0 animate-pulse" />
                       )}
                     </div>
 
                     {/* Customer name */}
                     <p className={cn(
                       'text-sm font-semibold leading-tight',
-                      !notification.is_read ? 'text-white' : 'text-white/60'
+                      !notification.is_read ? 'text-[var(--admin-text)]' : 'text-[var(--admin-text-secondary)]'
                     )}>
                       {notification.customer_name || notification.title}
                     </p>
@@ -361,14 +361,14 @@ const AdminNotificationsPage: React.FC = () => {
                     <div className="flex items-center justify-between gap-3">
                       <p className={cn(
                         'text-xs leading-tight line-clamp-1',
-                        !notification.is_read ? 'text-white/70' : 'text-white/40'
+                        !notification.is_read ? 'text-[var(--admin-text-secondary)]' : 'text-[var(--admin-text-tertiary)]'
                       )}>
                         {notification.product_name || notification.message}
                       </p>
                       {notification.amount != null && notification.amount > 0 && (
                         <span className={cn(
                           'text-xs font-bold whitespace-nowrap flex-shrink-0',
-                          !notification.is_read ? 'text-emerald-400' : 'text-emerald-400/50'
+                          !notification.is_read ? 'text-[var(--admin-success)]' : 'text-[var(--admin-success)]/50'
                         )}>
                           {formatCurrency(notification.amount)}
                         </span>
@@ -376,32 +376,32 @@ const AdminNotificationsPage: React.FC = () => {
                     </div>
 
                     {/* Timestamp */}
-                    <p className="text-[10px] text-white/30">
+                    <p className="text-[10px] text-[var(--admin-text-muted)]">
                       {formatRelativeTime(notification.created_at)}
-                      <span className="mx-1.5 text-white/15">·</span>
+                      <span className="mx-1.5 text-[var(--admin-text-disabled)]">·</span>
                       {formatNotificationTime(notification.created_at)}
                     </p>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex-shrink-0 flex items-center gap-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <div className="flex-shrink-0 flex items-center gap-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
                     {!notification.is_read && (
                       <button
                         onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                        className="p-1.5 rounded-lg bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/30 transition-all"
+                        className="p-1.5 rounded-lg bg-[var(--admin-bg-card)] hover:bg-[var(--admin-success-bg)] border border-[var(--admin-border)] hover:border-[var(--admin-success-border)] transition-all"
                         aria-label="Tandai terbaca"
                         title="Tandai terbaca"
                       >
-                        <Check size={12} className="text-white/40 hover:text-emerald-400" />
+                        <Check size={12} className="text-[var(--admin-text-muted)] hover:text-[var(--admin-success)]" />
                       </button>
                     )}
                     <button
                       onClick={(e) => handleDelete(e, notification.id)}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-pink-500/20 border border-white/10 hover:border-pink-500/30 transition-all"
+                      className="p-1.5 rounded-lg bg-[var(--admin-bg-card)] hover:bg-[var(--admin-accent)]/20 border border-[var(--admin-border)] hover:border-[var(--admin-accent)]/30 transition-all"
                       aria-label="Hapus"
                       title="Hapus"
                     >
-                      <Trash2 size={12} className="text-white/40 hover:text-pink-400" />
+                      <Trash2 size={12} className="text-[var(--admin-text-muted)] hover:text-[var(--admin-accent-light)]" />
                     </button>
                   </div>
                 </div>

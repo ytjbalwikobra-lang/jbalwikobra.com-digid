@@ -33,13 +33,13 @@ import {
   isOrderNotification
 } from './utils/notificationUtils';
 
-// Border color mapping - uses CSS variable values
+// Border color mapping - references CSS variables from cyber-compact.css
 const BORDER_COLORS = {
-  info: 'rgba(59, 130, 246, 0.3)',      // --admin-info-border
-  success: 'rgba(16, 185, 129, 0.3)',   // --admin-success-border
-  error: 'rgba(239, 68, 68, 0.3)',      // --admin-error-border
-  warning: 'rgba(245, 158, 11, 0.3)',   // --admin-warning-border
-  accent: 'rgba(245, 0, 87, 0.25)',    // --admin-accent with 25% opacity
+  info: 'var(--admin-info-border)',
+  success: 'var(--admin-success-border)',
+  error: 'var(--admin-error-border)',
+  warning: 'var(--admin-warning-border)',
+  accent: 'var(--admin-accent-subtle)',
 };
 
 // ========================================
@@ -217,11 +217,11 @@ const AdminFloatingNotifications: React.FC = () => {
             className={`
               pointer-events-auto
               flex items-start gap-2 p-3 
-              bg-[#0a0a0a] border border-pink-500/30 rounded-lg
+              bg-[var(--admin-primary-lighter)] border border-[var(--admin-accent)]/30 rounded-lg
               backdrop-blur-xl
               transition-all duration-300
-              hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]
-              hover:border-pink-500/50
+              hover:shadow-[var(--admin-accent-glow)]
+              hover:border-[var(--admin-accent)]/50
               animate-in slide-in-from-right-full
               ${isClickable ? 'cursor-pointer' : ''}
             `}
@@ -239,7 +239,7 @@ const AdminFloatingNotifications: React.FC = () => {
               {getNotificationIcon(notification.type)}
               {/* Pulse indicator */}
               <span 
-                className="absolute top-0 right-0 w-2 h-2 bg-pink-500 rounded-full animate-ping" 
+                className="absolute top-0 right-0 w-2 h-2 bg-[var(--admin-accent)] rounded-full animate-ping" 
                 aria-hidden="true" 
               />
             </div>
@@ -250,23 +250,23 @@ const AdminFloatingNotifications: React.FC = () => {
                 <h4 className="text-xs font-semibold text-white truncate">
                   {floatingTitle}
                 </h4>
-                <span className="text-[10px] text-white/40 whitespace-nowrap flex-shrink-0">
+                <span className="text-[10px] text-[var(--admin-text-muted)] whitespace-nowrap flex-shrink-0">
                   {formatRelativeTime(notification.created_at)}
                 </span>
               </div>
               
               {/* Tier 1: Show only customer/product name */}
-              <p className="text-xs text-white/70 line-clamp-2">
+              <p className="text-xs text-[var(--admin-text-secondary)] line-clamp-2">
                 {floatingCopy}
               </p>
 
               {/* Tier 1 Meta: Status badge + Amount only */}
               {notification.amount && (
                 <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 text-[10px] font-semibold text-pink-400 bg-pink-500/10 rounded uppercase">
+                  <span className="px-1.5 py-0.5 text-[10px] font-semibold text-[var(--admin-accent-light)] bg-[var(--admin-accent-subtle)] rounded uppercase">
                     {statusLabel}
                   </span>
-                  <span className="text-xs font-semibold text-pink-400">
+                  <span className="text-xs font-semibold text-[var(--admin-accent-light)]">
                     {formatCurrency(notification.amount)}
                   </span>
                 </div>
@@ -281,7 +281,7 @@ const AdminFloatingNotifications: React.FC = () => {
                       handleNotificationClick(notification);
                     }}
                     aria-label={`Lihat detail pesanan`}
-                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-pink-400 bg-pink-500/10 rounded hover:bg-pink-500/20 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-[var(--admin-accent-light)] bg-[var(--admin-accent-subtle)] rounded hover:bg-[var(--admin-accent)]/20 transition-colors"
                   >
                     <ExternalLink size={12} aria-hidden="true" />
                     <span>Detail</span>
@@ -293,7 +293,7 @@ const AdminFloatingNotifications: React.FC = () => {
                     handleMarkAsRead(notification.id);
                   }}
                   aria-label={`Tandai "${notification.title}" sebagai sudah dibaca`}
-                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-white bg-pink-500 rounded hover:bg-pink-600 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-white bg-[var(--admin-accent)] rounded hover:bg-[var(--admin-accent-dark)] transition-colors"
                 >
                   <Check size={12} aria-hidden="true" />
                   <span>Dibaca</span>
@@ -307,7 +307,7 @@ const AdminFloatingNotifications: React.FC = () => {
                   aria-label={`Tutup "${notification.title}"`}
                   className="flex items-center justify-center w-6 h-6 rounded hover:bg-white/10 transition-colors"
                 >
-                  <X size={14} className="text-white/60" aria-hidden="true" />
+                  <X size={14} className="text-[var(--admin-text-secondary)]" aria-hidden="true" />
                 </button>
               </div>
             </div>

@@ -10,16 +10,17 @@
 import React from 'react';
 import { ShoppingBag, CreditCard, User, XCircle, Star, AlertCircle, Home, Info, DollarSign } from 'lucide-react';
 
-// Color constants matching CSS variables in cyber-compact.css
+// Color constants referencing CSS variables in cyber-compact.css
+// Use var() in JSX class names; these raw values are for inline `style` props only
 const ADMIN_COLORS = {
-  success: '#10b981',        // --admin-success
-  successBg: 'rgba(16, 185, 129, 0.082)', // ~15 hex opacity
-  warning: '#f59e0b',        // --admin-warning
-  warningBg: 'rgba(245, 158, 11, 0.082)', // ~15 hex opacity
-  error: '#ef4444',          // --admin-error
-  errorBg: 'rgba(239, 68, 68, 0.082)',    // ~15 hex opacity
-  textSecondary: '#a1a1aa',  // --admin-text-secondary (zinc-400)
-  primaryLighter: '#1a1a1a', // --admin-primary-lighter
+  success: 'var(--admin-success)',
+  successBg: 'var(--admin-success-bg)',
+  warning: 'var(--admin-warning)',
+  warningBg: 'var(--admin-warning-bg)',
+  error: 'var(--admin-error)',
+  errorBg: 'var(--admin-error-bg)',
+  textSecondary: 'var(--admin-text-secondary)',
+  primaryLighter: 'var(--admin-primary-lighter)',
 };
 
 // Re-export formatCurrency for convenience
@@ -124,82 +125,82 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
   switch (type) {
     case 'new_order':
       return {
-        gradient: 'from-pink-500/20 to-rose-500/10',
+        gradient: 'from-[var(--admin-accent)]/20 to-[var(--admin-accent-dark)]/10',
         border: 'border-[var(--admin-accent)]/30',
-        icon: 'bg-gradient-to-br from-pink-500 to-rose-600',
-        badge: 'bg-[var(--admin-accent)]/20 text-[var(--admin-accent)] border-[var(--admin-accent)]/30',
-        glow: 'shadow-pink-500/20',
-        bg: 'bg-gradient-to-br from-pink-500/20 to-rose-500/20',
+        icon: 'bg-gradient-to-br from-[var(--admin-accent)] to-[var(--admin-accent-dark)]',
+        badge: 'bg-[var(--admin-accent-subtle)] text-[var(--admin-accent)] border-[var(--admin-accent)]/30',
+        glow: 'shadow-[var(--admin-accent)]/20',
+        bg: 'bg-[var(--admin-accent-subtle)]',
         pulse: 'bg-[var(--admin-accent)]',
       };
     case 'paid_order':
       return {
-        gradient: 'from-emerald-500/20 to-emerald-600/10',
-        border: 'border-[var(--admin-success)]/30',
-        icon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
-        badge: 'bg-[var(--admin-success)]/20 text-[var(--admin-success)] border-[var(--admin-success)]/30',
-        glow: 'shadow-emerald-500/20',
-        bg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20',
+        gradient: 'from-[var(--admin-success)]/20 to-[var(--admin-success-dark)]/10',
+        border: 'border-[var(--admin-success-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-success)] to-[var(--admin-success-dark)]',
+        badge: 'bg-[var(--admin-success-bg)] text-[var(--admin-success)] border-[var(--admin-success-border)]',
+        glow: 'shadow-[var(--admin-success)]/20',
+        bg: 'bg-[var(--admin-success-bg)]',
         pulse: 'bg-[var(--admin-success)]',
       };
     case 'new_rent':
       return {
-        gradient: 'from-orange-500/20 to-amber-500/10',
-        border: 'border-[var(--admin-orange)]/30',
-        icon: 'bg-gradient-to-br from-orange-500 to-amber-600',
-        badge: 'bg-[var(--admin-orange)]/20 text-[var(--admin-orange)] border-[var(--admin-orange)]/30',
-        glow: 'shadow-orange-500/20',
-        bg: 'bg-gradient-to-br from-orange-500/20 to-yellow-500/20',
+        gradient: 'from-[var(--admin-orange)]/20 to-[var(--admin-orange-dark)]/10',
+        border: 'border-[var(--admin-orange-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-orange)] to-[var(--admin-orange-dark)]',
+        badge: 'bg-[var(--admin-orange-bg)] text-[var(--admin-orange)] border-[var(--admin-orange-border)]',
+        glow: 'shadow-[var(--admin-orange)]/20',
+        bg: 'bg-[var(--admin-orange-bg)]',
         pulse: 'bg-[var(--admin-orange)]',
       };
     case 'paid_rent':
       return {
-        gradient: 'from-yellow-500/20 to-emerald-500/10',
-        border: 'border-[var(--admin-warning)]/30',
-        icon: 'bg-gradient-to-br from-yellow-500 to-emerald-600',
-        badge: 'bg-[var(--admin-warning)]/20 text-[var(--admin-warning)] border-[var(--admin-warning)]/30',
-        glow: 'shadow-yellow-500/20',
-        bg: 'bg-gradient-to-br from-yellow-500/20 to-emerald-500/20',
+        gradient: 'from-[var(--admin-warning)]/20 to-[var(--admin-success)]/10',
+        border: 'border-[var(--admin-warning-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-warning)] to-[var(--admin-success-dark)]',
+        badge: 'bg-[var(--admin-warning-bg)] text-[var(--admin-warning)] border-[var(--admin-warning-border)]',
+        glow: 'shadow-[var(--admin-warning)]/20',
+        bg: 'bg-[var(--admin-warning-bg)]',
         pulse: 'bg-[var(--admin-warning)]',
       };
     case 'order_cancelled':
       return {
-        gradient: 'from-pink-500/20 to-rose-500/10',
-        border: 'border-[var(--admin-error)]/30',
-        icon: 'bg-gradient-to-br from-pink-500 to-rose-600',
-        badge: 'bg-[var(--admin-error)]/20 text-[var(--admin-error)] border-[var(--admin-error)]/30',
-        glow: 'shadow-pink-500/20',
-        bg: 'bg-gradient-to-br from-pink-500/20 to-rose-500/20',
+        gradient: 'from-[var(--admin-error)]/20 to-[var(--admin-error-dark)]/10',
+        border: 'border-[var(--admin-error-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-error)] to-[var(--admin-error-dark)]',
+        badge: 'bg-[var(--admin-error-bg)] text-[var(--admin-error)] border-[var(--admin-error-border)]',
+        glow: 'shadow-[var(--admin-error)]/20',
+        bg: 'bg-[var(--admin-error-bg)]',
         pulse: 'bg-[var(--admin-error)]',
       };
     case 'new_user':
       return {
-        gradient: 'from-pink-500/20 to-fuchsia-500/10',
-        border: 'border-[var(--admin-accent)]/30',
-        icon: 'bg-gradient-to-br from-pink-500 to-fuchsia-600',
-        badge: 'bg-[var(--admin-accent)]/20 text-[var(--admin-accent)] border-[var(--admin-accent)]/30',
-        glow: 'shadow-pink-500/20',
-        bg: 'bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20',
-        pulse: 'bg-[var(--admin-accent)]',
+        gradient: 'from-[var(--admin-purple)]/20 to-[var(--admin-purple-dark)]/10',
+        border: 'border-[var(--admin-purple-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-purple)] to-[var(--admin-purple-dark)]',
+        badge: 'bg-[var(--admin-purple-bg)] text-[var(--admin-purple)] border-[var(--admin-purple-border)]',
+        glow: 'shadow-[var(--admin-purple)]/20',
+        bg: 'bg-[var(--admin-purple-bg)]',
+        pulse: 'bg-[var(--admin-purple)]',
       };
     case 'new_review':
       return {
-        gradient: 'from-yellow-500/20 to-amber-500/10',
-        border: 'border-[var(--admin-warning)]/30',
-        icon: 'bg-gradient-to-br from-yellow-500 to-amber-600',
-        badge: 'bg-[var(--admin-warning)]/20 text-[var(--admin-warning)] border-[var(--admin-warning)]/30',
-        glow: 'shadow-yellow-500/20',
-        bg: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
+        gradient: 'from-[var(--admin-warning)]/20 to-[var(--admin-orange)]/10',
+        border: 'border-[var(--admin-warning-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-warning)] to-[var(--admin-orange)]',
+        badge: 'bg-[var(--admin-warning-bg)] text-[var(--admin-warning)] border-[var(--admin-warning-border)]',
+        glow: 'shadow-[var(--admin-warning)]/20',
+        bg: 'bg-[var(--admin-warning-bg)]',
         pulse: 'bg-[var(--admin-warning)]',
       };
     default:
       return {
-        gradient: 'from-[var(--admin-bg-card)] to-zinc-500/10',
+        gradient: 'from-[var(--admin-bg-card)] to-[var(--admin-bg-elevated)]',
         border: 'border-[var(--admin-border)]',
-        icon: 'bg-gradient-to-br from-zinc-500 to-zinc-600',
+        icon: 'bg-gradient-to-br from-[var(--admin-text-muted)] to-[var(--admin-text-disabled)]',
         badge: 'bg-[var(--admin-bg-card)] text-[var(--admin-text-secondary)] border-[var(--admin-border)]',
-        glow: 'shadow-gray-500/20',
-        bg: 'bg-gradient-to-br from-[var(--admin-accent-muted)] to-[var(--admin-accent-muted)]',
+        glow: 'shadow-[var(--admin-text-muted)]/20',
+        bg: 'bg-[var(--admin-bg-elevated)]',
         pulse: 'bg-[var(--admin-accent)]',
       };
   }

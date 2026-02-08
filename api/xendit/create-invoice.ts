@@ -25,7 +25,7 @@ const ACTIVATED_PAYMENT_METHODS = [
 ];
 
 // Import shared notification service for DRY code
-import { createOrderNotification, getProductName } from '../_utils/notificationService.js';
+import { createOrderNotification, getProductName } from '../_utils/adminNotificationService.js';
 async function createOrderIfProvided(order: any, clientExternalId?: string) {
   try {
     if (!order) {

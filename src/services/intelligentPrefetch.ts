@@ -164,7 +164,8 @@ class IntelligentPrefetchManager {
         await adminClient.getOrders(1, 10);
         break;
       case 'recent-notifications':
-        await adminClient.getNotifications(1, 10);
+        // Notifications are handled via realtime subscriptions (useAdminRealtimeNotifications)
+        // No need to prefetch via API — this avoids redundant requests
         break;
       case 'orders-list':
         await adminClient.getOrders(1, 20);
@@ -337,7 +338,7 @@ class IntelligentPrefetchManager {
         // Refresh hot data in background
         try {
           await adminClient.getDashboardStats({ backgroundRefresh: true });
-          await adminClient.getNotifications(1, 5, { backgroundRefresh: true });
+          // Notifications are handled via realtime subscriptions — skip background refresh
         } catch (error) {
           console.warn('Background refresh failed:', error);
         }

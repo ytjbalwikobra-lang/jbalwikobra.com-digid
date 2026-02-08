@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext';
-import { notificationService, AppNotification } from '../services/notificationService';
+import { customerNotificationService, CustomerNotification } from '../services/customerNotificationService';
 import { supabase } from '../services/supabase';
 
-type NotificationItem = AppNotification & { _ts: number };
+type NotificationItem = CustomerNotification & { _ts: number };
 
 const UserFloatingNotifications: React.FC = () => {
   const { user } = useAuth();
@@ -19,7 +19,7 @@ const UserFloatingNotifications: React.FC = () => {
 
     async function bootstrap() {
       try {
-        const latest = await notificationService.getLatest(5, user?.id);
+        const latest = await customerNotificationService.getLatest(5, user?.id);
         if (latest?.length) {
           lastSeenRef.current = latest[0].created_at;
         }
@@ -28,12 +28,12 @@ const UserFloatingNotifications: React.FC = () => {
       if (canRealtime && supabase) {
         // Subscribe to new notification inserts
         channel = supabase
-          .channel('public:notifications:insert')
+          .channel('public:customer_notifications:insert')
           .on(
             'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'notifications' },
+            { event: 'INSERT', schema: 'public', table: 'customer_notifications' },
             (payload: any) => {
-              const n = payload?.new as AppNotification;
+              const n = payload?.new as CustomerNotification;
               // Show if global or for current user
               const visible = !n.user_id || (user?.id && n.user_id === user.id);
               if (!visible) return;
@@ -47,7 +47,7 @@ const UserFloatingNotifications: React.FC = () => {
       if (!canRealtime) {
         pollingRef.current = window.setInterval(async () => {
           try {
-            const latest = await notificationService.getLatest(1, user?.id);
+              const latest = await customerNotificationService.getLatest(1, user?.id);
             const newest = latest?.[0];
             if (newest && (!lastSeenRef.current || new Date(newest.created_at).getTime() > new Date(lastSeenRef.current).getTime())) {
               lastSeenRef.current = newest.created_at;
@@ -67,7 +67,7 @@ const UserFloatingNotifications: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, canRealtime]);
 
-  function push(n: AppNotification) {
+  function push(n: CustomerNotification) {
     const item: NotificationItem = { ...n, _ts: Date.now() };
     setItems((prev) => [item, ...prev].slice(0, 6));
     // Auto-dismiss after 8s

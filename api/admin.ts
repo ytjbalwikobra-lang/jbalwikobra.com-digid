@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { setCacheHeaders, CacheStrategies } from './_utils/cacheControl.js';
 import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
 import { validateAdminAuth } from './_middleware/authMiddleware.js';
-import { createOrderNotification, getProductName } from './_utils/notificationService.js';
+import { createOrderNotification, getProductName } from './_utils/adminNotificationService.js';
 
 // Lazy supabase client (service role preferred for admin operations)
 // Clean environment variables to remove any CRLF characters
@@ -154,12 +154,12 @@ function mockDashboard() {
 async function recentNotifications(limit: number) {
   if (!supabase) return [];
   const { data, error } = await supabase
-    .from('notifications')
-    .select('id, type, title, message, description, is_read, created_at, metadata')
+    .from('admin_notifications')
+    .select('id, type, title, message, is_read, created_at, metadata, order_id, product_name, amount')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) return [];
-  return (data||[]).map(n => ({ id:n.id, type:n.type||'new_order', title:n.title||'Notification', message:n.message||n.description||'', isRead:!!n.is_read, createdAt:n.created_at, metadata:n.metadata||null }));
+  return (data||[]).map(n => ({ id:n.id, type:n.type||'new_order', title:n.title||'Notification', message:n.message||'', isRead:!!n.is_read, createdAt:n.created_at, metadata:n.metadata||null }));
 }
 
 async function listOrders(page: number, limit: number, status?: string) {

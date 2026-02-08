@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Check, Clock, X, Settings } from 'lucide-react';
 import { PNCard, PNButton } from '../components/ui/CyberDesignSystem';
 import { PageWrapper, ConsistentLayout } from '../components/layout/ConsistentLayout';
-import { notificationService, AppNotification } from '../services/notificationService';
+import { customerNotificationService, CustomerNotification } from '../services/customerNotificationService';
 import { getAuthUserId } from '../services/authService';
 
 type NotificationType = 'order' | 'payment' | 'system' | 'promo' | 'product' | 'feed_post';
@@ -25,7 +25,7 @@ const NotificationsPage: React.FC = () => {
     loadNotifications();
   }, []);
 
-  const mapToUI = (n: AppNotification): NotificationUI => ({
+  const mapToUI = (n: CustomerNotification): NotificationUI => ({
     id: n.id,
     type: (n.type as NotificationType) || 'system',
     title: n.title,
@@ -39,7 +39,7 @@ const NotificationsPage: React.FC = () => {
     try {
       setLoading(true);
       const uid = await getAuthUserId();
-      const latest = await notificationService.getLatest(20, uid);
+        const latest = await customerNotificationService.getLatest(20, uid);
             const mappedNotifications = latest.map(mapToUI);
             setNotifications(mappedNotifications);
     } catch (error) {
@@ -52,7 +52,7 @@ const NotificationsPage: React.FC = () => {
   const markAsRead = async (id: string) => {
     try {
       const uid = await getAuthUserId();
-      await notificationService.markAsRead(id, uid);
+        await customerNotificationService.markAsRead(id, uid);
       await loadNotifications();
     } catch (e) {
       console.error('❌ NotificationsPage: markAsRead failed for notification:', id, e);
@@ -65,7 +65,7 @@ const NotificationsPage: React.FC = () => {
     try {
       const uid = await getAuthUserId();
             
-      await notificationService.markAllAsRead(uid);
+await customerNotificationService.markAllAsRead(uid);
       
       await loadNotifications();
     } catch (e) {

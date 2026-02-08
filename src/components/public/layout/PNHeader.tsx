@@ -6,7 +6,7 @@ import { SettingsService } from '../../../services/settingsService';
 import type { WebsiteSettings } from '../../../types';
 import type { Product } from '../../../types';
 import { PNContainer } from '../../ui/CyberDesignSystem';
-import { notificationService } from '../../../services/notificationService';
+import { customerNotificationService } from '../../../services/customerNotificationService';
 import { getAuthUserId } from '../../../services/authService';
 import { prefetchRoute } from '../../../utils/linkPrefetch';
 import { SearchDropdown } from '../../search';
@@ -86,7 +86,7 @@ const PNHeader: React.FC = () => {
     const load = async () => {
       try {
         const uid = await getAuthUserId();
-        const count = await notificationService.getUnreadCount(uid);
+        const count = await customerNotificationService.getUnreadCount(uid);
         if (active) setUnread(count);
       } catch {}
       timer = setTimeout(load, 20000); // 20s

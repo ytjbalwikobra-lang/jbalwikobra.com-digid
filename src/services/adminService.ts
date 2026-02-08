@@ -1638,81 +1638,14 @@ export const adminService = {
     }
   },
 
-  async getNotifications(page: number = 1, limit: number = 20): Promise<AdminNotification[]> {
-    return adminCache.getOrFetch(`admin:notifications:${page}:${limit}`, async () => {
-      if (!supabase) {
-        throw new Error('Supabase client not available');
-      }
-      try {
-        const { data, error } = await supabase
-          .from('admin_notifications')
-          .select('id, type, title, message, order_id, user_id, product_name, amount, created_at, is_read')
-          .order('created_at', { ascending: false })
-          .range((page - 1) * limit, page * limit - 1);
-
-        if (error) {
-          // Generate realistic notifications based on actual orders
-          const { data: recentOrders } = await supabase
-            .from('orders')
-            .select('id, customer_name, product_id, amount, status, created_at')
-            .order('created_at', { ascending: false })
-            .limit(limit);
-
-          if (recentOrders && recentOrders.length > 0) {
-            // Get product names
-            const productIds = Array.from(new Set(recentOrders.map((o: any) => o.product_id).filter(Boolean)));
-            const productsMap = await fetchProductNames(productIds);
-
-            return recentOrders.map((order: any, _index: number) => {
-              const productName = order.product_id ? productsMap[order.product_id] || 'Product Order' : 'Product Order';
-              
-              return {
-                id: `order-${order.id}`,
-                type: order.status === 'paid' ? 'paid_order' as const : 'new_order' as const,
-                title: order.status === 'paid' ? 'Payment Received' : 'New Order',
-                message: `${order.customer_name} - ${productName} - Rp ${order.amount?.toLocaleString()}`,
-                created_at: order.created_at,
-                is_read: false,
-                amount: order.amount
-              };
-            });
-          }
-
-          // Fallback mock data
-          return [
-            {
-              id: '1',
-              type: 'new_order' as const,
-              title: 'New Order Received',
-              message: 'A new order has been placed',
-              created_at: new Date().toISOString(),
-              is_read: false
-            },
-            {
-              id: '2',
-              type: 'paid_order' as const,
-              title: 'Payment Received',
-              message: 'Payment has been confirmed for an order',
-              created_at: new Date(Date.now() - 3600000).toISOString(),
-              is_read: false
-            }
-          ];
-        }
-        return data || [];
-      } catch (error) {
-        // Return basic mock data on any error
-        return [
-          {
-            id: '1',
-            type: 'new_order' as const,
-            title: 'System Ready',
-            message: 'Admin notifications system is operational',
-            created_at: new Date().toISOString(),
-            is_read: false
-          }
-        ];
-      }
-    }, { ttl: 30 * 1000 }); // 30 seconds for real-time notifications
+  /**
+   * @deprecated Use adminNotificationService (src/services/adminNotificationService.ts) instead.
+   * This method is unused — admin notifications are handled via the dedicated
+   * adminNotificationService + useAdminRealtimeNotifications hook.
+   */
+  async getNotifications(_page: number = 1, _limit: number = 20): Promise<AdminNotification[]> {
+    console.warn('[adminService] getNotifications is deprecated. Use adminNotificationService instead.');
+    return [];
   },
 
   // Cache invalidation methods
@@ -1727,8 +1660,8 @@ export const adminService = {
   // Prefetch related data
   async prefetchDashboardData() {
     await adminCache.prefetchBatch([
-      { key: 'admin:stats', fetchFn: () => this.getAdminStats() },
-      { key: 'admin:notifications:1:20', fetchFn: () => this.getNotifications(1, 20) }
+      { key: 'admin:stats', fetchFn: () => this.getAdminStats() }
+      // Notifications are handled via realtime subscriptions (useAdminRealtimeNotifications)
     ]);
   },
 

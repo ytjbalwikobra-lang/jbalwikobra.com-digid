@@ -1,8 +1,8 @@
 // Xendit webhook to update order status in Supabase (robust)
 // Configure Xendit to call /api/xendit/webhook with a shared XENDIT_CALLBACK_TOKEN
-// Refactored: Uses shared notificationService for DRY code
+// Refactored: Uses shared adminNotificationService for DRY code
 
-import { createOrderNotification, getProductName } from '../_utils/notificationService.js';
+import { createOrderNotification, getProductName, createCustomerPaymentNotification } from '../_utils/adminNotificationService.js';
 
 /**
  * Map Xendit webhook status to internal order status
@@ -16,10 +16,15 @@ function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancell
   return 'pending';
 }
 
-// Separate function specifically for creating admin database notifications when payment is completed
+// Create admin database notification when payment is completed
+// Includes idempotency check to prevent duplicate notifications
 async function createAdminPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
   try {
-    
+    if (!invoiceId && !externalId) {
+      console.warn('[Webhook] createAdminPaidNotification: No invoiceId or externalId provided, skipping');
+      return;
+    }
+
     // Query for order with paid status to ensure we only notify for actually paid orders
     let q = sb.from('orders')
       .select(`
@@ -32,6 +37,7 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
         order_type,
         rental_duration,
         product_id,
+        user_id,
         products:product_id (
           id,
           name,
@@ -48,13 +54,29 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
     const { data: orders, error: queryError } = await q;
     
     if (queryError) {
-      console.error('[Admin] Database query error for notification:', queryError);
+      console.error('[Webhook] createAdminPaidNotification: Database query error:', queryError);
       return;
     }
     
     const order = orders?.[0];
     
     if (!order) {
+      console.warn('[Webhook] createAdminPaidNotification: No order found with paid/completed status for invoiceId=', invoiceId, 'externalId=', externalId);
+      return;
+    }
+
+    // Idempotency: check if a paid notification already exists for this order
+    const isRental = order.order_type === 'rental';
+    const notifType = isRental ? 'paid_rent' : 'paid_order';
+    const { data: existing } = await sb
+      .from('admin_notifications')
+      .select('id')
+      .eq('order_id', order.id)
+      .eq('type', notifType)
+      .limit(1);
+    
+    if (existing && existing.length > 0) {
+      console.log('[Webhook] createAdminPaidNotification: Notification already exists for order', order.id, '- skipping duplicate');
       return;
     }
 
@@ -74,8 +96,24 @@ async function createAdminPaidNotification(sb: any, invoiceId?: string, external
       order.rental_duration
     );
     
+    console.log('[Webhook] ✅ Admin paid notification created for order:', order.id);
+
+    // Also create a customer-facing notification (writes to customer_notifications table)
+    try {
+      await createCustomerPaymentNotification(sb, {
+        id: order.id,
+        user_id: order.user_id,
+        customer_name: order.customer_name,
+        order_type: order.order_type,
+        amount: order.amount,
+        product_id: order.product_id,
+      }, productName);
+    } catch (customerNotifError) {
+      console.error('[Webhook] Customer notification creation failed (non-blocking):', customerNotifError);
+    }
+
   } catch (error) {
-    console.error('[Admin] Failed to create paid order database notification:', error);
+    console.error('[Webhook] Failed to create paid order database notification:', error);
   }
 }
 
@@ -113,6 +151,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     } else if (externalId) {
       checkQuery = checkQuery.eq('client_external_id', externalId);
     } else {
+      console.warn('[Webhook] sendOrderPaidNotification: No invoiceId or externalId provided, skipping');
       return;
     }
     
@@ -124,6 +163,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     }
     
     if (!checkOrders || checkOrders.length === 0) {
+      console.warn('[Webhook] sendOrderPaidNotification: Order not found for invoiceId=', invoiceId, 'externalId=', externalId);
       return;
     }
     
@@ -131,6 +171,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
     
     // Check if order status is paid or completed
     if (order.status !== 'paid' && order.status !== 'completed') {
+      console.warn('[Webhook] sendOrderPaidNotification: Order status is', order.status, '(not paid/completed) for order', order.id, '- skipping WhatsApp notification');
       return;
     }
     
@@ -388,6 +429,7 @@ wa.me/${order.customer_phone?.replace(/\D/g, '').replace(/^0/, '62').replace(/^8
         else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
         else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
         if (!/^62\d{8,15}$/.test(customerPhone)) {
+          console.warn('[WhatsApp] Invalid customer phone format after normalization:', customerPhone, 'for order', order.id);
           return;
         }
 
@@ -526,6 +568,7 @@ Happy Gaming Bosku! 🔥`;
           contextId
         });
         if (sendRes.success) {
+          console.log('[WhatsApp] ✅ Customer WhatsApp notification sent for order', order.id);
         } else {
           console.error('[WhatsApp] Customer notification failed:', sendRes.error);
         }
@@ -533,6 +576,7 @@ Happy Gaming Bosku! 🔥`;
         console.error('[WhatsApp] Error sending customer notification:', customerError);
       }
     } else {
+      console.warn('[WhatsApp] No customer_phone on order', order.id, '- skipping customer WhatsApp notification');
     }
 
   } catch (error) {

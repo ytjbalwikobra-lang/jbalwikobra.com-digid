@@ -178,7 +178,12 @@ GRANT EXECUTE ON FUNCTION public.get_unread_notification_count(uuid) TO authenti
 GRANT EXECUTE ON FUNCTION public.mark_notification_read(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.mark_all_notifications_read(uuid) TO authenticated;
 
--- 7. Add helpful comments
+-- 7. Update type check constraint to include 'payment' and 'order' types
+ALTER TABLE public.customer_notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+ALTER TABLE public.customer_notifications ADD CONSTRAINT customer_notifications_type_check
+  CHECK (type IN ('product', 'feed_post', 'system', 'payment', 'order', 'promo'));
+
+-- 8. Add helpful comments
 COMMENT ON TABLE public.customer_notifications IS 'Customer-facing notifications (payment confirmations, order updates, promos). Not to be confused with admin_notifications.';
 COMMENT ON TABLE public.customer_notification_reads IS 'Tracks which global customer notifications have been read by each user.';
 

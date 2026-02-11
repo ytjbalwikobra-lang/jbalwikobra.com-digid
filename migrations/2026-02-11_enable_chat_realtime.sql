@@ -6,17 +6,47 @@
 -- ENABLE REALTIME FOR CHAT TABLES
 -- =============================================================================
 
--- Enable realtime for chat_conversations
-ALTER PUBLICATION supabase_realtime ADD TABLE chat_conversations;
+-- Safe idempotent way to add tables to publication
+-- Only adds if not already a member
 
--- Enable realtime for chat_messages
-ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+DO $$
+BEGIN
+    -- Enable realtime for chat_conversations
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'chat_conversations'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE chat_conversations;
+    END IF;
 
--- Enable realtime for chat_admin_participants
-ALTER PUBLICATION supabase_realtime ADD TABLE chat_admin_participants;
+    -- Enable realtime for chat_messages
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'chat_messages'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+    END IF;
 
--- Enable realtime for chat_activity_logs (optional - for activity log updates)
-ALTER PUBLICATION supabase_realtime ADD TABLE chat_activity_logs;
+    -- Enable realtime for chat_admin_participants
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'chat_admin_participants'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE chat_admin_participants;
+    END IF;
+
+    -- Enable realtime for chat_activity_logs
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'chat_activity_logs'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE chat_activity_logs;
+    END IF;
+END $$;
 
 -- =============================================================================
 -- NOTES

@@ -105,6 +105,41 @@ npx tsc --noEmit
 - Manual execution ensures no conflicts with existing migrations
 - Safer for databases with existing data
 
+**Idempotent Migrations:**
+Always write migrations that can be run multiple times without errors:
+
+```sql
+-- ✅ Good: Idempotent CREATE TABLE
+CREATE TABLE IF NOT EXISTS my_table (...);
+
+-- ✅ Good: Idempotent ALTER PUBLICATION
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'my_table'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE my_table;
+    END IF;
+END $$;
+
+-- ✅ Good: Idempotent ALTER TABLE ADD COLUMN
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'my_table' AND column_name = 'new_column'
+    ) THEN
+        ALTER TABLE my_table ADD COLUMN new_column TEXT;
+    END IF;
+END $$;
+
+-- ❌ Bad: Will fail on second run
+ALTER PUBLICATION supabase_realtime ADD TABLE my_table;
+ALTER TABLE my_table ADD COLUMN new_column TEXT;
+```
+
 Reference: [SUPABASE_CLI_REFERENCE.md](../SUPABASE_CLI_REFERENCE.md)
 
 ### 3. Consistent Design System

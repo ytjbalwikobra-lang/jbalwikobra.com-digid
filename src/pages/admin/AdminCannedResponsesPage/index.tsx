@@ -135,7 +135,7 @@ const AdminCannedResponsesPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--admin-bg-pure)]">
+    <>
       <AdminHeroSection
         title="Template Respon"
         subtitle={`${responses.length} template respon cepat tersedia`}
@@ -206,7 +206,7 @@ const AdminCannedResponsesPage: React.FC = () => {
         editData={editItem}
         saving={saving}
       />
-    </div>
+    </>
   );
 };
 

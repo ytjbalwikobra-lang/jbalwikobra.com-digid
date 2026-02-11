@@ -50,6 +50,12 @@
   --cyber-pink-subtle: rgba(236, 72, 153, 0.15);
   --cyber-pink-ghost: rgba(236, 72, 153, 0.08);
   
+  /* Accent Alias — shorthand untuk --cyber-pink-primary agar konsisten */
+  --cyber-accent: #ec4899;
+  --cyber-accent-hover: #f472b6;
+  --cyber-accent-muted: rgba(236, 72, 153, 0.3);
+  --cyber-accent-subtle: rgba(236, 72, 153, 0.15);
+  
   /* Semantic Colors */
   --cyber-success: #10b981;
   --cyber-warning: #f59e0b;

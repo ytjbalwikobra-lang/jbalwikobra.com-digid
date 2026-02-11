@@ -337,7 +337,7 @@ const AdminChatPage: React.FC = () => {
   }, [loadConversationDetails, loadActivityLogs]);
 
   return (
-    <div className="min-h-screen bg-[var(--admin-bg-pure)]">
+    <>
       {/* Bagian Hero */}
       <AdminHeroSection
         title="Live Chat"
@@ -393,7 +393,7 @@ const AdminChatPage: React.FC = () => {
           />
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

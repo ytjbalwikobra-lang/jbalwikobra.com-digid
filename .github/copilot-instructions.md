@@ -177,6 +177,59 @@ Reference: [SUPABASE_CLI_REFERENCE.md](../SUPABASE_CLI_REFERENCE.md)
 | Borders | `--cyber-border`, `--cyber-border-hover`, `--cyber-border-active` |
 | Z-Index | `--cyber-z-base(0)`, `--cyber-z-elevated(10)`, `--cyber-z-sticky(100)`, `--cyber-z-dropdown(200)`, `--cyber-z-overlay(300)`, `--cyber-z-modal(400)`, `--cyber-z-toast(500)` |
 
+**PENTING — Validasi Token CSS:**
+- `--cyber-accent` = `#ec4899` (alias dari `--cyber-pink-primary`)
+- Sebelum menggunakan variabel CSS `var(--token-name)`, **pastikan token tersebut sudah didefinisikan** di `src/styles/cyber-compact.css`
+- Jika token tidak ada di CSS, elemen akan terlihat transparan/invisible!
+- Jika butuh token baru, **tambahkan ke CSS dulu**, baru gunakan di komponen
+- Gunakan browser DevTools → Computed tab untuk verifikasi nilai token resolve
+
+```tsx
+// ✅ Good: Token yang SUDAH ada di CSS
+<button className="bg-[var(--cyber-accent)] text-white">
+// --cyber-accent: #ec4899 → tombol terlihat pink
+
+// ❌ Bad: Token yang TIDAK ada di CSS
+<button className="bg-[var(--cyber-nonexistent)] text-white">
+// --cyber-nonexistent: undefined → tombol transparan, tidak terlihat!
+```
+
+### 3b. Admin Page Wrapper Rules
+
+**WAJIB**: Halaman admin TIDAK boleh menambahkan wrapper `min-h-screen` sendiri.
+
+`AdminShell` (di `AdminShellWrapper.tsx`) sudah menyediakan:
+- `<div className="min-h-screen bg-black text-white">` — wrapper utama
+- `<main className="p-3 lg:p-4">` — padding kontainer konten
+- Sidebar, header, floating notifications
+
+**Rules:**
+- ❌ Jangan bungkus halaman admin dengan `<div className="min-h-screen bg-[var(--admin-bg-pure)]">`
+- ✅ Gunakan `<>` (Fragment) atau langsung render tanpa wrapper tambahan
+- ✅ `AdminHeroSection` langsung sebagai child pertama
+
+```tsx
+// ✅ Good: Tanpa wrapper duplikat
+return (
+  <>
+    <AdminHeroSection title="Page" subtitle="..." badge="TAG" badgeColor="pink" />
+    <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* konten */}
+    </div>
+  </>
+);
+
+// ❌ Bad: Wrapper duplikat — menyebabkan layout berlapis
+return (
+  <div className="min-h-screen bg-[var(--admin-bg-pure)]">
+    <AdminHeroSection title="Page" subtitle="..." />
+    <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* konten */}
+    </div>
+  </div>
+);
+```
+
 ### 3a. Mobile-First Approach (Public Pages)
 
 **WAJIB**: Semua fitur untuk halaman public HARUS menggunakan pendekatan **mobile-first**.

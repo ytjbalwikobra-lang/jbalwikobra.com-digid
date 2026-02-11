@@ -114,7 +114,7 @@ CREATE POLICY "Admins view all typing"
         EXISTS (
             SELECT 1 FROM public.users
             WHERE id = auth.uid()
-            AND role IN ('admin', 'super_admin')
+            AND is_admin = TRUE
         )
     );
 
@@ -137,7 +137,7 @@ CREATE POLICY "Admins manage all typing"
         EXISTS (
             SELECT 1 FROM public.users
             WHERE id = auth.uid()
-            AND role IN ('admin', 'super_admin')
+            AND is_admin = TRUE
         )
     );
 
@@ -156,7 +156,7 @@ CREATE POLICY "Admins view canned responses"
         EXISTS (
             SELECT 1 FROM public.users
             WHERE id = auth.uid()
-            AND role IN ('admin', 'super_admin')
+            AND is_admin = TRUE
         )
     );
 
@@ -169,14 +169,14 @@ CREATE POLICY "Admins manage canned responses"
         EXISTS (
             SELECT 1 FROM public.users
             WHERE id = auth.uid()
-            AND role IN ('admin', 'super_admin')
+            AND is_admin = TRUE
         )
     )
     WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.users
             WHERE id = auth.uid()
-            AND role IN ('admin', 'super_admin')
+            AND is_admin = TRUE
         )
     );
 

@@ -788,13 +788,85 @@ V1.2.0 - "Live Chat Feature"
 
 ---
 
+## 📡 Supabase Realtime — Best Practices (WAJIB)
+
+**Supabase Realtime (`postgres_changes`) ADALAH mekanisme utama untuk fitur real-time (chat, notifikasi, dll.). JANGAN gunakan polling sebagai pengganti Realtime.**
+
+### Cara Kerja Realtime + RLS
+
+1. Client subscribe ke channel menggunakan **anon key** (karena project ini pakai custom session auth, bukan Supabase Auth)
+2. Supabase mengevaluasi **RLS policy** untuk role `anon` sebelum mengirim event
+3. **Jika TIDAK ada SELECT policy untuk `anon` → event TIDAK PERNAH dikirim ke client**
+4. Subscription filter (mis. `conversation_id=eq.xxx`) diterapkan SETELAH RLS check
+
+### Aturan WAJIB untuk Tabel Realtime
+
+```sql
+-- ✅ WAJIB: Setiap tabel yang butuh Realtime HARUS punya:
+
+-- 1. RLS enabled
+ALTER TABLE public.my_table ENABLE ROW LEVEL SECURITY;
+
+-- 2. Anon SELECT policy (karena custom auth, bukan Supabase Auth)
+CREATE POLICY "my_table_anon_select"
+  ON public.my_table
+  FOR SELECT TO anon
+  USING (true);
+
+-- 3. Tabel di-publish ke realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE my_table;
+
+-- ❌ JANGAN: Mengandalkan `authenticated` role atau `auth.uid()` untuk Realtime
+-- Project ini menggunakan custom session auth → semua client pakai anon key
+-- auth.uid() selalu NULL → policy dengan auth.uid() TIDAK BEKERJA untuk Realtime
+```
+
+### Keamanan Tanpa Supabase Auth
+
+Karena anon key bisa SELECT, keamanan dijamin oleh:
+1. **UUID sebagai identifier** — conversation_id/order_id tidak bisa ditebak
+2. **Semua operasi tulis melalui API** — menggunakan service_role + custom session validation
+3. **Frontend filter** — subscription hanya menerima event per conversation_id
+4. **JANGAN simpan data sensitif** (password, token) di tabel yang punya anon SELECT
+
+### Jangan Gunakan Polling Sebagai Pengganti Realtime
+
+```typescript
+// ❌ SALAH: Polling sebagai solusi utama
+useEffect(() => {
+  const interval = setInterval(() => fetchMessages(), 5000);
+  return () => clearInterval(interval);
+}, []);
+
+// ✅ BENAR: Realtime sebagai mekanisme utama
+useEffect(() => {
+  const { unsubscribe } = subscribeToMessages(convId, (msg) => {
+    setMessages(prev => [...prev, msg]);
+  });
+  return () => unsubscribe();
+}, [convId]);
+```
+
+### Checklist Fitur Realtime Baru
+
+- [ ] Tabel sudah enable RLS
+- [ ] Policy `anon SELECT` sudah dibuat
+- [ ] Tabel sudah di `supabase_realtime` publication
+- [ ] Migration idempotent (pakai `IF NOT EXISTS`)
+- [ ] Frontend subscribe via `supabase.channel().on('postgres_changes', ...)`
+- [ ] Cleanup subscription di `useEffect` return
+- [ ] Dedup event di callback (cek ID sebelum append)
+
+---
+
 ## ⚠️ Common Pitfalls
 
 1. **RLS Bypass**: Always test queries with both authenticated and service role clients
 2. **Type Mismatch**: Supabase returns `null` for missing relations — handle this
 3. **Realtime Subscriptions**: Clean up subscriptions in `useEffect` cleanup
-4. **Cache Invalidation**: Invalidate relevant caches after mutations
-5. **Environment Variables**: Never hardcode secrets — use `process.env`
+4. **Realtime + RLS**: Anon SELECT policy WAJIB ada untuk tabel yang butuh Realtime (lihat bagian Supabase Realtime di atas)
+5. **Cache Invalidation**: Invalidate relevant caches after mutations
+6. **Environment Variables**: Never hardcode secrets — use `process.env`
 
 ---
 

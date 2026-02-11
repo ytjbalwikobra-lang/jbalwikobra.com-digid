@@ -235,7 +235,7 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
 
   const senderType = isAdmin ? 'admin' : 'customer';
   const senderName = isAdmin 
-    ? (authAdmin?.userEmail || 'Admin')
+    ? (authAdmin?.userName || authAdmin?.userEmail || 'Admin')
     : (req.body.senderName || req.body.customerName || 'Customer');
 
   const msg = await chatService.sendMessage(sb, {

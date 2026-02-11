@@ -90,7 +90,21 @@ const AdminChatPage: React.FC = () => {
         status: statusFilter === 'all' ? undefined : statusFilter,
         limit: 100
       });
-      setConversations(result.conversations);
+      // Smart merge: hanya update state jika data berubah — hindari re-render percuma
+      setConversations(prev => {
+        const next = result.conversations;
+        if (prev.length === next.length) {
+          const isSame = prev.every((p, i) =>
+            p.id === next[i].id &&
+            p.updatedAt === next[i].updatedAt &&
+            p.unreadCount === next[i].unreadCount &&
+            p.status === next[i].status &&
+            p.lastMessageAt === next[i].lastMessageAt
+          );
+          if (isSame) return prev;
+        }
+        return next;
+      });
     } catch (err) {
       console.error('[AdminChat] Gagal memuat percakapan:', err);
       // Hanya tampilkan toast pada error, bukan setiap poll
@@ -107,7 +121,11 @@ const AdminChatPage: React.FC = () => {
   const loadStatistics = useCallback(async () => {
     try {
       const stats = await adminGetChatStatistics();
-      setStatistics(stats);
+      // Smart merge: skip update jika data sama
+      setStatistics(prev => {
+        if (prev && JSON.stringify(prev) === JSON.stringify(stats)) return prev;
+        return stats;
+      });
     } catch (err) {
       console.error('[AdminChat] Gagal memuat statistik:', err);
     }

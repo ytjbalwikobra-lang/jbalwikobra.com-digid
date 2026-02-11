@@ -297,7 +297,215 @@ Two separate systems exist:
 
 ---
 
-## 🚀 Commit Guidelines
+## � Docker Development Environment
+
+**Container Name**: `jbalwikobracom-digid`
+
+Container ini berjalan terus di background. Gunakan untuk sinkronisasi dan testing:
+
+```bash
+# Cek status container
+docker ps -f name=jbalwikobracom-digid
+
+# Masuk ke container
+docker exec -it jbalwikobracom-digid /bin/sh
+
+# Sync dengan container yang berjalan
+docker logs jbalwikobracom-digid --tail 50
+```
+
+Pastikan selalu sync dengan container sebelum push perubahan.
+
+---
+
+## 📁 Konvensi Penamaan File Migrasi
+
+**PENTING**: Gunakan format urutan angka 14 digit (compatible dengan Supabase CLI).
+
+**Format Penamaan:**
+```
+NNNNNNNNNNNNNN_nama_deskriptif.sql
+
+Contoh:
+00000000000000_initial_schema.sql
+00000000000001_enable_rls.sql
+00000000000002_add_user_id_to_orders.sql
+00000000000003_add_invoice_metadata.sql
+...
+00000000000055_create_live_chat_tables.sql
+00000000000056_enable_chat_realtime.sql
+00000000000057_add_chat_enhancements.sql
+```
+
+**Aturan:**
+1. Gunakan angka 14 digit dengan padding zero (compatible dengan Supabase CLI timestamp format)
+2. Pisahkan angka dan nama dengan underscore (_)
+3. Gunakan underscore (_) untuk spasi dalam nama
+4. Semua file migrasi HARUS berada di `supabase/migrations/`
+5. Jangan simpan file non-migrasi di folder migrations
+
+**Menambah Migrasi Baru:**
+```bash
+# Cek nomor terakhir
+ls supabase/migrations/*.sql | tail -1
+# Misal terakhir adalah 00000000000057, maka buat 00000000000058
+touch supabase/migrations/00000000000058_nama_fitur_baru.sql
+```
+
+**Alasan:**
+- Lebih mudah track urutan eksekusi
+- Compatible dengan Supabase CLI `db push` dan `migration list`
+- Sync local/remote lebih reliable
+- Mudah dibaca dan di-sort
+
+---
+
+## 🔌 Unified API Pattern
+
+**WAJIB**: Gunakan unified API call pattern untuk mengurangi jumlah endpoint dan menghemat egress.
+
+**Pattern yang Digunakan:**
+```typescript
+// api/domain.ts - Single endpoint dengan action parameter
+export default async function handler(req, res) {
+  const { action } = req.query;
+  
+  switch (action) {
+    case 'list':
+      return handleList(req, res);
+    case 'get':
+      return handleGet(req, res);
+    case 'create':
+      return handleCreate(req, res);
+    case 'update':
+      return handleUpdate(req, res);
+    case 'delete':
+      return handleDelete(req, res);
+    default:
+      return res.status(400).json({ error: 'Unknown action' });
+  }
+}
+```
+
+**Frontend Service Pattern:**
+```typescript
+// services/domainService.ts
+async function apiCall<T>(action: string, method: 'GET' | 'POST', params?, body?): Promise<T> {
+  const url = new URL('/api/domain', window.location.origin);
+  url.searchParams.set('action', action);
+  // ... unified fetch logic
+}
+
+export const listItems = () => apiCall<Item[]>('list', 'GET');
+export const getItem = (id: string) => apiCall<Item>('get', 'GET', { id });
+export const createItem = (data: CreateRequest) => apiCall<Item>('create', 'POST', undefined, data);
+```
+
+**Keuntungan:**
+1. Satu endpoint per domain (bukan puluhan endpoint terpisah)
+2. Lebih hemat egress (fewer HTTP connections)
+3. Konsisten error handling
+4. Mudah debug dan maintain
+
+---
+
+## 📦 Code Splitting & Skalabilitas
+
+**WAJIB**: Pecah file besar (>300 baris) menjadi komponen kecil.
+
+**Aturan:**
+1. **Komponen UI**: Maksimal 200 baris per file
+2. **Service files**: Maksimal 300 baris per file
+3. **Page components**: Maksimal 400 baris, pecah ke sub-komponen jika lebih
+
+**Struktur Pemecahan:**
+```
+src/pages/admin/AdminChatPage/
+├── index.tsx              # Main component (imports & composes)
+├── ChatConversationList.tsx
+├── ChatMessageView.tsx
+├── ChatInputForm.tsx
+├── ChatTypingIndicator.tsx
+├── ChatCannedPicker.tsx
+├── ChatActivityLog.tsx
+├── hooks/
+│   ├── useChatMessages.ts
+│   └── useChatTyping.ts
+└── utils/
+    └── chatHelpers.ts
+```
+
+**Panduan Pemecahan:**
+- Setiap komponen harus punya single responsibility
+- State yang di-share → angkat ke parent atau context
+- Logic yang reusable → extract ke custom hook
+- Utility functions → pindah ke folder utils/
+
+---
+
+## 💬 Komentar Kode (Bahasa Indonesia)
+
+**WAJIB**: Semua komentar dalam kode menggunakan Bahasa Indonesia.
+
+```typescript
+// ✅ Benar
+/**
+ * Komponen untuk menampilkan daftar percakapan chat
+ * Mendukung filter berdasarkan status dan pencarian
+ */
+const ChatConversationList: React.FC = () => {
+  // State untuk menyimpan daftar percakapan
+  const [conversations, setConversations] = useState([]);
+  
+  // Ambil data percakapan dari server
+  const loadConversations = async () => {
+    // ...
+  };
+};
+
+// ❌ Salah
+/**
+ * Component to display chat conversation list
+ * Supports filtering by status and search
+ */
+```
+
+**Pengecualian:**
+- JSDoc untuk public API yang mungkin digunakan library external
+- Error messages yang ditampilkan ke user (tetap dalam Bahasa Indonesia)
+- Console logs untuk debugging (boleh hybrid)
+
+---
+
+## 🗂️ Workspace Organization
+
+**Jaga workspace tetap bersih dan terorganisir:**
+
+```
+Root/
+├── .github/               # GitHub configs & CI/CD
+├── api/                   # Vercel serverless functions
+│   ├── _config/          # Shared configs
+│   ├── _middleware/      # Auth, CORS
+│   └── _utils/           # Shared utilities
+├── docs/                  # Documentation
+├── migrations/            # Legacy manual migrations (reference only)
+├── scripts/               # Build & utility scripts
+├── src/                   # React frontend source
+├── supabase/
+│   └── migrations/        # SEMUA file migrasi SQL di sini
+└── public/                # Static assets
+```
+
+**File yang TIDAK boleh ada di root:**
+- File SQL yang tidak terpakai
+- Backup files (.bak, .old)
+- Test files (pindahkan ke __tests__/)
+- Temporary files
+
+---
+
+## �🚀 Commit Guidelines
 
 Use semantic versioning for releases:
 

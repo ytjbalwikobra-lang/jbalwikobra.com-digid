@@ -108,7 +108,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onToggleActivityLog
 }) => {
   return (
-    <div className="col-span-1 md:col-span-8 h-[500px] md:h-full bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
+    <div className="col-span-1 md:col-span-8 h-[380px] md:h-full bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
       {selectedConversation ? (
         <>
           {/* Header Chat */}

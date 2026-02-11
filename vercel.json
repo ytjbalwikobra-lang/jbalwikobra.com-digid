@@ -17,6 +17,10 @@
     {
       "path": "/api/cron/cleanup-auth",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/notification-sync",
+      "schedule": "*/10 * * * *"
     }
   ],
   "functions": {
@@ -31,6 +35,9 @@
     },
     "api/cron/cleanup-auth.ts": {
       "maxDuration": 10
+    },
+    "api/cron/notification-sync.ts": {
+      "maxDuration": 15
     }
   },
   "headers": [

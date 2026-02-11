@@ -60,8 +60,8 @@ const SECURITY_HEADERS = {
 };
 
 // Fields to select (egress optimization)
-const USER_SAFE_FIELDS = 'id,email,phone,name,is_admin,is_active,phone_verified,profile_completed';
-const USER_AUTH_FIELDS = 'id,email,phone,name,password_hash,is_admin,is_active,profile_completed';
+const USER_SAFE_FIELDS = 'id,email,phone,name,role,is_admin,is_active,phone_verified,profile_completed';
+const USER_AUTH_FIELDS = 'id,email,phone,name,role,password_hash,is_admin,is_active,profile_completed';
 
 // ============================================================================
 // SINGLETON SUPABASE CLIENT - BULLETPROOF VERSION
@@ -313,6 +313,7 @@ async function getUserBySessionToken(sessionToken: string): Promise<any | null> 
     email: result.user_email,
     name: result.user_name,
     is_admin: result.is_admin,
+    role: result.user_role || (result.is_admin ? 'super_admin' : 'user'),
     created_at: result.user_created_at
   };
 }

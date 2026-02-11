@@ -1,7 +1,8 @@
-// Admin Routes with proper URL navigation
+// Admin Routes dengan role-based access control
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminShell } from './AdminShellWrapper';
+import RequireRole from '../../components/RequireRole';
 import AdminDashboard from './AdminDashboard';
 import AdminOrdersV2 from './AdminOrdersV2';
 import AdminOrderDetail from './AdminOrderDetail';
@@ -20,20 +21,28 @@ const AdminRoutes: React.FC = () => {
   return (
     <AdminShell>
       <Routes>
-        <Route path="/" element={<AdminDashboard />} />
-        <Route path="/dashboard" element={<AdminDashboard />} />
-        <Route path="/orders" element={<AdminOrdersV2 />} />
-        <Route path="/orders/:orderId" element={<AdminOrderDetail />} />
-        <Route path="/users" element={<AdminUsersV2 />} />
-        <Route path="/products" element={<AdminProductsDirect />} />
-        <Route path="/banners" element={<AdminBanners />} />
-        <Route path="/flash-sales" element={<AdminFlashSales />} />
-        <Route path="/settings" element={<AdminSettings />} />
-        <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
-        <Route path="/notifications" element={<AdminNotificationsPage />} />
-        <Route path="/chat" element={<AdminChatPage />} />
-        <Route path="/canned-responses" element={<AdminCannedResponsesPage />} />
-        {/* Redirect any unknown admin routes to dashboard */}
+        {/* Route yang bisa diakses semua admin (termasuk admin_viewer) */}
+        <Route element={<RequireRole allowed={['super_admin', 'admin_viewer']} />}>
+          <Route path="/" element={<AdminDashboard />} />
+          <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/orders" element={<AdminOrdersV2 />} />
+          <Route path="/orders/:orderId" element={<AdminOrderDetail />} />
+          <Route path="/products" element={<AdminProductsDirect />} />
+          <Route path="/chat" element={<AdminChatPage />} />
+        </Route>
+
+        {/* Route yang hanya bisa diakses super_admin */}
+        <Route element={<RequireRole allowed={['super_admin']} />}>
+          <Route path="/users" element={<AdminUsersV2 />} />
+          <Route path="/banners" element={<AdminBanners />} />
+          <Route path="/flash-sales" element={<AdminFlashSales />} />
+          <Route path="/settings" element={<AdminSettings />} />
+          <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
+          <Route path="/notifications" element={<AdminNotificationsPage />} />
+          <Route path="/canned-responses" element={<AdminCannedResponsesPage />} />
+        </Route>
+
+        {/* Redirect route yang tidak dikenal ke dashboard */}
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </AdminShell>

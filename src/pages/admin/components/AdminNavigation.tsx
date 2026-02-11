@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { adminCache } from '../../../services/adminCache';
 import { adminService } from '../../../services/adminService';
+import { useAuth } from '../../../contexts/TraditionalAuthContext';
+import { hasAccessToPath } from '../../../components/RequireRole';
 
 interface NavItem {
   path: string;
@@ -65,8 +67,14 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Filter item navigasi berdasarkan role user
+  const filteredNavItems = navigationItems.filter(item => 
+    hasAccessToPath(user?.role, item.path)
+  );
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -138,7 +146,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
   const NavigationList = () => (
     <nav className="flex-1 p-3 overflow-y-auto" aria-label="Main Navigation">
       <ul className="space-y-1">
-        {navigationItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
 

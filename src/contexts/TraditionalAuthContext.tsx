@@ -7,6 +7,7 @@ interface User {
   email?: string;
   name?: string;
   isAdmin: boolean;
+  role?: string;
   avatarUrl?: string;
   phoneVerified: boolean;
   profileCompleted: boolean;
@@ -133,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data.user,
         // snake_case -> camelCase
         isAdmin: data.user.is_admin ?? false,
+        role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
         phoneVerified: data.user.phone_verified ?? false,
         profileCompleted: data.user.profile_completed ?? false,
         createdAt: data.user.created_at || data.user.createdAt || new Date().toISOString(),
@@ -222,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const mappedUser = {
         ...data.user,
         isAdmin: data.user.is_admin ?? false,
+        role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
         phoneVerified: data.user.phone_verified ?? false,
         profileCompleted: data.user.profile_completed ?? false,
         createdAt: data.user.created_at || data.user.createdAt || new Date().toISOString(),
@@ -289,6 +292,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...user,
         ...data.user,
         isAdmin: data.user.is_admin ?? false,
+        role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
         phoneVerified: data.user.phone_verified ?? false,
         profileCompleted: true,
         createdAt: data.user.created_at || user.createdAt || new Date().toISOString(),
@@ -389,6 +393,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const mappedUser = {
             ...data.user,
             isAdmin: data.user.is_admin ?? false,
+            role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
             phoneVerified: data.user.phone_verified ?? false,
             profileCompleted: data.user.profile_completed ?? false,
             createdAt: data.user.created_at || data.user.createdAt || new Date().toISOString(),

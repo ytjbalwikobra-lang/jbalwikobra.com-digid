@@ -399,6 +399,62 @@ Two separate systems exist:
 
 **Note:** Backward-compatibility views `notifications` and `notification_reads` exist as aliases.
 
+**Periodic Sync (Cron):**
+- `api/cron/notification-sync.ts` berjalan setiap 10 menit
+- Memeriksa order `paid`/`completed` dalam 48 jam terakhir yang belum punya notifikasi admin
+- Membuat notifikasi admin + customer yang terlewat (idempotent)
+- Diperlukan karena webhook kadang gagal membuat notifikasi meski berhasil update status order
+
+---
+
+## 🔐 Admin Role System
+
+Sistem role untuk mengatur akses admin panel.
+
+**Role yang tersedia:**
+
+| Role | Akses | Deskripsi |
+|---|---|---|
+| `super_admin` | Semua halaman | Admin utama, akses penuh |
+| `admin_viewer` | Dashboard, Orders, Products, Chat | Admin terbatas, hanya bisa melihat |
+
+**Kolom database:** `public.users.role` (VARCHAR(50))
+- Default value: `'user'` (bukan admin)
+- Untuk admin baru: set `is_admin = TRUE` DAN `role = 'admin_viewer'` atau `'super_admin'`
+
+**File terkait:**
+
+| Layer | File | Fungsi |
+|---|---|---|
+| DB | `validate_session()` | Return `user_role` dari kolom `users.role` |
+| Middleware | `api/_middleware/authMiddleware.ts` | `AuthResult.role` dikirim ke handler |
+| API | `api/auth.ts` | Field `role` di `USER_SAFE_FIELDS` dan response |
+| Frontend | `src/contexts/TraditionalAuthContext.tsx` | `User.role` di context |
+| Route Guard | `src/components/RequireRole.tsx` | Proteksi route per role |
+| Routes | `src/pages/admin/AdminRoutes.tsx` | Route grouping per role |
+| Navigation | `src/pages/admin/components/AdminNavigation.tsx` | Filter menu per role |
+
+**Aturan pengembangan:**
+1. **Setiap route admin baru** HARUS dibungkus `<RequireRole>` di `AdminRoutes.tsx`
+2. **Setiap menu baru** HARUS ditambahkan ke `ROLE_PERMISSIONS` di `RequireRole.tsx`
+3. **Jangan hardcode role check** — gunakan `hasAccessToPath(user.role, path)` dari `RequireRole.tsx`
+4. **Backend API** harus cek `auth.role` untuk operasi write (bukan hanya `isAdmin`)
+5. **Admin baru**: Set di Supabase Dashboard → `users` table → set `is_admin = true`, `role = 'admin_viewer'`
+
+```tsx
+// ✅ Good: Route dilindungi RequireRole
+<Route element={<RequireRole allowed={['super_admin']} />}>
+  <Route path="/settings" element={<AdminSettings />} />
+</Route>
+
+// ✅ Good: Cek akses di UI
+import { hasAccessToPath } from '../components/RequireRole';
+{hasAccessToPath(user.role, '/admin/settings') && <SettingsButton />}
+
+// ❌ Bad: Hardcode role check
+{user.role === 'super_admin' && <SettingsButton />}
+```
+
 ---
 
 ## � Docker Development Environment

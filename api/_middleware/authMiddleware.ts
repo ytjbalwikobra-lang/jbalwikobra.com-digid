@@ -9,6 +9,7 @@ export interface AuthResult {
   userId?: string;
   userEmail?: string;
   isAdmin?: boolean;
+  role?: string;
   error?: string;
 }
 
@@ -74,7 +75,8 @@ export async function validateAdminAuth(req: VercelRequest): Promise<AuthResult>
         valid: true,
         userId: 'dev-user-id',
         userEmail: 'dev@localhost',
-        isAdmin: true
+        isAdmin: true,
+        role: 'super_admin'
       };
     }
     
@@ -155,7 +157,8 @@ export async function validateAdminAuth(req: VercelRequest): Promise<AuthResult>
       valid: true,
       userId: result.user_id,
       userEmail: result.user_email || undefined,
-      isAdmin: true
+      isAdmin: true,
+      role: result.user_role || 'super_admin'
     };
 
   } catch (error) {
@@ -186,7 +189,8 @@ export async function validateAdminAuthOptional(
       valid: true,
       userId: 'dev-user',
       userEmail: 'dev@localhost',
-      isAdmin: true
+      isAdmin: true,
+      role: 'super_admin'
     };
   }
 

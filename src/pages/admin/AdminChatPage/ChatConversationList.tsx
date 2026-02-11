@@ -61,7 +61,7 @@ export const ChatConversationList: React.FC<ChatConversationListProps> = ({
   onRefresh
 }) => {
   return (
-    <div className="col-span-1 md:col-span-4 h-[400px] md:h-full bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
+    <div className="col-span-1 md:col-span-4 h-[320px] md:h-full bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
       {/* Header Daftar */}
       <div className="p-4 border-b border-[var(--admin-border)]">
         <div className="flex items-center gap-2 mb-3">

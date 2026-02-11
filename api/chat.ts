@@ -10,10 +10,9 @@ const supabaseUrl = (process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').replace(/[\r\n\\]/g, '').trim();
 const supabaseAnonKey = (process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '').replace(/[\r\n\\]/g, '').trim();
 
-// Gunakan service role untuk operasi admin, anon untuk operasi pelanggan
+// Semua operasi chat backend menggunakan service role untuk bypass RLS
 const supabaseAdminKey = supabaseServiceKey || supabaseAnonKey;
 const supabaseAdmin = supabaseUrl && supabaseAdminKey ? createClient(supabaseUrl, supabaseAdminKey) : null;
-const supabaseAnon = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // Pembatasan rate
 const rateMap = new Map<string, { count: number; ts: number }>();
@@ -56,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Cek koneksi Supabase
-  if (!supabaseAdmin && !supabaseAnon) {
+  if (!supabaseAdmin) {
     return respond(res, 500, { error: 'Database not configured' });
   }
 
@@ -173,7 +172,7 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
     return respond(res, 400, { error: 'Email or phone required' });
   }
 
-  const sb = supabaseAnon || supabaseAdmin;
+  const sb = supabaseAdmin!;
   
   // Buat percakapan
   const conversation = await chatService.createConversation(sb, {
@@ -223,7 +222,7 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     return respond(res, 400, { error: 'conversationId and message required' });
   }
 
-  const sb = isAdmin ? supabaseAdmin : (supabaseAnon || supabaseAdmin);
+  const sb = isAdmin ? supabaseAdmin : (supabaseAdmin!);
 
   // Untuk pelanggan, pastikan mereka pemilik percakapan atau berikan email yang benar
   if (!isAdmin) {
@@ -276,7 +275,7 @@ async function handleGetMessages(req: VercelRequest, res: VercelResponse, isAdmi
     return respond(res, 400, { error: 'conversationId required' });
   }
 
-  const sb = isAdmin ? supabaseAdmin : (supabaseAnon || supabaseAdmin);
+  const sb = isAdmin ? supabaseAdmin : (supabaseAdmin!);
 
   const result = await chatService.getMessages(sb, conversationId as string, {
     limit: limit ? parseInt(limit as string, 10) : undefined,
@@ -297,7 +296,7 @@ async function handleSubmitRating(req: VercelRequest, res: VercelResponse) {
     return respond(res, 400, { error: 'Valid conversationId and rating (1-5) required' });
   }
 
-  const sb = supabaseAnon || supabaseAdmin;
+  const sb = supabaseAdmin!;
 
   const result = await chatService.submitRating(sb, {
     conversationId,
@@ -611,7 +610,7 @@ async function handleSetTyping(req: VercelRequest, res: VercelResponse) {
     return respond(res, 400, { error: 'conversationId and userType required' });
   }
 
-  const sb = supabaseAnon || supabaseAdmin;
+  const sb = supabaseAdmin!;
   
   const success = await chatService.setTypingIndicator(sb, {
     conversationId,
@@ -638,7 +637,7 @@ async function handleStopTyping(req: VercelRequest, res: VercelResponse) {
     return respond(res, 400, { error: 'conversationId and userType required' });
   }
 
-  const sb = supabaseAnon || supabaseAdmin;
+  const sb = supabaseAdmin!;
   
   const success = await chatService.removeTypingIndicator(sb, {
     conversationId,
@@ -664,7 +663,7 @@ async function handleGetTyping(req: VercelRequest, res: VercelResponse) {
     return respond(res, 400, { error: 'conversationId required' });
   }
 
-  const sb = supabaseAnon || supabaseAdmin;
+  const sb = supabaseAdmin!;
   
   const indicators = await chatService.getTypingIndicators(sb, conversationId as string);
 

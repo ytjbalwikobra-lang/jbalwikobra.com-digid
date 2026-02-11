@@ -137,6 +137,19 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 </div>
                 <div className="flex items-center gap-3 text-xs text-[var(--admin-text-muted)]">
                   <span>{selectedConversation.customerEmail}</span>
+                  {/* Badge topik */}
+                  {selectedConversation.topic && selectedConversation.topic !== 'lainnya' && (
+                    <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0 ${
+                      selectedConversation.topic === 'pembelian_rental'
+                        ? 'bg-[var(--admin-info)]/15 text-[var(--admin-info)]'
+                        : 'bg-[var(--admin-orange)]/15 text-[var(--admin-orange)]'
+                    }`}>
+                      {selectedConversation.topic === 'pembelian_rental' ? '🛒 Pembelian/Rental' : '💰 Jual Akun'}
+                    </span>
+                  )}
+                  {selectedConversation.gameTitle && (
+                    <span className="text-[10px] text-[var(--admin-purple)]">🎮 {selectedConversation.gameTitle}</span>
+                  )}
                   {selectedConversation.subject && (
                     <span className="truncate">• {selectedConversation.subject}</span>
                   )}

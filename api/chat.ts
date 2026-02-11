@@ -166,7 +166,7 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const { customerEmail, customerName, customerPhone, subject, initialMessage, orderId, metadata } = req.body || {};
+  const { customerEmail, customerName, customerPhone, subject, topic, gameTitle, initialMessage, orderId, metadata } = req.body || {};
 
   if (!customerEmail && !customerPhone) {
     return respond(res, 400, { error: 'Email or phone required' });
@@ -180,6 +180,8 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
     customerName,
     customerPhone,
     subject,
+    topic,
+    gameTitle,
     orderId,
     metadata
   });
@@ -331,6 +333,8 @@ async function handleAdminListConversations(req: VercelRequest, res: VercelRespo
     status: status as any,
     assignedAdminId: assignedToMe === 'true' ? authResult.userId : undefined,
     unassigned: unassigned === 'true',
+    adminRole: authResult.role,
+    currentAdminId: authResult.userId,
     limit: limit ? parseInt(limit as string, 10) : undefined,
     offset: offset ? parseInt(offset as string, 10) : undefined
   });

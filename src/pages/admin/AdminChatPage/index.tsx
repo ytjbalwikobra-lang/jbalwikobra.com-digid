@@ -3,13 +3,14 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useToast } from '../../../components/Toast';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { AdminHeroSection } from '../components/ui/AdminHeroSection';
 import {
   adminListConversations,
   adminGetConversation,
   adminSendMessage,
   adminUpdateStatus,
-  adminJoinConversation,
+  adminAssignConversation,
   adminLeaveConversation,
   adminGetActivityLogs,
   adminGetChatStatistics,
@@ -40,6 +41,7 @@ import { ChatPanel } from './ChatPanel';
 
 const AdminChatPage: React.FC = () => {
   const toast = useToast();
+  const { user } = useAuth();
   
   // State percakapan
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -345,21 +347,26 @@ const AdminChatPage: React.FC = () => {
     }
   }, [selectedConversation?.id, toast]);
 
-  /** Handler bergabung ke percakapan */
+  /** Handler tangani percakapan — assign ke diri sendiri */
   const handleAssignToSelf = useCallback(async () => {
-    if (!selectedConversation?.id) return;
+    if (!selectedConversation?.id || !user?.id) return;
     try {
-      const result = await adminJoinConversation(selectedConversation.id, 'participant');
+      const result = await adminAssignConversation(selectedConversation.id, user.id);
       if (result.error) {
         toast?.showToast(result.error, 'error');
         return;
       }
-      toast?.showToast('Berhasil bergabung ke percakapan', 'success');
+      // Update status lokal ke 'assigned'
+      setSelectedConversation(prev => prev ? { ...prev, status: 'assigned', assignedAdminId: user.id } : null);
+      setConversations(prev => prev.map(c =>
+        c.id === selectedConversation.id ? { ...c, status: 'assigned', assignedAdminId: user.id } : c
+      ));
+      toast?.showToast('Percakapan berhasil ditangani', 'success');
       loadConversationDetails(selectedConversation.id);
     } catch (err: any) {
-      toast?.showToast(err.message || 'Gagal bergabung', 'error');
+      toast?.showToast(err.message || 'Gagal menangani percakapan', 'error');
     }
-  }, [selectedConversation?.id, toast, loadConversationDetails]);
+  }, [selectedConversation?.id, user?.id, toast, loadConversationDetails]);
 
   /** Handler keluar dari percakapan */
   const handleLeaveConversation = useCallback(async () => {

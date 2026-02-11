@@ -161,12 +161,24 @@ export const ChatConversationList = React.memo<ChatConversationListProps>(({
                         </span>
                       </div>
                       
-                      {/* Subjek */}
-                      {conv.subject && (
-                        <p className="text-xs text-[var(--admin-text-secondary)] truncate mb-0.5">
-                          {conv.subject}
-                        </p>
-                      )}
+                      {/* Subjek + Topik */}
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        {conv.topic && conv.topic !== 'lainnya' && (
+                          <span className={`inline-flex items-center gap-0.5 px-1 py-0 text-[9px] font-medium rounded shrink-0 ${
+                            conv.topic === 'pembelian_rental'
+                              ? 'bg-[var(--admin-info)]/15 text-[var(--admin-info)]'
+                              : 'bg-[var(--admin-orange)]/15 text-[var(--admin-orange)]'
+                          }`}>
+                            {conv.topic === 'pembelian_rental' ? '🛒' : '💰'}
+                            {conv.topic === 'pembelian_rental' ? 'Beli' : 'Jual'}
+                          </span>
+                        )}
+                        {conv.subject && (
+                          <p className="text-xs text-[var(--admin-text-secondary)] truncate">
+                            {conv.subject}
+                          </p>
+                        )}
+                      </div>
                       
                       {/* Preview pesan terakhir + badge */}
                       <div className="flex items-center justify-between gap-2">

@@ -41,6 +41,8 @@ export async function createConversation(
     customerPhone?: string;
     userId?: string;
     subject?: string;
+    topic?: string;
+    gameTitle?: string;
     orderId?: string;
     metadata?: Record<string, unknown>;
   }
@@ -54,6 +56,8 @@ export async function createConversation(
         customer_phone: data.customerPhone,
         user_id: data.userId,
         subject: data.subject,
+        topic: data.topic || 'lainnya',
+        game_title: data.gameTitle,
         order_id: data.orderId,
         metadata: data.metadata || {},
         status: 'open'
@@ -120,6 +124,8 @@ export async function listConversations(
     status?: ChatConversationStatus | ChatConversationStatus[];
     assignedAdminId?: string;
     unassigned?: boolean;
+    adminRole?: string;
+    currentAdminId?: string;
     limit?: number;
     offset?: number;
   } = {}
@@ -147,6 +153,14 @@ export async function listConversations(
 
     if (options.unassigned) {
       query = query.is('assigned_admin_id', null);
+    }
+
+    // Role-based visibility: admin_viewer hanya bisa lihat:
+    // - Percakapan yang belum ditangani (open, assigned_admin_id IS NULL)
+    // - Percakapan yang ditangani oleh dirinya sendiri
+    // super_admin bisa lihat semua
+    if (options.adminRole === 'admin_viewer' && options.currentAdminId) {
+      query = query.or(`assigned_admin_id.is.null,assigned_admin_id.eq.${options.currentAdminId}`);
     }
 
     // Pagination
@@ -763,6 +777,8 @@ function mapConversation(row: any): ChatConversation {
     userId: row.user_id,
     status: row.status,
     subject: row.subject,
+    topic: row.topic || 'lainnya',
+    gameTitle: row.game_title,
     assignedAdminId: row.assigned_admin_id,
     assignedAdmin: row.assigned_admin ? {
       id: row.assigned_admin.id,

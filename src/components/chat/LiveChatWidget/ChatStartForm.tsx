@@ -1,10 +1,20 @@
 /**
  * ChatStartForm.tsx
  * Form untuk memulai percakapan chat baru — desain mobile-first
+ * Mendukung pemilihan topik: Pembelian/Rental (+ Order ID), Jual Akun (+ Game Selector), Lainnya
  */
 
 import React from 'react';
 import { UserIcon, MailIcon, TagIcon, MessageIcon, ArrowRightIcon } from './ChatIcons';
+import type { ChatTopic } from '../../../types/chat';
+import type { GameTitle } from '../../../types';
+
+/** Opsi topik chat yang tersedia */
+const TOPIC_OPTIONS: { value: ChatTopic; label: string; icon: string }[] = [
+  { value: 'pembelian_rental', label: 'Pembelian / Rental', icon: '🛒' },
+  { value: 'jual_akun', label: 'Jual Akun', icon: '💰' },
+  { value: 'lainnya', label: 'Lainnya', icon: '💬' },
+];
 
 interface ChatStartFormProps {
   /** Nama pelanggan */
@@ -15,6 +25,14 @@ interface ChatStartFormProps {
   subject: string;
   /** Pesan awal */
   initialMessage: string;
+  /** Topik percakapan */
+  topic: ChatTopic;
+  /** Order ID (untuk topik pembelian/rental) */
+  orderId: string;
+  /** Judul game terpilih (untuk topik jual akun) */
+  gameTitle: string;
+  /** Daftar game tersedia */
+  gameTitles: GameTitle[];
   /** Status loading */
   isLoading: boolean;
   /** Pesan error */
@@ -27,24 +45,40 @@ interface ChatStartFormProps {
   onSubjectChange: (value: string) => void;
   /** Handler perubahan pesan awal */
   onMessageChange: (value: string) => void;
+  /** Handler perubahan topik */
+  onTopicChange: (value: ChatTopic) => void;
+  /** Handler perubahan order ID */
+  onOrderIdChange: (value: string) => void;
+  /** Handler perubahan game title */
+  onGameTitleChange: (value: string) => void;
   /** Handler submit form */
   onSubmit: (e: React.FormEvent) => void;
 }
 
-/** Form memulai percakapan baru dengan data pelanggan */
+/** Form memulai percakapan baru dengan data pelanggan dan topik */
 export const ChatStartForm: React.FC<ChatStartFormProps> = ({
   customerName,
   customerEmail,
   subject,
   initialMessage,
+  topic,
+  orderId,
+  gameTitle,
+  gameTitles,
   isLoading,
   error,
   onNameChange,
   onEmailChange,
   onSubjectChange,
   onMessageChange,
+  onTopicChange,
+  onOrderIdChange,
+  onGameTitleChange,
   onSubmit
 }) => {
+  /** Kelas input yang konsisten */
+  const inputCls = "w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm";
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col h-full overflow-y-auto">
       {/* Teks sambutan */}
@@ -69,7 +103,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
               type="text"
               value={customerName}
               onChange={(e) => onNameChange(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
+              className={inputCls}
               placeholder="Nama Anda"
               required
             />
@@ -89,12 +123,98 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
               type="email"
               value={customerEmail}
               onChange={(e) => onEmailChange(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
+              className={inputCls}
               placeholder="email@example.com"
               required
             />
           </div>
         </div>
+
+        {/* Topik — wajib, pill selector */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+            Topik <span className="text-[var(--cyber-error)]">*</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {TOPIC_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onTopicChange(opt.value)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all touch-manipulation active:scale-95 ${
+                  topic === opt.value
+                    ? 'bg-[var(--cyber-accent)]/15 border-[var(--cyber-accent)] text-[var(--cyber-accent)]'
+                    : 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:border-[var(--cyber-border-hover)]'
+                }`}
+              >
+                <span>{opt.icon}</span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Order ID — tampil jika topik = pembelian_rental */}
+        {topic === 'pembelian_rental' && (
+          <div>
+            <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+              Order ID <span className="text-[var(--cyber-text-muted)]">(opsional)</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+                <TagIcon />
+              </span>
+              <input
+                type="text"
+                value={orderId}
+                onChange={(e) => onOrderIdChange(e.target.value)}
+                className={inputCls}
+                placeholder="Contoh: ORD-XXXXXX"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Game Selector — tampil jika topik = jual_akun */}
+        {topic === 'jual_akun' && (
+          <div>
+            <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+              Pilih Game <span className="text-[var(--cyber-error)]">*</span>
+            </label>
+            {gameTitles.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-1">
+                {gameTitles.map(g => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => onGameTitleChange(g.name)}
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium border transition-all touch-manipulation active:scale-95 ${
+                      gameTitle === g.name
+                        ? 'bg-[var(--cyber-accent)]/15 border-[var(--cyber-accent)] text-[var(--cyber-accent)]'
+                        : 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:border-[var(--cyber-border-hover)]'
+                    }`}
+                  >
+                    {g.logoUrl ? (
+                      <img
+                        src={g.logoUrl}
+                        alt={g.name}
+                        className="w-5 h-5 rounded object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-sm">{g.icon}</span>
+                    )}
+                    <span className="truncate">{g.name}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--cyber-text-muted)] py-2">
+                Memuat daftar game...
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Subjek — opsional */}
         <div>
@@ -109,8 +229,8 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
               type="text"
               value={subject}
               onChange={(e) => onSubjectChange(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
-              placeholder="Topik pertanyaan"
+              className={inputCls}
+              placeholder="Detail tambahan (opsional)"
             />
           </div>
         </div>
@@ -148,7 +268,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
         )}
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || (topic === 'jual_akun' && !gameTitle)}
           className="w-full py-3 bg-[var(--cyber-accent)] text-white font-semibold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 touch-manipulation flex items-center justify-center gap-2 shadow-lg shadow-[var(--cyber-accent)]/20"
         >
           {isLoading ? (

@@ -7,6 +7,9 @@
 // Status percakapan
 export type ChatConversationStatus = 'open' | 'assigned' | 'resolved' | 'closed';
 
+// Topik percakapan chat
+export type ChatTopic = 'pembelian_rental' | 'jual_akun' | 'lainnya';
+
 // Tipe pesan
 export type ChatMessageType = 'text' | 'image' | 'file' | 'system';
 
@@ -46,6 +49,8 @@ export interface ChatConversation {
   // Status
   status: ChatConversationStatus;
   subject?: string;
+  topic?: ChatTopic;
+  gameTitle?: string;
   
   // Penugasan
   assignedAdminId?: string;
@@ -184,6 +189,8 @@ export interface StartChatRequest {
   customerName?: string;
   customerPhone?: string;
   subject?: string;
+  topic?: ChatTopic;
+  gameTitle?: string;
   initialMessage?: string;
   orderId?: string;
   metadata?: Record<string, unknown>;

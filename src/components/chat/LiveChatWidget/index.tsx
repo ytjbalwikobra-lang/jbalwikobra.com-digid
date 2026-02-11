@@ -20,7 +20,9 @@ import {
   customerSetTyping,
   customerStopTyping
 } from '../../../services/chatService';
-import type { ChatConversation, ChatMessage } from '../../../types/chat';
+import { getGameTitles } from '../../../services/product/catalogOps';
+import type { ChatConversation, ChatMessage, ChatTopic } from '../../../types/chat';
+import type { GameTitle } from '../../../types';
 
 // Komponen sub-modules
 import { ChatIcon, CloseIcon } from './ChatIcons';
@@ -60,6 +62,12 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const [subject, setSubject] = useState('');
   const [initialMessage, setInitialMessage] = useState('');
   
+  // State topik dan field kondisional
+  const [topic, setTopic] = useState<ChatTopic>('lainnya');
+  const [orderId, setOrderId] = useState('');
+  const [gameTitle, setGameTitle] = useState('');
+  const [gameTitles, setGameTitles] = useState<GameTitle[]>([]);
+  
   // State rating
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
@@ -94,6 +102,13 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  /** Muat daftar game untuk selector topik jual akun */
+  useEffect(() => {
+    getGameTitles()
+      .then(games => setGameTitles(games))
+      .catch(err => console.error('[LiveChat] Gagal memuat game titles:', err));
+  }, []);
 
   /** Muat percakapan dari localStorage */
   useEffect(() => {
@@ -174,7 +189,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         customerName,
         customerEmail,
         subject,
-        initialMessage
+        initialMessage,
+        topic,
+        gameTitle: topic === 'jual_akun' ? gameTitle : undefined,
+        orderId: topic === 'pembelian_rental' ? orderId : undefined
       });
 
       if (result.error || !result.conversation) {
@@ -338,12 +356,19 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
                 customerEmail={customerEmail}
                 subject={subject}
                 initialMessage={initialMessage}
+                topic={topic}
+                orderId={orderId}
+                gameTitle={gameTitle}
+                gameTitles={gameTitles}
                 isLoading={isLoading}
                 error={error}
                 onNameChange={setCustomerName}
                 onEmailChange={setCustomerEmail}
                 onSubjectChange={setSubject}
                 onMessageChange={setInitialMessage}
+                onTopicChange={setTopic}
+                onOrderIdChange={setOrderId}
+                onGameTitleChange={setGameTitle}
                 onSubmit={handleStartConversation}
               />
             )}

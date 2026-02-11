@@ -3,8 +3,9 @@
  * Tampilan pesan chat dengan input, avatar, lampiran gambar, dan indikator mengetik
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useCallback } from 'react';
 import { SendIcon } from './ChatIcons';
+import { compressImage } from '../../../utils/imageCompression';
 import type { ChatMessage } from '../../../types/chat';
 
 /** Ikon lampiran gambar (SVG inline) */
@@ -58,6 +59,32 @@ const formatTime = (dateString: string) => {
   return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 };
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
+const ReadReceipt: React.FC<{ read?: boolean }> = ({ read }) => (
+  <span className="inline-flex items-center gap-0.5 text-[10px]">
+    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path
+        d="M4 13l4 4 6.5-6.5"
+        className={read ? 'text-[var(--cyber-accent)]' : 'text-[var(--cyber-text-muted)]'}
+      />
+    </svg>
+    {read && (
+      <svg className="w-3 h-3 -ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M8 13l4 4 8-8" className="text-[var(--cyber-accent)]" />
+      </svg>
+    )}
+  </span>
+);
+
 /** Tampilan percakapan chat dengan daftar pesan, input, lampiran gambar, dan indikator mengetik */
 export const ChatView: React.FC<ChatViewProps> = ({
   messages,
@@ -79,25 +106,51 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
+  const groupedMessages = useMemo(() => {
+    const groups: { date: string; items: ChatMessage[] }[] = [];
+    messages.forEach((msg) => {
+      const dateKey = formatDate(msg.createdAt);
+      const last = groups[groups.length - 1];
+      if (!last || last.date !== dateKey) {
+        groups.push({ date: dateKey, items: [msg] });
+      } else {
+        last.items.push(msg);
+      }
+    });
+    return groups;
+  }, [messages]);
+
+  const attachImage = useCallback(async (file: File) => {
+    // Kompres untuk hemat bandwidth
+    const compressed = await compressImage(file);
+    if (compressed.size > 3 * 1024 * 1024) return;
+    onFileSelect(compressed);
+    const url = URL.createObjectURL(compressed);
+    setPreviewUrl(url);
+  }, [onFileSelect]);
+
   /** Handler pilih file dari input */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Validasi tipe
-      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-        return;
-      }
-      // Validasi ukuran (3MB)
-      if (file.size > 3 * 1024 * 1024) {
-        return;
-      }
-      onFileSelect(file);
-      // Generate preview
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+    if (file && ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      attachImage(file);
     }
-    // Reset input agar bisa pilih file yang sama lagi
     e.target.value = '';
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      await attachImage(file);
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const file = e.clipboardData.files?.[0];
+    if (file && ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      await attachImage(file);
+    }
   };
 
   /** Batalkan pilihan file */
@@ -109,9 +162,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   };
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full bg-[#0f172a]"
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+      onPaste={handlePaste}
+    >
       {/* Daftar Pesan */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[linear-gradient(135deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_50%,rgba(255,255,255,0.04)_100%)]">
         {/* Pesan selamat datang saat kosong */}
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
@@ -126,59 +184,65 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-2 ${msg.senderType === 'customer' ? 'justify-end' : 'justify-start'}`}
-          >
-            {/* Avatar admin/system (kiri) */}
-            {msg.senderType !== 'customer' && msg.senderType !== 'system' && (
-              <div className="w-7 h-7 rounded-full bg-[var(--cyber-accent)]/20 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-[10px] font-bold text-[var(--cyber-accent)]">
-                  {getInitials(msg.senderName || 'CS')}
-                </span>
-              </div>
-            )}
-
-            <div
-              className={`max-w-[75%] px-3 py-2 ${
-                msg.senderType === 'customer'
-                  ? 'bg-[var(--cyber-accent)] text-white rounded-2xl rounded-br-md'
-                  : msg.senderType === 'system'
-                  ? 'bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] text-sm italic rounded-lg mx-auto max-w-[90%]'
-                  : 'bg-[var(--cyber-bg-surface)] text-[var(--cyber-text-primary)] rounded-2xl rounded-bl-md border border-[var(--cyber-border)]'
-              }`}
-            >
-              {/* Nama admin pengirim */}
-              {msg.senderType === 'admin' && (
-                <p className="text-[10px] font-semibold text-[var(--cyber-accent)] mb-0.5">
-                  {msg.senderName}
-                </p>
-              )}
-              {/* Lampiran gambar */}
-              {msg.messageType === 'image' && msg.attachmentUrl && (
-                <button
-                  type="button"
-                  onClick={() => setLightboxUrl(msg.attachmentUrl!)}
-                  className="block mb-1 rounded-lg overflow-hidden max-w-[200px] cursor-zoom-in"
-                >
-                  <img
-                    src={msg.attachmentUrl}
-                    alt={msg.attachmentName || 'Gambar'}
-                    className="w-full h-auto rounded-lg"
-                    loading="lazy"
-                  />
-                </button>
-              )}
-              {msg.message && (
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
-              )}
-              <p className={`text-[10px] mt-1 ${
-                msg.senderType === 'customer' ? 'text-white/60' : 'text-[var(--cyber-text-muted)]'
-              }`}>
-                {formatTime(msg.createdAt)}
-              </p>
+        {groupedMessages.map((group) => (
+          <div key={group.date} className="space-y-3">
+            <div className="flex justify-center">
+              <span className="px-3 py-1 text-[11px] uppercase tracking-wide bg-black/40 text-white/70 rounded-full">
+                {group.date}
+              </span>
             </div>
+            {group.items.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex gap-2 ${msg.senderType === 'customer' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.senderType !== 'customer' && msg.senderType !== 'system' && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--cyber-accent)] to-[#7c3aed] flex items-center justify-center shrink-0 mt-0.5 text-white text-xs font-bold">
+                    {getInitials(msg.senderName || 'CS')}
+                  </div>
+                )}
+
+                <div
+                  className={`max-w-[75%] px-3 py-2 shadow-sm ${
+                    msg.senderType === 'customer'
+                      ? 'bg-white text-gray-800 rounded-2xl rounded-br-sm'
+                      : msg.senderType === 'system'
+                      ? 'bg-black/60 text-white/70 text-sm italic rounded-lg mx-auto max-w-[90%]'
+                      : 'bg-[#06C755] text-white rounded-2xl rounded-bl-sm'
+                  }`}
+                >
+                  {msg.senderType === 'admin' && (
+                    <p className="text-[10px] font-semibold text-white/80 mb-0.5">
+                      {msg.senderName}
+                    </p>
+                  )}
+
+                  {msg.messageType === 'image' && msg.attachmentUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxUrl(msg.attachmentUrl!)}
+                      className="block mb-1 rounded-lg overflow-hidden max-w-[220px] cursor-zoom-in"
+                    >
+                      <img
+                        src={msg.attachmentUrl}
+                        alt={msg.attachmentName || 'Gambar'}
+                        className="w-full h-auto rounded-lg"
+                        loading="lazy"
+                      />
+                    </button>
+                  )}
+                  {msg.message && (
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+                  )}
+                  <div className="flex items-center justify-between gap-3 mt-1 text-[10px] text-white/70">
+                    <span className={msg.senderType === 'customer' ? 'text-gray-500' : 'text-white/70'}>
+                      {formatTime(msg.createdAt)}
+                    </span>
+                    {msg.senderType === 'customer' && <ReadReceipt read={msg.isRead} />}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ))}
         <div ref={messagesEndRef} />
@@ -199,7 +263,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
 
       {/* Input Pesan — padding bawah ekstra untuk safe area iOS */}
-      <form onSubmit={onSubmit} className="p-3 border-t border-[var(--cyber-border)] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <form
+        onSubmit={onSubmit}
+        className="p-3 border-t border-[var(--cyber-border)] pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[var(--cyber-bg-card)]/70"
+      >
         {error && (
           <div className="flex items-center gap-2 p-2 mb-2 bg-[var(--cyber-error)]/10 rounded-lg">
             <svg className="w-3.5 h-3.5 text-[var(--cyber-error)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

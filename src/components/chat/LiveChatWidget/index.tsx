@@ -96,6 +96,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const unsubscribeTypingRef = useRef<(() => void) | null>(null);
   const unsubscribeConvRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Kelas posisi CSS — bottom-24 pada mobile agar tidak tertutup CyberBottomNav (z-100, ~76px tinggi)
   // z-[200] supaya di atas bottom nav (z-100) dan overlay (z-300 untuk modal)
@@ -116,6 +117,11 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
 
   /** Muat daftar game untuk selector topik jual akun */
   useEffect(() => {
+    notificationAudioRef.current = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.volume = 0.4;
+    }
+
     getGameTitles()
       .then(games => setGameTitles(games))
       .catch(err => console.error('[LiveChat] Gagal memuat game titles:', err));
@@ -171,6 +177,14 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         // Tambah unread jika chat tertutup dan pesan dari admin/system
         if (!isOpen && msg.senderType !== 'customer') {
           setUnreadCount(prev => prev + 1);
+          try {
+            if (notificationAudioRef.current) {
+              notificationAudioRef.current.currentTime = 0;
+              notificationAudioRef.current.play().catch(() => undefined);
+            }
+          } catch (err) {
+            console.error('[LiveChat] Gagal memutar suara notif:', err);
+          }
         }
       });
       unsubscribeRef.current = unsubscribe;

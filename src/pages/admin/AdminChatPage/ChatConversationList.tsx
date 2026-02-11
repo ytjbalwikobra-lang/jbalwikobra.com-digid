@@ -63,7 +63,7 @@ export const ChatConversationList = React.memo<ChatConversationListProps>(({
   onRefresh
 }) => {
   return (
-    <div className="col-span-1 md:col-span-4 h-[320px] md:h-full bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
+    <div className="col-span-1 lg:col-span-4 xl:col-span-4 h-[360px] lg:h-[calc(100vh-220px)] bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
       {/* Header Daftar */}
       <div className="p-4 border-b border-[var(--admin-border)]">
         <div className="flex items-center gap-2 mb-3">
@@ -87,7 +87,7 @@ export const ChatConversationList = React.memo<ChatConversationListProps>(({
         </div>
         
         {/* Filter Status */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-none">
+        <div className="flex gap-1 overflow-x-auto scrollbar-none -mx-1 pr-1 pb-1">
           {STATUS_OPTIONS.map((option) => (
             <button
               key={option.value}

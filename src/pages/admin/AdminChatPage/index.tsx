@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useToast } from '../../../components/Toast';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { useAuth } from '../../../contexts/TraditionalAuthContext';
-import { AdminHeroSection } from '../components/ui/AdminHeroSection';
 import {
   adminListConversations,
   adminGetConversation,
@@ -13,7 +12,6 @@ import {
   adminAssignConversation,
   adminLeaveConversation,
   adminGetActivityLogs,
-  adminGetChatStatistics,
   adminMarkRead,
   adminSetTyping,
   adminStopTyping,
@@ -28,7 +26,6 @@ import type {
   ChatMessage,
   ChatAdminParticipant,
   ChatActivityLog as ActivityLogType,
-  ChatStatistics,
   ChatConversationStatus,
   ChatTypingIndicator as TypingIndicatorType,
   ChatCannedResponse
@@ -36,7 +33,6 @@ import type {
 
 // Komponen sub-modules
 import { type FilterStatus } from './chatHelpers';
-import { ChatStatisticsCards } from './ChatStatisticsCards';
 import { ChatConversationList } from './ChatConversationList';
 import { ChatPanel } from './ChatPanel';
 
@@ -50,7 +46,7 @@ const AdminChatPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [participants, setParticipants] = useState<ChatAdminParticipant[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLogType[]>([]);
-  const [statistics, setStatistics] = useState<ChatStatistics | null>(null);
+  // Statistik tidak ditampilkan di layout baru
   
   // State loading — pisah antara initial load vs background refresh
   const [initialLoading, setInitialLoading] = useState(true);
@@ -124,20 +120,6 @@ const AdminChatPage: React.FC = () => {
     }
   }, [statusFilter, toast]);
 
-  /** Muat statistik chat — silent update */
-  const loadStatistics = useCallback(async () => {
-    try {
-      const stats = await adminGetChatStatistics();
-      // Smart merge: skip update jika data sama
-      setStatistics(prev => {
-        if (prev && JSON.stringify(prev) === JSON.stringify(stats)) return prev;
-        return stats;
-      });
-    } catch (err) {
-      console.error('[AdminChat] Gagal memuat statistik:', err);
-    }
-  }, []);
-
   /** Muat detail percakapan yang dipilih */
   const loadConversationDetails = useCallback(async (convId: string) => {
     setMessageLoading(true);
@@ -170,17 +152,15 @@ const AdminChatPage: React.FC = () => {
   /** Muat data awal saat komponen dimount */
   useEffect(() => {
     loadConversations();
-    loadStatistics();
-  }, [loadConversations, loadStatistics]);
+  }, [loadConversations]);
 
   /** Silent polling setiap 15 detik — tanpa spinner, data di-update di background */
   useEffect(() => {
     const interval = setInterval(() => {
       loadConversations();
-      loadStatistics();
     }, 15000);
     return () => clearInterval(interval);
-  }, [loadConversations, loadStatistics]);
+  }, [loadConversations]);
 
   /** Langganan pembaruan percakapan secara realtime */
   useEffect(() => {
@@ -441,67 +421,52 @@ const AdminChatPage: React.FC = () => {
   const handleToggleActivityLog = useCallback(() => setShowActivityLog(prev => !prev), []);
 
   return (
-    <>
-      {/* Bagian Hero */}
-      <AdminHeroSection
-        title="Live Chat"
-        subtitle="Kelola percakapan dengan pelanggan"
-        badge="REALTIME"
-        badgeColor="pink"
-      />
+    <div className="space-y-3">
+      {/* Konten Utama - dua kolom: kiri daftar, kanan detail */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 min-h-[calc(100vh-180px)]">
+        <ChatConversationList
+          conversations={filteredConversations}
+          selectedConversation={selectedConversation}
+          loading={initialLoading}
+          statusFilter={statusFilter}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onStatusFilterChange={setStatusFilter}
+          onSelectConversation={handleSelectConversation}
+          onRefresh={loadConversations}
+        />
 
-      <div className="mt-4 space-y-4">
-        {/* Kartu Statistik */}
-        {statistics && <ChatStatisticsCards statistics={statistics} />}
-
-        {/* Konten Utama - Split View — responsif: stack pada mobile, side-by-side pada desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 h-auto md:h-[calc(100vh-380px)] md:min-h-[500px]">
-          {/* Daftar Percakapan */}
-          <ChatConversationList
-            conversations={filteredConversations}
-            selectedConversation={selectedConversation}
-            loading={initialLoading}
-            statusFilter={statusFilter}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onStatusFilterChange={setStatusFilter}
-            onSelectConversation={handleSelectConversation}
-            onRefresh={loadConversations}
-          />
-
-          {/* Panel Chat */}
-          <ChatPanel
-            selectedConversation={selectedConversation}
-            messages={messages}
-            participants={participants}
-            activityLogs={activityLogs}
-            messageLoading={messageLoading}
-            sendingMessage={sendingMessage}
-            typingUsers={typingUsers}
-            newMessage={newMessage}
-            showActivityLog={showActivityLog}
-            showCannedPicker={showCannedPicker}
-            filteredCannedResponses={filteredCannedResponses}
-            cannedResponses={cannedResponses}
-            messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
-            messageInputRef={messageInputRef as React.RefObject<HTMLInputElement>}
-            onMessageChange={handleMessageInputChange}
-            onSendMessage={handleSendMessage}
-            onSelectCannedResponse={handleSelectCannedResponse}
-            onToggleCannedPicker={handleToggleCannedPicker}
-            onCloseCannedPicker={handleCloseCannedPicker}
-            selectedFile={selectedFile}
-            isUploading={isUploading}
-            onFileSelect={setSelectedFile}
-            onSendImage={handleSendImage}
-            onStatusChange={handleStatusChange}
-            onAssignToSelf={handleAssignToSelf}
-            onLeaveConversation={handleLeaveConversation}
-            onToggleActivityLog={handleToggleActivityLog}
-          />
-        </div>
+        <ChatPanel
+          selectedConversation={selectedConversation}
+          messages={messages}
+          participants={participants}
+          activityLogs={activityLogs}
+          messageLoading={messageLoading}
+          sendingMessage={sendingMessage}
+          typingUsers={typingUsers}
+          newMessage={newMessage}
+          showActivityLog={showActivityLog}
+          showCannedPicker={showCannedPicker}
+          filteredCannedResponses={filteredCannedResponses}
+          cannedResponses={cannedResponses}
+          messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+          messageInputRef={messageInputRef as React.RefObject<HTMLInputElement>}
+          onMessageChange={handleMessageInputChange}
+          onSendMessage={handleSendMessage}
+          onSelectCannedResponse={handleSelectCannedResponse}
+          onToggleCannedPicker={handleToggleCannedPicker}
+          onCloseCannedPicker={handleCloseCannedPicker}
+          selectedFile={selectedFile}
+          isUploading={isUploading}
+          onFileSelect={setSelectedFile}
+          onSendImage={handleSendImage}
+          onStatusChange={handleStatusChange}
+          onAssignToSelf={handleAssignToSelf}
+          onLeaveConversation={handleLeaveConversation}
+          onToggleActivityLog={handleToggleActivityLog}
+        />
       </div>
-    </>
+    </div>
   );
 };
 

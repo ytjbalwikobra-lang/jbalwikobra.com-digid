@@ -3,8 +3,9 @@
  * Komponen form input pesan dengan picker template respon cepat dan upload gambar
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Send, Zap, Image as ImageIcon, X } from 'lucide-react';
+import { compressImage } from '../../../utils/imageCompression';
 import type { ChatCannedResponse, ChatConversationStatus } from '../../../types/chat';
 
 interface ChatInputFormProps {
@@ -66,15 +67,31 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   /** Handler pilih file */
+  const attachImage = useCallback(async (file: File) => {
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) return;
+    const compressed = await compressImage(file);
+    if (compressed.size > 3 * 1024 * 1024) return;
+    onFileSelect(compressed);
+    setPreviewUrl(URL.createObjectURL(compressed));
+  }, [onFileSelect]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) return;
-      if (file.size > 3 * 1024 * 1024) return;
-      onFileSelect(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      attachImage(file);
     }
     e.target.value = '';
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) await attachImage(file);
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const file = e.clipboardData.files?.[0];
+    if (file) await attachImage(file);
   };
 
   /** Batalkan file */
@@ -126,7 +143,13 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="p-3 border-t border-[var(--admin-border)] bg-[var(--admin-bg-card)]">
+      <form
+        onSubmit={onSubmit}
+        onDrop={handleDrop}
+        onDragOver={(e) => e.preventDefault()}
+        onPaste={handlePaste}
+        className="p-3 border-t border-[var(--admin-border)] bg-[var(--admin-bg-card)]"
+      >
         {/* Preview lampiran */}
         {selectedFile && previewUrl && (
           <div className="mb-2 relative inline-block">

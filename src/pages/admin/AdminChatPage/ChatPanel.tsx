@@ -87,6 +87,8 @@ interface ChatPanelProps {
   onLeaveConversation: () => void;
   /** Handler toggle log aktivitas */
   onToggleActivityLog: () => void;
+  /** Handler kembali ke list (mobile) */
+  onBack?: () => void;
 }
 
 /** Panel chat utama dengan header aksi, area pesan, dan sidebar — dimemoize */
@@ -117,7 +119,8 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
   onStatusChange,
   onAssignToSelf,
   onLeaveConversation,
-  onToggleActivityLog
+  onToggleActivityLog,
+  onBack
 }) => {
   return (
     <div className="col-span-1 lg:col-span-8 xl:col-span-8 h-[480px] lg:h-[calc(100vh-220px)] bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
@@ -125,7 +128,21 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
         <>
           {/* Header Chat */}
           <div className="p-4 border-b border-[var(--admin-border)]">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 lg:hidden">
+                {onBack && (
+                  <button
+                    onClick={onBack}
+                    className="p-2 rounded-lg bg-[var(--admin-bg-surface)] text-[var(--admin-text)] hover:bg-[var(--admin-bg-elevated)]"
+                    aria-label="Kembali ke daftar"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </button>
+                )}
+                <span className="text-sm text-[var(--admin-text-muted)]">Percakapan</span>
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h3 className="font-semibold text-[var(--admin-text)] truncate">

@@ -38,6 +38,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     '/admin/orders',
     '/admin/products',
     '/admin/chat',
+    '/admin/notifications',
   ],
 };
 

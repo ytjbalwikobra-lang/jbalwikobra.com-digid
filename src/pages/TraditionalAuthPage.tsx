@@ -122,6 +122,12 @@ const AuthPage: React.FC = () => {
         return;
       }
 
+      // Admin langsung diarahkan ke dashboard admin
+      if (result.user?.isAdmin) {
+        navigate('/admin', { replace: true });
+        return;
+      }
+
       const redirect = searchParams.get('redirect');
       const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
       navigate(decodedRedirect, { replace: true });

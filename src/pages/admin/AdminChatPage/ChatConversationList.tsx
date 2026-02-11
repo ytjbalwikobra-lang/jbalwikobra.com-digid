@@ -87,13 +87,13 @@ export const ChatConversationList = React.memo<ChatConversationListProps>(({
         </div>
         
         {/* Filter Status */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-none -mx-1 pr-1 pb-1">
+        <div className="flex gap-1 overflow-x-auto scrollbar-none -mx-2 pr-2 pb-2 w-full">
           {STATUS_OPTIONS.map((option) => (
             <button
               key={option.value}
               onClick={() => onStatusFilterChange(option.value)}
               className={cn(
-                'px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap transition-all',
+                'px-3 py-2 text-xs font-medium rounded-full whitespace-nowrap transition-all min-w-[78px]',
                 statusFilter === option.value
                   ? 'bg-[var(--admin-accent)] text-white shadow-sm shadow-[var(--admin-accent)]/20'
                   : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-elevated)]'

@@ -47,6 +47,8 @@ const AdminChatPage: React.FC = () => {
   const [participants, setParticipants] = useState<ChatAdminParticipant[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLogType[]>([]);
   // Statistik tidak ditampilkan di layout baru
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
   
   // State loading — pisah antara initial load vs background refresh
   const [initialLoading, setInitialLoading] = useState(true);
@@ -81,6 +83,21 @@ const AdminChatPage: React.FC = () => {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const isFirstLoadRef = useRef(true);
+
+  // Deteksi mobile untuk toggle list/detail
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setShowMobileDetail(false);
+    }
+  }, [isMobile]);
 
   /** Muat daftar percakapan — tanpa flicker saat background refresh */
   const loadConversations = useCallback(async () => {
@@ -409,6 +426,9 @@ const AdminChatPage: React.FC = () => {
     setSelectedFile(null); // Reset file saat pindah percakapan
     loadConversationDetails(conv.id);
     loadActivityLogs(conv.id);
+    if (isMobile) {
+      setShowMobileDetail(true);
+    }
   }, [loadConversationDetails, loadActivityLogs]);
 
   /** Toggle canned picker — stabil referensi */
@@ -420,52 +440,63 @@ const AdminChatPage: React.FC = () => {
   const handleCloseCannedPicker = useCallback(() => setShowCannedPicker(false), []);
   const handleToggleActivityLog = useCallback(() => setShowActivityLog(prev => !prev), []);
 
+  const listPane = (
+    <ChatConversationList
+      conversations={filteredConversations}
+      selectedConversation={selectedConversation}
+      loading={initialLoading}
+      statusFilter={statusFilter}
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      onStatusFilterChange={setStatusFilter}
+      onSelectConversation={handleSelectConversation}
+      onRefresh={loadConversations}
+    />
+  );
+
+  const detailPane = (
+    <ChatPanel
+      selectedConversation={selectedConversation}
+      messages={messages}
+      participants={participants}
+      activityLogs={activityLogs}
+      messageLoading={messageLoading}
+      sendingMessage={sendingMessage}
+      typingUsers={typingUsers}
+      newMessage={newMessage}
+      showActivityLog={showActivityLog}
+      showCannedPicker={showCannedPicker}
+      filteredCannedResponses={filteredCannedResponses}
+      cannedResponses={cannedResponses}
+      messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+      messageInputRef={messageInputRef as React.RefObject<HTMLInputElement>}
+      onMessageChange={handleMessageInputChange}
+      onSendMessage={handleSendMessage}
+      onSelectCannedResponse={handleSelectCannedResponse}
+      onToggleCannedPicker={handleToggleCannedPicker}
+      onCloseCannedPicker={handleCloseCannedPicker}
+      selectedFile={selectedFile}
+      isUploading={isUploading}
+      onFileSelect={setSelectedFile}
+      onSendImage={handleSendImage}
+      onStatusChange={handleStatusChange}
+      onAssignToSelf={handleAssignToSelf}
+      onLeaveConversation={handleLeaveConversation}
+      onToggleActivityLog={handleToggleActivityLog}
+      onBack={isMobile ? () => setShowMobileDetail(false) : undefined}
+    />
+  );
+
   return (
     <div className="space-y-3">
-      {/* Konten Utama - dua kolom: kiri daftar, kanan detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 min-h-[calc(100vh-180px)]">
-        <ChatConversationList
-          conversations={filteredConversations}
-          selectedConversation={selectedConversation}
-          loading={initialLoading}
-          statusFilter={statusFilter}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onStatusFilterChange={setStatusFilter}
-          onSelectConversation={handleSelectConversation}
-          onRefresh={loadConversations}
-        />
-
-        <ChatPanel
-          selectedConversation={selectedConversation}
-          messages={messages}
-          participants={participants}
-          activityLogs={activityLogs}
-          messageLoading={messageLoading}
-          sendingMessage={sendingMessage}
-          typingUsers={typingUsers}
-          newMessage={newMessage}
-          showActivityLog={showActivityLog}
-          showCannedPicker={showCannedPicker}
-          filteredCannedResponses={filteredCannedResponses}
-          cannedResponses={cannedResponses}
-          messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
-          messageInputRef={messageInputRef as React.RefObject<HTMLInputElement>}
-          onMessageChange={handleMessageInputChange}
-          onSendMessage={handleSendMessage}
-          onSelectCannedResponse={handleSelectCannedResponse}
-          onToggleCannedPicker={handleToggleCannedPicker}
-          onCloseCannedPicker={handleCloseCannedPicker}
-          selectedFile={selectedFile}
-          isUploading={isUploading}
-          onFileSelect={setSelectedFile}
-          onSendImage={handleSendImage}
-          onStatusChange={handleStatusChange}
-          onAssignToSelf={handleAssignToSelf}
-          onLeaveConversation={handleLeaveConversation}
-          onToggleActivityLog={handleToggleActivityLog}
-        />
-      </div>
+      {isMobile ? (
+        showMobileDetail ? detailPane : listPane
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 min-h-[calc(100vh-180px)]">
+          {listPane}
+          {detailPane}
+        </div>
+      )}
     </div>
   );
 };

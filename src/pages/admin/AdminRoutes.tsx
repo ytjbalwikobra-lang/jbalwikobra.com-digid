@@ -29,6 +29,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/orders/:orderId" element={<AdminOrderDetail />} />
           <Route path="/products" element={<AdminProductsDirect />} />
           <Route path="/chat" element={<AdminChatPage />} />
+          <Route path="/notifications" element={<AdminNotificationsPage />} />
         </Route>
 
         {/* Route yang hanya bisa diakses super_admin */}
@@ -38,7 +39,6 @@ const AdminRoutes: React.FC = () => {
           <Route path="/flash-sales" element={<AdminFlashSales />} />
           <Route path="/settings" element={<AdminSettings />} />
           <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
-          <Route path="/notifications" element={<AdminNotificationsPage />} />
           <Route path="/canned-responses" element={<AdminCannedResponsesPage />} />
         </Route>
 

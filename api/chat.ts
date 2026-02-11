@@ -120,6 +120,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'admin-mark-read':
         return await handleMarkRead(req, res);
 
+      // =========================================================================
+      // TYPING INDICATORS ENDPOINTS
+      // =========================================================================
+      
+      case 'set-typing':
+        return await handleSetTyping(req, res);
+      
+      case 'stop-typing':
+        return await handleStopTyping(req, res);
+      
+      case 'get-typing':
+        return await handleGetTyping(req, res);
+
+      // =========================================================================
+      // CANNED RESPONSES ENDPOINTS (admin only)
+      // =========================================================================
+      
+      case 'admin-get-canned-responses':
+        return await handleGetCannedResponses(req, res);
+      
+      case 'admin-create-canned-response':
+        return await handleCreateCannedResponse(req, res);
+      
+      case 'admin-update-canned-response':
+        return await handleUpdateCannedResponse(req, res);
+      
+      case 'admin-delete-canned-response':
+        return await handleDeleteCannedResponse(req, res);
+
       default:
         return respond(res, 400, { error: 'Invalid action' });
     }
@@ -562,6 +591,189 @@ async function handleMarkRead(req: VercelRequest, res: VercelResponse) {
 
   if (!success) {
     return respond(res, 500, { error: 'Failed to mark messages as read' });
+  }
+
+  return respond(res, 200, { success: true });
+}
+
+// =============================================================================
+// TYPING INDICATORS HANDLERS
+// =============================================================================
+
+async function handleSetTyping(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const { conversationId, userId, userType, userName } = req.body || {};
+
+  if (!conversationId || !userType) {
+    return respond(res, 400, { error: 'conversationId and userType required' });
+  }
+
+  const sb = supabaseAnon || supabaseAdmin;
+  
+  const success = await chatService.setTypingIndicator(sb, {
+    conversationId,
+    userId,
+    userType,
+    userName
+  });
+
+  if (!success) {
+    return respond(res, 500, { error: 'Failed to set typing indicator' });
+  }
+
+  return respond(res, 200, { success: true });
+}
+
+async function handleStopTyping(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const { conversationId, userId, userType } = req.body || {};
+
+  if (!conversationId || !userType) {
+    return respond(res, 400, { error: 'conversationId and userType required' });
+  }
+
+  const sb = supabaseAnon || supabaseAdmin;
+  
+  const success = await chatService.removeTypingIndicator(sb, {
+    conversationId,
+    userId,
+    userType
+  });
+
+  if (!success) {
+    return respond(res, 500, { error: 'Failed to remove typing indicator' });
+  }
+
+  return respond(res, 200, { success: true });
+}
+
+async function handleGetTyping(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const { conversationId } = req.query;
+
+  if (!conversationId) {
+    return respond(res, 400, { error: 'conversationId required' });
+  }
+
+  const sb = supabaseAnon || supabaseAdmin;
+  
+  const indicators = await chatService.getTypingIndicators(sb, conversationId as string);
+
+  return respond(res, 200, { indicators });
+}
+
+// =============================================================================
+// CANNED RESPONSES HANDLERS
+// =============================================================================
+
+async function handleGetCannedResponses(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  if (!authResult.valid) {
+    return respond(res, 401, { error: authResult.error || 'Unauthorized' });
+  }
+
+  const responses = await chatService.getCannedResponses(supabaseAdmin);
+
+  return respond(res, 200, { responses });
+}
+
+async function handleCreateCannedResponse(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  if (!authResult.valid) {
+    return respond(res, 401, { error: authResult.error || 'Unauthorized' });
+  }
+
+  const { title, message, category, shortcut, sortOrder } = req.body || {};
+
+  if (!title || !message) {
+    return respond(res, 400, { error: 'title and message required' });
+  }
+
+  const response = await chatService.createCannedResponse(supabaseAdmin, {
+    title,
+    message,
+    category,
+    shortcut,
+    sortOrder,
+    createdBy: authResult.user?.id
+  });
+
+  if (!response) {
+    return respond(res, 500, { error: 'Failed to create canned response' });
+  }
+
+  return respond(res, 201, { response });
+}
+
+async function handleUpdateCannedResponse(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'PUT' && req.method !== 'PATCH') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  if (!authResult.valid) {
+    return respond(res, 401, { error: authResult.error || 'Unauthorized' });
+  }
+
+  const { id, title, message, category, shortcut, isActive, sortOrder } = req.body || {};
+
+  if (!id) {
+    return respond(res, 400, { error: 'id required' });
+  }
+
+  const response = await chatService.updateCannedResponse(supabaseAdmin, id, {
+    title,
+    message,
+    category,
+    shortcut,
+    isActive,
+    sortOrder
+  });
+
+  if (!response) {
+    return respond(res, 500, { error: 'Failed to update canned response' });
+  }
+
+  return respond(res, 200, { response });
+}
+
+async function handleDeleteCannedResponse(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'DELETE') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  if (!authResult.valid) {
+    return respond(res, 401, { error: authResult.error || 'Unauthorized' });
+  }
+
+  const { id } = req.query;
+
+  if (!id) {
+    return respond(res, 400, { error: 'id required' });
+  }
+
+  const success = await chatService.deleteCannedResponse(supabaseAdmin, id as string);
+
+  if (!success) {
+    return respond(res, 500, { error: 'Failed to delete canned response' });
   }
 
   return respond(res, 200, { success: true });

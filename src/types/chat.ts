@@ -283,3 +283,65 @@ export interface ChatStatistics {
   averageRating?: number;
   ratingsCount: number;
 }
+
+// =============================================================================
+// ENHANCEMENTS: Typing Indicators & Canned Responses
+// =============================================================================
+
+/**
+ * Typing Indicator
+ * Shows who is currently typing in a conversation
+ */
+export interface ChatTypingIndicator {
+  id: string;
+  conversationId: string;
+  userId?: string;
+  userType: ChatSenderType;
+  userName?: string;
+  startedAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Canned Response Category
+ */
+export type CannedResponseCategory = 
+  | 'greeting' 
+  | 'closing' 
+  | 'faq' 
+  | 'technical' 
+  | 'status' 
+  | 'followup'
+  | 'other';
+
+/**
+ * Canned Response (Template Message)
+ * Pre-defined message templates for admin quick responses
+ */
+export interface ChatCannedResponse {
+  id: string;
+  title: string;
+  message: string;
+  category?: CannedResponseCategory;
+  shortcut?: string; // e.g., '/hello', '/thanks'
+  usageCount: number;
+  lastUsedAt?: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Create/Update Canned Response Request
+ */
+export interface CannedResponseRequest {
+  title: string;
+  message: string;
+  category?: CannedResponseCategory;
+  shortcut?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+

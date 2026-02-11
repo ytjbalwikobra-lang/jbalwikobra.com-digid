@@ -247,10 +247,17 @@ export async function adminMarkRead(
 /**
  * Ambil semua template respon cepat (admin)
  */
-export async function adminGetCannedResponses(category?: string): Promise<{ data: ChatCannedResponse[] | null; error: string | null }> {
+export async function adminGetCannedResponses(category?: string): Promise<ChatCannedResponse[]> {
   const params: Record<string, string> = {};
   if (category) params.category = category;
-  return chatApiCall<ChatCannedResponse[]>('admin-get-canned-responses', 'GET', params);
+  const result = await chatApiCall<{ responses: ChatCannedResponse[] }>('admin-get-canned-responses', 'GET', params);
+  // Backend mengembalikan { responses: [...] }, perlu di-unwrap
+  const data = result.data;
+  if (data && Array.isArray((data as any).responses)) {
+    return (data as any).responses;
+  }
+  if (Array.isArray(data)) return data;
+  return [];
 }
 
 /**

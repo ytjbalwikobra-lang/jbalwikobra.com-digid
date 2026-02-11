@@ -194,8 +194,10 @@ const AdminChatPage: React.FC = () => {
   /** Muat template respon cepat saat komponen dimount */
   useEffect(() => {
     const loadCanned = async () => {
-      const { data } = await adminGetCannedResponses();
-      if (data) setCannedResponses(data);
+      const responses = await adminGetCannedResponses();
+      if (Array.isArray(responses)) {
+        setCannedResponses(responses);
+      }
     };
     loadCanned();
   }, []);
@@ -239,7 +241,7 @@ const AdminChatPage: React.FC = () => {
   }, []);
 
   /** Filter template respon cepat berdasarkan pencarian */
-  const filteredCannedResponses = cannedResponses.filter(cr => {
+  const filteredCannedResponses = (Array.isArray(cannedResponses) ? cannedResponses : []).filter(cr => {
     if (!cannedFilter) return cr.isActive;
     return cr.isActive && (
       cr.shortcut?.toLowerCase().includes(cannedFilter) ||
@@ -249,7 +251,7 @@ const AdminChatPage: React.FC = () => {
   });
 
   /** Filter percakapan berdasarkan pencarian */
-  const filteredConversations = conversations.filter(conv => {
+  const filteredConversations = (Array.isArray(conversations) ? conversations : []).filter(conv => {
     if (debouncedSearch) {
       const search = debouncedSearch.toLowerCase();
       const matchName = conv.customerName?.toLowerCase().includes(search);

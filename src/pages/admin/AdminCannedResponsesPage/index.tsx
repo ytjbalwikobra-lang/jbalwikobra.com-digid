@@ -34,9 +34,8 @@ const AdminCannedResponsesPage: React.FC = () => {
   const loadResponses = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await adminGetCannedResponses();
-      if (error) { toast?.showToast(error, 'error'); return; }
-      setResponses(data || []);
+      const responses = await adminGetCannedResponses();
+      setResponses(Array.isArray(responses) ? responses : []);
     } catch (err) {
       console.error('[CannedResponses] Gagal memuat template:', err);
       toast?.showToast('Gagal memuat template', 'error');

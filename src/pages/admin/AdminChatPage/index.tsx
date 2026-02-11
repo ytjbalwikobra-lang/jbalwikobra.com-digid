@@ -1,31 +1,8 @@
-/**
- * AdminChatPage/index.tsx
- * 
- * Halaman admin untuk mengelola percakapan live chat.
- * Fitur:
- * - Daftar percakapan dengan filter status
- * - Pembaruan pesan secara realtime
- * - Partisipasi multi-admin
- * - Log aktivitas
- * - Indikator mengetik
- * - Template respon cepat (canned responses)
- */
+/** Halaman admin untuk mengelola percakapan live chat dengan fitur realtime */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import {
-  MessageSquare,
-  UserPlus,
-  UserMinus,
-  CheckCircle,
-  XCircle,
-  Users,
-  History
-} from 'lucide-react';
-import { cn } from '../../../utils/cn';
 import { useToast } from '../../../components/Toast';
 import { useDebounce } from '../../../hooks/useDebounce';
-import { AdminButton } from '../components/ui/AdminButton';
-import { AdminEmptyState } from '../components/ui/AdminEmptyState';
 import { AdminHeroSection } from '../components/ui/AdminHeroSection';
 import {
   adminListConversations,
@@ -59,10 +36,7 @@ import type {
 import { type FilterStatus } from './chatHelpers';
 import { ChatStatisticsCards } from './ChatStatisticsCards';
 import { ChatConversationList } from './ChatConversationList';
-import { ChatMessageView } from './ChatMessageView';
-import { ChatTypingIndicator } from './ChatTypingIndicator';
-import { ChatInputForm } from './ChatInputForm';
-import { ChatActivityLog } from './ChatActivityLog';
+import { ChatPanel } from './ChatPanel';
 
 const AdminChatPage: React.FC = () => {
   const toast = useToast();
@@ -104,8 +78,6 @@ const AdminChatPage: React.FC = () => {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Fungsi load data ---
-
   /** Muat daftar percakapan dari server */
   const loadConversations = useCallback(async () => {
     setLoading(true);
@@ -122,7 +94,6 @@ const AdminChatPage: React.FC = () => {
       setLoading(false);
     }
   }, [statusFilter, toast]);
-
   /** Muat statistik chat */
   const loadStatistics = useCallback(async () => {
     try {
@@ -132,7 +103,6 @@ const AdminChatPage: React.FC = () => {
       console.error('[AdminChat] Gagal memuat statistik:', err);
     }
   }, []);
-
   /** Muat detail percakapan yang dipilih */
   const loadConversationDetails = useCallback(async (convId: string) => {
     setMessageLoading(true);
@@ -151,7 +121,6 @@ const AdminChatPage: React.FC = () => {
       setMessageLoading(false);
     }
   }, [toast]);
-
   /** Muat log aktivitas percakapan */
   const loadActivityLogs = useCallback(async (convId: string) => {
     try {
@@ -161,8 +130,6 @@ const AdminChatPage: React.FC = () => {
       console.error('[AdminChat] Gagal memuat log aktivitas:', err);
     }
   }, []);
-
-  // --- Effects ---
 
   /** Muat data awal saat komponen dimount */
   useEffect(() => {
@@ -226,8 +193,6 @@ const AdminChatPage: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // --- Handler ---
 
   /** Handler perubahan input pesan dengan deteksi shortcut template */
   const handleMessageInputChange = useCallback((value: string) => {
@@ -371,8 +336,6 @@ const AdminChatPage: React.FC = () => {
     loadActivityLogs(conv.id);
   }, [loadConversationDetails, loadActivityLogs]);
 
-  // --- Render ---
-
   return (
     <div className="min-h-screen bg-[var(--admin-bg-pure)]">
       {/* Bagian Hero */}
@@ -403,137 +366,31 @@ const AdminChatPage: React.FC = () => {
           />
 
           {/* Panel Chat */}
-          <div className="col-span-12 md:col-span-8 bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
-            {selectedConversation ? (
-              <>
-                {/* Header Chat */}
-                <div className="p-4 border-b border-[var(--admin-border)]">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-[var(--admin-text)]">
-                        {selectedConversation.customerName || selectedConversation.customerEmail}
-                      </h3>
-                      <p className="text-sm text-[var(--admin-text-secondary)]">
-                        {selectedConversation.customerEmail}
-                        {selectedConversation.customerPhone && ` • ${selectedConversation.customerPhone}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* Tombol Aksi Status */}
-                      {selectedConversation.status === 'open' && (
-                        <AdminButton
-                          variant="primary"
-                          size="sm"
-                          icon={<UserPlus className="w-4 h-4" />}
-                          onClick={handleAssignToSelf}
-                        >
-                          Tangani
-                        </AdminButton>
-                      )}
-                      {selectedConversation.status === 'assigned' && (
-                        <>
-                          <AdminButton
-                            variant="success"
-                            size="sm"
-                            icon={<CheckCircle className="w-4 h-4" />}
-                            onClick={() => handleStatusChange('resolved')}
-                          >
-                            Selesai
-                          </AdminButton>
-                          <AdminButton
-                            variant="ghost"
-                            size="sm"
-                            icon={<UserMinus className="w-4 h-4" />}
-                            onClick={handleLeaveConversation}
-                          >
-                            Keluar
-                          </AdminButton>
-                        </>
-                      )}
-                      {selectedConversation.status === 'resolved' && (
-                        <AdminButton
-                          variant="ghost"
-                          size="sm"
-                          icon={<XCircle className="w-4 h-4" />}
-                          onClick={() => handleStatusChange('closed')}
-                        >
-                          Tutup
-                        </AdminButton>
-                      )}
-                      
-                      {/* Toggle Log Aktivitas */}
-                      <button
-                        onClick={() => setShowActivityLog(!showActivityLog)}
-                        className={cn(
-                          'p-2 rounded-lg transition-colors',
-                          showActivityLog
-                            ? 'bg-[var(--admin-accent)] text-white'
-                            : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-elevated)]'
-                        )}
-                        aria-label="Toggle log aktivitas"
-                      >
-                        <History className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Daftar Partisipan */}
-                  {participants.length > 0 && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Users className="w-4 h-4 text-[var(--admin-text-muted)]" />
-                      <span className="text-xs text-[var(--admin-text-muted)]">
-                        {participants.map(p => p.admin?.name || p.admin?.email).filter(Boolean).join(', ')}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-1 overflow-hidden">
-                  {/* Area Pesan */}
-                  <div className={cn(
-                    'flex-1 flex flex-col overflow-hidden',
-                    showActivityLog && 'border-r border-[var(--admin-border)]'
-                  )}>
-                    <ChatMessageView
-                      messages={messages}
-                      loading={messageLoading}
-                      ref={messagesEndRef}
-                    />
-
-                    <ChatTypingIndicator typingUsers={typingUsers} />
-
-                    <ChatInputForm
-                      newMessage={newMessage}
-                      sendingMessage={sendingMessage}
-                      conversationStatus={selectedConversation.status}
-                      showCannedPicker={showCannedPicker}
-                      filteredCannedResponses={filteredCannedResponses}
-                      cannedResponses={cannedResponses}
-                      inputRef={messageInputRef as React.RefObject<HTMLInputElement>}
-                      onMessageChange={handleMessageInputChange}
-                      onSubmit={handleSendMessage}
-                      onSelectCannedResponse={handleSelectCannedResponse}
-                      onToggleCannedPicker={() => { setShowCannedPicker(!showCannedPicker); setCannedFilter(''); }}
-                      onCloseCannedPicker={() => setShowCannedPicker(false)}
-                    />
-                  </div>
-
-                  {/* Sidebar Log Aktivitas */}
-                  {showActivityLog && (
-                    <ChatActivityLog activityLogs={activityLogs} />
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <AdminEmptyState
-                  icon={<MessageSquare className="w-16 h-16" />}
-                  title="Pilih Percakapan"
-                  description="Pilih percakapan dari daftar untuk mulai chat"
-                />
-              </div>
-            )}
-          </div>
+          <ChatPanel
+            selectedConversation={selectedConversation}
+            messages={messages}
+            participants={participants}
+            activityLogs={activityLogs}
+            messageLoading={messageLoading}
+            sendingMessage={sendingMessage}
+            typingUsers={typingUsers}
+            newMessage={newMessage}
+            showActivityLog={showActivityLog}
+            showCannedPicker={showCannedPicker}
+            filteredCannedResponses={filteredCannedResponses}
+            cannedResponses={cannedResponses}
+            messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+            messageInputRef={messageInputRef as React.RefObject<HTMLInputElement>}
+            onMessageChange={handleMessageInputChange}
+            onSendMessage={handleSendMessage}
+            onSelectCannedResponse={handleSelectCannedResponse}
+            onToggleCannedPicker={() => { setShowCannedPicker(!showCannedPicker); setCannedFilter(''); }}
+            onCloseCannedPicker={() => setShowCannedPicker(false)}
+            onStatusChange={handleStatusChange}
+            onAssignToSelf={handleAssignToSelf}
+            onLeaveConversation={handleLeaveConversation}
+            onToggleActivityLog={() => setShowActivityLog(!showActivityLog)}
+          />
         </div>
       </div>
     </div>

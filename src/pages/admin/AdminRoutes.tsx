@@ -14,6 +14,7 @@ import AdminBanners from './AdminBanners';
 import AdminFlashSales from './AdminFlashSales';
 import AdminNotificationsPage from './AdminNotificationsPage';
 import AdminChatPage from './AdminChatPage';
+import AdminCannedResponsesPage from './AdminCannedResponsesPage';
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const AdminRoutes: React.FC = () => {
         <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
         <Route path="/notifications" element={<AdminNotificationsPage />} />
         <Route path="/chat" element={<AdminChatPage />} />
+        <Route path="/canned-responses" element={<AdminCannedResponsesPage />} />
         {/* Redirect any unknown admin routes to dashboard */}
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>

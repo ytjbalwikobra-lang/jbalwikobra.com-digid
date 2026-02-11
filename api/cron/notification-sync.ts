@@ -106,13 +106,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       (existingNotifs || []).map(n => `${n.order_id}:${n.type}`)
     );
 
-    // Juga cek customer_notifications yang terlewat
-    const { data: existingCustomerNotifs } = await supabase
-      .from('customer_notifications')
-      .select('link_url, type')
-      .eq('type', 'payment')
-      .in('link_url', ['/orders']);
-
     // Proses setiap order yang belum punya notifikasi
     for (const order of paidOrders) {
       const isRental = order.order_type === 'rental';

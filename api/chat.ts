@@ -46,7 +46,7 @@ function getClientIP(req: VercelRequest): string {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
-  setCorsHeaders(res, req);
+  setCorsHeaders(req, res);
   if (handleCorsPreFlight(req, res)) return;
 
   // Pembatasan rate

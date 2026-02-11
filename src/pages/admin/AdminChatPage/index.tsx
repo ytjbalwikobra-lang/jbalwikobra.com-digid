@@ -20,7 +20,8 @@ import {
   adminGetCannedResponses,
   subscribeToMessages,
   subscribeToConversations,
-  subscribeToTypingIndicators
+  subscribeToTypingIndicators,
+  uploadChatAttachment
 } from '../../../services/chatService';
 import type {
   ChatConversation,
@@ -72,6 +73,10 @@ const AdminChatPage: React.FC = () => {
   const [cannedResponses, setCannedResponses] = useState<ChatCannedResponse[]>([]);
   const [showCannedPicker, setShowCannedPicker] = useState(false);
   const [cannedFilter, setCannedFilter] = useState('');
+  
+  // State lampiran gambar
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -327,6 +332,40 @@ const AdminChatPage: React.FC = () => {
     }
   }, [newMessage, selectedConversation?.id, toast]);
 
+  /** Handler kirim gambar — upload lalu kirim pesan dengan lampiran */
+  const handleSendImage = useCallback(async () => {
+    if (!selectedFile || !selectedConversation?.id) return;
+    setIsUploading(true);
+    try {
+      const uploadResult = await uploadChatAttachment(selectedConversation.id, selectedFile);
+      if (!uploadResult.url) {
+        toast?.showToast(uploadResult.error || 'Gagal mengunggah gambar', 'error');
+        return;
+      }
+      const result = await adminSendMessage(selectedConversation.id, '', {
+        messageType: 'image',
+        attachmentUrl: uploadResult.url,
+        attachmentName: selectedFile.name,
+        attachmentType: selectedFile.type
+      });
+      if (result.error) {
+        toast?.showToast(result.error, 'error');
+        return;
+      }
+      if (result.message) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === result.message!.id)) return prev;
+          return [...prev, result.message!];
+        });
+      }
+      setSelectedFile(null);
+    } catch (err: any) {
+      toast?.showToast(err.message || 'Gagal mengirim gambar', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [selectedFile, selectedConversation?.id, toast]);
+
   /** Handler ubah status percakapan */
   const handleStatusChange = useCallback(async (status: ChatConversationStatus) => {
     if (!selectedConversation?.id) return;
@@ -387,6 +426,7 @@ const AdminChatPage: React.FC = () => {
   /** Handler pilih percakapan dari daftar */
   const handleSelectConversation = useCallback((conv: ChatConversation) => {
     setSelectedConversation(conv);
+    setSelectedFile(null); // Reset file saat pindah percakapan
     loadConversationDetails(conv.id);
     loadActivityLogs(conv.id);
   }, [loadConversationDetails, loadActivityLogs]);
@@ -450,6 +490,10 @@ const AdminChatPage: React.FC = () => {
             onSelectCannedResponse={handleSelectCannedResponse}
             onToggleCannedPicker={handleToggleCannedPicker}
             onCloseCannedPicker={handleCloseCannedPicker}
+            selectedFile={selectedFile}
+            isUploading={isUploading}
+            onFileSelect={setSelectedFile}
+            onSendImage={handleSendImage}
             onStatusChange={handleStatusChange}
             onAssignToSelf={handleAssignToSelf}
             onLeaveConversation={handleLeaveConversation}

@@ -42,13 +42,19 @@ export async function sendCustomerMessage(
   conversationId: string,
   message: string,
   customerEmail?: string,
-  senderName?: string
+  senderName?: string,
+  options?: {
+    messageType?: 'text' | 'image' | 'file';
+    attachmentUrl?: string;
+    attachmentName?: string;
+    attachmentType?: string;
+  }
 ): Promise<{ message: ChatMessage | null; error: string | null }> {
   const result = await chatApiCall<{ success: boolean; message: ChatMessage }>(
     'send-message',
     'POST',
     undefined,
-    { conversationId, message, customerEmail, senderName }
+    { conversationId, message, customerEmail, senderName, ...options }
   );
 
   if (result.error || !result.data?.message) {
@@ -56,6 +62,39 @@ export async function sendCustomerMessage(
   }
 
   return { message: result.data.message, error: null };
+}
+
+/**
+ * Upload lampiran gambar ke Supabase Storage via backend
+ */
+export async function uploadChatAttachment(
+  conversationId: string,
+  file: File
+): Promise<{ url: string | null; fileName: string | null; mimeType: string | null; error: string | null }> {
+  // Konversi file ke base64
+  const base64Data = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Hapus prefix data:image/xxx;base64,
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const result = await chatApiCall<{ success: boolean; url: string; fileName: string; mimeType: string }>(
+    'upload-attachment',
+    'POST',
+    undefined,
+    { conversationId, base64Data, fileName: file.name, mimeType: file.type }
+  );
+
+  if (result.error || !result.data?.url) {
+    return { url: null, fileName: null, mimeType: null, error: result.error || 'Gagal upload file' };
+  }
+
+  return { url: result.data.url, fileName: result.data.fileName, mimeType: result.data.mimeType, error: null };
 }
 
 /**

@@ -79,6 +79,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'submit-rating':
         return await handleSubmitRating(req, res);
 
+      case 'upload-attachment':
+        return await handleUploadAttachment(req, res);
+
       // =========================================================================
       // ENDPOINT ADMIN (perlu autentikasi)
       // =========================================================================
@@ -160,6 +163,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 // =============================================================================
 // HANDLER PELANGGAN
 // =============================================================================
+
+/** Handler upload lampiran gambar ke Supabase Storage */
+async function handleUploadAttachment(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const { conversationId, base64Data, fileName, mimeType } = req.body || {};
+
+  if (!conversationId || !base64Data || !fileName || !mimeType) {
+    return respond(res, 400, { error: 'conversationId, base64Data, fileName, and mimeType required' });
+  }
+
+  // Validasi tipe MIME — hanya gambar
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedMimes.includes(mimeType)) {
+    return respond(res, 400, { error: 'Tipe file tidak didukung. Hanya JPEG, PNG, GIF, WebP.' });
+  }
+
+  // Decode base64
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  // Batasan ukuran: 3MB (base64 inflate ~33%, jaga di bawah 4.5MB body limit Vercel)
+  if (buffer.length > 3 * 1024 * 1024) {
+    return respond(res, 400, { error: 'Ukuran file maksimal 3MB' });
+  }
+
+  // Generate path unik: chat-attachments/{conversationId}/{timestamp}_{fileName}
+  const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `${conversationId}/${Date.now()}_${sanitizedName}`;
+
+  const sb = supabaseAdmin!;
+
+  // Upload ke Supabase Storage
+  const { data, error } = await sb.storage
+    .from('chat-attachments')
+    .upload(storagePath, buffer, {
+      contentType: mimeType,
+      upsert: false
+    });
+
+  if (error) {
+    console.error('[chat.ts] Upload gagal:', error);
+    return respond(res, 500, { error: 'Gagal mengupload file' });
+  }
+
+  // Dapatkan URL publik
+  const { data: urlData } = sb.storage
+    .from('chat-attachments')
+    .getPublicUrl(data.path);
+
+  return respond(res, 200, {
+    success: true,
+    url: urlData.publicUrl,
+    fileName: sanitizedName,
+    mimeType
+  });
+}
 
 async function handleStartConversation(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

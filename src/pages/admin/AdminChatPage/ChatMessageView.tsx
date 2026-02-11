@@ -1,9 +1,9 @@
 /**
  * ChatMessageView.tsx
- * Komponen tampilan daftar pesan chat dengan bubble, avatar, dan grouping
+ * Komponen tampilan daftar pesan chat dengan bubble, avatar, gambar, dan grouping
  */
 
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { cn } from '../../../utils/cn';
 import { AdminLoadingState } from '../components/ui/AdminLoadingState';
 import { formatTime, getInitials } from './chatHelpers';
@@ -16,10 +16,13 @@ interface ChatMessageViewProps {
   loading: boolean;
 }
 
-/** Tampilan daftar pesan dengan bubble, avatar, dan auto-scroll */
+/** Tampilan daftar pesan dengan bubble, avatar, gambar, dan auto-scroll */
 export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
   ({ messages, loading }, ref) => {
+    const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
     return (
+      <>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loading ? (
           <AdminLoadingState message="Memuat pesan..." />
@@ -83,6 +86,21 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                       {msg.senderName}
                     </p>
                   )}
+                  {/* Lampiran gambar */}
+                  {msg.messageType === 'image' && msg.attachmentUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxUrl(msg.attachmentUrl!)}
+                      className="block mb-1 rounded-lg overflow-hidden max-w-[220px] cursor-zoom-in"
+                    >
+                      <img
+                        src={msg.attachmentUrl}
+                        alt={msg.attachmentName || 'Gambar'}
+                        className="w-full h-auto rounded-lg"
+                        loading="lazy"
+                      />
+                    </button>
+                  )}
                   {msg.senderType !== 'system' && (
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
                   )}
@@ -117,6 +135,28 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
         {/* Elemen scroll anchor */}
         <div ref={ref} />
       </div>
+
+      {/* Lightbox gambar — fullscreen overlay */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center text-lg hover:bg-white/30 transition-colors"
+          >
+            ✕
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Gambar penuh"
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      </>
     );
   }
 );

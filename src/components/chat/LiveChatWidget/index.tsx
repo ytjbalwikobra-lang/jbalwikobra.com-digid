@@ -15,6 +15,7 @@ import {
   sendCustomerMessage,
   getCustomerMessages,
   submitRating,
+  uploadChatAttachment,
   subscribeToMessages,
   subscribeToTypingIndicators,
   customerSetTyping,
@@ -75,6 +76,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   
   // State indikator mengetik
   const [adminTyping, setAdminTyping] = useState(false);
+  
+  // State lampiran gambar
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // State jumlah pesan belum dibaca (untuk badge FAB)
   const [unreadCount, setUnreadCount] = useState(0);
@@ -276,6 +281,59 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     }
   };
 
+  /** Handler kirim lampiran gambar */
+  const handleSendImage = async () => {
+    if (!selectedFile || !conversation?.id) return;
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      // Upload file ke Supabase Storage via backend
+      const uploadResult = await uploadChatAttachment(conversation.id, selectedFile);
+      if (uploadResult.error || !uploadResult.url) {
+        setError(uploadResult.error || 'Gagal upload gambar');
+        return;
+      }
+
+      // Kirim pesan dengan lampiran
+      const caption = newMessage.trim() || '📷 Gambar';
+      const result = await sendCustomerMessage(
+        conversation.id,
+        caption,
+        customerEmail,
+        customerName,
+        {
+          messageType: 'image',
+          attachmentUrl: uploadResult.url,
+          attachmentName: uploadResult.fileName || selectedFile.name,
+          attachmentType: uploadResult.mimeType || selectedFile.type
+        }
+      );
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      // Tambahkan secara optimistik
+      if (result.message) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === result.message!.id)) return prev;
+          return [...prev, result.message!];
+        });
+      }
+
+      // Reset state
+      setSelectedFile(null);
+      setNewMessage('');
+    } catch (err: any) {
+      setError(err.message || 'Gagal mengirim gambar');
+    } finally {
+      setIsUploading(false);
+      inputRef.current?.focus();
+    }
+  };
+
   /** Handler kirim rating */
   const handleSubmitRating = async () => {
     if (!conversation?.id || rating === 0) return;
@@ -379,10 +437,14 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
                 isLoading={isLoading}
                 error={error}
                 adminTyping={adminTyping}
+                selectedFile={selectedFile}
+                isUploading={isUploading}
                 messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
                 inputRef={inputRef as React.RefObject<HTMLInputElement>}
                 onInputChange={handleInputChange}
                 onSubmit={handleSendMessage}
+                onFileSelect={setSelectedFile}
+                onSendImage={handleSendImage}
                 onEndChat={() => setViewState('rating')}
               />
             )}

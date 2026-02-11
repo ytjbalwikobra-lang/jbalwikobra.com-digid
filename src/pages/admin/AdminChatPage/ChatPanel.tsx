@@ -71,6 +71,14 @@ interface ChatPanelProps {
   onToggleCannedPicker: () => void;
   /** Handler tutup picker template */
   onCloseCannedPicker: () => void;
+  /** File gambar yang dipilih untuk dikirim */
+  selectedFile: File | null;
+  /** Status sedang mengunggah gambar */
+  isUploading: boolean;
+  /** Handler pemilihan file gambar */
+  onFileSelect: (file: File | null) => void;
+  /** Handler kirim gambar */
+  onSendImage: () => void;
   /** Handler ubah status percakapan */
   onStatusChange: (status: ChatConversationStatus) => void;
   /** Handler bergabung ke percakapan */
@@ -102,6 +110,10 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
   onSelectCannedResponse,
   onToggleCannedPicker,
   onCloseCannedPicker,
+  selectedFile,
+  isUploading,
+  onFileSelect,
+  onSendImage,
   onStatusChange,
   onAssignToSelf,
   onLeaveConversation,
@@ -256,11 +268,15 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 filteredCannedResponses={filteredCannedResponses}
                 cannedResponses={cannedResponses}
                 inputRef={messageInputRef}
+                selectedFile={selectedFile}
+                isUploading={isUploading}
                 onMessageChange={onMessageChange}
                 onSubmit={onSendMessage}
                 onSelectCannedResponse={onSelectCannedResponse}
                 onToggleCannedPicker={onToggleCannedPicker}
                 onCloseCannedPicker={onCloseCannedPicker}
+                onFileSelect={onFileSelect}
+                onSendImage={onSendImage}
               />
             </div>
 

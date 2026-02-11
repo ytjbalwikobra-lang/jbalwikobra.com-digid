@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const XENDIT_SECRET_KEY = process.env.XENDIT_SECRET_KEY;
 const XENDIT_BASE_URL = 'https://api.xendit.co';
 
-interface PaymentMethodResponse {
+interface _PaymentMethodResponse {
   id: string;
   name: string;
   type: string;

@@ -460,7 +460,7 @@ async function handleJoinConversation(req: VercelRequest, res: VercelResponse) {
   const success = await chatService.addAdminParticipant(
     supabaseAdmin,
     conversationId,
-    authResult.userId,
+    authResult.userId!,
     role || 'participant'
   );
 
@@ -490,7 +490,7 @@ async function handleLeaveConversation(req: VercelRequest, res: VercelResponse) 
   const success = await chatService.removeAdminParticipant(
     supabaseAdmin,
     conversationId,
-    authResult.userId
+    authResult.userId!
   );
 
   if (!success) {

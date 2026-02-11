@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { setCacheHeaders, CacheStrategies } from './_utils/cacheControl.js';
 import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
-import { validateAdminAuth } from './_middleware/authMiddleware.js';
+import { validateAdminAuth, AuthResult } from './_middleware/authMiddleware.js';
 import * as chatService from './_utils/chatService.js';
 
 // Bersihkan variabel environment
@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return respond(res, 500, { error: 'Database not configured' });
   }
 
-  const { action, conversationId, messageId } = req.query;
+  const { action } = req.query;
 
   try {
     switch (action) {
@@ -208,13 +208,13 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
   }
 
   // Validasi autentikasi admin jika endpoint admin
-  let adminUser: any = null;
+  let authAdmin: AuthResult | null = null;
   if (isAdmin) {
-    const authResult = await validateAdminAuth(req, supabaseAdmin);
+    const authResult = await validateAdminAuth(req);
     if (!authResult.valid) {
       return respond(res, 401, { error: authResult.error || 'Unauthorized' });
     }
-    adminUser = authResult.user;
+    authAdmin = authResult;
   }
 
   const { conversationId, message, messageType, attachmentUrl, attachmentName, attachmentType } = req.body || {};
@@ -236,13 +236,13 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
 
   const senderType = isAdmin ? 'admin' : 'customer';
   const senderName = isAdmin 
-    ? (adminUser?.name || adminUser?.email || 'Admin')
+    ? (authAdmin?.userEmail || 'Admin')
     : (req.body.senderName || req.body.customerName || 'Customer');
 
   const msg = await chatService.sendMessage(sb, {
     conversationId,
     senderType,
-    senderId: isAdmin ? adminUser?.id : undefined,
+    senderId: isAdmin ? authAdmin?.userId : undefined,
     senderName,
     message,
     messageType,
@@ -264,7 +264,7 @@ async function handleGetMessages(req: VercelRequest, res: VercelResponse, isAdmi
   }
 
   if (isAdmin) {
-    const authResult = await validateAdminAuth(req, supabaseAdmin);
+    const authResult = await validateAdminAuth(req);
     if (!authResult.valid) {
       return respond(res, 401, { error: authResult.error || 'Unauthorized' });
     }
@@ -321,7 +321,7 @@ async function handleAdminListConversations(req: VercelRequest, res: VercelRespo
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -330,7 +330,7 @@ async function handleAdminListConversations(req: VercelRequest, res: VercelRespo
 
   const result = await chatService.listConversations(supabaseAdmin, {
     status: status as any,
-    assignedAdminId: assignedToMe === 'true' ? authResult.user?.id : undefined,
+    assignedAdminId: assignedToMe === 'true' ? authResult.userId : undefined,
     unassigned: unassigned === 'true',
     limit: limit ? parseInt(limit as string, 10) : undefined,
     offset: offset ? parseInt(offset as string, 10) : undefined
@@ -344,7 +344,7 @@ async function handleAdminGetConversation(req: VercelRequest, res: VercelRespons
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -379,7 +379,7 @@ async function handleAssignConversation(req: VercelRequest, res: VercelResponse)
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -394,8 +394,8 @@ async function handleAssignConversation(req: VercelRequest, res: VercelResponse)
     supabaseAdmin,
     conversationId,
     adminId,
-    authResult.user?.id,
-    authResult.user?.name || authResult.user?.email
+    authResult.userId,
+    authResult.userEmail
   );
 
   if (!success) {
@@ -410,7 +410,7 @@ async function handleUpdateStatus(req: VercelRequest, res: VercelResponse) {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -430,8 +430,8 @@ async function handleUpdateStatus(req: VercelRequest, res: VercelResponse) {
     supabaseAdmin,
     conversationId,
     status,
-    authResult.user?.id,
-    authResult.user?.name || authResult.user?.email
+    authResult.userId,
+    authResult.userEmail
   );
 
   if (!success) {
@@ -446,7 +446,7 @@ async function handleJoinConversation(req: VercelRequest, res: VercelResponse) {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -460,7 +460,7 @@ async function handleJoinConversation(req: VercelRequest, res: VercelResponse) {
   const success = await chatService.addAdminParticipant(
     supabaseAdmin,
     conversationId,
-    authResult.user?.id,
+    authResult.userId,
     role || 'participant'
   );
 
@@ -476,7 +476,7 @@ async function handleLeaveConversation(req: VercelRequest, res: VercelResponse) 
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -490,7 +490,7 @@ async function handleLeaveConversation(req: VercelRequest, res: VercelResponse) 
   const success = await chatService.removeAdminParticipant(
     supabaseAdmin,
     conversationId,
-    authResult.user?.id
+    authResult.userId
   );
 
   if (!success) {
@@ -505,7 +505,7 @@ async function handleGetParticipants(req: VercelRequest, res: VercelResponse) {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -530,7 +530,7 @@ async function handleGetActivityLogs(req: VercelRequest, res: VercelResponse) {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -555,7 +555,7 @@ async function handleChatStatistics(req: VercelRequest, res: VercelResponse) {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -570,7 +570,7 @@ async function handleMarkRead(req: VercelRequest, res: VercelResponse) {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -585,8 +585,8 @@ async function handleMarkRead(req: VercelRequest, res: VercelResponse) {
     supabaseAdmin,
     conversationId,
     'admin',
-    authResult.user?.id,
-    authResult.user?.name || authResult.user?.email
+    authResult.userId,
+    authResult.userEmail
   );
 
   if (!success) {
@@ -680,7 +680,7 @@ async function handleGetCannedResponses(req: VercelRequest, res: VercelResponse)
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -695,7 +695,7 @@ async function handleCreateCannedResponse(req: VercelRequest, res: VercelRespons
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -712,7 +712,7 @@ async function handleCreateCannedResponse(req: VercelRequest, res: VercelRespons
     category,
     shortcut,
     sortOrder,
-    createdBy: authResult.user?.id
+    createdBy: authResult.userId
   });
 
   if (!response) {
@@ -727,7 +727,7 @@ async function handleUpdateCannedResponse(req: VercelRequest, res: VercelRespons
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
@@ -759,7 +759,7 @@ async function handleDeleteCannedResponse(req: VercelRequest, res: VercelRespons
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const authResult = await validateAdminAuth(req, supabaseAdmin);
+  const authResult = await validateAdminAuth(req);
   if (!authResult.valid) {
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }

@@ -14,7 +14,10 @@ import {
   sendCustomerMessage,
   getCustomerMessages,
   submitRating,
-  subscribeToMessages
+  subscribeToMessages,
+  subscribeToTypingIndicators,
+  customerSetTyping,
+  customerStopTyping
 } from '../../services/chatService';
 import type { ChatConversation, ChatMessage } from '../../types/chat';
 
@@ -82,10 +85,15 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const [feedback, setFeedback] = useState('');
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
   
+  // Typing indicator state
+  const [adminTyping, setAdminTyping] = useState(false);
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
+  const unsubscribeTypingRef = useRef<(() => void) | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Position classes
   const positionClasses = position === 'bottom-right'
@@ -131,6 +139,26 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
       
       return () => {
         unsubscribe();
+      };
+    }
+  }, [conversation?.id]);
+
+  // Subscribe to typing indicators
+  useEffect(() => {
+    if (conversation?.id) {
+      unsubscribeTypingRef.current?.();
+      
+      const { unsubscribe } = subscribeToTypingIndicators(conversation.id, (indicators) => {
+        // Show if any admin is typing
+        const hasAdminTyping = indicators.some(i => i.userType === 'admin');
+        setAdminTyping(hasAdminTyping);
+      });
+      
+      unsubscribeTypingRef.current = unsubscribe;
+      
+      return () => {
+        unsubscribe();
+        setAdminTyping(false);
       };
     }
   }, [conversation?.id]);
@@ -187,6 +215,22 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     }
   };
 
+  // Handle customer message input change (with typing indicator)
+  const handleInputChange = useCallback((value: string) => {
+    setNewMessage(value);
+    
+    if (conversation?.id && value.trim()) {
+      customerSetTyping(conversation.id, customerName);
+      
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (conversation?.id) {
+          customerStopTyping(conversation.id);
+        }
+      }, 3000);
+    }
+  }, [conversation?.id, customerName]);
+
   // Send message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,6 +239,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     const messageText = newMessage.trim();
     setNewMessage('');
     setIsLoading(true);
+    
+    // Stop typing indicator
+    customerStopTyping(conversation.id);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     try {
       const result = await sendCustomerMessage(
@@ -392,6 +440,20 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Admin Typing Indicator */}
+      {adminTyping && (
+        <div className="px-4 py-1.5 border-t border-[var(--cyber-border)]">
+          <p className="text-xs text-[var(--cyber-text-secondary)] flex items-center gap-1.5">
+            <span className="flex gap-0.5">
+              <span className="w-1 h-1 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-1 h-1 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-1 h-1 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </span>
+            Admin sedang mengetik...
+          </p>
+        </div>
+      )}
+
       {/* Input */}
       <form onSubmit={handleSendMessage} className="p-3 border-t border-[var(--cyber-border)]">
         {error && (
@@ -402,7 +464,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
             ref={inputRef}
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             className="flex-1 px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-sm"
             placeholder="Ketik pesan..."
             disabled={isLoading}

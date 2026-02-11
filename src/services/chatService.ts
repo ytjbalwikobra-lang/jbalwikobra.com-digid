@@ -13,6 +13,9 @@ import type {
   ChatActivityLog,
   ChatRating,
   ChatStatistics,
+  ChatTypingIndicator,
+  ChatCannedResponse,
+  CannedResponseRequest,
   StartChatRequest,
   ListConversationsResponse,
   GetMessagesResponse,
@@ -457,6 +460,142 @@ export function subscribeToConversations(
       supabase?.removeChannel(channel);
     }
   };
+}
+
+// =============================================================================
+// TYPING INDICATORS
+// =============================================================================
+
+type TypingCallback = (indicators: ChatTypingIndicator[]) => void;
+
+/**
+ * Send typing indicator (admin)
+ */
+export async function adminSetTyping(conversationId: string): Promise<void> {
+  await apiCall('set-typing', 'POST', undefined, { conversationId });
+}
+
+/**
+ * Stop typing indicator (admin)
+ */
+export async function adminStopTyping(conversationId: string): Promise<void> {
+  await apiCall('stop-typing', 'POST', undefined, { conversationId });
+}
+
+/**
+ * Send typing indicator (customer - direct Supabase for speed)
+ */
+export async function customerSetTyping(conversationId: string, userName: string): Promise<void> {
+  if (!supabase) return;
+  
+  await supabase
+    .from('chat_typing_indicators')
+    .upsert({
+      conversation_id: conversationId,
+      user_type: 'customer',
+      user_name: userName,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'conversation_id,user_type,user_id'
+    });
+}
+
+/**
+ * Stop typing indicator (customer)
+ */
+export async function customerStopTyping(conversationId: string): Promise<void> {
+  if (!supabase) return;
+  
+  await supabase
+    .from('chat_typing_indicators')
+    .delete()
+    .eq('conversation_id', conversationId)
+    .eq('user_type', 'customer');
+}
+
+/**
+ * Subscribe to typing indicators for a conversation
+ */
+export function subscribeToTypingIndicators(
+  conversationId: string,
+  callback: TypingCallback
+): { unsubscribe: () => void } {
+  if (!supabase) {
+    return { unsubscribe: () => {} };
+  }
+
+  const channel = supabase
+    .channel(`typing:${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'chat_typing_indicators',
+        filter: `conversation_id=eq.${conversationId}`
+      },
+      async () => {
+        // Fetch current typing indicators on any change
+        const { data } = await supabase!
+          .from('chat_typing_indicators')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .gte('updated_at', new Date(Date.now() - 10000).toISOString());
+        
+        const indicators: ChatTypingIndicator[] = (data || []).map((row: any) => ({
+          id: row.id,
+          conversationId: row.conversation_id,
+          userId: row.user_id,
+          userType: row.user_type,
+          userName: row.user_name,
+          startedAt: row.started_at || row.created_at,
+          updatedAt: row.updated_at
+        }));
+        
+        callback(indicators);
+      }
+    )
+    .subscribe();
+
+  return {
+    unsubscribe: () => {
+      supabase?.removeChannel(channel);
+    }
+  };
+}
+
+// =============================================================================
+// CANNED RESPONSES
+// =============================================================================
+
+/**
+ * Get all canned responses (admin)
+ */
+export async function adminGetCannedResponses(category?: string): Promise<{ data: ChatCannedResponse[] | null; error: string | null }> {
+  const params: Record<string, string> = {};
+  if (category) params.category = category;
+  return apiCall<ChatCannedResponse[]>('admin-get-canned-responses', 'GET', params);
+}
+
+/**
+ * Create a canned response (admin)
+ */
+export async function adminCreateCannedResponse(request: CannedResponseRequest): Promise<{ data: ChatCannedResponse | null; error: string | null }> {
+  return apiCall<ChatCannedResponse>('admin-create-canned-response', 'POST', undefined, request);
+}
+
+/**
+ * Update a canned response (admin)
+ */
+export async function adminUpdateCannedResponse(id: string, request: Partial<CannedResponseRequest>): Promise<{ data: ChatCannedResponse | null; error: string | null }> {
+  return apiCall<ChatCannedResponse>('admin-update-canned-response', 'POST', undefined, { id, ...request });
+}
+
+/**
+ * Delete a canned response (admin)
+ */
+export async function adminDeleteCannedResponse(id: string): Promise<{ data: any; error: string | null }> {
+  return apiCall('admin-delete-canned-response', 'POST', undefined, { id });
 }
 
 // =============================================================================

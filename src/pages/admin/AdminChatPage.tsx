@@ -23,7 +23,8 @@ import {
   Users,
   BarChart2,
   Star,
-  History
+  History,
+  Zap
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useToast } from '../../components/Toast';
@@ -43,8 +44,12 @@ import {
   adminGetActivityLogs,
   adminGetChatStatistics,
   adminMarkRead,
+  adminSetTyping,
+  adminStopTyping,
+  adminGetCannedResponses,
   subscribeToMessages,
-  subscribeToConversations
+  subscribeToConversations,
+  subscribeToTypingIndicators
 } from '../../services/chatService';
 import type {
   ChatConversation,
@@ -52,7 +57,9 @@ import type {
   ChatAdminParticipant,
   ChatActivityLog,
   ChatStatistics,
-  ChatConversationStatus
+  ChatConversationStatus,
+  ChatTypingIndicator,
+  ChatCannedResponse
 } from '../../types/chat';
 
 type FilterStatus = 'all' | ChatConversationStatus;
@@ -123,9 +130,20 @@ const AdminChatPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [showActivityLog, setShowActivityLog] = useState(false);
   
+  // Typing indicators state
+  const [typingUsers, setTypingUsers] = useState<ChatTypingIndicator[]>([]);
+  
+  // Canned responses state
+  const [cannedResponses, setCannedResponses] = useState<ChatCannedResponse[]>([]);
+  const [showCannedPicker, setShowCannedPicker] = useState(false);
+  const [cannedFilter, setCannedFilter] = useState('');
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const unsubscribeMessagesRef = useRef<(() => void) | null>(null);
+  const unsubscribeTypingRef = useRef<(() => void) | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Load conversations
   const loadConversations = useCallback(async () => {
@@ -231,6 +249,79 @@ const AdminChatPage: React.FC = () => {
     }
   }, [selectedConversation?.id]);
 
+  // Subscribe to typing indicators for selected conversation
+  useEffect(() => {
+    if (selectedConversation?.id) {
+      unsubscribeTypingRef.current?.();
+      
+      const { unsubscribe } = subscribeToTypingIndicators(selectedConversation.id, (indicators) => {
+        // Only show non-admin typing (customer typing)
+        setTypingUsers(indicators.filter(i => i.userType !== 'admin'));
+      });
+      
+      unsubscribeTypingRef.current = unsubscribe;
+      
+      return () => {
+        unsubscribe();
+        setTypingUsers([]);
+      };
+    }
+  }, [selectedConversation?.id]);
+
+  // Load canned responses on mount
+  useEffect(() => {
+    const loadCannedResponses = async () => {
+      const { data } = await adminGetCannedResponses();
+      if (data) setCannedResponses(data);
+    };
+    loadCannedResponses();
+  }, []);
+
+  // Handle admin typing indicator
+  const handleMessageInputChange = useCallback((value: string) => {
+    setNewMessage(value);
+    
+    // Check for canned response shortcut (starts with /)
+    if (value.startsWith('/') && value.length > 1) {
+      setCannedFilter(value.slice(1).toLowerCase());
+      setShowCannedPicker(true);
+    } else {
+      setShowCannedPicker(false);
+      setCannedFilter('');
+    }
+    
+    // Send typing indicator
+    if (selectedConversation?.id && value.trim()) {
+      adminSetTyping(selectedConversation.id);
+      
+      // Auto-stop typing after 3 seconds of inactivity
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (selectedConversation?.id) {
+          adminStopTyping(selectedConversation.id);
+        }
+      }, 3000);
+    }
+  }, [selectedConversation?.id]);
+
+  // Insert canned response
+  const handleSelectCannedResponse = useCallback((response: ChatCannedResponse) => {
+    setNewMessage(response.message);
+    setShowCannedPicker(false);
+    setCannedFilter('');
+    messageInputRef.current?.focus();
+  }, []);
+
+  // Filtered canned responses for picker
+  const filteredCannedResponses = cannedResponses.filter(cr => {
+    if (!cannedFilter) return cr.isActive;
+    return cr.isActive && (
+      cr.shortcut?.toLowerCase().includes(cannedFilter) ||
+      cr.title.toLowerCase().includes(cannedFilter) ||
+      cr.category?.toLowerCase().includes(cannedFilter)
+    );
+  });
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -255,7 +346,12 @@ const AdminChatPage: React.FC = () => {
     
     const messageText = newMessage.trim();
     setNewMessage('');
+    setShowCannedPicker(false);
     setSendingMessage(true);
+    
+    // Stop typing indicator
+    adminStopTyping(selectedConversation.id);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     
     try {
       const result = await adminSendMessage(selectedConversation.id, messageText);
@@ -617,27 +713,102 @@ const AdminChatPage: React.FC = () => {
                       <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Message Input */}
-                    <form onSubmit={handleSendMessage} className="p-4 border-t border-[var(--admin-border)]">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Ketik pesan..."
-                          disabled={sendingMessage || !['open', 'assigned'].includes(selectedConversation.status)}
-                          className="flex-1 px-4 py-2 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-lg text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50"
-                        />
-                        <AdminButton
-                          type="submit"
-                          variant="primary"
-                          icon={<Send className="w-4 h-4" />}
-                          disabled={sendingMessage || !newMessage.trim() || !['open', 'assigned'].includes(selectedConversation.status)}
-                        >
-                          Kirim
-                        </AdminButton>
+                    {/* Typing Indicator */}
+                    {typingUsers.length > 0 && (
+                      <div className="px-4 py-1.5 border-t border-[var(--admin-border)] bg-[var(--admin-bg-surface)]">
+                        <p className="text-xs text-[var(--admin-text-secondary)] flex items-center gap-1.5">
+                          <span className="flex gap-0.5">
+                            <span className="w-1.5 h-1.5 bg-[var(--admin-accent)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 bg-[var(--admin-accent)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 bg-[var(--admin-accent)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </span>
+                          {typingUsers.map(u => u.userName || 'Pelanggan').join(', ')} sedang mengetik...
+                        </p>
                       </div>
-                    </form>
+                    )}
+
+                    {/* Message Input */}
+                    <div className="relative">
+                      {/* Canned Response Picker */}
+                      {showCannedPicker && filteredCannedResponses.length > 0 && (
+                        <div className="absolute bottom-full left-0 right-0 mx-4 mb-1 bg-[var(--admin-bg-elevated)] border border-[var(--admin-border)] rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+                          <div className="p-2 border-b border-[var(--admin-border)]">
+                            <p className="text-xs text-[var(--admin-text-muted)] flex items-center gap-1">
+                              <Zap className="w-3 h-3" />
+                              Quick Responses - ketik / untuk filter
+                            </p>
+                          </div>
+                          {filteredCannedResponses.slice(0, 8).map((cr) => (
+                            <button
+                              key={cr.id}
+                              type="button"
+                              onClick={() => handleSelectCannedResponse(cr)}
+                              className="w-full text-left px-3 py-2 hover:bg-[var(--admin-bg-surface)] transition-colors border-b border-[var(--admin-border)] last:border-b-0"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-mono text-[var(--admin-accent)]">
+                                      {cr.shortcut}
+                                    </span>
+                                    <span className="text-sm font-medium text-[var(--admin-text)] truncate">
+                                      {cr.title}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-[var(--admin-text-muted)] truncate mt-0.5">
+                                    {cr.message}
+                                  </p>
+                                </div>
+                                {cr.category && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--admin-bg-surface)] text-[var(--admin-text-tertiary)] shrink-0">
+                                    {cr.category}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleSendMessage} className="p-4 border-t border-[var(--admin-border)]">
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <input
+                              ref={messageInputRef}
+                              type="text"
+                              value={newMessage}
+                              onChange={(e) => handleMessageInputChange(e.target.value)}
+                              placeholder="Ketik pesan... (/ untuk template)"
+                              disabled={sendingMessage || !['open', 'assigned'].includes(selectedConversation.status)}
+                              className="w-full px-4 py-2 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-lg text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setShowCannedPicker(false);
+                                }
+                              }}
+                            />
+                            {!showCannedPicker && cannedResponses.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => { setShowCannedPicker(!showCannedPicker); setCannedFilter(''); }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] transition-colors"
+                                title="Template pesan cepat"
+                              >
+                                <Zap className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                          <AdminButton
+                            type="submit"
+                            variant="primary"
+                            icon={<Send className="w-4 h-4" />}
+                            disabled={sendingMessage || !newMessage.trim() || !['open', 'assigned'].includes(selectedConversation.status)}
+                          >
+                            Kirim
+                          </AdminButton>
+                        </div>
+                      </form>
+                    </div>
                   </div>
 
                   {/* Activity Log Sidebar */}

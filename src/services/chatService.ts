@@ -1,8 +1,8 @@
 /**
  * Chat Service (Frontend)
  * 
- * Client-side service for live chat functionality.
- * Handles API calls and realtime subscriptions.
+ * Service sisi klien untuk fitur live chat.
+ * Menangani panggilan API dan langganan realtime.
  */
 
 import { supabase } from './supabase';
@@ -26,7 +26,7 @@ import type {
 const API_BASE = '/api/chat';
 
 // =============================================================================
-// API HELPERS
+// FUNGSI BANTUAN API
 // =============================================================================
 
 async function apiCall<T>(
@@ -51,7 +51,7 @@ async function apiCall<T>(
       'Content-Type': 'application/json'
     };
 
-    // Add auth token if available (for admin endpoints)
+    // Tambahkan token auth jika tersedia (untuk endpoint admin)
     const session = await supabase?.auth.getSession();
     if (session?.data?.session?.access_token) {
       headers['Authorization'] = `Bearer ${session.data.session.access_token}`;
@@ -77,11 +77,11 @@ async function apiCall<T>(
 }
 
 // =============================================================================
-// CUSTOMER FUNCTIONS
+// FUNGSI PELANGGAN
 // =============================================================================
 
 /**
- * Start a new chat conversation
+ * Mulai percakapan chat baru
  */
 export async function startConversation(
   request: StartChatRequest
@@ -101,7 +101,7 @@ export async function startConversation(
 }
 
 /**
- * Send a message as customer
+ * Kirim pesan sebagai pelanggan
  */
 export async function sendCustomerMessage(
   conversationId: string,
@@ -124,7 +124,7 @@ export async function sendCustomerMessage(
 }
 
 /**
- * Get messages for a conversation (customer view)
+ * Ambil pesan untuk percakapan (tampilan pelanggan)
  */
 export async function getCustomerMessages(
   conversationId: string,
@@ -140,7 +140,7 @@ export async function getCustomerMessages(
 }
 
 /**
- * Submit a rating for a completed conversation
+ * Kirim rating untuk percakapan yang sudah selesai
  */
 export async function submitRating(
   request: SubmitRatingRequest
@@ -160,11 +160,11 @@ export async function submitRating(
 }
 
 // =============================================================================
-// ADMIN FUNCTIONS
+// FUNGSI ADMIN
 // =============================================================================
 
 /**
- * List conversations (admin)
+ * Daftar percakapan (admin)
  */
 export async function adminListConversations(
   options?: {
@@ -185,7 +185,7 @@ export async function adminListConversations(
 }
 
 /**
- * Get conversation details with messages and participants (admin)
+ * Ambil detail percakapan beserta pesan dan partisipan (admin)
  */
 export async function adminGetConversation(
   conversationId: string
@@ -200,7 +200,7 @@ export async function adminGetConversation(
 }
 
 /**
- * Send a message as admin
+ * Kirim pesan sebagai admin
  */
 export async function adminSendMessage(
   conversationId: string,
@@ -227,7 +227,7 @@ export async function adminSendMessage(
 }
 
 /**
- * Get messages for a conversation (admin)
+ * Ambil pesan untuk percakapan (admin)
  */
 export async function adminGetMessages(
   conversationId: string,
@@ -243,7 +243,7 @@ export async function adminGetMessages(
 }
 
 /**
- * Assign conversation to admin
+ * Tugaskan percakapan ke admin
  */
 export async function adminAssignConversation(
   conversationId: string,
@@ -263,7 +263,7 @@ export async function adminAssignConversation(
 }
 
 /**
- * Update conversation status
+ * Perbarui status percakapan
  */
 export async function adminUpdateStatus(
   conversationId: string,
@@ -283,7 +283,7 @@ export async function adminUpdateStatus(
 }
 
 /**
- * Join a conversation as admin
+ * Bergabung ke percakapan sebagai admin
  */
 export async function adminJoinConversation(
   conversationId: string,
@@ -303,7 +303,7 @@ export async function adminJoinConversation(
 }
 
 /**
- * Leave a conversation
+ * Keluar dari percakapan
  */
 export async function adminLeaveConversation(
   conversationId: string
@@ -322,7 +322,7 @@ export async function adminLeaveConversation(
 }
 
 /**
- * Get participants for a conversation
+ * Ambil daftar partisipan untuk percakapan
  */
 export async function adminGetParticipants(
   conversationId: string,
@@ -338,7 +338,7 @@ export async function adminGetParticipants(
 }
 
 /**
- * Get activity logs for a conversation
+ * Ambil log aktivitas untuk percakapan
  */
 export async function adminGetActivityLogs(
   conversationId: string,
@@ -354,7 +354,7 @@ export async function adminGetActivityLogs(
 }
 
 /**
- * Get chat statistics for dashboard
+ * Ambil statistik chat untuk dashboard
  */
 export async function adminGetChatStatistics(): Promise<ChatStatistics | null> {
   const result = await apiCall<ChatStatistics>('admin-chat-statistics', 'GET');
@@ -362,7 +362,7 @@ export async function adminGetChatStatistics(): Promise<ChatStatistics | null> {
 }
 
 /**
- * Mark messages as read
+ * Tandai pesan sebagai dibaca
  */
 export async function adminMarkRead(
   conversationId: string
@@ -381,14 +381,14 @@ export async function adminMarkRead(
 }
 
 // =============================================================================
-// REALTIME SUBSCRIPTIONS
+// LANGGANAN REALTIME
 // =============================================================================
 
 type MessageCallback = (message: ChatMessage) => void;
 type ConversationCallback = (conversation: ChatConversation) => void;
 
 /**
- * Subscribe to new messages in a conversation
+ * Langganan pesan baru dalam percakapan
  */
 export function subscribeToMessages(
   conversationId: string,
@@ -424,7 +424,7 @@ export function subscribeToMessages(
 }
 
 /**
- * Subscribe to conversation updates (status changes, new messages)
+ * Langganan pembaruan percakapan (perubahan status, pesan baru)
  */
 export function subscribeToConversations(
   callback: ConversationCallback,
@@ -463,27 +463,27 @@ export function subscribeToConversations(
 }
 
 // =============================================================================
-// TYPING INDICATORS
+// INDIKATOR MENGETIK
 // =============================================================================
 
 type TypingCallback = (indicators: ChatTypingIndicator[]) => void;
 
 /**
- * Send typing indicator (admin)
+ * Kirim indikator mengetik (admin)
  */
 export async function adminSetTyping(conversationId: string): Promise<void> {
   await apiCall('set-typing', 'POST', undefined, { conversationId });
 }
 
 /**
- * Stop typing indicator (admin)
+ * Hentikan indikator mengetik (admin)
  */
 export async function adminStopTyping(conversationId: string): Promise<void> {
   await apiCall('stop-typing', 'POST', undefined, { conversationId });
 }
 
 /**
- * Send typing indicator (customer - direct Supabase for speed)
+ * Kirim indikator mengetik (pelanggan - langsung Supabase untuk kecepatan)
  */
 export async function customerSetTyping(conversationId: string, userName: string): Promise<void> {
   if (!supabase) return;
@@ -501,7 +501,7 @@ export async function customerSetTyping(conversationId: string, userName: string
 }
 
 /**
- * Stop typing indicator (customer)
+ * Hentikan indikator mengetik (pelanggan)
  */
 export async function customerStopTyping(conversationId: string): Promise<void> {
   if (!supabase) return;
@@ -514,7 +514,7 @@ export async function customerStopTyping(conversationId: string): Promise<void> 
 }
 
 /**
- * Subscribe to typing indicators for a conversation
+ * Langganan indikator mengetik untuk percakapan
  */
 export function subscribeToTypingIndicators(
   conversationId: string,
@@ -535,7 +535,7 @@ export function subscribeToTypingIndicators(
         filter: `conversation_id=eq.${conversationId}`
       },
       async () => {
-        // Fetch current typing indicators on any change
+        // Ambil indikator mengetik saat ini setiap ada perubahan
         const { data } = await supabase!
           .from('chat_typing_indicators')
           .select('*')
@@ -565,11 +565,11 @@ export function subscribeToTypingIndicators(
 }
 
 // =============================================================================
-// CANNED RESPONSES
+// TEMPLATE RESPON CEPAT
 // =============================================================================
 
 /**
- * Get all canned responses (admin)
+ * Ambil semua template respon cepat (admin)
  */
 export async function adminGetCannedResponses(category?: string): Promise<{ data: ChatCannedResponse[] | null; error: string | null }> {
   const params: Record<string, string> = {};
@@ -578,28 +578,28 @@ export async function adminGetCannedResponses(category?: string): Promise<{ data
 }
 
 /**
- * Create a canned response (admin)
+ * Buat template respon cepat baru (admin)
  */
 export async function adminCreateCannedResponse(request: CannedResponseRequest): Promise<{ data: ChatCannedResponse | null; error: string | null }> {
   return apiCall<ChatCannedResponse>('admin-create-canned-response', 'POST', undefined, request);
 }
 
 /**
- * Update a canned response (admin)
+ * Perbarui template respon cepat (admin)
  */
 export async function adminUpdateCannedResponse(id: string, request: Partial<CannedResponseRequest>): Promise<{ data: ChatCannedResponse | null; error: string | null }> {
   return apiCall<ChatCannedResponse>('admin-update-canned-response', 'POST', undefined, { id, ...request });
 }
 
 /**
- * Delete a canned response (admin)
+ * Hapus template respon cepat (admin)
  */
 export async function adminDeleteCannedResponse(id: string): Promise<{ data: any; error: string | null }> {
   return apiCall('admin-delete-canned-response', 'POST', undefined, { id });
 }
 
 // =============================================================================
-// DATA MAPPERS (for realtime payloads)
+// MAPPER DATA (untuk payload realtime)
 // =============================================================================
 
 function mapMessageFromRealtime(row: any): ChatMessage {

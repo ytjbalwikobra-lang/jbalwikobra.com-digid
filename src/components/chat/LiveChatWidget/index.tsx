@@ -1,0 +1,373 @@
+/**
+ * LiveChatWidget/index.tsx
+ * 
+ * Widget chat mengambang untuk pelanggan berkomunikasi dengan support.
+ * Fitur:
+ * - Memulai percakapan baru
+ * - Kirim/terima pesan secara realtime
+ * - Indikator mengetik admin
+ * - Berikan rating setelah percakapan
+ */
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  startConversation,
+  sendCustomerMessage,
+  getCustomerMessages,
+  submitRating,
+  subscribeToMessages,
+  subscribeToTypingIndicators,
+  customerSetTyping,
+  customerStopTyping
+} from '../../../services/chatService';
+import type { ChatConversation, ChatMessage } from '../../../types/chat';
+
+// Komponen sub-modules
+import { ChatIcon, CloseIcon } from './ChatIcons';
+import { ChatStartForm } from './ChatStartForm';
+import { ChatView } from './ChatView';
+import { ChatRatingView } from './ChatRatingView';
+
+interface ChatWidgetProps {
+  /** Posisi widget di layar */
+  position?: 'bottom-right' | 'bottom-left';
+  /** Apakah widget dibuka secara default */
+  defaultOpen?: boolean;
+  /** Callback saat percakapan dimulai */
+  onConversationStart?: (conversation: ChatConversation) => void;
+}
+
+/** State tampilan widget chat */
+type ViewState = 'start' | 'chat' | 'rating' | 'closed';
+
+const LiveChatWidget: React.FC<ChatWidgetProps> = ({
+  position = 'bottom-right',
+  defaultOpen = false,
+  onConversationStart
+}) => {
+  // State umum
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [viewState, setViewState] = useState<ViewState>('start');
+  const [conversation, setConversation] = useState<ChatConversation | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // State form awal
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [initialMessage, setInitialMessage] = useState('');
+  
+  // State rating
+  const [rating, setRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  
+  // State indikator mengetik
+  const [adminTyping, setAdminTyping] = useState(false);
+  
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const unsubscribeTypingRef = useRef<(() => void) | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Kelas posisi CSS
+  const positionClasses = position === 'bottom-right'
+    ? 'right-4 bottom-4'
+    : 'left-4 bottom-4';
+
+  // --- Effects ---
+
+  /** Scroll ke bawah saat ada pesan baru */
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  /** Muat percakapan dari localStorage */
+  useEffect(() => {
+    const savedConvId = localStorage.getItem('chat_conversation_id');
+    const savedEmail = localStorage.getItem('chat_customer_email');
+    const savedName = localStorage.getItem('chat_customer_name');
+    
+    if (savedConvId && savedEmail) {
+      setConversation({ id: savedConvId } as ChatConversation);
+      setCustomerEmail(savedEmail);
+      setCustomerName(savedName || '');
+      setViewState('chat');
+      loadMessages(savedConvId);
+    }
+  }, []);
+
+  /** Langganan pesan realtime */
+  useEffect(() => {
+    if (conversation?.id) {
+      const { unsubscribe } = subscribeToMessages(conversation.id, (msg) => {
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      });
+      unsubscribeRef.current = unsubscribe;
+      return () => { unsubscribe(); };
+    }
+  }, [conversation?.id]);
+
+  /** Langganan indikator mengetik admin */
+  useEffect(() => {
+    if (conversation?.id) {
+      unsubscribeTypingRef.current?.();
+      const { unsubscribe } = subscribeToTypingIndicators(conversation.id, (indicators) => {
+        const hasAdminTyping = indicators.some(i => i.userType === 'admin');
+        setAdminTyping(hasAdminTyping);
+      });
+      unsubscribeTypingRef.current = unsubscribe;
+      return () => { unsubscribe(); setAdminTyping(false); };
+    }
+  }, [conversation?.id]);
+
+  // --- Fungsi utilitas ---
+
+  /** Muat pesan dari server */
+  const loadMessages = async (convId: string) => {
+    setIsLoading(true);
+    try {
+      const result = await getCustomerMessages(convId, { limit: 50 });
+      setMessages(result.messages);
+    } catch (err) {
+      console.error('[LiveChat] Gagal memuat pesan:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- Handler ---
+
+  /** Handler mulai percakapan baru */
+  const handleStartConversation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await startConversation({
+        customerName,
+        customerEmail,
+        subject,
+        initialMessage
+      });
+
+      if (result.error || !result.conversation) {
+        setError(result.error || 'Gagal memulai percakapan');
+        return;
+      }
+
+      // Simpan ke localStorage
+      localStorage.setItem('chat_conversation_id', result.conversation.id);
+      localStorage.setItem('chat_customer_email', customerEmail);
+      localStorage.setItem('chat_customer_name', customerName);
+
+      setConversation(result.conversation);
+      setViewState('chat');
+      onConversationStart?.(result.conversation);
+
+      if (initialMessage) {
+        await loadMessages(result.conversation.id);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /** Handler perubahan input pesan dengan indikator mengetik */
+  const handleInputChange = useCallback((value: string) => {
+    setNewMessage(value);
+    
+    if (conversation?.id && value.trim()) {
+      customerSetTyping(conversation.id, customerName);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (conversation?.id) {
+          customerStopTyping(conversation.id);
+        }
+      }, 3000);
+    }
+  }, [conversation?.id, customerName]);
+
+  /** Handler kirim pesan */
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !conversation?.id) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage('');
+    setIsLoading(true);
+    
+    customerStopTyping(conversation.id);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    try {
+      const result = await sendCustomerMessage(
+        conversation.id,
+        messageText,
+        customerEmail,
+        customerName
+      );
+
+      if (result.error) {
+        setError(result.error);
+        setNewMessage(messageText);
+        return;
+      }
+
+      // Tambahkan secara optimistik jika belum ada dari realtime
+      if (result.message) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === result.message!.id)) return prev;
+          return [...prev, result.message!];
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || 'Gagal mengirim pesan');
+      setNewMessage(messageText);
+    } finally {
+      setIsLoading(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  /** Handler kirim rating */
+  const handleSubmitRating = async () => {
+    if (!conversation?.id || rating === 0) return;
+    setIsLoading(true);
+
+    try {
+      const result = await submitRating({
+        conversationId: conversation.id,
+        rating,
+        feedback
+      });
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setRatingSubmitted(true);
+      
+      // Bersihkan localStorage
+      localStorage.removeItem('chat_conversation_id');
+      localStorage.removeItem('chat_customer_email');
+      localStorage.removeItem('chat_customer_name');
+      
+      // Tampilkan ucapan terima kasih, lalu reset
+      setTimeout(() => {
+        setConversation(null);
+        setMessages([]);
+        setRating(0);
+        setFeedback('');
+        setRatingSubmitted(false);
+        setViewState('start');
+        setIsOpen(false);
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Gagal mengirim rating');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- Render ---
+
+  return (
+    <div className={`fixed ${positionClasses} z-50`}>
+      {/* Jendela Chat */}
+      {isOpen && (
+        <div className="mb-4 w-[350px] h-[500px] bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-[var(--cyber-accent)] text-white">
+            <div>
+              <h3 className="font-semibold">Live Chat</h3>
+              <p className="text-xs text-white/80">
+                {viewState === 'start' ? 'Mulai percakapan' : 
+                 viewState === 'rating' ? 'Berikan penilaian' : 'Kami siap membantu'}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+
+          {/* Konten */}
+          <div className="flex-1 overflow-hidden">
+            {viewState === 'start' && (
+              <ChatStartForm
+                customerName={customerName}
+                customerEmail={customerEmail}
+                subject={subject}
+                initialMessage={initialMessage}
+                isLoading={isLoading}
+                error={error}
+                onNameChange={setCustomerName}
+                onEmailChange={setCustomerEmail}
+                onSubjectChange={setSubject}
+                onMessageChange={setInitialMessage}
+                onSubmit={handleStartConversation}
+              />
+            )}
+            {viewState === 'chat' && (
+              <ChatView
+                messages={messages}
+                newMessage={newMessage}
+                isLoading={isLoading}
+                error={error}
+                adminTyping={adminTyping}
+                messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
+                inputRef={inputRef as React.RefObject<HTMLInputElement>}
+                onInputChange={handleInputChange}
+                onSubmit={handleSendMessage}
+                onEndChat={() => setViewState('rating')}
+              />
+            )}
+            {viewState === 'rating' && (
+              <ChatRatingView
+                rating={rating}
+                feedback={feedback}
+                isLoading={isLoading}
+                error={error}
+                ratingSubmitted={ratingSubmitted}
+                onRatingChange={setRating}
+                onFeedbackChange={setFeedback}
+                onSubmit={handleSubmitRating}
+                onBack={() => setViewState('chat')}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tombol Toggle Widget */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-14 h-14 bg-[var(--cyber-accent)] text-white rounded-full shadow-lg hover:bg-[var(--cyber-accent)]/90 transition-all hover:scale-105 flex items-center justify-center"
+        aria-label={isOpen ? 'Tutup chat' : 'Buka chat'}
+      >
+        {isOpen ? <CloseIcon /> : <ChatIcon />}
+      </button>
+    </div>
+  );
+};
+
+export default LiveChatWidget;

@@ -5,17 +5,17 @@ import { setCorsHeaders, handleCorsPreFlight } from './_utils/corsConfig.js';
 import { validateAdminAuth } from './_middleware/authMiddleware.js';
 import * as chatService from './_utils/chatService.js';
 
-// Clean environment variables
+// Bersihkan variabel environment
 const supabaseUrl = (process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '').replace(/[\r\n\\]/g, '').trim();
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').replace(/[\r\n\\]/g, '').trim();
 const supabaseAnonKey = (process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '').replace(/[\r\n\\]/g, '').trim();
 
-// Use service role for admin operations, anon for customer operations
+// Gunakan service role untuk operasi admin, anon untuk operasi pelanggan
 const supabaseAdminKey = supabaseServiceKey || supabaseAnonKey;
 const supabaseAdmin = supabaseUrl && supabaseAdminKey ? createClient(supabaseUrl, supabaseAdminKey) : null;
 const supabaseAnon = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
-// Rate limiting
+// Pembatasan rate
 const rateMap = new Map<string, { count: number; ts: number }>();
 const RATE_WINDOW_MS = 10_000;
 const RATE_LIMIT = 60;
@@ -34,7 +34,7 @@ function rateLimit(key: string): boolean {
 
 function respond(res: VercelResponse, status: number, body: any) {
   res.setHeader('Content-Type', 'application/json');
-  setCacheHeaders(res, CacheStrategies.NoCache); // No caching for chat
+  setCacheHeaders(res, CacheStrategies.NoCache); // Tanpa cache untuk chat
   res.status(status).send(JSON.stringify(body));
 }
 
@@ -49,13 +49,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(res, req);
   if (handleCorsPreFlight(req, res)) return;
 
-  // Rate limiting
+  // Pembatasan rate
   const ip = getClientIP(req);
   if (!rateLimit(ip)) {
     return respond(res, 429, { error: 'Too many requests' });
   }
 
-  // Check Supabase
+  // Cek koneksi Supabase
   if (!supabaseAdmin && !supabaseAnon) {
     return respond(res, 500, { error: 'Database not configured' });
   }
@@ -65,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch (action) {
       // =========================================================================
-      // CUSTOMER ENDPOINTS (no auth required)
+      // ENDPOINT PELANGGAN (tanpa autentikasi)
       // =========================================================================
       
       case 'start-conversation':
@@ -81,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleSubmitRating(req, res);
 
       // =========================================================================
-      // ADMIN ENDPOINTS (auth required)
+      // ENDPOINT ADMIN (perlu autentikasi)
       // =========================================================================
       
       case 'admin-list-conversations':
@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleMarkRead(req, res);
 
       // =========================================================================
-      // TYPING INDICATORS ENDPOINTS
+      // ENDPOINT INDIKATOR MENGETIK
       // =========================================================================
       
       case 'set-typing':
@@ -134,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleGetTyping(req, res);
 
       // =========================================================================
-      // CANNED RESPONSES ENDPOINTS (admin only)
+      // ENDPOINT TEMPLATE RESPON CEPAT (khusus admin)
       // =========================================================================
       
       case 'admin-get-canned-responses':
@@ -159,7 +159,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 // =============================================================================
-// CUSTOMER HANDLERS
+// HANDLER PELANGGAN
 // =============================================================================
 
 async function handleStartConversation(req: VercelRequest, res: VercelResponse) {
@@ -175,7 +175,7 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
 
   const sb = supabaseAnon || supabaseAdmin;
   
-  // Create conversation
+  // Buat percakapan
   const conversation = await chatService.createConversation(sb, {
     customerEmail,
     customerName,
@@ -189,7 +189,7 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
     return respond(res, 500, { error: 'Failed to create conversation' });
   }
 
-  // Send initial message if provided
+  // Kirim pesan awal jika ada
   if (initialMessage) {
     await chatService.sendMessage(sb, {
       conversationId: conversation.id,
@@ -207,7 +207,7 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  // Validate admin auth if admin endpoint
+  // Validasi autentikasi admin jika endpoint admin
   let adminUser: any = null;
   if (isAdmin) {
     const authResult = await validateAdminAuth(req, supabaseAdmin);
@@ -225,7 +225,7 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
 
   const sb = isAdmin ? supabaseAdmin : (supabaseAnon || supabaseAdmin);
 
-  // For customers, verify they own the conversation or provide correct email
+  // Untuk pelanggan, pastikan mereka pemilik percakapan atau berikan email yang benar
   if (!isAdmin) {
     const { customerEmail } = req.body || {};
     const conv = await chatService.getConversation(sb, conversationId);
@@ -313,7 +313,7 @@ async function handleSubmitRating(req: VercelRequest, res: VercelResponse) {
 }
 
 // =============================================================================
-// ADMIN HANDLERS
+// HANDLER ADMIN
 // =============================================================================
 
 async function handleAdminListConversations(req: VercelRequest, res: VercelResponse) {
@@ -361,7 +361,7 @@ async function handleAdminGetConversation(req: VercelRequest, res: VercelRespons
     return respond(res, 404, { error: 'Conversation not found' });
   }
 
-  // Also fetch participants and recent messages
+  // Ambil juga partisipan dan pesan terbaru
   const [participants, messagesResult] = await Promise.all([
     chatService.getAdminParticipants(supabaseAdmin, conversationId as string),
     chatService.getMessages(supabaseAdmin, conversationId as string, { limit: 50 })
@@ -597,7 +597,7 @@ async function handleMarkRead(req: VercelRequest, res: VercelResponse) {
 }
 
 // =============================================================================
-// TYPING INDICATORS HANDLERS
+// HANDLER INDIKATOR MENGETIK
 // =============================================================================
 
 async function handleSetTyping(req: VercelRequest, res: VercelResponse) {
@@ -672,7 +672,7 @@ async function handleGetTyping(req: VercelRequest, res: VercelResponse) {
 }
 
 // =============================================================================
-// CANNED RESPONSES HANDLERS
+// HANDLER TEMPLATE RESPON CEPAT
 // =============================================================================
 
 async function handleGetCannedResponses(req: VercelRequest, res: VercelResponse) {

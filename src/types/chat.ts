@@ -1,22 +1,22 @@
 /**
- * Live Chat System Types
+ * Tipe Sistem Live Chat
  * 
- * Types for the real-time chat system between customers and admins
+ * Definisi tipe untuk sistem chat realtime antara pelanggan dan admin
  */
 
-// Conversation status
+// Status percakapan
 export type ChatConversationStatus = 'open' | 'assigned' | 'resolved' | 'closed';
 
-// Message types
+// Tipe pesan
 export type ChatMessageType = 'text' | 'image' | 'file' | 'system';
 
-// Sender types
+// Tipe pengirim
 export type ChatSenderType = 'customer' | 'admin' | 'system';
 
-// Admin participant roles
+// Peran partisipan admin
 export type ChatAdminRole = 'primary' | 'participant' | 'observer';
 
-// Activity log actions
+// Aksi log aktivitas
 export type ChatActivityAction =
   | 'conversation_started'
   | 'conversation_assigned'
@@ -32,39 +32,39 @@ export type ChatActivityAction =
   | 'rating_submitted';
 
 /**
- * Chat Conversation
+ * Percakapan Chat
  */
 export interface ChatConversation {
   id: string;
   
-  // Customer info
+  // Info pelanggan
   customerEmail?: string;
   customerName?: string;
   customerPhone?: string;
   userId?: string;
   
-  // State
+  // Status
   status: ChatConversationStatus;
   subject?: string;
   
-  // Assignment
+  // Penugasan
   assignedAdminId?: string;
-  assignedAdmin?: ChatUser; // Populated
+  assignedAdmin?: ChatUser; // Diisi otomatis
   
-  // Related entities
+  // Entitas terkait
   orderId?: string;
   
   // Metadata
   metadata?: Record<string, unknown>;
   
-  // Timestamps
+  // Waktu
   createdAt: string;
   updatedAt: string;
   lastMessageAt: string;
   resolvedAt?: string;
   closedAt?: string;
   
-  // Computed/populated fields
+  // Field yang dihitung/diisi
   messages?: ChatMessage[];
   participants?: ChatAdminParticipant[];
   unreadCount?: number;
@@ -72,86 +72,86 @@ export interface ChatConversation {
 }
 
 /**
- * Chat Message
+ * Pesan Chat
  */
 export interface ChatMessage {
   id: string;
   conversationId: string;
   
-  // Sender
+  // Pengirim
   senderType: ChatSenderType;
   senderId?: string;
   senderName: string;
   
-  // Content
+  // Konten
   message: string;
   messageType: ChatMessageType;
   
-  // Attachment (optional)
+  // Lampiran (opsional)
   attachmentUrl?: string;
   attachmentName?: string;
   attachmentType?: string;
   
-  // Read status
+  // Status baca
   isRead: boolean;
   readAt?: string;
   
   // Metadata
   metadata?: Record<string, unknown>;
   
-  // Timestamp
+  // Waktu
   createdAt: string;
 }
 
 /**
- * Chat Admin Participant
+ * Partisipan Admin Chat
  */
 export interface ChatAdminParticipant {
   id: string;
   conversationId: string;
   adminId: string;
   
-  // State
+  // Status
   role: ChatAdminRole;
   isActive: boolean;
   
-  // Timestamps
+  // Waktu
   joinedAt: string;
   leftAt?: string;
   
-  // Populated admin info
+  // Info admin yang diisi otomatis
   admin?: ChatUser;
 }
 
 /**
- * Chat Activity Log
+ * Log Aktivitas Chat
  */
 export interface ChatActivityLog {
   id: string;
   
-  // Related entities
+  // Entitas terkait
   conversationId?: string;
   messageId?: string;
   
-  // Actor
+  // Aktor pelaku
   actorType: ChatSenderType;
   actorId?: string;
   actorName?: string;
   
-  // Action
+  // Aksi
   action: ChatActivityAction;
   details?: Record<string, unknown>;
   
-  // Security info
+  // Info keamanan
   ipAddress?: string;
   userAgent?: string;
   
-  // Timestamp
+  // Waktu
   createdAt: string;
 }
 
 /**
- * Chat Rating
+ * Rating Chat
  */
 export interface ChatRating {
   id: string;
@@ -163,7 +163,7 @@ export interface ChatRating {
 }
 
 /**
- * Simplified User for chat context
+ * User sederhana untuk konteks chat
  */
 export interface ChatUser {
   id: string;
@@ -173,11 +173,11 @@ export interface ChatUser {
 }
 
 // =============================================================================
-// API Request/Response Types
+// TIPE REQUEST/RESPONSE API
 // =============================================================================
 
 /**
- * Start new conversation request
+ * Request mulai percakapan baru
  */
 export interface StartChatRequest {
   customerEmail?: string;
@@ -190,7 +190,7 @@ export interface StartChatRequest {
 }
 
 /**
- * Send message request
+ * Request kirim pesan
  */
 export interface SendMessageRequest {
   conversationId: string;
@@ -202,7 +202,7 @@ export interface SendMessageRequest {
 }
 
 /**
- * Assign conversation request
+ * Request tugaskan percakapan
  */
 export interface AssignConversationRequest {
   conversationId: string;
@@ -210,8 +210,8 @@ export interface AssignConversationRequest {
 }
 
 /**
- * Update conversation status request
- * Used for resolving/closing conversations
+ * Request perbarui status percakapan
+ * Digunakan untuk menyelesaikan/menutup percakapan
  */
 export interface UpdateConversationStatusRequest {
   conversationId: string;
@@ -219,7 +219,7 @@ export interface UpdateConversationStatusRequest {
 }
 
 /**
- * Admin join conversation request
+ * Request admin bergabung ke percakapan
  */
 export interface JoinConversationRequest {
   conversationId: string;
@@ -227,7 +227,7 @@ export interface JoinConversationRequest {
 }
 
 /**
- * Submit rating request
+ * Request kirim rating
  */
 export interface SubmitRatingRequest {
   conversationId: string;
@@ -236,7 +236,7 @@ export interface SubmitRatingRequest {
 }
 
 /**
- * List conversations request
+ * Request daftar percakapan
  */
 export interface ListConversationsRequest {
   status?: ChatConversationStatus | ChatConversationStatus[];
@@ -246,7 +246,7 @@ export interface ListConversationsRequest {
 }
 
 /**
- * List conversations response
+ * Response daftar percakapan
  */
 export interface ListConversationsResponse {
   conversations: ChatConversation[];
@@ -255,16 +255,16 @@ export interface ListConversationsResponse {
 }
 
 /**
- * Get messages request
+ * Request ambil pesan
  */
 export interface GetMessagesRequest {
   conversationId: string;
   limit?: number;
-  before?: string; // Cursor for pagination
+  before?: string; // Kursor untuk paginasi
 }
 
 /**
- * Get messages response
+ * Response ambil pesan
  */
 export interface GetMessagesResponse {
   messages: ChatMessage[];
@@ -272,25 +272,25 @@ export interface GetMessagesResponse {
 }
 
 /**
- * Chat statistics for admin dashboard
+ * Statistik chat untuk dashboard admin
  */
 export interface ChatStatistics {
   totalConversations: number;
   openConversations: number;
   assignedConversations: number;
   resolvedConversations: number;
-  averageResponseTime?: number; // in seconds
+  averageResponseTime?: number; // dalam detik
   averageRating?: number;
   ratingsCount: number;
 }
 
 // =============================================================================
-// ENHANCEMENTS: Typing Indicators & Canned Responses
+// PENINGKATAN: Indikator Mengetik & Template Respon Cepat
 // =============================================================================
 
 /**
- * Typing Indicator
- * Shows who is currently typing in a conversation
+ * Indikator Mengetik
+ * Menampilkan siapa yang sedang mengetik dalam percakapan
  */
 export interface ChatTypingIndicator {
   id: string;
@@ -303,7 +303,7 @@ export interface ChatTypingIndicator {
 }
 
 /**
- * Canned Response Category
+ * Kategori Template Respon Cepat
  */
 export type CannedResponseCategory = 
   | 'greeting' 
@@ -315,15 +315,15 @@ export type CannedResponseCategory =
   | 'other';
 
 /**
- * Canned Response (Template Message)
- * Pre-defined message templates for admin quick responses
+ * Template Respon Cepat
+ * Template pesan standar untuk respon cepat admin
  */
 export interface ChatCannedResponse {
   id: string;
   title: string;
   message: string;
   category?: CannedResponseCategory;
-  shortcut?: string; // e.g., '/hello', '/thanks'
+  shortcut?: string; // contoh: '/hello', '/thanks'
   usageCount: number;
   lastUsedAt?: string;
   isActive: boolean;
@@ -334,7 +334,7 @@ export interface ChatCannedResponse {
 }
 
 /**
- * Create/Update Canned Response Request
+ * Request buat/perbarui template respon cepat
  */
 export interface CannedResponseRequest {
   title: string;

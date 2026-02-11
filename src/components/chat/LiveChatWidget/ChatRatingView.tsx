@@ -71,7 +71,7 @@ export const ChatRatingView: React.FC<ChatRatingViewProps> = ({
                 key={star}
                 type="button"
                 onClick={() => onRatingChange(star)}
-                className="transition-transform hover:scale-110"
+                className="transition-transform hover:scale-110 active:scale-95 touch-manipulation"
               >
                 <StarIcon filled={star <= rating} />
               </button>
@@ -83,7 +83,7 @@ export const ChatRatingView: React.FC<ChatRatingViewProps> = ({
             value={feedback}
             onChange={(e) => onFeedbackChange(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] resize-none text-sm mb-4"
+            className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] resize-none text-base sm:text-sm mb-4"
             placeholder="Tulis feedback (opsional)..."
           />
 
@@ -96,7 +96,7 @@ export const ChatRatingView: React.FC<ChatRatingViewProps> = ({
             <button
               type="button"
               onClick={onBack}
-              className="flex-1 py-2 border border-[var(--cyber-border)] text-[var(--cyber-text)] rounded-lg hover:bg-[var(--cyber-bg-surface)] transition-colors"
+              className="flex-1 py-2 border border-[var(--cyber-border)] text-[var(--cyber-text)] rounded-lg hover:bg-[var(--cyber-bg-surface)] active:scale-[0.98] transition-all touch-manipulation"
             >
               Kembali
             </button>
@@ -104,7 +104,7 @@ export const ChatRatingView: React.FC<ChatRatingViewProps> = ({
               type="button"
               onClick={onSubmit}
               disabled={rating === 0 || isLoading}
-              className="flex-1 py-2 bg-[var(--cyber-accent)] text-white rounded-lg hover:bg-[var(--cyber-accent)]/90 transition-colors disabled:opacity-50"
+              className="flex-1 py-2 bg-[var(--cyber-accent)] text-white rounded-lg hover:bg-[var(--cyber-accent)]/90 active:scale-[0.98] transition-all disabled:opacity-50 touch-manipulation"
             >
               {isLoading ? 'Mengirim...' : 'Kirim'}
             </button>

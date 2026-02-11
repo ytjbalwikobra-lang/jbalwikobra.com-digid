@@ -167,7 +167,58 @@ Reference: [SUPABASE_CLI_REFERENCE.md](../SUPABASE_CLI_REFERENCE.md)
 <div className="bg-white/5 text-white/70 border-white/10">
 ```
 
-**Public pages** use `--cyber-*` namespace tokens.
+**Public pages** use `--cyber-*` namespace tokens:
+
+| Category | Variables |
+|---|---|
+| Colors | `--cyber-accent`, `--cyber-success`, `--cyber-error`, `--cyber-warning`, `--cyber-info` |
+| Backgrounds | `--cyber-bg-pure`, `--cyber-bg-surface`, `--cyber-bg-card`, `--cyber-bg-elevated` |
+| Text | `--cyber-text-primary`, `--cyber-text-secondary`, `--cyber-text-muted`, `--cyber-text-disabled` |
+| Borders | `--cyber-border`, `--cyber-border-hover`, `--cyber-border-active` |
+| Z-Index | `--cyber-z-base(0)`, `--cyber-z-elevated(10)`, `--cyber-z-sticky(100)`, `--cyber-z-dropdown(200)`, `--cyber-z-overlay(300)`, `--cyber-z-modal(400)`, `--cyber-z-toast(500)` |
+
+### 3a. Mobile-First Approach (Public Pages)
+
+**WAJIB**: Semua fitur untuk halaman public HARUS menggunakan pendekatan **mobile-first**.
+
+**Prinsip:**
+1. **Desain untuk mobile terlebih dahulu**, lalu tambahkan breakpoint untuk layar lebih besar (`sm:`, `md:`, `lg:`)
+2. **Gunakan Tailwind responsive prefix secara ascending**: `base` → `sm:` → `md:` → `lg:` → `xl:`
+3. **Hindari `hidden` tanpa breakpoint** — pastikan elemen terlihat di semua ukuran layar
+4. **CyberBottomNav**: Ditampilkan di mobile (`lg:hidden`), tinggi ~80px, z-index `var(--cyber-z-sticky)` = 100
+
+**Rules:**
+- ✅ Gunakan `text-base sm:text-sm` pada `<input>` dan `<textarea>` (16px mencegah auto-zoom iOS)
+- ✅ Tambahkan `touch-manipulation` pada tombol untuk menghilangkan delay 300ms
+- ✅ Tambahkan `active:scale-95` atau `active:scale-[0.98]` untuk feedback sentuh
+- ✅ Gunakan `env(safe-area-inset-bottom)` untuk padding bawah pada perangkat notch
+- ✅ Fixed elements harus clear dari CyberBottomNav: `bottom-24 lg:bottom-4`
+- ✅ Z-index fixed elements harus di atas CyberBottomNav: `z-[200]` minimum
+- ✅ Widget/overlay pada mobile harus fullscreen: `fixed inset-0 sm:inset-auto sm:relative`
+- ❌ Jangan gunakan fixed width tanpa fallback responsive: `w-[350px]` → `w-full sm:w-[350px]`
+- ❌ Jangan gunakan `hover:` saja — selalu pasangkan dengan `active:` untuk touch
+
+```tsx
+// ✅ Good: Mobile-first chat widget
+<div className="fixed inset-0 sm:inset-auto sm:relative sm:w-[350px] h-full sm:h-[min(500px,70vh)]">
+
+// ✅ Good: Input yang tidak trigger zoom di iOS
+<input className="text-base sm:text-sm ..." />
+
+// ✅ Good: Tombol dengan feedback sentuh
+<button className="hover:bg-white/20 active:bg-white/30 active:scale-95 touch-manipulation">
+
+// ✅ Good: Fixed element clear dari bottom nav
+<div className="fixed right-4 bottom-24 lg:bottom-4 z-[200]">
+
+// ❌ Bad: Width tetap yang overflow di layar kecil
+<div className="w-[350px] h-[500px]">
+
+// ❌ Bad: Tidak ada padding safe area
+<form className="p-3 border-t">
+// ✅ Good: Dengan safe area
+<form className="p-3 border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+```
 
 ### 4. Database Verification Before Modifications
 

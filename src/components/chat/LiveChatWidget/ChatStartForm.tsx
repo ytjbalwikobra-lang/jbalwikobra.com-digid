@@ -45,7 +45,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
   onSubmit
 }) => {
   return (
-    <form onSubmit={onSubmit} className="p-4 space-y-4">
+    <form onSubmit={onSubmit} className="p-4 space-y-4 overflow-y-auto">
       <div>
         <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-1">
           Nama
@@ -54,7 +54,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
           type="text"
           value={customerName}
           onChange={(e) => onNameChange(e.target.value)}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)]"
+          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
           placeholder="Nama Anda"
           required
         />
@@ -67,7 +67,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
           type="email"
           value={customerEmail}
           onChange={(e) => onEmailChange(e.target.value)}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)]"
+          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
           placeholder="email@example.com"
           required
         />
@@ -80,7 +80,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
           type="text"
           value={subject}
           onChange={(e) => onSubjectChange(e.target.value)}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)]"
+          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
           placeholder="Bagaimana kami bisa membantu?"
         />
       </div>
@@ -92,7 +92,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
           value={initialMessage}
           onChange={(e) => onMessageChange(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] resize-none"
+          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] resize-none text-base sm:text-sm"
           placeholder="Tulis pesan Anda..."
           required
         />
@@ -103,7 +103,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-2.5 bg-[var(--cyber-accent)] text-white font-medium rounded-lg hover:bg-[var(--cyber-accent)]/90 transition-colors disabled:opacity-50"
+        className="w-full py-2.5 bg-[var(--cyber-accent)] text-white font-medium rounded-lg hover:bg-[var(--cyber-accent)]/90 active:scale-[0.98] transition-all disabled:opacity-50 touch-manipulation"
       >
         {isLoading ? 'Memulai...' : 'Mulai Chat'}
       </button>

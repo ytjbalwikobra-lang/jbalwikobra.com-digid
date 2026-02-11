@@ -104,8 +104,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
       )}
 
-      {/* Input Pesan */}
-      <form onSubmit={onSubmit} className="p-3 border-t border-[var(--cyber-border)]">
+      {/* Input Pesan — padding bawah ekstra untuk safe area iOS */}
+      <form onSubmit={onSubmit} className="p-3 border-t border-[var(--cyber-border)] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {error && (
           <p className="text-xs text-[var(--cyber-error)] mb-2">{error}</p>
         )}
@@ -115,14 +115,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
             type="text"
             value={newMessage}
             onChange={(e) => onInputChange(e.target.value)}
-            className="flex-1 px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-sm"
+            className="flex-1 px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
             placeholder="Ketik pesan..."
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !newMessage.trim()}
-            className="px-3 py-2 bg-[var(--cyber-accent)] text-white rounded-lg hover:bg-[var(--cyber-accent)]/90 transition-colors disabled:opacity-50"
+            className="px-3 py-2 bg-[var(--cyber-accent)] text-white rounded-lg hover:bg-[var(--cyber-accent)]/90 active:scale-95 transition-all disabled:opacity-50 touch-manipulation"
           >
             <SendIcon />
           </button>

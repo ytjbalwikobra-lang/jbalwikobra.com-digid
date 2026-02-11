@@ -75,10 +75,11 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const unsubscribeTypingRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Kelas posisi CSS
+  // Kelas posisi CSS — bottom-24 pada mobile agar tidak tertutup CyberBottomNav (z-100, ~76px tinggi)
+  // z-[200] supaya di atas bottom nav (z-100) dan overlay (z-300 untuk modal)
   const positionClasses = position === 'bottom-right'
-    ? 'right-4 bottom-4'
-    : 'left-4 bottom-4';
+    ? 'right-4 bottom-24 lg:bottom-4'
+    : 'left-4 bottom-24 lg:bottom-4';
 
   // --- Effects ---
 
@@ -289,22 +290,23 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   // --- Render ---
 
   return (
-    <div className={`fixed ${positionClasses} z-50`}>
-      {/* Jendela Chat */}
+    <div className={`fixed ${positionClasses} z-[200]`}>
+      {/* Jendela Chat — fullscreen pada mobile kecil, popup pada desktop */}
       {isOpen && (
-        <div className="mb-4 w-[350px] h-[500px] bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed inset-0 sm:inset-auto sm:relative sm:mb-4 w-full sm:w-[350px] h-full sm:h-[min(500px,70vh)] bg-[var(--cyber-bg-card)] sm:border sm:border-[var(--cyber-border)] sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-[var(--cyber-accent)] text-white">
-            <div>
-              <h3 className="font-semibold">Live Chat</h3>
-              <p className="text-xs text-white/80">
+          <div className="flex items-center justify-between px-4 py-3 bg-[var(--cyber-accent)] text-white safe-area-top">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-base">Live Chat</h3>
+              <p className="text-xs text-white/80 truncate">
                 {viewState === 'start' ? 'Mulai percakapan' : 
                  viewState === 'rating' ? 'Berikan penilaian' : 'Kami siap membantu'}
               </p>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 hover:bg-white/20 rounded-full transition-colors"
+              className="p-2 -mr-1 hover:bg-white/20 active:bg-white/30 rounded-full transition-colors touch-manipulation"
+              aria-label="Tutup chat"
             >
               <CloseIcon />
             </button>
@@ -358,10 +360,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         </div>
       )}
 
-      {/* Tombol Toggle Widget */}
+      {/* Tombol Toggle Widget — tersembunyi saat chat fullscreen pada mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-[var(--cyber-accent)] text-white rounded-full shadow-lg hover:bg-[var(--cyber-accent)]/90 transition-all hover:scale-105 flex items-center justify-center"
+        className={`w-14 h-14 bg-[var(--cyber-accent)] text-white rounded-full shadow-lg hover:bg-[var(--cyber-accent)]/90 active:scale-95 transition-all hover:scale-105 flex items-center justify-center touch-manipulation ${isOpen ? 'hidden sm:flex' : 'flex'}`}
         aria-label={isOpen ? 'Tutup chat' : 'Buka chat'}
       >
         {isOpen ? <CloseIcon /> : <ChatIcon />}

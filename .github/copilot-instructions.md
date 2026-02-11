@@ -72,38 +72,42 @@ docker exec -it supabase-cli supabase gen types typescript --local > src/types/s
 
 **Production Database (Remote):**
 
-For production databases with existing migration history managed via Dashboard:
+Gunakan `npx supabase db push` untuk menerapkan migrasi ke production:
 
 ```bash
-# 1. Link to your Supabase project (one-time)
-npx supabase link --project-ref YOUR_PROJECT_REF
+# 1. Link ke project Supabase (satu kali)
+npx supabase link --project-ref xeithuvgldzxnggxadri
 
-# 2. Execute migration manually via Supabase Dashboard SQL Editor
-#    - Open migration file in code editor
-#    - Copy SQL content
-#    - Paste into Dashboard → SQL Editor
-#    - Click "Run"
-#    - Verify tables created in Table Editor
+# 2. Push semua migrasi pending ke remote
+echo "Y" | npx supabase db push
 
-# 3. Generate types from remote database
+# 3. Cek status migrasi (semua harus sync local = remote)
+npx supabase migration list
+
+# 4. Generate types dari remote database
 npx supabase gen types typescript --linked > src/types/database.ts
 
-# 4. Verify TypeScript compiles
+# 5. Verifikasi TypeScript compiles
 npx tsc --noEmit
 ```
 
-**CRITICAL Migration Rules:**
-1. **For New Projects**: Use `npx supabase db push` to apply migrations
-2. **For Production with Manual History**: Execute SQL via Dashboard → SQL Editor
-3. **Always generate types AFTER migration** using `supabase gen types`
-4. **Verify changes** in Supabase Dashboard → Table Editor
-5. **Then commit** migration file + updated types together
+**Jika migrasi gagal:**
+```bash
+# 1. Catat error message dengan seksama
+# 2. Revert status migrasi yang gagal
+npx supabase migration repair NOMOR_MIGRASI --status reverted
 
-**Why Manual Execution for Production?**
-- Production databases often have migration history managed via Dashboard
-- `db push` fails when remote history doesn't match local migrations/
-- Manual execution ensures no conflicts with existing migrations
-- Safer for databases with existing data
+# 3. Fix file migrasi SQL
+# 4. Push ulang
+echo "Y" | npx supabase db push
+```
+
+**CRITICAL Migration Rules:**
+1. **SELALU gunakan `npx supabase db push`** — JANGAN via Dashboard SQL Editor
+2. **Always generate types AFTER migration** using `supabase gen types`
+3. **Verify** dengan `npx supabase migration list` — local dan remote harus sync
+4. **Then commit** migration file + updated types together
+5. **Jika gagal** — repair → fix → push ulang (jangan skip ke Dashboard)
 
 **Idempotent Migrations:**
 Always write migrations that can be run multiple times without errors:
@@ -141,6 +145,83 @@ ALTER TABLE my_table ADD COLUMN new_column TEXT;
 ```
 
 Reference: [SUPABASE_CLI_REFERENCE.md](../SUPABASE_CLI_REFERENCE.md)
+
+### 2b. Supabase Migration — Pelajaran dari Kesalahan (Lessons Learned)
+
+**PENTING**: Aturan ini berasal dari error nyata saat push migrasi. Ikuti ketat!
+
+**1. `supabase db push` memvalidasi SEMUA statement sebelum eksekusi:**
+- Jika migration file punya 5 statement, SEMUA di-validate dulu
+- Jika statement ke-5 reference kolom yang baru dibuat di statement ke-1, GAGAL
+- Error: `column "xxx" does not exist (SQLSTATE 42703)`
+
+**2. DDL (ALTER TABLE) dan fungsi yang reference kolom baru HARUS di file terpisah:**
+```sql
+-- ❌ GAGAL: Satu file, CREATE FUNCTION reference kolom baru
+ALTER TABLE users ADD COLUMN role VARCHAR(50);
+CREATE FUNCTION validate_session(...) RETURNS TABLE(user_role VARCHAR) AS $$ 
+  SELECT u.role FROM users u ...  -- GAGAL: role belum ada saat validasi
+$$;
+
+-- ✅ BENAR: Pisah jadi 2 file migrasi
+-- File 058_add_role_column.sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50);
+
+-- File 059_update_function.sql  
+CREATE OR REPLACE FUNCTION validate_session(...) ...
+```
+
+**3. PL/pgSQL mengkompilasi saat parse-time:**
+- `UPDATE table SET new_col = 'value'` di dalam `DO $$` block GAGAL jika `new_col` belum ada
+- Solusi: Gunakan `EXECUTE` dengan string untuk dynamic SQL
+```sql
+-- ❌ GAGAL
+DO $$ BEGIN
+  UPDATE users SET role = 'super_admin' WHERE is_admin = true;
+END $$;
+
+-- ✅ BENAR
+DO $$ BEGIN
+  EXECUTE 'UPDATE users SET role = ''super_admin'' WHERE is_admin = true';
+END $$;
+```
+
+**4. Function overloads — DROP harus semua signature:**
+- `DROP FUNCTION IF EXISTS func(VARCHAR(64))` hanya drop signature exact itu
+- Jika ada overload dengan signature lain, function tetap ada → `COMMENT ON FUNCTION` gagal: "function name is not unique"
+- Solusi: Gunakan loop `pg_proc` untuk drop SEMUA overloads
+```sql
+DO $$ DECLARE r RECORD; BEGIN
+  FOR r IN SELECT oid::regprocedure AS sig 
+           FROM pg_proc WHERE proname = 'validate_session' 
+           AND pronamespace = 'public'::regnamespace
+  LOOP
+    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig || ' CASCADE';
+  END LOOP;
+END $$;
+```
+
+**5. `ALTER TABLE ADD COLUMN IF NOT EXISTS` lebih simpel:**
+```sql
+-- ❌ Terlalu verbose
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns ...) THEN
+    ALTER TABLE x ADD COLUMN y TEXT;
+  END IF;
+END $$;
+
+-- ✅ Simpel dan idempotent (PostgreSQL 9.6+)
+ALTER TABLE x ADD COLUMN IF NOT EXISTS y TEXT;
+```
+
+**6. `COMMENT ON FUNCTION` harus specify signature jika ada overloads:**
+```sql
+-- ❌ GAGAL jika ada multiple signatures
+COMMENT ON FUNCTION public.validate_session IS 'description';
+
+-- ✅ BENAR: Specify exact parameter types
+COMMENT ON FUNCTION public.validate_session(VARCHAR(64)) IS 'description';
+```
 
 ### 3. Consistent Design System
 

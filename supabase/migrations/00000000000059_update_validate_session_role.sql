@@ -1,33 +1,22 @@
--- Migration: Sistem Role Admin
+-- Migration: Update validate_session untuk return role
 -- Date: 2026-02-11
--- Description: Menambahkan dukungan role admin (super_admin, admin_viewer)
---              pada validate_session dan tabel users
+-- Description: Update fungsi validate_session agar mengembalikan user_role
+-- PENTING: Migrasi ini HARUS dijalankan SETELAH 058 (kolom role sudah ada)
 
--- ============================================================================
--- 1. Pastikan kolom role ada di tabel users (sudah ada, tapi pastikan default)
--- ============================================================================
+-- Drop SEMUA overload validate_session yang mungkin ada
 DO $$
+DECLARE
+    r RECORD;
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'users' AND column_name = 'role'
-    ) THEN
-        ALTER TABLE public.users ADD COLUMN role VARCHAR(50) DEFAULT 'user';
-    END IF;
+    FOR r IN 
+        SELECT oid::regprocedure AS func_sig
+        FROM pg_proc 
+        WHERE proname = 'validate_session' 
+        AND pronamespace = 'public'::regnamespace
+    LOOP
+        EXECUTE 'DROP FUNCTION IF EXISTS ' || r.func_sig || ' CASCADE';
+    END LOOP;
 END $$;
-
--- ============================================================================
--- 2. Set admin yang sudah ada (is_admin = true) menjadi super_admin
---    Hanya update jika role masih 'user' agar tidak override manual
--- ============================================================================
-UPDATE public.users 
-SET role = 'super_admin' 
-WHERE is_admin = TRUE AND (role IS NULL OR role = 'user');
-
--- ============================================================================
--- 3. Update validate_session untuk mengembalikan role
--- ============================================================================
-DROP FUNCTION IF EXISTS public.validate_session(VARCHAR(64));
 
 CREATE OR REPLACE FUNCTION public.validate_session(
     p_session_token VARCHAR(64)
@@ -106,20 +95,4 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.validate_session IS 'Validasi session dan return user info termasuk role dan created_at';
-
--- ============================================================================
--- 4. RLS policy: admin_viewer hanya bisa baca, tidak bisa hapus/update tertentu
---    (RLS ditangani di level API, bukan DB - karena kita pakai service role key)
--- ============================================================================
-
--- Index untuk query role
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_indexes 
-        WHERE indexname = 'idx_users_role'
-    ) THEN
-        CREATE INDEX idx_users_role ON public.users(role);
-    END IF;
-END $$;
+COMMENT ON FUNCTION public.validate_session(VARCHAR(64)) IS 'Validasi session dan return user info termasuk role dan created_at';

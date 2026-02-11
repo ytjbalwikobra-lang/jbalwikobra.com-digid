@@ -223,6 +223,25 @@ COMMENT ON FUNCTION public.validate_session IS 'description';
 COMMENT ON FUNCTION public.validate_session(VARCHAR(64)) IS 'description';
 ```
 
+**7. Return type fungsi HARUS cocok exact dengan tipe kolom tabel:**
+- PostgreSQL error `42804`: "structure of query does not match function result type"
+- Jika kolom tabel bertipe `TEXT`, return type fungsi HARUS `TEXT` (bukan `VARCHAR`)
+- `TEXT` ≠ `VARCHAR` di PostgreSQL function return types meskipun keduanya string
+- Selalu cek tipe kolom tabel SEBELUM menulis RETURNS TABLE
+```sql
+-- ❌ GAGAL: users.email bertipe TEXT, tapi return VARCHAR
+RETURNS TABLE (user_email VARCHAR, user_name VARCHAR) ...
+-- Error: Returned type text does not match expected type character varying
+
+-- ✅ BENAR: Return type sesuai tipe kolom tabel
+RETURNS TABLE (user_email TEXT, user_name TEXT) ...
+```
+
+**8. Argumen fungsi — perhatikan urutan parameter:**
+- `setCorsHeaders(req, res)` ≠ `setCorsHeaders(res, req)` — swap argumen menyebabkan TS error di build Vercel
+- Build error di Vercel menghasilkan "A server error has occurred" (plain text) bukan JSON
+- Selalu cek TypeScript types untuk memastikan urutan argumen benar
+
 ### 3. Consistent Design System
 
 **CRITICAL**: The admin panel uses the **Cyber Compact Design System V3** defined in `src/styles/cyber-compact.css`.

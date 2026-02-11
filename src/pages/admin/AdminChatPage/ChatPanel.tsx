@@ -81,8 +81,8 @@ interface ChatPanelProps {
   onToggleActivityLog: () => void;
 }
 
-/** Panel chat utama dengan header aksi, area pesan, dan sidebar */
-export const ChatPanel: React.FC<ChatPanelProps> = ({
+/** Panel chat utama dengan header aksi, area pesan, dan sidebar — dimemoize */
+export const ChatPanel = React.memo<ChatPanelProps>(({
   selectedConversation,
   messages,
   participants,
@@ -274,4 +274,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
     </div>
   );
-};
+});
+
+ChatPanel.displayName = 'ChatPanel';

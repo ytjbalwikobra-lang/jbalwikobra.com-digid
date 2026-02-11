@@ -77,6 +77,8 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const unsubscribeTypingRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
 
   // Kelas posisi CSS — bottom-24 pada mobile agar tidak tertutup CyberBottomNav (z-100, ~76px tinggi)
   // z-[200] supaya di atas bottom nav (z-100) dan overlay (z-300 untuk modal)
@@ -121,6 +123,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
       const { unsubscribe } = subscribeToMessages(conversation.id, (msg) => {
         setMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev;
+          lastMessageIdRef.current = msg.id;
           return [...prev, msg];
         });
         // Tambah unread jika chat tertutup dan pesan dari admin/system
@@ -146,6 +149,46 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     }
   }, [conversation?.id]);
 
+  /**
+   * Polling fallback — Supabase Realtime postgres_changes tergantung RLS,
+   * dan anon key tidak punya SELECT policy pada chat_messages.
+   * Polling setiap 5 detik saat view chat aktif sebagai jaminan pesan sampai.
+   */
+  useEffect(() => {
+    if (conversation?.id && viewState === 'chat') {
+      const pollMessages = async () => {
+        try {
+          const result = await getCustomerMessages(conversation.id, { limit: 50 });
+          if (result.messages && result.messages.length > 0) {
+            const latestId = result.messages[result.messages.length - 1].id;
+            // Hanya update state jika ada pesan baru
+            if (latestId !== lastMessageIdRef.current) {
+              lastMessageIdRef.current = latestId;
+              setMessages(result.messages);
+              // Tambah unread jika chat tertutup
+              if (!isOpen) {
+                setUnreadCount(prev => prev + 1);
+              }
+            }
+          }
+        } catch (err) {
+          // Polling gagal diam-diam, tidak perlu tampilkan error
+          console.warn('[LiveChat] Polling gagal:', err);
+        }
+      };
+
+      // Polling setiap 5 detik
+      pollIntervalRef.current = setInterval(pollMessages, 5000);
+
+      return () => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+      };
+    }
+  }, [conversation?.id, viewState, isOpen]);
+
   // --- Fungsi utilitas ---
 
   /** Muat pesan dari server */
@@ -154,6 +197,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     try {
       const result = await getCustomerMessages(convId, { limit: 50 });
       setMessages(result.messages);
+      // Track pesan terakhir untuk polling dedup
+      if (result.messages.length > 0) {
+        lastMessageIdRef.current = result.messages[result.messages.length - 1].id;
+      }
     } catch (err) {
       console.error('[LiveChat] Gagal memuat pesan:', err);
     } finally {

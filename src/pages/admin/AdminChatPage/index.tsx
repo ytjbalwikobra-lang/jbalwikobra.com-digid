@@ -1,6 +1,6 @@
 /** Halaman admin untuk mengelola percakapan live chat dengan fitur realtime */
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useToast } from '../../../components/Toast';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { AdminHeroSection } from '../components/ui/AdminHeroSection';
@@ -49,8 +49,8 @@ const AdminChatPage: React.FC = () => {
   const [activityLogs, setActivityLogs] = useState<ActivityLogType[]>([]);
   const [statistics, setStatistics] = useState<ChatStatistics | null>(null);
   
-  // State loading
-  const [loading, setLoading] = useState(true);
+  // State loading — pisah antara initial load vs background refresh
+  const [initialLoading, setInitialLoading] = useState(true);
   const [messageLoading, setMessageLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   
@@ -77,10 +77,14 @@ const AdminChatPage: React.FC = () => {
   const unsubscribeTypingRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  const isFirstLoadRef = useRef(true);
 
-  /** Muat daftar percakapan dari server */
+  /** Muat daftar percakapan — tanpa flicker saat background refresh */
   const loadConversations = useCallback(async () => {
-    setLoading(true);
+    // Hanya tampilkan spinner pada initial load pertama kali
+    if (isFirstLoadRef.current) {
+      setInitialLoading(true);
+    }
     try {
       const result = await adminListConversations({
         status: statusFilter === 'all' ? undefined : statusFilter,
@@ -89,12 +93,17 @@ const AdminChatPage: React.FC = () => {
       setConversations(result.conversations);
     } catch (err) {
       console.error('[AdminChat] Gagal memuat percakapan:', err);
-      toast?.showToast('Gagal memuat percakapan', 'error');
+      // Hanya tampilkan toast pada error, bukan setiap poll
+      if (isFirstLoadRef.current) {
+        toast?.showToast('Gagal memuat percakapan', 'error');
+      }
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      isFirstLoadRef.current = false;
     }
   }, [statusFilter, toast]);
-  /** Muat statistik chat */
+
+  /** Muat statistik chat — silent update */
   const loadStatistics = useCallback(async () => {
     try {
       const stats = await adminGetChatStatistics();
@@ -103,6 +112,7 @@ const AdminChatPage: React.FC = () => {
       console.error('[AdminChat] Gagal memuat statistik:', err);
     }
   }, []);
+
   /** Muat detail percakapan yang dipilih */
   const loadConversationDetails = useCallback(async (convId: string) => {
     setMessageLoading(true);
@@ -121,6 +131,7 @@ const AdminChatPage: React.FC = () => {
       setMessageLoading(false);
     }
   }, [toast]);
+
   /** Muat log aktivitas percakapan */
   const loadActivityLogs = useCallback(async (convId: string) => {
     try {
@@ -137,9 +148,7 @@ const AdminChatPage: React.FC = () => {
     loadStatistics();
   }, [loadConversations, loadStatistics]);
 
-  /** Polling fallback setiap 15 detik — realtime subscription menggunakan anon key
-   *  yang tidak punya RLS SELECT policy pada chat_conversations, 
-   *  jadi kita perlu polling sebagai cadangan */
+  /** Silent polling setiap 15 detik — tanpa spinner, data di-update di background */
   useEffect(() => {
     const interval = setInterval(() => {
       loadConversations();
@@ -240,30 +249,32 @@ const AdminChatPage: React.FC = () => {
     messageInputRef.current?.focus();
   }, []);
 
-  /** Filter template respon cepat berdasarkan pencarian */
-  const filteredCannedResponses = (Array.isArray(cannedResponses) ? cannedResponses : []).filter(cr => {
-    if (!cannedFilter) return cr.isActive;
-    return cr.isActive && (
-      cr.shortcut?.toLowerCase().includes(cannedFilter) ||
-      cr.title.toLowerCase().includes(cannedFilter) ||
-      cr.category?.toLowerCase().includes(cannedFilter)
-    );
-  });
+  /** Filter template respon cepat berdasarkan pencarian — dimemoize */
+  const filteredCannedResponses = useMemo(() => 
+    (Array.isArray(cannedResponses) ? cannedResponses : []).filter(cr => {
+      if (!cannedFilter) return cr.isActive;
+      return cr.isActive && (
+        cr.shortcut?.toLowerCase().includes(cannedFilter) ||
+        cr.title.toLowerCase().includes(cannedFilter) ||
+        cr.category?.toLowerCase().includes(cannedFilter)
+      );
+    }), [cannedResponses, cannedFilter]);
 
-  /** Filter percakapan berdasarkan pencarian */
-  const filteredConversations = (Array.isArray(conversations) ? conversations : []).filter(conv => {
-    if (debouncedSearch) {
-      const search = debouncedSearch.toLowerCase();
-      const matchName = conv.customerName?.toLowerCase().includes(search);
-      const matchEmail = conv.customerEmail?.toLowerCase().includes(search);
-      const matchSubject = conv.subject?.toLowerCase().includes(search);
-      if (!matchName && !matchEmail && !matchSubject) return false;
-    }
-    return true;
-  });
+  /** Filter percakapan berdasarkan pencarian — dimemoize */
+  const filteredConversations = useMemo(() =>
+    (Array.isArray(conversations) ? conversations : []).filter(conv => {
+      if (debouncedSearch) {
+        const search = debouncedSearch.toLowerCase();
+        const matchName = conv.customerName?.toLowerCase().includes(search);
+        const matchEmail = conv.customerEmail?.toLowerCase().includes(search);
+        const matchSubject = conv.subject?.toLowerCase().includes(search);
+        if (!matchName && !matchEmail && !matchSubject) return false;
+      }
+      return true;
+    }), [conversations, debouncedSearch]);
 
   /** Handler kirim pesan */
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation?.id) return;
     
@@ -283,7 +294,10 @@ const AdminChatPage: React.FC = () => {
         return;
       }
       if (result.message) {
-        setMessages(prev => [...prev, result.message!]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === result.message!.id)) return prev;
+          return [...prev, result.message!];
+        });
       }
     } catch (err: any) {
       toast?.showToast(err.message || 'Gagal mengirim pesan', 'error');
@@ -291,10 +305,10 @@ const AdminChatPage: React.FC = () => {
     } finally {
       setSendingMessage(false);
     }
-  };
+  }, [newMessage, selectedConversation?.id, toast]);
 
   /** Handler ubah status percakapan */
-  const handleStatusChange = async (status: ChatConversationStatus) => {
+  const handleStatusChange = useCallback(async (status: ChatConversationStatus) => {
     if (!selectedConversation?.id) return;
     try {
       const result = await adminUpdateStatus(selectedConversation.id, status);
@@ -303,15 +317,18 @@ const AdminChatPage: React.FC = () => {
         return;
       }
       setSelectedConversation(prev => prev ? { ...prev, status } : null);
+      // Update juga di daftar percakapan langsung tanpa full reload
+      setConversations(prev => prev.map(c => 
+        c.id === selectedConversation.id ? { ...c, status } : c
+      ));
       toast?.showToast(`Status diubah ke ${status}`, 'success');
-      loadConversations();
     } catch (err: any) {
       toast?.showToast(err.message || 'Gagal mengubah status', 'error');
     }
-  };
+  }, [selectedConversation?.id, toast]);
 
   /** Handler bergabung ke percakapan */
-  const handleAssignToSelf = async () => {
+  const handleAssignToSelf = useCallback(async () => {
     if (!selectedConversation?.id) return;
     try {
       const result = await adminJoinConversation(selectedConversation.id, 'participant');
@@ -324,10 +341,10 @@ const AdminChatPage: React.FC = () => {
     } catch (err: any) {
       toast?.showToast(err.message || 'Gagal bergabung', 'error');
     }
-  };
+  }, [selectedConversation?.id, toast, loadConversationDetails]);
 
   /** Handler keluar dari percakapan */
-  const handleLeaveConversation = async () => {
+  const handleLeaveConversation = useCallback(async () => {
     if (!selectedConversation?.id) return;
     try {
       const result = await adminLeaveConversation(selectedConversation.id);
@@ -340,7 +357,7 @@ const AdminChatPage: React.FC = () => {
     } catch (err: any) {
       toast?.showToast(err.message || 'Gagal keluar', 'error');
     }
-  };
+  }, [selectedConversation?.id, toast, loadConversationDetails]);
 
   /** Handler pilih percakapan dari daftar */
   const handleSelectConversation = useCallback((conv: ChatConversation) => {
@@ -348,6 +365,15 @@ const AdminChatPage: React.FC = () => {
     loadConversationDetails(conv.id);
     loadActivityLogs(conv.id);
   }, [loadConversationDetails, loadActivityLogs]);
+
+  /** Toggle canned picker — stabil referensi */
+  const handleToggleCannedPicker = useCallback(() => {
+    setShowCannedPicker(prev => !prev);
+    setCannedFilter('');
+  }, []);
+
+  const handleCloseCannedPicker = useCallback(() => setShowCannedPicker(false), []);
+  const handleToggleActivityLog = useCallback(() => setShowActivityLog(prev => !prev), []);
 
   return (
     <>
@@ -369,7 +395,7 @@ const AdminChatPage: React.FC = () => {
           <ChatConversationList
             conversations={filteredConversations}
             selectedConversation={selectedConversation}
-            loading={loading}
+            loading={initialLoading}
             statusFilter={statusFilter}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -397,12 +423,12 @@ const AdminChatPage: React.FC = () => {
             onMessageChange={handleMessageInputChange}
             onSendMessage={handleSendMessage}
             onSelectCannedResponse={handleSelectCannedResponse}
-            onToggleCannedPicker={() => { setShowCannedPicker(!showCannedPicker); setCannedFilter(''); }}
-            onCloseCannedPicker={() => setShowCannedPicker(false)}
+            onToggleCannedPicker={handleToggleCannedPicker}
+            onCloseCannedPicker={handleCloseCannedPicker}
             onStatusChange={handleStatusChange}
             onAssignToSelf={handleAssignToSelf}
             onLeaveConversation={handleLeaveConversation}
-            onToggleActivityLog={() => setShowActivityLog(!showActivityLog)}
+            onToggleActivityLog={handleToggleActivityLog}
           />
         </div>
       </div>

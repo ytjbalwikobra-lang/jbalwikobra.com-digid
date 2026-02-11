@@ -13,8 +13,8 @@ interface ChatStatisticsCardsProps {
   statistics: ChatStatistics;
 }
 
-/** Menampilkan 4 kartu metrik statistik chat */
-export const ChatStatisticsCards: React.FC<ChatStatisticsCardsProps> = ({ statistics }) => {
+/** Menampilkan 4 kartu metrik statistik chat — dimemoize karena jarang berubah */
+export const ChatStatisticsCards = React.memo<ChatStatisticsCardsProps>(({ statistics }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <AdminBentoMetricCard
@@ -39,4 +39,6 @@ export const ChatStatisticsCards: React.FC<ChatStatisticsCardsProps> = ({ statis
       />
     </div>
   );
-};
+});
+
+ChatStatisticsCards.displayName = 'ChatStatisticsCards';

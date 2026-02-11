@@ -32,8 +32,8 @@ interface ChatConversationListProps {
   onRefresh: () => void;
 }
 
-/** Badge status percakapan dengan warna sesuai */
-const StatusBadge: React.FC<{ status: ChatConversationStatus }> = ({ status }) => {
+/** Badge status percakapan dengan warna sesuai — dimemoize */
+const StatusBadge: React.FC<{ status: ChatConversationStatus }> = React.memo(({ status }) => {
   const option = STATUS_OPTIONS.find(o => o.value === status);
   return (
     <span
@@ -46,10 +46,12 @@ const StatusBadge: React.FC<{ status: ChatConversationStatus }> = ({ status }) =
       {option?.label || status}
     </span>
   );
-};
+});
 
-/** Daftar percakapan dengan pencarian, filter, preview, dan badge unread */
-export const ChatConversationList: React.FC<ChatConversationListProps> = ({
+StatusBadge.displayName = 'StatusBadge';
+
+/** Daftar percakapan dengan pencarian, filter, preview, dan badge unread — dimemoize */
+export const ChatConversationList = React.memo<ChatConversationListProps>(({
   conversations,
   selectedConversation,
   loading,
@@ -193,4 +195,6 @@ export const ChatConversationList: React.FC<ChatConversationListProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ChatConversationList.displayName = 'ChatConversationList';

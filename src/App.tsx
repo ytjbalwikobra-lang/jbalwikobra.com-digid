@@ -52,6 +52,7 @@ const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const CategoryPage = React.lazy(() => import('./pages/CategoryPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const MaintenancePage = React.lazy(() => import('./pages/MaintenancePage'));
+const LiveChatWidget = React.lazy(() => import('./components/chat/LiveChatWidget'));
 
 // Lazy load admin pages (biggest performance impact)
 const AdminRoutes = React.lazy(() => import('./pages/admin/AdminRoutes'));
@@ -256,6 +257,10 @@ function App() {
                     <CyberBottomNav />
                     {/* Cart Bottom Sheet */}
                     <CartIntegration />
+                    {/* Live Chat Widget */}
+                    <Suspense fallback={null}>
+                      <LiveChatWidget />
+                    </Suspense>
                   </div>
                 } />
               </Routes>

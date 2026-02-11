@@ -503,6 +503,7 @@ Ditunggu ya Bosku, sebentar lagi kami hubungi! 📞
 
 Ada pertanyaan? Chat aja:
 💬 wa.me/${contactPhone}
+🌐 Live Chat: https://jbalwikobra.com/?chat=open
 
 Happy Gaming! 🔥`
           : `✅ *MANTAP BOSKU! PEMBAYARAN DITERIMA* 💰
@@ -551,6 +552,7 @@ Mohon ditunggu ya Bosku, nanti langsung kami kirim detail akunnya! 🚀
 
 Ada pertanyaan? Chat aja:
 💬 wa.me/${contactPhone}
+🌐 Live Chat: https://jbalwikobra.com/?chat=open
 
 Happy Gaming Bosku! 🔥`;
 

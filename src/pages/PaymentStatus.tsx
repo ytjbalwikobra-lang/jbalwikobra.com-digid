@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, Home } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Home, MessageCircle } from 'lucide-react';
 import { PNContainer, PNCard, PNHeading, PNText, PNButton } from '../components/ui/CyberDesignSystem';
 import { formatCurrency } from '../utils/helpers';
 
@@ -64,6 +64,13 @@ const PaymentStatus: React.FC = () => {
   };
 
   const handleGoHome = () => {
+    navigate('/');
+  };
+
+  /** Buka live chat widget di beranda */
+  const handleOpenChat = () => {
+    // Simpan flag agar widget chat terbuka otomatis di beranda
+    sessionStorage.setItem('open_live_chat', 'true');
     navigate('/');
   };
 
@@ -142,10 +149,20 @@ const PaymentStatus: React.FC = () => {
                     <Home size={18} />
                     <span>Kembali ke Beranda</span>
                   </PNButton>
+                  <PNButton
+                    onClick={handleOpenChat}
+                    variant="secondary"
+                    size="lg"
+                    fullWidth
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={18} />
+                    <span>💬 Chat dengan Support</span>
+                  </PNButton>
                   <div className="text-center">
                     <PNText className="text-sm text-[var(--cyber-text-muted)]">• Pesanan Anda sedang diproses</PNText>
                     <PNText className="text-sm text-[var(--cyber-text-muted)]">• Akun akan dikirim via WhatsApp dalam 5-30 menit</PNText>
-                    <PNText className="text-sm text-[var(--cyber-text-muted)]">• Tim support siap membantu: wa.me/6289653510125</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">• Butuh bantuan? Gunakan Live Chat di atas</PNText>
                   </div>
                 </div>
               </div>
@@ -232,9 +249,18 @@ const PaymentStatus: React.FC = () => {
                     <Home size={18} />
                     <span>Kembali ke Beranda</span>
                   </PNButton>
+                  <PNButton
+                    onClick={handleOpenChat}
+                    variant="secondary"
+                    size="lg"
+                    fullWidth
+                    className="flex items-center justify-center gap-2 !border-[var(--cyber-accent)]"
+                  >
+                    <MessageCircle size={18} />
+                    <span>💬 Chat dengan Support</span>
+                  </PNButton>
                   <div className="text-center">
-                    <PNText className="text-sm text-[var(--cyber-text-muted)]">Butuh bantuan? Hubungi customer service:</PNText>
-                    <PNText className="text-sm text-[var(--cyber-pink-primary)]">wa.me/6289653510125</PNText>
+                    <PNText className="text-sm text-[var(--cyber-text-muted)]">Butuh bantuan? Gunakan Live Chat di atas</PNText>
                   </div>
                 </div>
               </div>

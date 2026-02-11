@@ -10,10 +10,39 @@ import type {
   ChatConversation,
   ChatMessage,
   ChatRating,
+  ChatUser,
   StartChatRequest,
   GetMessagesResponse,
   SubmitRatingRequest
 } from '../types/chat';
+
+/**
+ * Ambil detail percakapan pelanggan (termasuk nama admin yang menangani)
+ */
+export async function getConversationDetails(
+  conversationId: string
+): Promise<{ status: string; assignedAdmin: ChatUser | null; error: string | null }> {
+  const result = await chatApiCall<{
+    id: string;
+    status: string;
+    assignedAdminId?: string;
+    assignedAdmin?: ChatUser | null;
+  }>(
+    'get-conversation',
+    'GET',
+    { conversationId }
+  );
+
+  if (result.error || !result.data) {
+    return { status: 'open', assignedAdmin: null, error: result.error || 'Gagal memuat percakapan' };
+  }
+
+  return {
+    status: result.data.status,
+    assignedAdmin: result.data.assignedAdmin || null,
+    error: null
+  };
+}
 
 /**
  * Mulai percakapan chat baru

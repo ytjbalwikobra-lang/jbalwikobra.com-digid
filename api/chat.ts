@@ -82,6 +82,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'upload-attachment':
         return await handleUploadAttachment(req, res);
 
+      case 'get-conversation':
+        return await handleCustomerGetConversation(req, res);
+
       // =========================================================================
       // ENDPOINT ADMIN (perlu autentikasi)
       // =========================================================================
@@ -163,6 +166,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 // =============================================================================
 // HANDLER PELANGGAN
 // =============================================================================
+
+/** Handler ambil detail percakapan untuk pelanggan (termasuk nama admin yang menangani) */
+async function handleCustomerGetConversation(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const { conversationId } = req.query;
+
+  if (!conversationId) {
+    return respond(res, 400, { error: 'conversationId required' });
+  }
+
+  const conversation = await chatService.getConversation(supabaseAdmin, conversationId as string);
+
+  if (!conversation) {
+    return respond(res, 404, { error: 'Conversation not found' });
+  }
+
+  // Kembalikan data percakapan termasuk assignedAdmin (nama admin yang menangani)
+  return respond(res, 200, {
+    id: conversation.id,
+    status: conversation.status,
+    assignedAdminId: conversation.assignedAdminId,
+    assignedAdmin: conversation.assignedAdmin || null
+  });
+}
 
 /** Handler upload lampiran gambar ke Supabase Storage */
 async function handleUploadAttachment(req: VercelRequest, res: VercelResponse) {

@@ -16,7 +16,9 @@ import {
   getCustomerMessages,
   submitRating,
   uploadChatAttachment,
+  getConversationDetails,
   subscribeToMessages,
+  subscribeToConversations,
   subscribeToTypingIndicators,
   customerSetTyping,
   customerStopTyping
@@ -84,11 +86,15 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   // State jumlah pesan belum dibaca (untuk badge FAB)
   const [unreadCount, setUnreadCount] = useState(0);
   
+  // State nama admin yang menangani
+  const [assignedAdminName, setAssignedAdminName] = useState<string | null>(null);
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const unsubscribeTypingRef = useRef<(() => void) | null>(null);
+  const unsubscribeConvRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Kelas posisi CSS — bottom-24 pada mobile agar tidak tertutup CyberBottomNav (z-100, ~76px tinggi)
@@ -113,6 +119,25 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     getGameTitles()
       .then(games => setGameTitles(games))
       .catch(err => console.error('[LiveChat] Gagal memuat game titles:', err));
+    
+    // Cek flag auto-open dari halaman payment
+    const autoOpen = sessionStorage.getItem('open_live_chat');
+    if (autoOpen === 'true') {
+      sessionStorage.removeItem('open_live_chat');
+      setIsOpen(true);
+    }
+    
+    // Cek URL param ?chat=open (dari link WhatsApp)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('chat') === 'open') {
+      setIsOpen(true);
+      // Bersihkan param agar tidak terbuka lagi saat refresh
+      urlParams.delete('chat');
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
   }, []);
 
   /** Muat percakapan dari localStorage */
@@ -163,6 +188,33 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
       });
       unsubscribeTypingRef.current = unsubscribe;
       return () => { unsubscribe(); setAdminTyping(false); };
+    }
+  }, [conversation?.id]);
+
+  /** Langganan perubahan percakapan — deteksi saat admin ditugaskan */
+  useEffect(() => {
+    if (conversation?.id) {
+      // Ambil data awal untuk nama admin
+      getConversationDetails(conversation.id).then(result => {
+        if (!result.error && result.assignedAdmin?.name) {
+          setAssignedAdminName(result.assignedAdmin.name);
+        }
+      });
+
+      // Langganan realtime: deteksi perubahan assigned_admin_id
+      unsubscribeConvRef.current?.();
+      const { unsubscribe } = subscribeToConversations((conv) => {
+        if (conv.id === conversation.id && conv.assignedAdminId) {
+          // Admin ditugaskan — ambil nama via API (realtime tidak punya join)
+          getConversationDetails(conversation.id).then(result => {
+            if (!result.error && result.assignedAdmin?.name) {
+              setAssignedAdminName(result.assignedAdmin.name);
+            }
+          });
+        }
+      });
+      unsubscribeConvRef.current = unsubscribe;
+      return () => { unsubscribe(); };
     }
   }, [conversation?.id]);
 
@@ -394,7 +446,8 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
               </div>
               <p className="text-xs text-white/70 truncate mt-0.5">
                 {viewState === 'start' ? 'Biasanya membalas dalam beberapa menit' : 
-                 viewState === 'rating' ? 'Berikan penilaian Anda' : 'Tim support siap membantu'}
+                 viewState === 'rating' ? 'Berikan penilaian Anda' : 
+                 assignedAdminName ? `Terhubung dengan ${assignedAdminName}` : 'Tim support siap membantu'}
               </p>
             </div>
             <button

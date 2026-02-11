@@ -5,7 +5,6 @@
 
 import React, { useRef, useState } from 'react';
 import { Send, Zap, Image as ImageIcon, X } from 'lucide-react';
-import { AdminButton } from '../components/ui/AdminButton';
 import type { ChatCannedResponse, ChatConversationStatus } from '../../../types/chat';
 
 interface ChatInputFormProps {
@@ -127,13 +126,13 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="p-4 border-t border-[var(--admin-border)]">
+      <form onSubmit={onSubmit} className="p-3 border-t border-[var(--admin-border)] bg-[var(--admin-bg-card)]">
         {/* Preview lampiran */}
         {selectedFile && previewUrl && (
           <div className="mb-2 relative inline-block">
-            <img src={previewUrl} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-[var(--admin-border)]" />
+            <img src={previewUrl} alt="Preview" className="w-16 h-16 object-cover rounded-xl border border-[var(--admin-border)]" />
             {isUploading ? (
-              <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
                 <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -146,14 +145,14 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
             )}
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex items-end gap-2">
           {/* Tombol upload gambar */}
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={handleFileChange} className="hidden" />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sendingMessage || isDisabled || isUploading}
-            className="p-2 rounded-lg text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] hover:bg-[var(--admin-accent)]/10 transition-colors disabled:opacity-50"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] hover:bg-[var(--admin-accent)]/10 transition-colors disabled:opacity-50 shrink-0"
             title="Upload gambar"
           >
             <ImageIcon className="w-5 h-5" />
@@ -164,9 +163,9 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
               type="text"
               value={newMessage}
               onChange={(e) => onMessageChange(e.target.value)}
-              placeholder="Ketik pesan... (/ untuk template)"
+              placeholder="Ketik pesan..."
               disabled={sendingMessage || isDisabled || isUploading}
-              className="w-full px-4 py-2 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-lg text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50"
+              className="w-full px-4 py-2.5 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-full text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50 transition-colors"
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   onCloseCannedPicker();
@@ -177,7 +176,7 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
               <button
                 type="button"
                 onClick={onToggleCannedPicker}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] transition-colors"
                 title="Template pesan cepat"
               >
                 <Zap className="w-4 h-4" />
@@ -185,24 +184,22 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
             )}
           </div>
           {selectedFile ? (
-            <AdminButton
+            <button
               type="button"
-              variant="primary"
-              icon={<Send className="w-4 h-4" />}
               disabled={sendingMessage || isUploading}
               onClick={onSendImage}
+              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-50 shrink-0 shadow-sm"
             >
-              Kirim
-            </AdminButton>
+              <Send className="w-4 h-4" />
+            </button>
           ) : (
-            <AdminButton
+            <button
               type="submit"
-              variant="primary"
-              icon={<Send className="w-4 h-4" />}
               disabled={sendingMessage || !newMessage.trim() || isDisabled}
+              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-30 shrink-0 shadow-sm"
             >
-              Kirim
-            </AdminButton>
+              <Send className="w-4 h-4" />
+            </button>
           )}
         </div>
       </form>

@@ -1,7 +1,7 @@
 /**
  * ChatStartForm.tsx
  * Form untuk memulai percakapan chat baru — desain mobile-first
- * Mendukung pemilihan topik: Pembelian/Rental (+ Order ID), Jual Akun (+ Game Selector), Lainnya
+ * Mendukung pemilihan topik via dropdown: Pembelian/Rental (+ Order ID), Jual Akun (+ Game Selector), Lainnya
  */
 
 import React from 'react';
@@ -11,9 +11,9 @@ import type { GameTitle } from '../../../types';
 
 /** Opsi topik chat yang tersedia */
 const TOPIC_OPTIONS: { value: ChatTopic; label: string; icon: string }[] = [
-  { value: 'pembelian_rental', label: 'Pembelian / Rental', icon: '🛒' },
-  { value: 'jual_akun', label: 'Jual Akun', icon: '💰' },
-  { value: 'lainnya', label: 'Lainnya', icon: '💬' },
+  { value: 'pembelian_rental', label: '🛒 Pembelian / Rental', icon: '🛒' },
+  { value: 'jual_akun', label: '💰 Jual Akun', icon: '💰' },
+  { value: 'lainnya', label: '💬 Lainnya', icon: '💬' },
 ];
 
 interface ChatStartFormProps {
@@ -130,27 +130,33 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
           </div>
         </div>
 
-        {/* Topik — wajib, pill selector */}
+        {/* Topik — wajib, dropdown selector */}
         <div>
           <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
             Topik <span className="text-[var(--cyber-error)]">*</span>
           </label>
-          <div className="flex flex-wrap gap-2">
-            {TOPIC_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onTopicChange(opt.value)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all touch-manipulation active:scale-95 ${
-                  topic === opt.value
-                    ? 'bg-[var(--cyber-accent)]/15 border-[var(--cyber-accent)] text-[var(--cyber-accent)]'
-                    : 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:border-[var(--cyber-border-hover)]'
-                }`}
-              >
-                <span>{opt.icon}</span>
-                {opt.label}
-              </button>
-            ))}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+              <TagIcon />
+            </span>
+            <select
+              value={topic}
+              onChange={(e) => onTopicChange(e.target.value as ChatTopic)}
+              className={`${inputCls} appearance-none cursor-pointer pr-8`}
+              required
+            >
+              {TOPIC_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {/* Ikon panah dropdown */}
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--cyber-text-muted)]">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
           </div>
         </div>
 
@@ -175,38 +181,33 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
           </div>
         )}
 
-        {/* Game Selector — tampil jika topik = jual_akun */}
+        {/* Game Selector — dropdown, tampil jika topik = jual_akun */}
         {topic === 'jual_akun' && (
           <div>
             <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
               Pilih Game <span className="text-[var(--cyber-error)]">*</span>
             </label>
             {gameTitles.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-1">
-                {gameTitles.map(g => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => onGameTitleChange(g.name)}
-                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium border transition-all touch-manipulation active:scale-95 ${
-                      gameTitle === g.name
-                        ? 'bg-[var(--cyber-accent)]/15 border-[var(--cyber-accent)] text-[var(--cyber-accent)]'
-                        : 'bg-[var(--cyber-bg-surface)] border-[var(--cyber-border)] text-[var(--cyber-text-secondary)] hover:border-[var(--cyber-border-hover)]'
-                    }`}
-                  >
-                    {g.logoUrl ? (
-                      <img
-                        src={g.logoUrl}
-                        alt={g.name}
-                        className="w-5 h-5 rounded object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="text-sm">{g.icon}</span>
-                    )}
-                    <span className="truncate">{g.name}</span>
-                  </button>
-                ))}
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base">🎮</span>
+                <select
+                  value={gameTitle}
+                  onChange={(e) => onGameTitleChange(e.target.value)}
+                  className={`${inputCls} appearance-none cursor-pointer pr-8`}
+                  required
+                >
+                  <option value="">-- Pilih Game --</option>
+                  {gameTitles.map(g => (
+                    <option key={g.id} value={g.name}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--cyber-text-muted)]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
               </div>
             ) : (
               <p className="text-xs text-[var(--cyber-text-muted)] py-2">

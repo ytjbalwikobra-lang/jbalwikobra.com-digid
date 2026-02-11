@@ -17,7 +17,8 @@ export {
   sendCustomerMessage,
   getCustomerMessages,
   submitRating,
-  uploadChatAttachment
+  uploadChatAttachment,
+  getConversationDetails
 } from './chatCustomerService';
 
 // Fungsi admin

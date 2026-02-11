@@ -35,6 +35,33 @@ export const formatDate = (dateString: string) => {
   });
 };
 
+/** Format waktu relatif dalam Bahasa Indonesia */
+export const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+  
+  if (diffSec < 60) return 'Baru saja';
+  if (diffMin < 60) return `${diffMin}m lalu`;
+  if (diffHour < 24) return `${diffHour}j lalu`;
+  if (diffDay < 7) return `${diffDay}h lalu`;
+  
+  return formatDate(dateString);
+};
+
+/** Ambil inisial dari nama (1-2 huruf) */
+export const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
 /** Label aktivitas percakapan dalam Bahasa Indonesia */
 export function getActivityLabel(action: string): string {
   const labels: Record<string, string> = {

@@ -350,8 +350,8 @@ const AdminChatPage: React.FC = () => {
         {/* Kartu Statistik */}
         {statistics && <ChatStatisticsCards statistics={statistics} />}
 
-        {/* Konten Utama - Split View */}
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-400px)] min-h-[600px]">
+        {/* Konten Utama - Split View — responsif: stack pada mobile, side-by-side pada desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-auto md:h-[calc(100vh-400px)] md:min-h-[600px]">
           {/* Daftar Percakapan */}
           <ChatConversationList
             conversations={filteredConversations}

@@ -1,9 +1,10 @@
 /**
  * ChatStartForm.tsx
- * Form untuk memulai percakapan chat baru
+ * Form untuk memulai percakapan chat baru — desain mobile-first
  */
 
 import React from 'react';
+import { UserIcon, MailIcon, TagIcon, MessageIcon, ArrowRightIcon } from './ChatIcons';
 
 interface ChatStartFormProps {
   /** Nama pelanggan */
@@ -45,68 +46,127 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
   onSubmit
 }) => {
   return (
-    <form onSubmit={onSubmit} className="p-4 space-y-4 overflow-y-auto">
-      <div>
-        <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-1">
-          Nama
-        </label>
-        <input
-          type="text"
-          value={customerName}
-          onChange={(e) => onNameChange(e.target.value)}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
-          placeholder="Nama Anda"
-          required
-        />
+    <form onSubmit={onSubmit} className="flex flex-col h-full overflow-y-auto">
+      {/* Teks sambutan */}
+      <div className="px-4 pt-4 pb-2">
+        <p className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed">
+          Halo! 👋 Isi form di bawah untuk memulai percakapan dengan tim support kami.
+        </p>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-1">
-          Email
-        </label>
-        <input
-          type="email"
-          value={customerEmail}
-          onChange={(e) => onEmailChange(e.target.value)}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
-          placeholder="email@example.com"
-          required
-        />
+
+      {/* Form fields */}
+      <div className="px-4 space-y-3 flex-1">
+        {/* Nama — wajib */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+            Nama <span className="text-[var(--cyber-error)]">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+              <UserIcon />
+            </span>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => onNameChange(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
+              placeholder="Nama Anda"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Email — wajib */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+            Email <span className="text-[var(--cyber-error)]">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+              <MailIcon />
+            </span>
+            <input
+              type="email"
+              value={customerEmail}
+              onChange={(e) => onEmailChange(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
+              placeholder="email@example.com"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Subjek — opsional */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+            Subjek
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+              <TagIcon />
+            </span>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => onSubjectChange(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
+              placeholder="Topik pertanyaan"
+            />
+          </div>
+        </div>
+
+        {/* Pesan — wajib */}
+        <div>
+          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+            Pesan <span className="text-[var(--cyber-error)]">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-[var(--cyber-text-muted)]">
+              <MessageIcon />
+            </span>
+            <textarea
+              value={initialMessage}
+              onChange={(e) => onMessageChange(e.target.value)}
+              rows={3}
+              className="w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all resize-none text-base sm:text-sm"
+              placeholder="Jelaskan kendala Anda..."
+              required
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-1">
-          Subjek
-        </label>
-        <input
-          type="text"
-          value={subject}
-          onChange={(e) => onSubjectChange(e.target.value)}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
-          placeholder="Bagaimana kami bisa membantu?"
-        />
+
+      {/* Footer — error + tombol CTA */}
+      <div className="px-4 py-4 mt-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {error && (
+          <div className="flex items-center gap-2 p-2.5 mb-3 bg-[var(--cyber-error)]/10 border border-[var(--cyber-error)]/20 rounded-lg">
+            <svg className="w-4 h-4 text-[var(--cyber-error)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-[var(--cyber-error)]">{error}</p>
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3 bg-[var(--cyber-accent)] text-white font-semibold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 touch-manipulation flex items-center justify-center gap-2 shadow-lg shadow-[var(--cyber-accent)]/20"
+        >
+          {isLoading ? (
+            <>
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Memulai...
+            </>
+          ) : (
+            <>
+              Mulai Chat
+              <ArrowRightIcon />
+            </>
+          )}
+        </button>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-[var(--cyber-text-secondary)] mb-1">
-          Pesan
-        </label>
-        <textarea
-          value={initialMessage}
-          onChange={(e) => onMessageChange(e.target.value)}
-          rows={3}
-          className="w-full px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] resize-none text-base sm:text-sm"
-          placeholder="Tulis pesan Anda..."
-          required
-        />
-      </div>
-      {error && (
-        <p className="text-sm text-[var(--cyber-error)]">{error}</p>
-      )}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-2.5 bg-[var(--cyber-accent)] text-white font-medium rounded-lg hover:bg-[var(--cyber-accent)]/90 active:scale-[0.98] transition-all disabled:opacity-50 touch-manipulation"
-      >
-        {isLoading ? 'Memulai...' : 'Mulai Chat'}
-      </button>
     </form>
   );
 };

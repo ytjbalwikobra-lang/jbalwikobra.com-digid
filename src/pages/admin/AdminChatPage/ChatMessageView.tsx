@@ -1,12 +1,12 @@
 /**
  * ChatMessageView.tsx
- * Komponen tampilan daftar pesan chat dengan bubble
+ * Komponen tampilan daftar pesan chat dengan bubble, avatar, dan grouping
  */
 
 import { forwardRef } from 'react';
 import { cn } from '../../../utils/cn';
 import { AdminLoadingState } from '../components/ui/AdminLoadingState';
-import { formatTime } from './chatHelpers';
+import { formatTime, getInitials } from './chatHelpers';
 import type { ChatMessage } from '../../../types/chat';
 
 interface ChatMessageViewProps {
@@ -16,7 +16,7 @@ interface ChatMessageViewProps {
   loading: boolean;
 }
 
-/** Tampilan daftar pesan dengan bubble dan auto-scroll */
+/** Tampilan daftar pesan dengan bubble, avatar, dan auto-scroll */
 export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
   ({ messages, loading }, ref) => {
     return (
@@ -24,50 +24,95 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
         {loading ? (
           <AdminLoadingState message="Memuat pesan..." />
         ) : messages.length === 0 ? (
-          <p className="text-center text-[var(--admin-text-muted)] py-8">
-            Belum ada pesan
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <div className="w-12 h-12 rounded-full bg-[var(--admin-accent)]/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-[var(--admin-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <p className="text-sm text-[var(--admin-text-muted)]">
+              Belum ada pesan dalam percakapan ini
+            </p>
+          </div>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                'flex',
-                msg.senderType === 'admin' ? 'justify-end' : 'justify-start'
-              )}
-            >
+          messages.map((msg, idx) => {
+            // Deteksi apakah pesan sebelumnya dari pengirim yang sama (grouping)
+            const prevMsg = idx > 0 ? messages[idx - 1] : null;
+            const isSameSender = prevMsg?.senderType === msg.senderType && prevMsg?.senderId === msg.senderId;
+            
+            return (
               <div
+                key={msg.id}
                 className={cn(
-                  'max-w-[70%] rounded-lg px-3 py-2',
-                  msg.senderType === 'admin'
-                    ? 'bg-[var(--admin-accent)] text-white'
-                    : msg.senderType === 'system'
-                    ? 'bg-[var(--admin-bg-elevated)] text-[var(--admin-text-secondary)] text-sm italic'
-                    : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text)]'
+                  'flex gap-2',
+                  msg.senderType === 'admin' ? 'justify-end' : 'justify-start',
+                  isSameSender ? 'mt-0.5' : 'mt-3',
+                  msg.senderType === 'system' && 'justify-center'
                 )}
               >
-                {/* Nama pengirim untuk pesan pelanggan */}
+                {/* Avatar pelanggan (kiri) */}
                 {msg.senderType !== 'admin' && msg.senderType !== 'system' && (
-                  <p className="text-xs font-medium text-[var(--admin-accent)] mb-1">
-                    {msg.senderName}
-                  </p>
+                  <div className={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--admin-info)]/15',
+                    isSameSender ? 'invisible' : 'visible'
+                  )}>
+                    <span className="text-[10px] font-bold text-[var(--admin-info)]">
+                      {getInitials(msg.senderName || 'CU')}
+                    </span>
+                  </div>
                 )}
-                {/* Nama pengirim untuk pesan admin */}
+
+                <div
+                  className={cn(
+                    'max-w-[70%] px-3 py-2',
+                    msg.senderType === 'admin'
+                      ? 'bg-[var(--admin-accent)] text-white rounded-2xl rounded-br-md'
+                      : msg.senderType === 'system'
+                      ? 'bg-[var(--admin-bg-elevated)] text-[var(--admin-text-secondary)] text-xs italic rounded-full px-4 py-1.5 max-w-none'
+                      : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text)] rounded-2xl rounded-bl-md border border-[var(--admin-border)]'
+                  )}
+                >
+                  {/* Nama pengirim — hanya tampilkan saat bukan grouped */}
+                  {msg.senderType !== 'admin' && msg.senderType !== 'system' && !isSameSender && (
+                    <p className="text-[10px] font-semibold text-[var(--admin-info)] mb-0.5">
+                      {msg.senderName}
+                    </p>
+                  )}
+                  {msg.senderType === 'admin' && !isSameSender && (
+                    <p className="text-[10px] font-semibold text-white/80 mb-0.5">
+                      {msg.senderName}
+                    </p>
+                  )}
+                  {msg.senderType !== 'system' && (
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+                  )}
+                  {msg.senderType === 'system' && (
+                    <span>{msg.message}</span>
+                  )}
+                  {msg.senderType !== 'system' && (
+                    <p className={cn(
+                      'text-[10px] mt-1',
+                      msg.senderType === 'admin' ? 'text-white/60' : 'text-[var(--admin-text-muted)]'
+                    )}>
+                      {formatTime(msg.createdAt)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Avatar admin (kanan) */}
                 {msg.senderType === 'admin' && (
-                  <p className="text-xs font-medium text-white/80 mb-1">
-                    {msg.senderName}
-                  </p>
+                  <div className={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--admin-accent)]/15',
+                    isSameSender ? 'invisible' : 'visible'
+                  )}>
+                    <span className="text-[10px] font-bold text-[var(--admin-accent)]">
+                      {getInitials(msg.senderName || 'AD')}
+                    </span>
+                  </div>
                 )}
-                <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                <p className={cn(
-                  'text-xs mt-1',
-                  msg.senderType === 'admin' ? 'text-white/70' : 'text-[var(--admin-text-muted)]'
-                )}>
-                  {formatTime(msg.createdAt)}
-                </p>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         {/* Elemen scroll anchor */}
         <div ref={ref} />

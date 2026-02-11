@@ -1,6 +1,6 @@
 /**
  * ChatView.tsx
- * Tampilan pesan chat dengan input dan indikator mengetik
+ * Tampilan pesan chat dengan input, avatar, dan indikator mengetik
  */
 
 import React from 'react';
@@ -30,6 +30,13 @@ interface ChatViewProps {
   onEndChat: () => void;
 }
 
+/** Ambil inisial nama (1-2 huruf) */
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
 /** Format waktu ke format Indonesia */
 const formatTime = (dateString: string) => {
   const date = new Date(dateString);
@@ -53,34 +60,52 @@ export const ChatView: React.FC<ChatViewProps> = ({
     <div className="flex flex-col h-full">
       {/* Daftar Pesan */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* Pesan selamat datang saat kosong */}
         {messages.length === 0 && !isLoading && (
-          <p className="text-center text-[var(--cyber-text-muted)] text-sm py-8">
-            Belum ada pesan
-          </p>
+          <div className="flex flex-col items-center justify-center py-8 gap-3">
+            <div className="w-12 h-12 rounded-full bg-[var(--cyber-accent)]/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-[var(--cyber-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <p className="text-sm text-[var(--cyber-text-muted)] text-center">
+              Percakapan dimulai — ketik pesan pertama Anda
+            </p>
+          </div>
         )}
+
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.senderType === 'customer' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-2 ${msg.senderType === 'customer' ? 'justify-end' : 'justify-start'}`}
           >
+            {/* Avatar admin/system (kiri) */}
+            {msg.senderType !== 'customer' && msg.senderType !== 'system' && (
+              <div className="w-7 h-7 rounded-full bg-[var(--cyber-accent)]/20 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-[10px] font-bold text-[var(--cyber-accent)]">
+                  {getInitials(msg.senderName || 'CS')}
+                </span>
+              </div>
+            )}
+
             <div
-              className={`max-w-[80%] rounded-lg px-3 py-2 ${
+              className={`max-w-[75%] px-3 py-2 ${
                 msg.senderType === 'customer'
-                  ? 'bg-[var(--cyber-accent)] text-white'
+                  ? 'bg-[var(--cyber-accent)] text-white rounded-2xl rounded-br-md'
                   : msg.senderType === 'system'
-                  ? 'bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] text-sm italic'
-                  : 'bg-[var(--cyber-bg-surface)] text-[var(--cyber-text)]'
+                  ? 'bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-secondary)] text-sm italic rounded-lg mx-auto max-w-[90%]'
+                  : 'bg-[var(--cyber-bg-surface)] text-[var(--cyber-text-primary)] rounded-2xl rounded-bl-md border border-[var(--cyber-border)]'
               }`}
             >
               {/* Nama admin pengirim */}
               {msg.senderType === 'admin' && (
-                <p className="text-xs font-medium text-[var(--cyber-accent)] mb-1">
+                <p className="text-[10px] font-semibold text-[var(--cyber-accent)] mb-0.5">
                   {msg.senderName}
                 </p>
               )}
-              <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-              <p className={`text-xs mt-1 ${
-                msg.senderType === 'customer' ? 'text-white/70' : 'text-[var(--cyber-text-muted)]'
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+              <p className={`text-[10px] mt-1 ${
+                msg.senderType === 'customer' ? 'text-white/60' : 'text-[var(--cyber-text-muted)]'
               }`}>
                 {formatTime(msg.createdAt)}
               </p>
@@ -92,12 +117,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Indikator Admin Mengetik */}
       {adminTyping && (
-        <div className="px-4 py-1.5 border-t border-[var(--cyber-border)]">
-          <p className="text-xs text-[var(--cyber-text-secondary)] flex items-center gap-1.5">
+        <div className="px-4 py-2 border-t border-[var(--cyber-border)]">
+          <p className="text-xs text-[var(--cyber-text-secondary)] flex items-center gap-2">
             <span className="flex gap-0.5">
-              <span className="w-1 h-1 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-1 h-1 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-1 h-1 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="w-1.5 h-1.5 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-1.5 h-1.5 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-1.5 h-1.5 bg-[var(--cyber-accent)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </span>
             Admin sedang mengetik...
           </p>
@@ -107,7 +132,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {/* Input Pesan — padding bawah ekstra untuk safe area iOS */}
       <form onSubmit={onSubmit} className="p-3 border-t border-[var(--cyber-border)] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {error && (
-          <p className="text-xs text-[var(--cyber-error)] mb-2">{error}</p>
+          <div className="flex items-center gap-2 p-2 mb-2 bg-[var(--cyber-error)]/10 rounded-lg">
+            <svg className="w-3.5 h-3.5 text-[var(--cyber-error)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-[var(--cyber-error)]">{error}</p>
+          </div>
         )}
         <div className="flex gap-2">
           <input
@@ -115,22 +145,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
             type="text"
             value={newMessage}
             onChange={(e) => onInputChange(e.target.value)}
-            className="flex-1 px-3 py-2 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] text-base sm:text-sm"
+            className="flex-1 px-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-xl text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm"
             placeholder="Ketik pesan..."
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !newMessage.trim()}
-            className="px-3 py-2 bg-[var(--cyber-accent)] text-white rounded-lg hover:bg-[var(--cyber-accent)]/90 active:scale-95 transition-all disabled:opacity-50 touch-manipulation"
+            className="w-10 h-10 bg-[var(--cyber-accent)] text-white rounded-xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 touch-manipulation flex items-center justify-center shrink-0"
           >
             <SendIcon />
           </button>
         </div>
+        {/* Tombol selesaikan chat — lebih jelas */}
         <button
           type="button"
           onClick={onEndChat}
-          className="w-full mt-2 text-xs text-[var(--cyber-text-muted)] hover:text-[var(--cyber-text)] transition-colors"
+          className="w-full mt-2 py-1.5 text-xs text-[var(--cyber-text-muted)] hover:text-[var(--cyber-error)] hover:bg-[var(--cyber-error)]/5 rounded-lg transition-all touch-manipulation"
         >
           Selesaikan Chat
         </button>

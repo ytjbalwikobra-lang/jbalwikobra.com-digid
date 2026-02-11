@@ -68,6 +68,9 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   // State indikator mengetik
   const [adminTyping, setAdminTyping] = useState(false);
   
+  // State jumlah pesan belum dibaca (untuk badge FAB)
+  const [unreadCount, setUnreadCount] = useState(0);
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,6 +110,11 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     }
   }, []);
 
+  /** Reset unread saat widget dibuka */
+  useEffect(() => {
+    if (isOpen) setUnreadCount(0);
+  }, [isOpen]);
+
   /** Langganan pesan realtime */
   useEffect(() => {
     if (conversation?.id) {
@@ -115,11 +123,15 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
           if (prev.some(m => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
+        // Tambah unread jika chat tertutup dan pesan dari admin/system
+        if (!isOpen && msg.senderType !== 'customer') {
+          setUnreadCount(prev => prev + 1);
+        }
       });
       unsubscribeRef.current = unsubscribe;
       return () => { unsubscribe(); };
     }
-  }, [conversation?.id]);
+  }, [conversation?.id, isOpen]);
 
   /** Langganan indikator mengetik admin */
   useEffect(() => {
@@ -293,14 +305,20 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     <div className={`fixed ${positionClasses} z-[200]`}>
       {/* Jendela Chat — fullscreen pada mobile kecil, popup pada desktop */}
       {isOpen && (
-        <div className="fixed inset-0 sm:inset-auto sm:relative sm:mb-4 w-full sm:w-[350px] h-full sm:h-[min(500px,70vh)] bg-[var(--cyber-bg-card)] sm:border sm:border-[var(--cyber-border)] sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-[var(--cyber-accent)] text-white safe-area-top">
+        <div className="fixed inset-0 sm:inset-auto sm:relative sm:mb-4 w-full sm:w-[380px] h-full sm:h-[min(520px,75vh)] bg-[var(--cyber-bg-card)] sm:border sm:border-[var(--cyber-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-2 sm:animate-in sm:fade-in sm:zoom-in-95 duration-200">
+          {/* Header — gradient dengan status online */}
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[var(--cyber-accent)] to-[color-mix(in_srgb,var(--cyber-accent)_80%,#7c3aed)] text-white safe-area-top">
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base">Live Chat</h3>
-              <p className="text-xs text-white/80 truncate">
-                {viewState === 'start' ? 'Mulai percakapan' : 
-                 viewState === 'rating' ? 'Berikan penilaian' : 'Kami siap membantu'}
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-base">Live Chat</h3>
+                <span className="flex items-center gap-1 px-1.5 py-0.5 bg-white/15 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-[var(--cyber-success)] rounded-full animate-pulse" />
+                  <span className="text-[10px] font-medium">Online</span>
+                </span>
+              </div>
+              <p className="text-xs text-white/70 truncate mt-0.5">
+                {viewState === 'start' ? 'Biasanya membalas dalam beberapa menit' : 
+                 viewState === 'rating' ? 'Berikan penilaian Anda' : 'Tim support siap membantu'}
               </p>
             </div>
             <button
@@ -362,11 +380,21 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Tombol Toggle Widget — tersembunyi saat chat fullscreen pada mobile */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 bg-[var(--cyber-accent)] text-white rounded-full shadow-lg hover:bg-[var(--cyber-accent)]/90 active:scale-95 transition-all hover:scale-105 flex items-center justify-center touch-manipulation ${isOpen ? 'hidden sm:flex' : 'flex'}`}
+        onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnreadCount(0); }}
+        className={`relative w-14 h-14 bg-[var(--cyber-accent)] text-white rounded-full shadow-lg shadow-[var(--cyber-accent)]/30 hover:shadow-[var(--cyber-accent)]/50 active:scale-90 transition-all hover:scale-110 flex items-center justify-center touch-manipulation ${isOpen ? 'hidden sm:flex' : 'flex'}`}
         aria-label={isOpen ? 'Tutup chat' : 'Buka chat'}
       >
         {isOpen ? <CloseIcon /> : <ChatIcon />}
+        {/* Badge jumlah pesan belum dibaca */}
+        {!isOpen && unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[var(--cyber-error)] text-white text-xs font-bold rounded-full flex items-center justify-center ring-2 ring-[var(--cyber-bg-card)] animate-bounce">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+        {/* Pulse glow saat ada pesan baru */}
+        {!isOpen && unreadCount > 0 && (
+          <span className="absolute inset-0 rounded-full bg-[var(--cyber-accent)] animate-ping opacity-40" />
+        )}
       </button>
     </div>
   );

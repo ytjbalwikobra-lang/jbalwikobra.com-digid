@@ -12,15 +12,16 @@ import {
   CheckCircle,
   XCircle,
   Users,
-  History
+  History,
+  Clock
 } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { AdminButton } from '../components/ui/AdminButton';
-import { AdminEmptyState } from '../components/ui/AdminEmptyState';
 import { ChatMessageView } from './ChatMessageView';
 import { ChatTypingIndicator } from './ChatTypingIndicator';
 import { ChatInputForm } from './ChatInputForm';
 import { ChatActivityLog } from './ChatActivityLog';
+import { STATUS_OPTIONS, formatRelativeTime } from './chatHelpers';
 import type {
   ChatConversation,
   ChatMessage,
@@ -107,22 +108,41 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onToggleActivityLog
 }) => {
   return (
-    <div className="col-span-12 md:col-span-8 bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
+    <div className="col-span-1 md:col-span-8 h-[500px] md:h-full bg-[var(--admin-bg-card)] rounded-xl border border-[var(--admin-border)] flex flex-col overflow-hidden">
       {selectedConversation ? (
         <>
           {/* Header Chat */}
           <div className="p-4 border-b border-[var(--admin-border)]">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-[var(--admin-text)]">
-                  {selectedConversation.customerName || selectedConversation.customerEmail}
-                </h3>
-                <p className="text-sm text-[var(--admin-text-secondary)]">
-                  {selectedConversation.customerEmail}
-                  {selectedConversation.customerPhone && ` • ${selectedConversation.customerPhone}`}
-                </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="font-semibold text-[var(--admin-text)] truncate">
+                    {selectedConversation.customerName || selectedConversation.customerEmail}
+                  </h3>
+                  {/* Badge status inline */}
+                  {(() => {
+                    const opt = STATUS_OPTIONS.find(o => o.value === selectedConversation.status);
+                    return (
+                      <span
+                        className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full uppercase tracking-wide shrink-0"
+                        style={{
+                          backgroundColor: `color-mix(in srgb, ${opt?.color || 'var(--admin-text)'} 15%, transparent)`,
+                          color: opt?.color || 'var(--admin-text)'
+                        }}
+                      >
+                        {opt?.label || selectedConversation.status}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-[var(--admin-text-muted)]">
+                  <span>{selectedConversation.customerEmail}</span>
+                  {selectedConversation.subject && (
+                    <span className="truncate">• {selectedConversation.subject}</span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0 ml-3">
                 {/* Tombol Aksi Status */}
                 {selectedConversation.status === 'open' && (
                   <AdminButton
@@ -175,21 +195,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-elevated)]'
                   )}
                   aria-label="Toggle log aktivitas"
+                  title="Log Aktivitas"
                 >
                   <History className="w-4 h-4" />
                 </button>
               </div>
             </div>
             
-            {/* Daftar Partisipan */}
-            {participants.length > 0 && (
-              <div className="flex items-center gap-2 mt-2">
-                <Users className="w-4 h-4 text-[var(--admin-text-muted)]" />
-                <span className="text-xs text-[var(--admin-text-muted)]">
-                  {participants.map(p => p.admin?.name || p.admin?.email).filter(Boolean).join(', ')}
+            {/* Daftar Partisipan + Waktu */}
+            <div className="flex items-center gap-3 mt-2">
+              {participants.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-[var(--admin-text-muted)]" />
+                  <span className="text-[11px] text-[var(--admin-text-muted)]">
+                    {participants.map(p => p.admin?.name || p.admin?.email).filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[var(--admin-text-muted)]" />
+                <span className="text-[11px] text-[var(--admin-text-muted)]">
+                  {formatRelativeTime(selectedConversation.createdAt)}
                 </span>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="flex flex-1 overflow-hidden">
@@ -229,12 +258,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           </div>
         </>
       ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <AdminEmptyState
-            icon={<MessageSquare className="w-16 h-16" />}
-            title="Pilih Percakapan"
-            description="Pilih percakapan dari daftar untuk mulai chat"
-          />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
+          <div className="w-20 h-20 rounded-full bg-[var(--admin-accent)]/10 flex items-center justify-center">
+            <MessageSquare className="w-10 h-10 text-[var(--admin-accent)]" />
+          </div>
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-[var(--admin-text)] mb-1">
+              Pilih Percakapan
+            </h3>
+            <p className="text-sm text-[var(--admin-text-muted)] max-w-xs">
+              Pilih percakapan dari daftar di samping untuk mulai merespon pelanggan
+            </p>
+          </div>
         </div>
       )}
     </div>

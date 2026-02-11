@@ -5,12 +5,12 @@
  * Digunakan oleh modul customer dan admin service.
  */
 
-import { supabase } from './supabase';
-
 const API_BASE = '/api/chat';
 
 /**
- * Panggilan API generik untuk endpoint chat
+ * Panggilan API generik untuk endpoint chat.
+ * Menggunakan session_token dari localStorage (custom auth),
+ * BUKAN supabase.auth.getSession() karena project ini tidak menggunakan Supabase Auth.
  */
 export async function chatApiCall<T>(
   action: string,
@@ -34,10 +34,11 @@ export async function chatApiCall<T>(
       'Content-Type': 'application/json'
     };
 
-    // Tambahkan token auth jika tersedia (untuk endpoint admin)
-    const session = await supabase?.auth.getSession();
-    if (session?.data?.session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.data.session.access_token}`;
+    // Tambahkan token auth dari localStorage (custom session auth)
+    // Semua admin service lain menggunakan pola yang sama
+    const sessionToken = localStorage.getItem('session_token');
+    if (sessionToken) {
+      headers['Authorization'] = `Bearer ${sessionToken}`;
     }
 
     const response = await fetch(url.toString(), {

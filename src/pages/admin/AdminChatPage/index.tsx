@@ -137,6 +137,17 @@ const AdminChatPage: React.FC = () => {
     loadStatistics();
   }, [loadConversations, loadStatistics]);
 
+  /** Polling fallback setiap 15 detik — realtime subscription menggunakan anon key
+   *  yang tidak punya RLS SELECT policy pada chat_conversations, 
+   *  jadi kita perlu polling sebagai cadangan */
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadConversations();
+      loadStatistics();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [loadConversations, loadStatistics]);
+
   /** Langganan pembaruan percakapan secara realtime */
   useEffect(() => {
     const { unsubscribe } = subscribeToConversations((conv) => {

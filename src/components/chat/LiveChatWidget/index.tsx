@@ -21,10 +21,12 @@ import {
   subscribeToConversations,
   subscribeToTypingIndicators,
   customerSetTyping,
-  customerStopTyping
+  customerStopTyping,
+  getChatSettings,
+  isWithinBusinessHours
 } from '../../../services/chatService';
 import { getGameTitles } from '../../../services/product/catalogOps';
-import type { ChatConversation, ChatMessage, ChatTopic } from '../../../types/chat';
+import type { ChatConversation, ChatMessage, ChatTopic, ChatSettings } from '../../../types/chat';
 import type { GameTitle } from '../../../types';
 
 // Komponen sub-modules
@@ -89,6 +91,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   // State nama admin yang menangani
   const [assignedAdminName, setAssignedAdminName] = useState<string | null>(null);
   
+  // State pengaturan jam operasional
+  const [chatSettings, setChatSettings] = useState<ChatSettings | null>(null);
+  const [isOfflineHours, setIsOfflineHours] = useState(false);
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -144,6 +150,14 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         : window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
+    
+    // Muat pengaturan jam operasional chat
+    getChatSettings().then(settings => {
+      setChatSettings(settings);
+      if (settings.businessHoursEnabled) {
+        setIsOfflineHours(!isWithinBusinessHours(settings));
+      }
+    }).catch(err => console.error('[LiveChat] Gagal memuat chat settings:', err));
   }, []);
 
   /** Muat percakapan dari localStorage */
@@ -165,6 +179,15 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   useEffect(() => {
     if (isOpen) setUnreadCount(0);
   }, [isOpen]);
+
+  /** Cek ulang status jam operasional setiap 60 detik */
+  useEffect(() => {
+    if (!chatSettings?.businessHoursEnabled) return;
+    const interval = setInterval(() => {
+      setIsOfflineHours(!isWithinBusinessHours(chatSettings));
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [chatSettings]);
 
   /** Langganan pesan realtime — mekanisme utama penerimaan pesan */
   useEffect(() => {
@@ -448,18 +471,25 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
       {/* Jendela Chat — fullscreen pada mobile kecil, popup pada desktop */}
       {isOpen && (
         <div className="fixed inset-0 sm:inset-auto sm:relative sm:mb-4 w-full sm:w-[380px] h-full sm:h-[min(520px,75vh)] bg-[var(--cyber-bg-card)] sm:border sm:border-[var(--cyber-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-2 sm:animate-in sm:fade-in sm:zoom-in-95 duration-200">
-          {/* Header — gradient dengan status online */}
+          {/* Header — gradient dengan status online/offline */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[var(--cyber-accent)] to-[color-mix(in_srgb,var(--cyber-accent)_80%,#7c3aed)] text-white safe-area-top">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-base">Live Chat</h3>
-                <span className="flex items-center gap-1 px-1.5 py-0.5 bg-white/15 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-[var(--cyber-success)] rounded-full animate-pulse" />
-                  <span className="text-[10px] font-medium">Online</span>
-                </span>
+                {isOfflineHours ? (
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/20 rounded-full">
+                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                    <span className="text-[10px] font-medium text-amber-200">{chatSettings?.offlineLabel || 'Offline'}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 bg-white/15 rounded-full">
+                    <span className="w-1.5 h-1.5 bg-[var(--cyber-success)] rounded-full animate-pulse" />
+                    <span className="text-[10px] font-medium">Online</span>
+                  </span>
+                )}
               </div>
               <p className="text-xs text-white/70 truncate mt-0.5">
-                {viewState === 'start' ? 'Biasanya membalas dalam beberapa menit' : 
+                {viewState === 'start' ? (isOfflineHours ? 'Balasan mungkin lebih lambat dari biasanya' : 'Biasanya membalas dalam beberapa menit') : 
                  viewState === 'rating' ? 'Berikan penilaian Anda' : 
                  assignedAdminName ? `Terhubung dengan ${assignedAdminName}` : 'Tim support siap membantu'}
               </p>
@@ -474,7 +504,22 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
           </div>
 
           {/* Konten */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Banner offline — ditampilkan di luar jam operasional */}
+            {isOfflineHours && chatSettings?.offlineMessage && (
+              <div className="px-3 pt-3 shrink-0">
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                  <div className="flex gap-2">
+                    <span className="text-sm mt-0.5 shrink-0">🕐</span>
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      {chatSettings.offlineMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex-1 overflow-hidden">
             {viewState === 'start' && (
               <ChatStartForm
                 customerName={customerName}
@@ -528,6 +573,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
                 onBack={() => setViewState('chat')}
               />
             )}
+            </div>
           </div>
         </div>
       )}

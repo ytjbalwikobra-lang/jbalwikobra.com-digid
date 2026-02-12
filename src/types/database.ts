@@ -310,6 +310,59 @@ export type Database = {
           },
         ]
       }
+      chat_canned_responses: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          message: string
+          shortcut: string | null
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          message: string
+          shortcut?: string | null
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          message?: string
+          shortcut?: string | null
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_canned_responses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           assigned_admin_id: string | null
@@ -318,6 +371,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          game_title: string | null
           id: string
           last_message_at: string | null
           metadata: Json | null
@@ -325,6 +379,7 @@ export type Database = {
           resolved_at: string | null
           status: string | null
           subject: string | null
+          topic: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -335,6 +390,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          game_title?: string | null
           id?: string
           last_message_at?: string | null
           metadata?: Json | null
@@ -342,6 +398,7 @@ export type Database = {
           resolved_at?: string | null
           status?: string | null
           subject?: string | null
+          topic?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -352,6 +409,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          game_title?: string | null
           id?: string
           last_message_at?: string | null
           metadata?: Json | null
@@ -359,6 +417,7 @@ export type Database = {
           resolved_at?: string | null
           status?: string | null
           subject?: string | null
+          topic?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -493,6 +552,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      chat_settings: {
+        Row: {
+          business_hours_enabled: boolean
+          business_hours_end: string
+          business_hours_start: string
+          business_hours_timezone: string
+          id: string
+          offline_label: string
+          offline_message: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          business_hours_enabled?: boolean
+          business_hours_end?: string
+          business_hours_start?: string
+          business_hours_timezone?: string
+          id?: string
+          offline_label?: string
+          offline_message?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          business_hours_enabled?: boolean
+          business_hours_end?: string
+          business_hours_start?: string
+          business_hours_timezone?: string
+          id?: string
+          offline_label?: string
+          offline_message?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       customer_notification_reads: {
         Row: {
@@ -1697,6 +1792,7 @@ export type Database = {
           phone_verified_at: string | null
           profile_completed: boolean | null
           profile_completed_at: string | null
+          role: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1721,6 +1817,7 @@ export type Database = {
           phone_verified_at?: string | null
           profile_completed?: boolean | null
           profile_completed_at?: string | null
+          role?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1745,6 +1842,7 @@ export type Database = {
           phone_verified_at?: string | null
           profile_completed?: boolean | null
           profile_completed_at?: string | null
+          role?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2427,6 +2525,7 @@ export type Database = {
           user_email: string
           user_id: string
           user_name: string
+          user_role: string
           valid: boolean
         }[]
       }

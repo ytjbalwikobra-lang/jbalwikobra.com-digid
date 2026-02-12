@@ -25,6 +25,7 @@ import {
   Bell,
   MessageSquare,
   FileText,
+  Clock,
 } from 'lucide-react';
 import { adminCache } from '../../../services/adminCache';
 import { adminService } from '../../../services/adminService';
@@ -47,6 +48,7 @@ const navigationItems: NavItem[] = [
   { path: '/admin/whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { path: '/admin/chat', label: 'Live Chat', icon: MessageSquare },
   { path: '/admin/canned-responses', label: 'Template Respon', icon: FileText },
+  { path: '/admin/chat-settings', label: 'Chat Settings', icon: Clock },
   { path: '/admin/notifications', label: 'Notifications', icon: Bell },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];

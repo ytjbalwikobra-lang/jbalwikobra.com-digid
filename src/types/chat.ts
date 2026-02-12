@@ -352,3 +352,15 @@ export interface CannedResponseRequest {
   sortOrder?: number;
 }
 
+/**
+ * Pengaturan Jam Operasional Chat
+ * Konfigurasi jam kerja dan pesan di luar jam kerja
+ */
+export interface ChatSettings {
+  businessHoursEnabled: boolean;
+  businessHoursStart: string; // Format HH:mm (contoh: "09:00")
+  businessHoursEnd: string;   // Format HH:mm (contoh: "23:00")
+  businessHoursTimezone: string;
+  offlineMessage: string;
+  offlineLabel: string;
+}

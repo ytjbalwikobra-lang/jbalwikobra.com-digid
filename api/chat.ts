@@ -154,6 +154,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'admin-delete-canned-response':
         return await handleDeleteCannedResponse(req, res);
 
+      // =========================================================================
+      // ENDPOINT PENGATURAN CHAT
+      // =========================================================================
+      
+      case 'get-chat-settings':
+        return await handleGetChatSettings(req, res);
+      
+      case 'admin-update-chat-settings':
+        return await handleUpdateChatSettings(req, res);
+
       default:
         return respond(res, 400, { error: 'Invalid action' });
     }
@@ -871,4 +881,102 @@ async function handleDeleteCannedResponse(req: VercelRequest, res: VercelRespons
   }
 
   return respond(res, 200, { success: true });
+}
+
+// =============================================================================
+// HANDLER PENGATURAN CHAT
+// =============================================================================
+
+/** Ambil pengaturan chat (publik — untuk widget pelanggan) */
+async function handleGetChatSettings(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin!
+      .from('chat_settings')
+      .select('*')
+      .eq('id', 'default')
+      .single();
+
+    if (error) {
+      console.error('[chat.ts] Error fetching chat settings:', error);
+      // Kembalikan default jika tabel belum ada
+      return respond(res, 200, {
+        businessHoursEnabled: true,
+        businessHoursStart: '09:00',
+        businessHoursEnd: '23:00',
+        businessHoursTimezone: 'Asia/Jakarta',
+        offlineMessage: 'Terima kasih telah menghubungi kami. Saat ini di luar jam operasional. Pesan Anda tetap kami terima dan akan dibalas paling lambat pukul 09:00 WIB.',
+        offlineLabel: 'Di Luar Jam Operasional'
+      });
+    }
+
+    return respond(res, 200, {
+      businessHoursEnabled: data.business_hours_enabled,
+      businessHoursStart: data.business_hours_start,
+      businessHoursEnd: data.business_hours_end,
+      businessHoursTimezone: data.business_hours_timezone,
+      offlineMessage: data.offline_message,
+      offlineLabel: data.offline_label
+    });
+  } catch (err) {
+    console.error('[chat.ts] Exception fetching chat settings:', err);
+    return respond(res, 500, { error: 'Failed to get chat settings' });
+  }
+}
+
+/** Perbarui pengaturan chat (khusus admin) */
+async function handleUpdateChatSettings(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const authResult = await validateAdminAuth(req);
+  if (!authResult.valid) {
+    return respond(res, 401, { error: authResult.error || 'Unauthorized' });
+  }
+
+  // Hanya super_admin yang bisa ubah pengaturan chat
+  if (authResult.role !== 'super_admin') {
+    return respond(res, 403, { error: 'Only super_admin can update chat settings' });
+  }
+
+  const {
+    businessHoursEnabled,
+    businessHoursStart,
+    businessHoursEnd,
+    businessHoursTimezone,
+    offlineMessage,
+    offlineLabel
+  } = req.body || {};
+
+  try {
+    const updates: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+      updated_by: authResult.userId
+    };
+
+    if (typeof businessHoursEnabled === 'boolean') updates.business_hours_enabled = businessHoursEnabled;
+    if (businessHoursStart) updates.business_hours_start = businessHoursStart;
+    if (businessHoursEnd) updates.business_hours_end = businessHoursEnd;
+    if (businessHoursTimezone) updates.business_hours_timezone = businessHoursTimezone;
+    if (offlineMessage !== undefined) updates.offline_message = offlineMessage;
+    if (offlineLabel !== undefined) updates.offline_label = offlineLabel;
+
+    const { error } = await supabaseAdmin!
+      .from('chat_settings')
+      .upsert({ id: 'default', ...updates });
+
+    if (error) {
+      console.error('[chat.ts] Error updating chat settings:', error);
+      return respond(res, 500, { error: 'Failed to update chat settings' });
+    }
+
+    return respond(res, 200, { success: true });
+  } catch (err) {
+    console.error('[chat.ts] Exception updating chat settings:', err);
+    return respond(res, 500, { error: 'Failed to update chat settings' });
+  }
 }

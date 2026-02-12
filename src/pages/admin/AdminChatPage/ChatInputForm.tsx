@@ -5,6 +5,7 @@
 
 import React, { useRef, useState, useCallback } from 'react';
 import { Send, Zap, Image as ImageIcon, X } from 'lucide-react';
+import { cn } from '../../../utils/cn';
 import { compressImage } from '../../../utils/imageCompression';
 import type { ChatCannedResponse, ChatConversationStatus } from '../../../types/chat';
 
@@ -103,43 +104,60 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
   return (
     <div className="relative">
       {/* Picker Template Respon Cepat */}
-      {showCannedPicker && filteredCannedResponses.length > 0 && (
+      {showCannedPicker && (
         <div className="absolute bottom-full left-0 right-0 mx-4 mb-1 bg-[var(--admin-bg-elevated)] border border-[var(--admin-border)] rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
-          <div className="p-2 border-b border-[var(--admin-border)]">
+          <div className="p-2 border-b border-[var(--admin-border)] flex items-center justify-between">
             <p className="text-xs text-[var(--admin-text-muted)] flex items-center gap-1">
               <Zap className="w-3 h-3" />
-              Quick Responses - ketik / untuk filter
+              Quick Responses — ketik / untuk filter
             </p>
-          </div>
-          {filteredCannedResponses.slice(0, 8).map((cr) => (
             <button
-              key={cr.id}
               type="button"
-              onClick={() => onSelectCannedResponse(cr)}
-              className="w-full text-left px-3 py-2 hover:bg-[var(--admin-bg-surface)] transition-colors border-b border-[var(--admin-border)] last:border-b-0"
+              onClick={onCloseCannedPicker}
+              className="p-0.5 text-[var(--admin-text-muted)] hover:text-[var(--admin-text)] transition-colors"
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-[var(--admin-accent)]">
-                      {cr.shortcut}
-                    </span>
-                    <span className="text-sm font-medium text-[var(--admin-text)] truncate">
-                      {cr.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[var(--admin-text-muted)] truncate mt-0.5">
-                    {cr.message}
-                  </p>
-                </div>
-                {cr.category && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--admin-bg-surface)] text-[var(--admin-text-tertiary)] shrink-0">
-                    {cr.category}
-                  </span>
-                )}
-              </div>
+              <X className="w-3.5 h-3.5" />
             </button>
-          ))}
+          </div>
+          {filteredCannedResponses.length === 0 ? (
+            <div className="px-3 py-4 text-center">
+              <p className="text-xs text-[var(--admin-text-muted)]">
+                {cannedResponses.length === 0
+                  ? 'Belum ada template respon. Buat di menu Template Respon.'
+                  : 'Tidak ada template yang cocok dengan filter.'}
+              </p>
+            </div>
+          ) : (
+            filteredCannedResponses.slice(0, 8).map((cr) => (
+              <button
+                key={cr.id}
+                type="button"
+                onClick={() => onSelectCannedResponse(cr)}
+                className="w-full text-left px-3 py-2 hover:bg-[var(--admin-bg-surface)] transition-colors border-b border-[var(--admin-border)] last:border-b-0"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-[var(--admin-accent)]">
+                        {cr.shortcut}
+                      </span>
+                      <span className="text-sm font-medium text-[var(--admin-text)] truncate">
+                        {cr.title}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--admin-text-muted)] truncate mt-0.5">
+                      {cr.message}
+                    </p>
+                  </div>
+                  {cr.category && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--admin-bg-surface)] text-[var(--admin-text-tertiary)] shrink-0">
+                      {cr.category}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))
+          )}
         </div>
       )}
 
@@ -175,7 +193,7 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sendingMessage || isDisabled || isUploading}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] hover:bg-[var(--admin-accent)]/10 transition-colors disabled:opacity-50 shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] hover:bg-[var(--admin-accent)]/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
             title="Upload gambar"
           >
             <ImageIcon className="w-5 h-5" />
@@ -188,18 +206,23 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
               onChange={(e) => onMessageChange(e.target.value)}
               placeholder="Ketik pesan..."
               disabled={sendingMessage || isDisabled || isUploading}
-              className="w-full px-4 py-2.5 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-full text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50 transition-colors"
+              className="w-full px-4 py-2.5 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-full text-base sm:text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50 transition-colors"
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   onCloseCannedPicker();
                 }
               }}
             />
-            {!showCannedPicker && cannedResponses.length > 0 && (
+            {cannedResponses.length > 0 && (
               <button
                 type="button"
-                onClick={onToggleCannedPicker}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] transition-colors"
+                onClick={showCannedPicker ? onCloseCannedPicker : onToggleCannedPicker}
+                className={cn(
+                  'absolute right-3 top-1/2 -translate-y-1/2 p-1 transition-colors',
+                  showCannedPicker
+                    ? 'text-[var(--admin-accent)]'
+                    : 'text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)]'
+                )}
                 title="Template pesan cepat"
               >
                 <Zap className="w-4 h-4" />
@@ -211,7 +234,7 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
               type="button"
               disabled={sendingMessage || isUploading}
               onClick={onSendImage}
-              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-50 shrink-0 shadow-sm"
+              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-50 shrink-0 shadow-sm active:scale-95 touch-manipulation"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -219,7 +242,7 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
             <button
               type="submit"
               disabled={sendingMessage || !newMessage.trim() || isDisabled}
-              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-30 shrink-0 shadow-sm"
+              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-30 shrink-0 shadow-sm active:scale-95 touch-manipulation"
             >
               <Send className="w-4 h-4" />
             </button>

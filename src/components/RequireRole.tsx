@@ -32,6 +32,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     '/admin/canned-responses',
     '/admin/notifications',
     '/admin/settings',
+    '/admin/chat-settings',
   ],
   admin_viewer: [
     '/admin/dashboard',

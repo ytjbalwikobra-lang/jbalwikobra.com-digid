@@ -17,6 +17,7 @@ import {
   adminStopTyping,
   adminGetCannedResponses,
   subscribeToMessages,
+  subscribeToAllMessages,
   subscribeToConversations,
   subscribeToTypingIndicators,
   uploadChatAttachment
@@ -48,6 +49,7 @@ const AdminChatPage: React.FC = () => {
   const [activityLogs, setActivityLogs] = useState<ActivityLogType[]>([]);
   // Statistik tidak ditampilkan di layout baru
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
   
   // State loading — pisah antara initial load vs background refresh
@@ -84,13 +86,16 @@ const AdminChatPage: React.FC = () => {
   const messageInputRef = useRef<HTMLInputElement>(null);
   const isFirstLoadRef = useRef(true);
 
-  // Deteksi mobile untuk toggle list/detail
+  // Deteksi breakpoint: mobile (<640px), tablet (640-1023px), desktop (≥1024px)
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
-    const update = () => setIsMobile(mq.matches);
+    const update = () => {
+      const w = window.innerWidth;
+      setIsMobile(w < 640);
+      setIsTablet(w >= 640 && w < 1024);
+    };
     update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   useEffect(() => {
@@ -110,10 +115,16 @@ const AdminChatPage: React.FC = () => {
         status: statusFilter === 'all' ? undefined : statusFilter,
         limit: 100
       });
+      
+      // Log untuk debugging jika list kosong padahal seharusnya ada
+      if (result.conversations.length === 0 && isFirstLoadRef.current) {
+        console.warn('[AdminChat] API returned 0 conversations. total:', result.total);
+      }
+      
       // Smart merge: hanya update state jika data berubah — hindari re-render percuma
       setConversations(prev => {
         const next = result.conversations;
-        if (prev.length === next.length) {
+        if (prev.length === next.length && next.length > 0) {
           const isSame = prev.every((p, i) =>
             p.id === next[i].id &&
             p.updatedAt === next[i].updatedAt &&
@@ -186,10 +197,41 @@ const AdminChatPage: React.FC = () => {
         const idx = prev.findIndex(c => c.id === conv.id);
         if (idx >= 0) {
           const updated = [...prev];
-          updated[idx] = { ...updated[idx], ...conv };
+          // Pertahankan lastMessage dan unreadCount dari state lokal jika realtime tidak punya
+          updated[idx] = {
+            ...updated[idx],
+            ...conv,
+            lastMessage: conv.lastMessage || updated[idx].lastMessage,
+            unreadCount: conv.unreadCount ?? updated[idx].unreadCount
+          };
           return updated;
         }
         return [conv, ...prev];
+      });
+    });
+    return () => { unsubscribe(); };
+  }, []);
+
+  /** Langganan SEMUA pesan baru untuk update preview di daftar percakapan */
+  useEffect(() => {
+    const { unsubscribe } = subscribeToAllMessages((msg) => {
+      setConversations(prev => {
+        const idx = prev.findIndex(c => c.id === msg.conversationId);
+        if (idx < 0) return prev; // Percakapan tidak ada di list — abaikan
+        const updated = [...prev];
+        updated[idx] = {
+          ...updated[idx],
+          lastMessage: msg,
+          lastMessageAt: msg.createdAt,
+          // Increment unread hanya jika pesan dari customer
+          unreadCount: msg.senderType !== 'admin'
+            ? (updated[idx].unreadCount || 0) + 1
+            : updated[idx].unreadCount
+        };
+        // Pindahkan ke atas list (pesan terbaru)
+        const [moved] = updated.splice(idx, 1);
+        updated.unshift(moved);
+        return updated;
       });
     });
     return () => { unsubscribe(); };
@@ -200,10 +242,25 @@ const AdminChatPage: React.FC = () => {
     if (selectedConversation?.id) {
       unsubscribeMessagesRef.current?.();
       const { unsubscribe } = subscribeToMessages(selectedConversation.id, (msg) => {
+        // Tambahkan pesan ke daftar pesan percakapan aktif
         setMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
+        
+        // Update preview pesan terakhir di daftar percakapan
+        setConversations(prev => prev.map(c => {
+          if (c.id !== msg.conversationId) return c;
+          return {
+            ...c,
+            lastMessage: msg,
+            lastMessageAt: msg.createdAt,
+            // Increment unread jika pesan dari customer dan bukan percakapan aktif
+            unreadCount: msg.senderType !== 'admin'
+              ? (c.unreadCount || 0) + 1
+              : c.unreadCount
+          };
+        }));
       });
       unsubscribeMessagesRef.current = unsubscribe;
       return () => { unsubscribe(); };
@@ -274,10 +331,12 @@ const AdminChatPage: React.FC = () => {
   /** Filter template respon cepat berdasarkan pencarian — dimemoize */
   const filteredCannedResponses = useMemo(() => 
     (Array.isArray(cannedResponses) ? cannedResponses : []).filter(cr => {
-      if (!cannedFilter) return cr.isActive;
-      return cr.isActive && (
+      // Kompatibel snake_case (is_active) dan camelCase (isActive)
+      const active = cr.isActive ?? (cr as any).is_active ?? true;
+      if (!cannedFilter) return active;
+      return active && (
         cr.shortcut?.toLowerCase().includes(cannedFilter) ||
-        cr.title.toLowerCase().includes(cannedFilter) ||
+        cr.title?.toLowerCase().includes(cannedFilter) ||
         cr.category?.toLowerCase().includes(cannedFilter)
       );
     }), [cannedResponses, cannedFilter]);
@@ -426,10 +485,14 @@ const AdminChatPage: React.FC = () => {
     setSelectedFile(null); // Reset file saat pindah percakapan
     loadConversationDetails(conv.id);
     loadActivityLogs(conv.id);
+    // Reset unread count di daftar percakapan karena akan di-markRead
+    setConversations(prev => prev.map(c =>
+      c.id === conv.id ? { ...c, unreadCount: 0 } : c
+    ));
     if (isMobile) {
       setShowMobileDetail(true);
     }
-  }, [loadConversationDetails, loadActivityLogs]);
+  }, [loadConversationDetails, loadActivityLogs, isMobile]);
 
   /** Toggle canned picker — stabil referensi */
   const handleToggleCannedPicker = useCallback(() => {
@@ -488,16 +551,44 @@ const AdminChatPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-3">
-      {isMobile ? (
-        showMobileDetail ? detailPane : listPane
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 min-h-[calc(100vh-180px)]">
-          {listPane}
-          {detailPane}
+    <>
+      {/* Hero — hidden pada mobile agar chat full-screen */}
+      {!isMobile && (
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-base lg:text-lg font-bold text-[var(--admin-text)]">Live Chat</h1>
+            <p className="text-[11px] text-[var(--admin-text-secondary)] mt-0.5">
+              {conversations.length > 0
+                ? `${conversations.length} percakapan aktif`
+                : 'Kelola percakapan pelanggan'
+              }
+            </p>
+          </div>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--admin-success)]/10 border border-[var(--admin-success)]/20 rounded-full">
+            <span className="w-1.5 h-1.5 bg-[var(--admin-success)] rounded-full animate-pulse" />
+            <span className="text-[11px] font-medium text-[var(--admin-success)]">Realtime</span>
+          </span>
         </div>
       )}
-    </div>
+
+      {/* Layout Utama — three-tier responsive */}
+      {isMobile ? (
+        /* Mobile: full-screen single panel, edge-to-edge */
+        <div className="h-[calc(100dvh-76px)] -mx-3 -mb-3">
+          {showMobileDetail ? detailPane : listPane}
+        </div>
+      ) : (
+        /* Tablet & Desktop: side-by-side panels */
+        <div className={`flex gap-3 ${isTablet ? 'h-[calc(100dvh-128px)]' : 'h-[calc(100vh-160px)]'}`}>
+          <div className={`shrink-0 ${isTablet ? 'w-[280px]' : 'w-[380px]'}`}>
+            {listPane}
+          </div>
+          <div className="flex-1 min-w-0">
+            {detailPane}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

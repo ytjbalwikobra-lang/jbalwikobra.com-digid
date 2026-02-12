@@ -178,8 +178,55 @@ export async function listConversations(
       return { conversations: [], total: 0 };
     }
 
+    const mapped = (data || []).map(mapConversation);
+
+    // Ambil pesan terakhir dan jumlah pesan belum dibaca — dalam try-catch TERPISAH
+    // agar kegagalan batch fetch tidak menyebabkan seluruh list conversations kosong
+    if (mapped.length > 0) {
+      try {
+        const convIds = mapped.map(c => c.id);
+
+        // Query langsung: ambil pesan terakhir per percakapan (tanpa RPC)
+        const { data: recentMessages, error: msgError } = await sb
+          .from('chat_messages')
+          .select('id, conversation_id, sender_type, sender_id, sender_name, message, message_type, attachment_url, attachment_name, attachment_type, is_read, read_at, metadata, created_at')
+          .in('conversation_id', convIds)
+          .order('created_at', { ascending: false })
+          .limit(convIds.length * 5); // Batasi jumlah data yang diambil
+
+        if (msgError) {
+          console.error('[ChatService] Error fetching recent messages (non-fatal):', msgError);
+        } else if (recentMessages && recentMessages.length > 0) {
+          // Kelompokkan: ambil pesan terakhir per percakapan
+          const lastByConv = new Map<string, any>();
+          const unreadByConv = new Map<string, number>();
+          
+          for (const msg of recentMessages) {
+            if (!lastByConv.has(msg.conversation_id)) {
+              lastByConv.set(msg.conversation_id, msg);
+            }
+            if (msg.sender_type !== 'admin' && !msg.is_read) {
+              unreadByConv.set(msg.conversation_id, (unreadByConv.get(msg.conversation_id) || 0) + 1);
+            }
+          }
+
+          // Tempelkan ke mapped conversations
+          for (const conv of mapped) {
+            const lastMsg = lastByConv.get(conv.id);
+            if (lastMsg) {
+              conv.lastMessage = mapMessage(lastMsg);
+            }
+            conv.unreadCount = unreadByConv.get(conv.id) || 0;
+          }
+        }
+      } catch (batchErr) {
+        // PENTING: Jangan biarkan error batch fetch menghancurkan response utama
+        console.error('[ChatService] Batch fetch last messages failed (non-fatal):', batchErr);
+      }
+    }
+
     return {
-      conversations: (data || []).map(mapConversation),
+      conversations: mapped,
       total: count || 0
     };
   } catch (err) {
@@ -980,11 +1027,30 @@ export async function getCannedResponses(sb: any): Promise<any[]> {
       return [];
     }
 
-    return data || [];
+    // Map snake_case ke camelCase agar konsisten dengan tipe frontend
+    return (data || []).map(mapCannedResponse);
   } catch (err) {
     console.error('[ChatService] Exception getting canned responses:', err);
     return [];
   }
+}
+
+/** Map row database canned_response ke camelCase */
+function mapCannedResponse(row: any) {
+  return {
+    id: row.id,
+    title: row.title,
+    message: row.message,
+    category: row.category,
+    shortcut: row.shortcut,
+    usageCount: row.usage_count ?? 0,
+    lastUsedAt: row.last_used_at,
+    isActive: row.is_active ?? true,
+    sortOrder: row.sort_order ?? 0,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
 }
 
 /**

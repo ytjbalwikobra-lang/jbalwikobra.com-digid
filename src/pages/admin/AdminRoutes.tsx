@@ -16,6 +16,7 @@ import AdminFlashSales from './AdminFlashSales';
 import AdminNotificationsPage from './AdminNotificationsPage';
 import AdminChatPage from './AdminChatPage';
 import AdminCannedResponsesPage from './AdminCannedResponsesPage';
+import AdminChatSettingsPage from './AdminChatSettingsPage';
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -40,6 +41,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/settings" element={<AdminSettings />} />
           <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
           <Route path="/canned-responses" element={<AdminCannedResponsesPage />} />
+          <Route path="/chat-settings" element={<AdminChatSettingsPage />} />
         </Route>
 
         {/* Redirect route yang tidak dikenal ke dashboard */}

@@ -16,7 +16,8 @@ import type {
   CannedResponseRequest,
   ListConversationsResponse,
   GetMessagesResponse,
-  ChatConversationStatus
+  ChatConversationStatus,
+  ChatSettings
 } from '../types/chat';
 
 // =============================================================================
@@ -40,6 +41,10 @@ export async function adminListConversations(
     'GET',
     options
   );
+
+  if (result.error) {
+    console.error('[AdminChat] adminListConversations error:', result.error);
+  }
 
   return result.data || { conversations: [], total: 0, hasMore: false };
 }
@@ -280,3 +285,72 @@ export async function adminUpdateCannedResponse(id: string, request: Partial<Can
 export async function adminDeleteCannedResponse(id: string): Promise<{ data: any; error: string | null }> {
   return chatApiCall('admin-delete-canned-response', 'POST', undefined, { id });
 }
+
+// =============================================================================
+// PENGATURAN CHAT
+// =============================================================================
+
+/** Default pengaturan chat */
+const DEFAULT_CHAT_SETTINGS: ChatSettings = {
+  businessHoursEnabled: true,
+  businessHoursStart: '09:00',
+  businessHoursEnd: '23:00',
+  businessHoursTimezone: 'Asia/Jakarta',
+  offlineMessage: 'Terima kasih telah menghubungi kami. Saat ini di luar jam operasional (23:00 - 09:00 WIB). Pesan Anda tetap kami terima dan akan dibalas paling lambat pukul 09:00 WIB. Terima kasih atas kesabarannya! 🙏',
+  offlineLabel: 'Di Luar Jam Operasional'
+};
+
+/**
+ * Ambil pengaturan chat (publik — bisa dipanggil tanpa auth)
+ */
+export async function getChatSettings(): Promise<ChatSettings> {
+  const result = await chatApiCall<ChatSettings>('get-chat-settings', 'GET');
+  return result.data || DEFAULT_CHAT_SETTINGS;
+}
+
+/**
+ * Perbarui pengaturan chat (khusus super_admin)
+ */
+export async function adminUpdateChatSettings(settings: Partial<ChatSettings>): Promise<{ success: boolean; error: string | null }> {
+  const result = await chatApiCall<{ success: boolean }>('admin-update-chat-settings', 'POST', undefined, settings);
+  return {
+    success: result.data?.success || false,
+    error: result.error
+  };
+}
+
+/**
+ * Cek apakah saat ini dalam jam operasional chat
+ */
+export function isWithinBusinessHours(settings: ChatSettings): boolean {
+  if (!settings.businessHoursEnabled) return true; // Fitur dimatikan = selalu online
+  
+  const now = new Date();
+  // Konversi waktu ke timezone yang dikonfigurasi
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: settings.businessHoursTimezone
+  });
+  const parts = formatter.formatToParts(now);
+  const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+  const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+  const currentTime = currentHour * 60 + currentMinute;
+
+  const [startH, startM] = settings.businessHoursStart.split(':').map(Number);
+  const [endH, endM] = settings.businessHoursEnd.split(':').map(Number);
+  const startTime = startH * 60 + startM;
+  const endTime = endH * 60 + endM;
+
+  // Handle overnight range (contoh: 23:00 - 09:00 = diluar jam)
+  // Normal range: start < end (contoh: 09:00 - 23:00)
+  if (startTime <= endTime) {
+    return currentTime >= startTime && currentTime < endTime;
+  } else {
+    // Overnight: 23:00 - 09:00 means online from 23:00 to 09:00
+    // Tapi kita pakai ini sebagai jam kerja normal (09:00 - 23:00)
+    return currentTime >= startTime || currentTime < endTime;
+  }
+}
+

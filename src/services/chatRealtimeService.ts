@@ -59,6 +59,41 @@ export function subscribeToMessages(
 }
 
 /**
+ * Langganan SEMUA pesan baru (tanpa filter percakapan).
+ * Digunakan oleh admin untuk update preview pesan di daftar percakapan.
+ */
+export function subscribeToAllMessages(
+  callback: MessageCallback
+): { unsubscribe: () => void } {
+  if (!supabase) {
+    console.warn('[ChatService] Supabase tidak tersedia untuk realtime');
+    return { unsubscribe: () => {} };
+  }
+
+  const channel = supabase
+    .channel('chat_messages:all')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages'
+      },
+      (payload) => {
+        const msg = mapMessageFromRealtime(payload.new);
+        callback(msg);
+      }
+    )
+    .subscribe();
+
+  return {
+    unsubscribe: () => {
+      supabase?.removeChannel(channel);
+    }
+  };
+}
+
+/**
  * Langganan pembaruan percakapan (perubahan status, pesan baru)
  */
 export function subscribeToConversations(

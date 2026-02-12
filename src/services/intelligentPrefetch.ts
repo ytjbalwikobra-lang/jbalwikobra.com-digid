@@ -30,7 +30,7 @@ class IntelligentPrefetchManager {
   private config: PrefetchConfig = {
     enabled: true,
     aggressiveMode: false,
-    backgroundRefreshInterval: 30000, // 30 seconds
+    backgroundRefreshInterval: 60000, // 60 detik — sesuai aturan egress minimum
     prefetchOnHover: true,
     prefetchOnIdle: true,
   };

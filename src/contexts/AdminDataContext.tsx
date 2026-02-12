@@ -162,7 +162,7 @@ export const AdminDataProvider: React.FC<AdminDataProviderProps> = ({
     try {
       setProductsLoading(true);
       setProductsError(null);
-      const result = await OptimizedProductService.getProductsPaginated({}, { limit: 500 });
+      const result = await OptimizedProductService.getProductsPaginated({}, { limit: 100 });
       setProducts(result.data);
       setLastLoaded(prev => ({ ...prev, products: Date.now() }));
     } catch (error: any) {
@@ -227,8 +227,8 @@ export const AdminDataProvider: React.FC<AdminDataProviderProps> = ({
       }
     };
 
-    // Check cache freshness every minute
-    const interval = setInterval(checkCacheFreshness, 60 * 1000);
+    // Cek cache freshness setiap 5 menit (sebelumnya 1 menit — hemat egress 5x)
+    const interval = setInterval(checkCacheFreshness, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [lastLoaded, refreshCategories, refreshGameTitles, refreshTiers, refreshProducts]);
 

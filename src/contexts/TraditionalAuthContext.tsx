@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { normalizeLoginIdentifier } from '../utils/phoneUtils';
+import { supabase } from '../services/supabase';
 
 interface User {
   id: string;
@@ -11,6 +12,7 @@ interface User {
   avatarUrl?: string;
   phoneVerified: boolean;
   profileCompleted: boolean;
+  authProvider?: string;
   dateOfBirth?: string;
   gender?: string;
   bio?: string;
@@ -32,8 +34,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   login: (identifier: string, password: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; profileCompleted?: boolean}>;
-  signup: (phone: string, password: string, name?: string) => Promise<{error?: any; success?: boolean; userId?: string; message?: string}>;
-  verifyPhone: (userId: string, code: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; nextStep?: string}>;
+  signup: (email: string, password: string, name: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string}>;
+  loginWithGoogle: () => Promise<{error?: any; success?: boolean}>;
   completeProfile: (email: string, name: string) => Promise<{error?: any; success?: boolean; user?: User}>;
   logout: (logoutAll?: boolean) => Promise<void>;
   refreshSession: () => Promise<boolean>;
@@ -130,19 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Map backend field names to frontend (robust mapping)
-      const mappedUser = {
-        ...data.user,
-        // snake_case -> camelCase
-        isAdmin: data.user.is_admin ?? false,
-        role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
-        phoneVerified: data.user.phone_verified ?? false,
-        profileCompleted: data.user.profile_completed ?? false,
-        createdAt: data.user.created_at || data.user.createdAt || new Date().toISOString(),
-        // Normalize common aliases
-        name: data.user.name || data.user.full_name || data.user.username || '',
-        email: data.user.email || data.user.user_email || '',
-        phone: data.user.phone || data.user.whatsapp || data.user.phone_number || ''
-      } as User;
+      const mappedUser = mapBackendUser(data.user);
 
       // Store session data
       localStorage.setItem('session_token', data.session_token);
@@ -168,77 +158,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (phone: string, password: string, name?: string) => {
+  const signup = async (email: string, password: string, name: string) => {
     try {
-      // Use comprehensive phone normalization
-      const normalizedPhone = normalizeLoginIdentifier(phone);
-      
       const response = await fetch('/api/auth?action=signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          phone: normalizedPhone, 
-          password, 
-          name
-        }),
+        body: JSON.stringify({ email, password, name }),
       });
 
-  const ct2 = response.headers.get('content-type') || '';
-  const data = ct2.includes('application/json') ? await response.json() : { error: await response.text() };
+      const ct2 = response.headers.get('content-type') || '';
+      const data = ct2.includes('application/json') ? await response.json() : { error: await response.text() };
 
       if (!response.ok) {
         return { error: data.error || 'Signup failed' };
       }
 
-      return { 
-        success: true, 
-        userId: data.user_id,
-        message: data.message
-      };
-    } catch (error) {
-      console.error('Signup error:', error);
-      return { error: 'Network error. Please try again.' };
-    }
-  };
+      // Map backend field names ke frontend
+      const mappedUser = mapBackendUser(data.user);
 
-  const verifyPhone = async (userId: string, code: string) => {
-    try {
-      const response = await fetch('/api/auth?action=verify-phone', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId, verification_code: code }),
-      });
-
-  const ct3 = response.headers.get('content-type') || '';
-  const data = ct3.includes('application/json') ? await response.json() : { error: await response.text() };
-
-      if (!response.ok) {
-        return { error: data.error || 'Verification failed' };
-      }
-
-      // Map backend field names to frontend
-      const mappedUser = {
-        ...data.user,
-        isAdmin: data.user.is_admin ?? false,
-        role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
-        phoneVerified: data.user.phone_verified ?? false,
-        profileCompleted: data.user.profile_completed ?? false,
-        createdAt: data.user.created_at || data.user.createdAt || new Date().toISOString(),
-        name: data.user.name || data.user.full_name || data.user.username || '',
-        email: data.user.email || data.user.user_email || '',
-        phone: data.user.phone || data.user.whatsapp || data.user.phone_number || ''
-      } as User;
-
-      // Store session data
+      // Simpan session data (signup langsung dapat session tanpa verifikasi WA)
       localStorage.setItem('session_token', data.session_token);
       localStorage.setItem('user_data', JSON.stringify(mappedUser));
       localStorage.setItem('session_expires', data.expires_at);
 
-      // Update state
       setUser(mappedUser);
       setSession({
         expiresAt: data.expires_at,
@@ -247,15 +191,145 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { 
         success: true, 
-        user: mappedUser, 
-        sessionToken: data.session_token,
-        nextStep: data.next_step
+        user: mappedUser,
+        sessionToken: data.session_token
       };
     } catch (error) {
-      console.error('Verification error:', error);
+      console.error('Signup error:', error);
       return { error: 'Network error. Please try again.' };
     }
   };
+
+  /**
+   * Login dengan Google OAuth via Supabase Auth
+   * Flow: signInWithOAuth → redirect ke Google → callback ke Supabase → redirect kembali
+   */
+  const loginWithGoogle = async () => {
+    try {
+      if (!supabase) {
+        return { error: 'Supabase client not initialized' };
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Google OAuth error:', error);
+        return { error: error.message };
+      }
+
+      // Redirect terjadi otomatis — tidak perlu return success
+      return { success: true };
+    } catch (error) {
+      console.error('Google login error:', error);
+      return { error: 'Failed to initiate Google login' };
+    }
+  };
+
+  // Helper: Map backend user fields ke frontend
+  const mapBackendUser = useCallback((backendUser: any): User => ({
+    ...backendUser,
+    isAdmin: backendUser.is_admin ?? false,
+    role: backendUser.role || (backendUser.is_admin ? 'super_admin' : 'user'),
+    phoneVerified: backendUser.phone_verified ?? false,
+    profileCompleted: backendUser.profile_completed ?? false,
+    authProvider: backendUser.auth_provider || 'email',
+    avatarUrl: backendUser.avatar_url || '',
+    createdAt: backendUser.created_at || backendUser.createdAt || new Date().toISOString(),
+    name: backendUser.name || backendUser.full_name || backendUser.username || '',
+    email: backendUser.email || backendUser.user_email || '',
+    phone: backendUser.phone || backendUser.phone_number || ''
+  }), []);
+
+  // Handle Google OAuth callback
+  // Supabase Auth redirect bisa ke URL manapun (implicit flow: #access_token=... di hash)
+  // Deteksi: jika ada Supabase Auth session TAPI TIDAK ada custom session → ini OAuth callback
+  useEffect(() => {
+    if (!supabase) return;
+
+    let processed = false;
+
+    const processOAuthSession = async (authSession: { access_token: string }) => {
+      if (processed || !authSession?.access_token) return;
+
+      // Cek apakah sudah punya custom session (bukan OAuth callback)
+      const existingToken = localStorage.getItem('session_token');
+      if (existingToken) {
+        // Sudah login dengan custom session, cleanup Supabase session saja
+        console.log('[Auth] Custom session exists, cleaning up Supabase session');
+        await supabase?.auth.signOut();
+        return;
+      }
+
+      processed = true;
+      console.log('[Auth] OAuth session detected, processing...');
+
+      try {
+        // Kirim access_token ke backend untuk buat/link custom user + custom session
+        const response = await fetch('/api/auth?action=google-callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: authSession.access_token }),
+        });
+
+        const ct = response.headers.get('content-type') || '';
+        const data = ct.includes('application/json') ? await response.json() : { error: await response.text() };
+
+        if (!response.ok) {
+          console.error('[Auth] Google callback failed:', data.error);
+          await supabase?.auth.signOut();
+          return;
+        }
+
+        // Map dan simpan user data (custom session, bukan Supabase session)
+        const mappedUser = mapBackendUser(data.user);
+        localStorage.setItem('session_token', data.session_token);
+        localStorage.setItem('user_data', JSON.stringify(mappedUser));
+        localStorage.setItem('session_expires', data.expires_at);
+
+        setUser(mappedUser);
+        setSession({
+          expiresAt: data.expires_at,
+          lastActivity: new Date().toISOString()
+        });
+
+        console.log('[Auth] OAuth login success:', mappedUser.name);
+
+        // Sign out dari Supabase Auth (kita pakai custom session)
+        await supabase?.auth.signOut();
+
+        // Bersihkan hash fragment dari URL (implicit flow meninggalkan #access_token=...)
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } catch (err) {
+        console.error('[Auth] OAuth processing error:', err);
+        await supabase?.auth.signOut();
+      }
+    };
+
+    // Listen untuk Supabase Auth session events (handles implicit + PKCE)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[Auth] onAuthStateChange:', event, 'hasSession:', !!session);
+        if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+          await processOAuthSession(session);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [mapBackendUser]);
 
   const completeProfile = async (email: string, name: string) => {
     try {
@@ -287,19 +361,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: data.error || 'Profile completion failed' };
       }
 
-      // Map backend field names to frontend and update user data with completed profile
-      const mappedUser = {
-        ...user,
-        ...data.user,
-        isAdmin: data.user.is_admin ?? false,
-        role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
-        phoneVerified: data.user.phone_verified ?? false,
-        profileCompleted: true,
-        createdAt: data.user.created_at || user.createdAt || new Date().toISOString(),
-        name: data.user.name || data.user.full_name || name || user.name || '',
-        email: data.user.email || email || user.email || '',
-        phone: data.user.phone || data.user.whatsapp || user.phone || ''
-      } as User;
+      // Map backend field names to frontend dan update user data
+      const mappedUser = mapBackendUser({ ...user, ...data.user, profileCompleted: true });
       localStorage.setItem('user_data', JSON.stringify(mappedUser));
       setUser(mappedUser);
 
@@ -389,19 +452,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         if (data.success && data.user) {
-          // Map backend field names to frontend
-          const mappedUser = {
-            ...data.user,
-            isAdmin: data.user.is_admin ?? false,
-            role: data.user.role || (data.user.is_admin ? 'super_admin' : 'user'),
-            phoneVerified: data.user.phone_verified ?? false,
-            profileCompleted: data.user.profile_completed ?? false,
-            createdAt: data.user.created_at || data.user.createdAt || new Date().toISOString(),
-            name: data.user.name || data.user.full_name || data.user.username || '',
-            email: data.user.email || data.user.user_email || '',
-            phone: data.user.phone || data.user.whatsapp || data.user.phone_number || ''
-          } as User;
-          // Update user data with latest from server
+          // Map backend field names ke frontend (menggunakan helper)
+          const mappedUser = mapBackendUser(data.user);
+          // Update user data dengan latest dari server
           localStorage.setItem('user_data', JSON.stringify(mappedUser));
           setUser(mappedUser);
           console.log('[AUTH DEBUG] ✅ Session validated, mapped isAdmin:', mappedUser.isAdmin);
@@ -423,7 +476,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     login,
     signup,
-    verifyPhone,
+    loginWithGoogle,
     completeProfile,
     logout,
     refreshSession,

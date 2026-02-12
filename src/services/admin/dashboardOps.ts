@@ -12,7 +12,7 @@ import type { AdminStats, OrderDayStat, OrderStatusDayStat, TopProductStat, Admi
 let _dashboardStatsCache: { data: AdminStats; timestamp: number } | null = null;
 const _dashboardStatsCacheDuration = 60 * 1000; // 1 menit
 
-/** Ambil statistik admin langsung dari Supabase */
+/** Ambil statistik admin via RPC (1 query, server-side aggregation) */
 export async function getAdminStats(): Promise<AdminStats> {
   if (!supabase) {
     console.warn('⚠️ [getAdminStats] Supabase not configured, returning fallback');
@@ -21,50 +21,33 @@ export async function getAdminStats(): Promise<AdminStats> {
 
   return adminCache.getOrFetch('admin:stats', async () => {
     try {
-      const [
-        { count: totalUsers }, { count: totalProducts }, { count: totalOrders },
-        { count: pendingOrders }, { count: completedOrders }, { count: paidOrders },
-        ordersWithRevenue
-      ] = await Promise.all([
+      // 1 RPC call menggantikan 7+ query terpisah — hemat egress ~95%
+      const { data, error } = await (supabase as any).rpc('get_dashboard_stats');
+      if (!error && data) {
+        return {
+          totalOrders: data.totalOrders || 0,
+          totalRevenue: Number(data.totalRevenue) || 0,
+          totalUsers: data.totalUsers || 0,
+          totalProducts: data.totalProducts || 0,
+          totalReviews: data.totalReviews || 0,
+          averageRating: Number(data.averageRating) || 0,
+          pendingOrders: data.pendingOrders || 0,
+          completedOrders: data.completedOrders || 0,
+          totalFlashSales: data.totalFlashSales || 0,
+          activeFlashSales: data.activeFlashSales || 0,
+        };
+      }
+      console.warn('[getAdminStats] RPC fallback — error:', error?.message);
+      // Fallback minimal jika RPC belum di-deploy
+      const [{ count: totalOrders }, { count: totalUsers }, { count: totalProducts }] = await Promise.all([
+        (supabase as any).from('orders').select('id', { count: 'exact', head: true }),
         (supabase as any).from('users').select('id', { count: 'exact', head: true }),
         (supabase as any).from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        (supabase as any).from('orders').select('id', { count: 'exact', head: true }),
-        (supabase as any).from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        (supabase as any).from('orders').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
-        (supabase as any).from('orders').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
-        (supabase as any).from('orders').select('amount, status').in('status', ['paid', 'completed'])
       ]);
-
-      let totalRevenue = 0;
-      if (ordersWithRevenue.data) {
-        totalRevenue = ordersWithRevenue.data.reduce((sum: number, order: { amount?: number }) => sum + (Number(order.amount) || 0), 0);
-      }
-
-      let totalReviews = 0, averageRating = 0;
-      try {
-        const [{ count: reviewCount }, reviewsWithRating] = await Promise.all([
-          (supabase as any).from('reviews').select('id', { count: 'exact', head: true }),
-          (supabase as any).from('reviews').select('rating')
-        ]);
-        totalReviews = reviewCount || 0;
-        averageRating = reviewsWithRating.data?.length > 0
-          ? reviewsWithRating.data.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviewsWithRating.data.length : 0;
-      } catch { console.info('ℹ️ Reviews table not found (expected for new installations)'); }
-
-      let totalFlashSales = 0, activeFlashSales = 0;
-      try {
-        const [{ count: tfs }, { count: afs }] = await Promise.all([
-          (supabase as any).from('flash_sales').select('id', { count: 'exact', head: true }),
-          (supabase as any).from('flash_sales').select('id', { count: 'exact', head: true }).eq('is_active', true)
-        ]);
-        totalFlashSales = tfs || 0; activeFlashSales = afs || 0;
-      } catch { console.info('ℹ️ Flash sales table not found (expected for new installations)'); }
-
       return {
-        totalOrders: totalOrders || 0, totalRevenue, totalUsers: totalUsers || 0,
-        totalProducts: totalProducts || 0, totalReviews, averageRating: Math.round(averageRating * 10) / 10,
-        pendingOrders: pendingOrders || 0, completedOrders: (completedOrders || 0) + (paidOrders || 0),
-        totalFlashSales, activeFlashSales
+        totalOrders: totalOrders || 0, totalRevenue: 0, totalUsers: totalUsers || 0,
+        totalProducts: totalProducts || 0, totalReviews: 0, averageRating: 0,
+        pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0
       };
     } catch (error) {
       console.error('❌ [getAdminStats] Error:', error);
@@ -109,7 +92,7 @@ export async function getDashboardStats(): Promise<AdminStats> {
   }
 }
 
-/** Time-series order per hari */
+/** Time-series order per hari (via RPC — server-side aggregation) */
 export async function getOrdersTimeSeries(params?: { startDate?: string; endDate?: string; days?: number }): Promise<OrderDayStat[]> {
   if (!supabase) throw new Error('Supabase client not available');
   try {
@@ -119,18 +102,39 @@ export async function getOrdersTimeSeries(params?: { startDate?: string; endDate
     const startISO = new Date(start.getFullYear(), start.getMonth(), start.getDate()).toISOString();
     const endISO = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999).toISOString();
 
-    const { data: orders, error } = await supabase.from('orders').select('created_at, amount, status').gte('created_at', startISO).lte('created_at', endISO);
+    // Inisialisasi bucket kosong untuk semua hari
     const dailyStats: Record<string, { count: number; revenue: number }> = {};
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) { dailyStats[d.toISOString().slice(0, 10)] = { count: 0, revenue: 0 }; }
-    if (error) { return Object.entries(dailyStats).map(([date, s]) => ({ date, ...s })).sort((a, b) => a.date.localeCompare(b.date)); }
 
-    (orders || []).forEach(order => {
-      const key = new Date(order.created_at).toISOString().slice(0, 10);
-      if (dailyStats[key]) {
-        dailyStats[key].count += 1;
-        if (order.status === 'paid' || order.status === 'completed') dailyStats[key].revenue += Number(order.amount) || 0;
-      }
+    // RPC: agregasi di database, return hanya summary per hari (bukan ribuan baris)
+    const { data, error } = await (supabase as any).rpc('get_orders_time_series', {
+      p_start_date: startISO,
+      p_end_date: endISO
     });
+
+    if (!error && data) {
+      (data as any[]).forEach((row: any) => {
+        if (dailyStats[row.date]) {
+          dailyStats[row.date].count = Number(row.total_count) || 0;
+          dailyStats[row.date].revenue = Number(row.revenue) || 0;
+        }
+      });
+    } else if (error) {
+      console.warn('[getOrdersTimeSeries] RPC error, fallback ke query terbatas:', error.message);
+      // Fallback: query hanya kolom minimal dengan limit
+      const { data: orders } = await supabase.from('orders')
+        .select('created_at, amount, status')
+        .gte('created_at', startISO).lte('created_at', endISO)
+        .limit(1000);
+      (orders || []).forEach(order => {
+        const key = new Date(order.created_at).toISOString().slice(0, 10);
+        if (dailyStats[key]) {
+          dailyStats[key].count += 1;
+          if (order.status === 'paid' || order.status === 'completed') dailyStats[key].revenue += Number(order.amount) || 0;
+        }
+      });
+    }
+
     return Object.entries(dailyStats).map(([date, s]) => ({ date, ...s })).sort((a, b) => a.date.localeCompare(b.date));
   } catch (error) {
     console.error('Error in getOrdersTimeSeries:', error);
@@ -142,7 +146,7 @@ export async function getOrdersTimeSeries(params?: { startDate?: string; endDate
   }
 }
 
-/** Time-series order created vs completed */
+/** Time-series order created vs completed (via RPC — server-side aggregation) */
 export async function getOrderStatusTimeSeries(params?: { startDate?: string; endDate?: string; days?: number }): Promise<OrderStatusDayStat[]> {
   if (!supabase) throw new Error('Supabase client not available');
   try {
@@ -152,19 +156,38 @@ export async function getOrderStatusTimeSeries(params?: { startDate?: string; en
     const startISO = new Date(start.getFullYear(), start.getMonth(), start.getDate()).toISOString();
     const endISO = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1).toISOString();
 
-    const { data: orders, error } = await supabase.from('orders').select('created_at, updated_at, status').gte('created_at', startISO).lt('created_at', endISO);
     const dailyStats: Record<string, { created: number; completed: number }> = {};
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) { dailyStats[d.toISOString().slice(0, 10)] = { created: 0, completed: 0 }; }
-    if (error) { return Object.entries(dailyStats).map(([date, s]) => ({ date, ...s })).sort((a, b) => a.date.localeCompare(b.date)); }
 
-    (orders || []).forEach(order => {
-      const createdKey = new Date(order.created_at).toISOString().slice(0, 10);
-      if (dailyStats[createdKey]) dailyStats[createdKey].created += 1;
-      if (order.status === 'completed' && order.updated_at) {
-        const updatedKey = new Date(order.updated_at).toISOString().slice(0, 10);
-        if (dailyStats[updatedKey]) dailyStats[updatedKey].completed += 1;
-      }
+    // RPC: agregasi di database
+    const { data, error } = await (supabase as any).rpc('get_order_status_time_series', {
+      p_start_date: startISO,
+      p_end_date: endISO
     });
+
+    if (!error && data) {
+      (data as any[]).forEach((row: any) => {
+        if (dailyStats[row.date]) {
+          dailyStats[row.date].created = Number(row.created_count) || 0;
+          dailyStats[row.date].completed = Number(row.completed_count) || 0;
+        }
+      });
+    } else if (error) {
+      console.warn('[getOrderStatusTimeSeries] RPC error, fallback:', error.message);
+      const { data: orders } = await supabase.from('orders')
+        .select('created_at, updated_at, status')
+        .gte('created_at', startISO).lt('created_at', endISO)
+        .limit(1000);
+      (orders || []).forEach(order => {
+        const createdKey = new Date(order.created_at).toISOString().slice(0, 10);
+        if (dailyStats[createdKey]) dailyStats[createdKey].created += 1;
+        if (order.status === 'completed' && order.updated_at) {
+          const updatedKey = new Date(order.updated_at).toISOString().slice(0, 10);
+          if (dailyStats[updatedKey]) dailyStats[updatedKey].completed += 1;
+        }
+      });
+    }
+
     return Object.entries(dailyStats).map(([date, s]) => ({ date, ...s })).sort((a, b) => a.date.localeCompare(b.date));
   } catch (error) {
     console.error('Error in getOrderStatusTimeSeries:', error);
@@ -176,7 +199,7 @@ export async function getOrderStatusTimeSeries(params?: { startDate?: string; en
   }
 }
 
-/** Top selling products */
+/** Top selling products (via RPC — server-side aggregation + join) */
 export async function getTopProducts(params?: { startDate?: string; endDate?: string; limit?: number }): Promise<TopProductStat[]> {
   if (!supabase) throw new Error('Supabase client not available');
   try {
@@ -186,23 +209,45 @@ export async function getTopProducts(params?: { startDate?: string; endDate?: st
     const startISO = new Date(start.getFullYear(), start.getMonth(), start.getDate()).toISOString();
     const endISO = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999).toISOString();
 
-    const { data, error } = await supabase.from('orders').select('product_id, amount, status').gte('created_at', startISO).lte('created_at', endISO);
-    if (error) { console.warn('getTopProducts error', error); return []; }
+    // RPC: agregasi + JOIN product names di database
+    const { data, error } = await (supabase as any).rpc('get_top_products', {
+      p_start_date: startISO,
+      p_end_date: endISO,
+      p_limit: lim
+    });
 
-    const productIds = [...new Set((data || []).map(o => o.product_id).filter(Boolean))];
-    const productNamesMap: Record<string, string> = {};
-    if (productIds.length > 0) {
-      const { data: products } = await supabase.from('products').select('id, name').in('id', productIds);
-      (products || []).forEach(p => { productNamesMap[p.id] = p.name; });
+    if (!error && data) {
+      return (data as any[]).map((row: any) => ({
+        product_id: row.product_id,
+        product_name: row.product_name || 'Produk',
+        count: Number(row.order_count) || 0,
+        revenue: Number(row.revenue) || 0,
+      }));
     }
 
+    console.warn('[getTopProducts] RPC error, fallback ke query terbatas:', error?.message);
+    // Fallback: query minimal dengan limit
+    const { data: orders } = await supabase.from('orders')
+      .select('product_id, amount, status')
+      .gte('created_at', startISO).lte('created_at', endISO)
+      .not('product_id', 'is', null)
+      .limit(500);
+
     const agg: Record<string, TopProductStat> = {};
-    (data || []).forEach(order => {
+    (orders || []).forEach(order => {
       const pid = order.product_id || 'unknown';
-      if (!agg[pid]) agg[pid] = { product_id: pid, product_name: productNamesMap[pid] || 'produk akun game', count: 0, revenue: 0 };
+      if (!agg[pid]) agg[pid] = { product_id: pid, product_name: 'Produk', count: 0, revenue: 0 };
       agg[pid].count += 1;
       if (order.status === 'paid' || order.status === 'completed') agg[pid].revenue += Number(order.amount) || 0;
     });
+
+    // Ambil nama produk hanya untuk top products
+    const topIds = Object.values(agg).sort((a, b) => b.revenue - a.revenue).slice(0, lim).map(t => t.product_id);
+    if (topIds.length > 0) {
+      const { data: products } = await supabase.from('products').select('id, name').in('id', topIds);
+      (products || []).forEach(p => { if (agg[p.id]) agg[p.id].product_name = p.name; });
+    }
+
     return Object.values(agg).sort((a, b) => b.revenue - a.revenue).slice(0, lim);
   } catch (error) { console.error('Error in getTopProducts:', error); return []; }
 }

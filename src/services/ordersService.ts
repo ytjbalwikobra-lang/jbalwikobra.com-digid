@@ -87,32 +87,31 @@ export const ordersService = {
 
   async getOrderStats() {
     try {
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('status, amount');
-
-      if (error) {
-        throw error;
+      // RPC: agregasi di database — menghindari download semua baris orders
+      const { data, error } = await supabase.rpc('get_dashboard_stats');
+      if (!error && data) {
+        return {
+          totalOrders: Number(data.total_orders) || 0,
+          totalRevenue: Number(data.total_revenue) || 0,
+          pendingOrders: Number(data.pending_orders) || 0,
+          completedOrders: Number(data.completed_orders) || 0,
+        };
       }
+      console.warn('[getOrderStats] RPC error, using count fallback:', error?.message);
 
-      const totalOrders = orders?.length || 0;
-      // Business rule update: revenue counts only PAID + COMPLETED
-      const revenueSourceStatuses = new Set(['paid','completed']);
-      const revenueOrders = orders?.filter(o => revenueSourceStatuses.has(o.status)) || [];
-      
-      const totalRevenue = revenueOrders.reduce((sum, order) => {
-        const amount = order.amount || 0;
-        return sum + amount;
-      }, 0);
-      
-      const pendingOrders = orders?.filter(order => order.status === 'pending').length || 0;
-      const completedOrders = orders?.filter(order => order.status === 'completed').length || 0;
+      // Fallback: head-only count queries (nol transfer data) + RPC revenue
+      const [totalResult, pendingResult, completedResult, revenueResult] = await Promise.all([
+        supabase.from('orders').select('id', { count: 'exact', head: true }),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+        supabase.rpc('get_total_revenue'),
+      ]);
 
       return {
-        totalOrders,
-        totalRevenue,
-        pendingOrders,
-        completedOrders,
+        totalOrders: totalResult.count || 0,
+        totalRevenue: Number(revenueResult.data) || 0,
+        pendingOrders: pendingResult.count || 0,
+        completedOrders: completedResult.count || 0,
       };
     } catch (error) {
       console.error('Error fetching order stats:', error);

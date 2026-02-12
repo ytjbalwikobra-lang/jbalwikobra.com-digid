@@ -422,71 +422,8 @@ export class DynamicWhatsAppService {
     }
   }
 
-  /**
-   * Send verification code via WhatsApp
-   */
-  async sendVerificationCode(phone: string, code: string): Promise<SendMessageResult> {
-    const message = `🔐 *Kode Verifikasi JB Alwikobra*
-
-Kode Anda: *${code}*
-
-⏰ Berlaku 15 menit
-🔒 Jangan bagikan kode ini
-
-Masukkan kode di halaman verifikasi untuk mengaktifkan akun Anda.
-
-_JB Alwikobra - Game Accounts & Services_`;
-
-    return this.sendMessage({
-      phone,
-      message,
-      messageType: 'text',
-      contextType: 'verification',
-      contextId: code
-    });
-  }
-
-  /**
-   * Send welcome message via WhatsApp
-   */
-  async sendWelcomeMessage(name: string, phone: string, email?: string): Promise<SendMessageResult> {
-    const message = `🎮 *Selamat Datang di JB Alwikobra!*
-
-Halo ${name}! 👋
-
-Terima kasih telah bergabung dengan JB Alwikobra E-commerce - tempat terpercaya untuk game account premium!
-
-🚀 *Sekarang Anda bisa:*
-✅ Berbelanja game account terbaik
-✅ Menyimpan wishlist favorit
-✅ Tracking riwayat pesanan
-✅ Mendapat notifikasi WhatsApp otomatis
-
-🎯 *Fitur Unggulan:*
-• Game account berkualitas tinggi
-• Proses cepat & aman
-• Support 24/7 via WhatsApp
-• Garansi kepuasan pelanggan
-
-📱 *Mulai belanja sekarang:*
-${process.env.REACT_APP_SITE_URL || 'https://jbalwikobra.com'}
-
-${email ? `📧 Email terdaftar: ${email}` : ''}
-
----
-🎮 *JB Alwikobra E-commerce*
-Premium Game Accounts & Services
-
-Ada pertanyaan? Balas pesan ini! 💬`;
-
-    return this.sendMessage({
-      phone,
-      message,
-      messageType: 'text',
-      contextType: 'welcome',
-      contextId: `${name}-${Date.now()}`
-    });
-  }
+  // sendVerificationCode() dan sendWelcomeMessage() DIHAPUS (auth revamp)
+  // Login sekarang menggunakan Google OAuth / Email, bukan WhatsApp OTP
 
   /**
    * Check if a successful message log already exists for a given context

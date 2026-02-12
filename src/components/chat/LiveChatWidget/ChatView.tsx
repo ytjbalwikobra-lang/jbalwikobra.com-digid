@@ -3,9 +3,10 @@
  * Tampilan pesan chat dengan input, avatar, lampiran gambar, dan indikator mengetik
  */
 
-import React, { useMemo, useRef, useState, useCallback } from 'react';
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { SendIcon } from './ChatIcons';
 import { compressImage } from '../../../utils/imageCompression';
+import { formatTime, formatDateLong as formatDate, getInitials } from '../../../utils/chatFormatters';
 import type { ChatMessage } from '../../../types/chat';
 
 /** Ikon lampiran gambar (SVG inline) */
@@ -46,29 +47,6 @@ interface ChatViewProps {
   onEndChat: () => void;
 }
 
-/** Ambil inisial nama (1-2 huruf) */
-const getInitials = (name: string) => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
-
-/** Format waktu ke format Indonesia */
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
-};
-
 const ReadReceipt: React.FC<{ read?: boolean }> = ({ read }) => (
   <span className="inline-flex items-center gap-0.5 text-[10px]">
     <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -105,6 +83,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // H1: Cleanup blob URL saat unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const groupedMessages = useMemo(() => {
     const groups: { date: string; items: ChatMessage[] }[] = [];
@@ -163,7 +148,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   };
   return (
     <div
-      className="flex flex-col h-full bg-[#0f172a]"
+      className="flex flex-col h-full bg-[var(--cyber-bg-pure)]"
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
       onPaste={handlePaste}
@@ -187,7 +172,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         {groupedMessages.map((group) => (
           <div key={group.date} className="space-y-3">
             <div className="flex justify-center">
-              <span className="px-3 py-1 text-[11px] uppercase tracking-wide bg-black/40 text-white/70 rounded-full">
+              <span className="px-3 py-1 text-[11px] uppercase tracking-wide bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-muted)] rounded-full">
                 {group.date}
               </span>
             </div>
@@ -197,7 +182,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 className={`flex gap-2 ${msg.senderType === 'customer' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.senderType !== 'customer' && msg.senderType !== 'system' && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--cyber-accent)] to-[#7c3aed] flex items-center justify-center shrink-0 mt-0.5 text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--cyber-accent)] to-[var(--cyber-purple)] flex items-center justify-center shrink-0 mt-0.5 text-white text-xs font-bold">
                     {getInitials(msg.senderName || 'CS')}
                   </div>
                 )}
@@ -205,14 +190,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <div
                   className={`max-w-[75%] px-3 py-2 shadow-sm ${
                     msg.senderType === 'customer'
-                      ? 'bg-white text-gray-800 rounded-2xl rounded-br-sm'
+                      ? 'bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-primary)] rounded-2xl rounded-br-sm'
                       : msg.senderType === 'system'
-                      ? 'bg-black/60 text-white/70 text-sm italic rounded-lg mx-auto max-w-[90%]'
-                      : 'bg-[#06C755] text-white rounded-2xl rounded-bl-sm'
+                      ? 'bg-[var(--cyber-bg-elevated)] text-[var(--cyber-text-muted)] text-sm italic rounded-lg mx-auto max-w-[90%]'
+                      : 'bg-[var(--cyber-success)] text-white rounded-2xl rounded-bl-sm'
                   }`}
                 >
                   {msg.senderType === 'admin' && (
-                    <p className="text-[10px] font-semibold text-white/80 mb-0.5">
+                    <p className="text-[10px] font-semibold text-white/70 mb-0.5">
                       {msg.senderName}
                     </p>
                   )}
@@ -234,8 +219,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   {msg.message && (
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
                   )}
-                  <div className="flex items-center justify-between gap-3 mt-1 text-[10px] text-white/70">
-                    <span className={msg.senderType === 'customer' ? 'text-gray-500' : 'text-white/70'}>
+                  <div className={`flex items-center justify-between gap-3 mt-1 text-[10px] ${msg.senderType === 'admin' ? 'text-white/50' : 'text-[var(--cyber-text-muted)]'}`}>
+                    <span>
                       {formatTime(msg.createdAt)}
                     </span>
                     {msg.senderType === 'customer' && <ReadReceipt read={msg.isRead} />}
@@ -285,7 +270,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               className="w-20 h-20 object-cover rounded-lg border border-[var(--cyber-border)]"
             />
             {isUploading && (
-              <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+              <div className="absolute inset-0 bg-[var(--cyber-bg-pure)]/50 rounded-lg flex items-center justify-center">
                 <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -350,15 +335,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </button>
       </form>
 
-      {/* Lightbox gambar — fullscreen overlay */}
+      {/* Lightbox gambar — fullscreen overlay, L1: keyboard escape */}
       {lightboxUrl && (
         <div
-          className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[500] bg-[var(--cyber-bg-pure)]/80 flex items-center justify-center p-4"
           onClick={() => setLightboxUrl(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Lightbox gambar"
+          tabIndex={-1}
         >
           <button
             onClick={() => setLightboxUrl(null)}
-            className="absolute top-4 right-4 w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center text-lg hover:bg-white/30 transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 bg-[var(--cyber-bg-elevated)] text-white rounded-full flex items-center justify-center text-lg hover:bg-[var(--cyber-bg-surface)] transition-colors"
+            aria-label="Tutup lightbox"
           >
             ✕
           </button>

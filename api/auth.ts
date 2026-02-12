@@ -8,20 +8,18 @@ import {
   isValidPhone, 
   isValidPassword, 
   sanitizeString, 
-  isValidName,
-  isValidVerificationCode 
+  isValidName
 } from './_utils/validation.js';
-import { DynamicWhatsAppService } from './_utils/dynamicWhatsAppService.js';
 
 /**
- * AUTH API - OPTIMIZED VERSION
+ * AUTH API - REVAMPED VERSION (Google OAuth + Email/Password)
  * 
- * Improvements:
- * - Eliminated code duplication (session creation, Supabase init)
- * - Reduced egress by selecting only required fields
- * - Enhanced security with consistent validation
+ * Perubahan:
+ * - Tambah Google OAuth login via Supabase Auth
+ * - Signup berubah dari phone-first ke email-first (tanpa WA OTP)
+ * - Hapus ketergantungan WhatsApp untuk autentikasi
+ * - Tetap menggunakan custom session (session_token)
  * - ISO 27001 & OWASP compliant
- * - Database function integration for optimal performance
  */
 
 // ============================================================================
@@ -32,17 +30,13 @@ import { DynamicWhatsAppService } from './_utils/dynamicWhatsAppService.js';
 const SESSION_EXPIRY_DAYS = 7;
 const SESSION_EXPIRY_MS = SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 
-// Verification configuration
-const VERIFICATION_EXPIRY_MINUTES = 15;
-const VERIFICATION_EXPIRY_MS = VERIFICATION_EXPIRY_MINUTES * 60 * 1000;
-
 // Rate limiting configuration (ISO 27001: Brute force protection)
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const RATE_LIMITS: Record<string, number> = {
   'login': 5,
   'signup': 3,
-  'verify-phone': 5,
+  'google-callback': 10,
   'validate-session': 20,
   'logout': 10,
   'complete-profile': 10,
@@ -60,8 +54,8 @@ const SECURITY_HEADERS = {
 };
 
 // Fields to select (egress optimization)
-const USER_SAFE_FIELDS = 'id,email,phone,name,role,is_admin,is_active,phone_verified,profile_completed';
-const USER_AUTH_FIELDS = 'id,email,phone,name,role,password_hash,is_admin,is_active,profile_completed';
+const USER_SAFE_FIELDS = 'id,email,phone,name,role,is_admin,is_active,phone_verified,profile_completed,auth_provider,avatar_url,google_id';
+const USER_AUTH_FIELDS = 'id,email,phone,name,role,password_hash,is_admin,is_active,profile_completed,auth_provider,avatar_url,google_id';
 
 // ============================================================================
 // SINGLETON SUPABASE CLIENT - BULLETPROOF VERSION
@@ -192,10 +186,6 @@ function generateSessionToken(): string {
   return crypto.randomBytes(32).toString('hex'); // 64 characters
 }
 
-function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 function getClientIP(req: VercelRequest): string {
   return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 
          (req.headers['x-real-ip'] as string) || 
@@ -204,10 +194,6 @@ function getClientIP(req: VercelRequest): string {
 
 function getSessionExpiry(): Date {
   return new Date(Date.now() + SESSION_EXPIRY_MS);
-}
-
-function getVerificationExpiry(): Date {
-  return new Date(Date.now() + VERIFICATION_EXPIRY_MS);
 }
 
 // ============================================================================
@@ -314,7 +300,9 @@ async function getUserBySessionToken(sessionToken: string): Promise<any | null> 
     name: result.user_name,
     is_admin: result.is_admin,
     role: result.user_role || (result.is_admin ? 'super_admin' : 'user'),
-    created_at: result.user_created_at
+    created_at: result.user_created_at,
+    auth_provider: result.user_auth_provider || 'email',
+    avatar_url: result.user_avatar_url
   };
 }
 
@@ -387,11 +375,11 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
 
 async function handleSignup(req: VercelRequest, res: VercelResponse) {
   try {
-    const { phone, password, name } = req.body;
+    const { email, password, name } = req.body;
 
-    // Validation
-    if (!phone || !isValidPhone(phone)) {
-      return res.status(400).json({ error: 'Valid phone number required' });
+    // Validasi — email-first signup (tanpa WhatsApp OTP)
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Valid email required' });
     }
 
     const passwordValidation = isValidPassword(password);
@@ -404,105 +392,66 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
     }
 
     const sanitizedName = sanitizeString(name.trim(), 100);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    // Check existing user
+    // Cek apakah email sudah terdaftar
     const { data: existingUsers } = await getSupabase()
       .from('users')
-      .select('id,phone_verified')
-      .eq('phone', phone)
+      .select('id,email,profile_completed,auth_provider')
+      .eq('email', normalizedEmail)
       .limit(1);
 
-    const existingUser = existingUsers?.[0];
-
-    if (existingUser?.phone_verified) {
-      return res.status(400).json({ error: 'User already exists and verified' });
+    if (existingUsers && existingUsers.length > 0) {
+      const existingUser = existingUsers[0];
+      if (existingUser.auth_provider === 'google') {
+        return res.status(400).json({ error: 'Email ini sudah terdaftar via Google. Silakan login dengan Google.' });
+      }
+      return res.status(400).json({ error: 'Email sudah terdaftar. Silakan login.' });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    let userId: string;
-
-    if (!existingUser) {
-      // Create new user
-      const { data: newUser, error: userError } = await getSupabase()
-        .from('users')
-        .insert({
-          phone,
-          password_hash: passwordHash,
-          name: sanitizedName,
-          is_active: true,
-          phone_verified: false,
-          profile_completed: false
-        })
-        .select('id')
-        .single();
-
-      if (userError) {
-        console.error('[Auth] User creation failed:', userError);
-        return res.status(500).json({ error: 'Failed to create user' });
-      }
-
-      userId = newUser.id;
-    } else {
-      // Update existing unverified user
-      const { error: updateError } = await getSupabase()
-        .from('users')
-        .update({ password_hash: passwordHash, name: sanitizedName })
-        .eq('id', existingUser.id);
-
-      if (updateError) {
-        console.error('[Auth] User update failed:', updateError);
-        return res.status(500).json({ error: 'Failed to update user' });
-      }
-
-      userId = existingUser.id;
-    }
-
-    // Generate verification code
-    const verificationCode = generateVerificationCode();
-    const expiresAt = getVerificationExpiry();
-
-    // Delete old verifications (fire and forget)
-    Promise.resolve(
-      getSupabase()
-        .from('phone_verifications')
-        .delete()
-        .eq('user_id', userId)
-    ).then(() => {}).catch((err: Error) => console.error('[Auth] Failed to cleanup old verifications:', err));
-
-    // Create verification
-    const { error: verificationError } = await getSupabase()
-      .from('phone_verifications')
+    // Buat user baru — langsung aktif (tanpa verifikasi WA)
+    const { data: newUser, error: userError } = await getSupabase()
+      .from('users')
       .insert({
-        user_id: userId,
-        phone,
-        verification_code: verificationCode,
-        expires_at: expiresAt.toISOString(),
-        ip_address: getClientIP(req),
-        user_agent: req.headers['user-agent'] || 'unknown'
-      });
+        email: normalizedEmail,
+        password_hash: passwordHash,
+        name: sanitizedName,
+        is_active: true,
+        phone_verified: false,
+        profile_completed: true,
+        auth_provider: 'email'
+      })
+      .select('id')
+      .single();
 
-    if (verificationError) {
-      console.error('[Auth] Verification creation failed:', verificationError);
-      return res.status(500).json({ error: 'Failed to create verification' });
+    if (userError) {
+      console.error('[Auth] User creation failed:', userError);
+      return res.status(500).json({ error: 'Failed to create user' });
     }
 
-    // Send WhatsApp (async, don't wait)
-    (async () => {
-      try {
-        const whatsappService = new DynamicWhatsAppService();
-        await whatsappService.sendVerificationCode(phone, verificationCode);
-      } catch (err) {
-        console.error('[Auth] WhatsApp send failed:', err);
-      }
-    })();
+    // Buat session langsung (tanpa verifikasi WA)
+    const session = await createSession(newUser.id, req);
+
+    // Ambil user data lengkap
+    const { data: userData, error: fetchError } = await getSupabase()
+      .from('users')
+      .select(USER_SAFE_FIELDS)
+      .eq('id', newUser.id)
+      .single();
+
+    if (fetchError) {
+      console.error('[Auth] User fetch failed:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch user data' });
+    }
 
     return res.status(200).json({
       success: true,
-      message: 'Verification code sent to WhatsApp',
-      user_id: userId,
-      expires_at: expiresAt.toISOString()
+      message: 'Akun berhasil dibuat',
+      user: userData,
+      ...session
     });
   } catch (error) {
     console.error('[Auth] Signup error:', error);
@@ -510,75 +459,121 @@ async function handleSignup(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function handleVerifyPhone(req: VercelRequest, res: VercelResponse) {
+/**
+ * Handle Google OAuth callback
+ * Frontend mengirim access_token dari Supabase Auth setelah Google sign-in
+ * Backend: Validasi token, cari/buat user di tabel users, buat custom session
+ */
+async function handleGoogleCallback(req: VercelRequest, res: VercelResponse) {
   try {
-    const { user_id, verification_code } = req.body;
+    const { access_token } = req.body;
 
-    // Validation
-    if (!user_id || !verification_code) {
-      return res.status(400).json({ error: 'User ID and verification code required' });
+    if (!access_token) {
+      return res.status(400).json({ error: 'Access token required' });
     }
 
-    if (!isValidVerificationCode(verification_code)) {
-      return res.status(400).json({ error: 'Invalid code format' });
+    // Buat Supabase client dengan anon key untuk validasi user token
+    const supabaseUrl = resolveEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL', 'REACT_APP_SUPABASE_URL');
+    const supabaseAnonKey = resolveEnvVar('SUPABASE_ANON_KEY', 'REACT_APP_SUPABASE_ANON_KEY');
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('[Auth] Missing Supabase anon config for Google callback');
+      return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    // Find verification
-    const { data: verifications, error: verificationError } = await getSupabase()
-      .from('phone_verifications')
-      .select('id,expires_at')
-      .eq('user_id', user_id)
-      .eq('verification_code', verification_code)
-      .eq('is_used', false)
-      .limit(1);
+    // Gunakan service role untuk mendapatkan user data dari access_token
+    const { data: { user: authUser }, error: authError } = await getSupabase()
+      .auth.getUser(access_token);
 
-    if (verificationError || !verifications || verifications.length === 0) {
-      return res.status(400).json({ error: 'Invalid verification code' });
+    if (authError || !authUser) {
+      console.error('[Auth] Google token validation failed:', authError);
+      return res.status(401).json({ error: 'Invalid or expired Google token' });
     }
 
-    const verification = verifications[0];
+    // Ekstrak info dari Google profile
+    const googleId = authUser.id; // Supabase Auth user ID
+    const googleEmail = authUser.email;
+    const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || '';
+    const googleAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '';
 
-    // Check expiry
-    if (new Date(verification.expires_at) < new Date()) {
-      return res.status(400).json({ error: 'Verification code expired' });
+    if (!googleEmail) {
+      return res.status(400).json({ error: 'Google account email not available' });
     }
 
-    // Mark as used (fire and forget)
-    Promise.resolve(
-      getSupabase()
-        .from('phone_verifications')
-        .update({ is_used: true, verified_at: new Date().toISOString() })
-        .eq('id', verification.id)
-    ).then(() => {}).catch((err: Error) => console.error('[Auth] Failed to mark verification as used:', err));
-
-    // Update user
-    const { data: user, error: userError } = await getSupabase()
+    // Cari user berdasarkan google_id atau email
+    const { data: existingUsers } = await getSupabase()
       .from('users')
-      .update({ 
-        phone_verified: true,
-        phone_verified_at: new Date().toISOString()
-      })
-      .eq('id', user_id)
       .select(USER_SAFE_FIELDS)
-      .single();
+      .or(`google_id.eq.${googleId},email.eq.${googleEmail}`)
+      .limit(2);
 
-    if (userError) {
-      console.error('[Auth] Phone verification failed:', userError);
-      return res.status(500).json({ error: 'Failed to verify phone' });
+    let userId: string;
+    let isNewUser = false;
+
+    if (existingUsers && existingUsers.length > 0) {
+      // User sudah ada — link Google account jika belum
+      const user = existingUsers[0];
+      userId = user.id;
+
+      // Update google_id dan avatar jika belum di-set
+      const updateData: Record<string, any> = {};
+      if (!user.google_id) updateData.google_id = googleId;
+      if (!user.avatar_url && googleAvatar) updateData.avatar_url = googleAvatar;
+      if (user.auth_provider !== 'google' && !user.google_id) updateData.auth_provider = 'google';
+      if (!user.name && googleName) updateData.name = googleName;
+      updateData.last_login_at = new Date().toISOString();
+
+      if (Object.keys(updateData).length > 0) {
+        await getSupabase()
+          .from('users')
+          .update(updateData)
+          .eq('id', userId);
+      }
+    } else {
+      // User baru — buat akun otomatis
+      isNewUser = true;
+      const { data: newUser, error: createError } = await getSupabase()
+        .from('users')
+        .insert({
+          email: googleEmail.toLowerCase(),
+          name: googleName,
+          avatar_url: googleAvatar,
+          google_id: googleId,
+          is_active: true,
+          phone_verified: false,
+          profile_completed: true,
+          auth_provider: 'google'
+        })
+        .select('id')
+        .single();
+
+      if (createError) {
+        console.error('[Auth] Google user creation failed:', createError);
+        return res.status(500).json({ error: 'Failed to create account' });
+      }
+
+      userId = newUser.id;
     }
 
-    // Create session
-    const session = await createSession(user.id, req);
+    // Buat custom session
+    const session = await createSession(userId, req);
+
+    // Ambil user data lengkap
+    const { data: userData } = await getSupabase()
+      .from('users')
+      .select(USER_SAFE_FIELDS)
+      .eq('id', userId)
+      .single();
 
     return res.status(200).json({
       success: true,
-      message: 'Phone verified successfully',
-      user,
+      message: isNewUser ? 'Akun Google berhasil dibuat' : 'Login Google berhasil',
+      user: { ...userData, profile_completed: userData?.profile_completed ?? true },
       ...session,
-      next_step: 'complete_profile'
+      is_new_user: isNewUser
     });
   } catch (error) {
-    console.error('[Auth] Verify phone error:', error);
+    console.error('[Auth] Google callback error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -800,8 +795,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleLogin(req, res);
       case 'signup':
         return await handleSignup(req, res);
-      case 'verify-phone':
-        return await handleVerifyPhone(req, res);
+      case 'google-callback':
+        return await handleGoogleCallback(req, res);
       case 'validate-session':
         return await handleValidateSession(req, res);
       case 'logout':

@@ -38,6 +38,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    // Cache: private karena data spesifik per order, short TTL untuk polling
+    res.setHeader('Cache-Control', 'private, max-age=10, stale-while-revalidate=20');
+
     // Return order status information
     return res.status(200).json({
       order_id: orderData.id,

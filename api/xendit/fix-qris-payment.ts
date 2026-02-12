@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         expiry_date: invoiceData.expiry_date || existingPayment.expiry_date
       })
       .eq('xendit_id', paymentId)
-      .select()
+      .select('xendit_id, status, payment_data')
       .single();
 
     if (updateError) {

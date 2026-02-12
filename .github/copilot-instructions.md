@@ -10,7 +10,8 @@ These instructions guide AI assistants (including GitHub Copilot) when working o
 - **Styling**: Tailwind CSS + Cyber Compact Design System V3
 - **Payments**: Xendit Payment Gateway
 - **Realtime**: Supabase Realtime subscriptions
-- **Messaging**: WhatsApp Business API (dynamic provider)
+- **Authentication**: Google OAuth (via Supabase Auth) + Email/Password (custom session)
+- **Messaging**: WhatsApp Business API (grup admin saja, individual customer WA dihapus Feb 2026)
 
 ---
 
@@ -856,6 +857,142 @@ useEffect(() => {
 - [ ] Frontend subscribe via `supabase.channel().on('postgres_changes', ...)`
 - [ ] Cleanup subscription di `useEffect` return
 - [ ] Dedup event di callback (cek ID sebelum append)
+
+---
+
+## 📊 Egress Optimization (KRITIKAL — Budget 300GB/bulan)
+
+**KONTEKS**: Supabase egress pernah meledak hingga 1.8TB/bulan. Limit plan adalah **300GB/bulan**. Setiap perubahan yang menyentuh database query WAJIB mempertimbangkan egress.
+
+### Prinsip Utama
+
+1. **JANGAN pernah gunakan `select('*')`** — selalu list kolom eksplisit
+2. **Gunakan RPC untuk agregasi** — jangan unduh ribuan baris untuk dihitung di client
+3. **Gunakan `{ count: 'exact', head: true }`** untuk menghitung jumlah baris tanpa transfer data
+4. **Selalu pasang `.limit()`** pada query yang bisa mengembalikan banyak baris
+5. **Cache response API** dengan `setCacheHeaders()` — hindari hit berulang yang sama
+6. **Realtime subscription HARUS difilter** — jangan subscribe ke seluruh tabel
+
+### Aturan Query Supabase
+
+```typescript
+// ❌ FATAL: Mengunduh SEMUA baris untuk dihitung di client
+const { data } = await supabase.from('orders').select('amount').in('status', ['paid', 'completed']);
+const revenue = data.reduce((sum, o) => sum + o.amount, 0); // 10.000 baris × 8 byte = 80KB per hit
+
+// ✅ BENAR: Agregasi di database via RPC (return 1 angka = ~10 byte)
+const { data } = await supabase.rpc('get_total_revenue');
+
+// ❌ FATAL: Select semua kolom
+const { data } = await supabase.from('products').select('*');
+
+// ✅ BENAR: Hanya kolom yang dibutuhkan
+const { data } = await supabase.from('products').select('id, name, price, image');
+
+// ❌ BURUK: Mengunduh semua baris untuk menghitung jumlah
+const { data } = await supabase.from('users').select('id');
+const count = data.length;
+
+// ✅ BENAR: Head-only count (nol transfer data)
+const { count } = await supabase.from('users').select('id', { count: 'exact', head: true });
+
+// ❌ BURUK: Query tanpa limit
+const { data } = await supabase.from('orders').select('created_at, amount, status');
+
+// ✅ BENAR: Selalu pasang limit
+const { data } = await supabase.from('orders').select('created_at, amount, status').limit(100);
+```
+
+### RPC Functions yang Tersedia
+
+| Function | Menggantikan | Hemat Egress |
+|---|---|---|
+| `get_dashboard_stats()` | 7+ query paralel + client-side reduce | ~95% |
+| `get_total_revenue()` | SELECT amount FROM orders + SUM di client | ~99% |
+| `get_average_rating()` | SELECT rating FROM reviews + AVG di client | ~99% |
+| `get_orders_time_series(start, end)` | SELECT semua orders + bucket di client | ~90% |
+| `get_order_status_time_series(start, end)` | SELECT semua orders + group di client | ~90% |
+| `get_top_products(start, end, limit)` | SELECT semua orders + 2 query + aggregate client | ~95% |
+| `get_product_stats()` | SELECT semua products + filter/reduce di client | ~95% |
+
+```typescript
+// ✅ Contoh penggunaan RPC
+const { data } = await supabase.rpc('get_dashboard_stats');
+// data = { totalOrders: 150, totalRevenue: 50000000, totalUsers: 80, ... }
+// 1 query = ~200 byte vs 7+ query = ~50KB
+```
+
+### Aturan Realtime Subscription (Egress)
+
+```typescript
+// ❌ FATAL: Subscribe ke SEMUA notifikasi — setiap user menerima semua event
+supabase.channel('notif').on('postgres_changes', {
+  event: 'INSERT', schema: 'public', table: 'customer_notifications'
+}, callback);
+
+// ✅ BENAR: Filter server-side berdasarkan user
+supabase.channel(`notif:${userId}`).on('postgres_changes', {
+  event: 'INSERT', schema: 'public', table: 'customer_notifications',
+  filter: `user_id=eq.${userId}`
+}, callback);
+```
+
+### Aturan Polling
+
+| Komponen | Interval Minimum | Alasan |
+|---|---|---|
+| Purchase ticker (public) | 15 menit | Data jarang berubah, banyak visitor |
+| Notification fallback | 60 detik | Hanya jika realtime gagal |
+| Admin cache check | 5 menit | Admin panel jarang banyak user |
+| Chat safety-net | 5 menit | Hanya backup, realtime utama |
+
+```typescript
+// ❌ BURUK: Polling terlalu sering
+setInterval(fetchData, 5000); // Setiap 5 detik
+
+// ✅ BENAR: Gunakan interval yang wajar
+setInterval(fetchData, 60000); // Setiap 60 detik (untuk fallback)
+// Atau lebih baik: gunakan Realtime sebagai mekanisme utama
+```
+
+### Aturan API Cache Headers
+
+```typescript
+import { setCacheHeaders, CacheStrategies } from './_utils/cacheControl';
+
+// Data statis/jarang berubah → cache panjang
+setCacheHeaders(res, CacheStrategies.Long);     // 10 menit
+setCacheHeaders(res, CacheStrategies.Extended);  // 1 jam
+
+// Data dinamis tapi tidak perlu real-time → cache pendek
+setCacheHeaders(res, CacheStrategies.Medium);    // 5 menit
+
+// Data yang HARUS real-time → no cache
+setCacheHeaders(res, CacheStrategies.NoCache);
+```
+
+### Write-path `.select()` (Insert/Update return)
+
+```typescript
+// ❌ KURANG OPTIMAL: Return semua kolom setelah insert
+const { data } = await supabase.from('products').insert(payload).select();
+
+// ✅ LEBIH BAIK: Return hanya kolom yang dibutuhkan
+const { data } = await supabase.from('products').insert(payload).select('id, name, price');
+
+// ✅ TERBAIK: Jika tidak butuh return data
+const { error } = await supabase.from('products').insert(payload);
+```
+
+### Checklist Fitur Baru (Egress)
+
+- [ ] Tidak ada `select('*')` — semua query list kolom eksplisit
+- [ ] Agregasi besar (SUM, AVG, COUNT) → gunakan RPC, bukan client-side
+- [ ] Query yang bisa return banyak baris → pasang `.limit()`
+- [ ] Realtime subscription → filter server-side (jangan subscribe seluruh tabel)
+- [ ] Polling interval → minimum 60 detik untuk fallback
+- [ ] API response → pasang `setCacheHeaders()` yang sesuai
+- [ ] Write-path → return hanya kolom yang dibutuhkan atau tidak return sama sekali
 
 ---
 

@@ -114,7 +114,7 @@ export async function createSampleReviews(): Promise<void> {
 /** Ambil daftar kategori aktif */
 export async function getCategories(): Promise<Array<{ id: string; name: string; slug?: string }>> {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('categories').select('id, name, slug').eq('is_active', true).order('name');
+  const { data, error } = await supabase.from('categories').select('id, name, slug').eq('is_active', true).order('name').limit(200);
   if (error) throw error;
   return data || [];
 }
@@ -122,7 +122,7 @@ export async function getCategories(): Promise<Array<{ id: string; name: string;
 /** Ambil daftar game title aktif */
 export async function getGameTitles(): Promise<Array<{ id: string; name: string; slug?: string }>> {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('game_titles').select('id, name, slug').eq('is_active', true).order('name');
+  const { data, error } = await supabase.from('game_titles').select('id, name, slug').eq('is_active', true).order('name').limit(200);
   if (error) throw error;
   return data || [];
 }
@@ -130,7 +130,7 @@ export async function getGameTitles(): Promise<Array<{ id: string; name: string;
 /** Ambil daftar tier aktif */
 export async function getTiers(): Promise<Array<{ id: string; name: string; slug?: string }>> {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('tiers').select('id, name, slug').eq('is_active', true).order('name');
+  const { data, error } = await supabase.from('tiers').select('id, name, slug').eq('is_active', true).order('name').limit(200);
   if (error) throw error;
   return data || [];
 }

@@ -203,7 +203,7 @@ const AdminNotificationsPage: React.FC = () => {
               placeholder="Cari nama customer, produk..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-lg text-xs text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)]/50 transition-colors"
+              className="w-full h-11 pl-9 pr-3 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-lg text-base sm:text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)]/50 transition-colors"
             />
           </div>
 
@@ -295,7 +295,7 @@ const AdminNotificationsPage: React.FC = () => {
                   <button
                     onClick={(e) => toggleSelect(e, notification.id)}
                     className={cn(
-                      'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 mt-0.5',
+                      'flex-shrink-0 w-8 h-8 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center transition-all duration-200 mt-0.5',
                       isSelected
                         ? 'bg-[var(--admin-accent)] border-[var(--admin-accent)]'
                         : 'border-[var(--admin-border-lighter)] hover:border-[var(--admin-text-tertiary)] bg-transparent'
@@ -388,20 +388,20 @@ const AdminNotificationsPage: React.FC = () => {
                     {!notification.is_read && (
                       <button
                         onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                        className="p-1.5 rounded-lg bg-[var(--admin-bg-card)] hover:bg-[var(--admin-success-bg)] border border-[var(--admin-border)] hover:border-[var(--admin-success-border)] transition-all"
+                        className="p-2.5 rounded-lg bg-[var(--admin-bg-card)] hover:bg-[var(--admin-success-bg)] border border-[var(--admin-border)] hover:border-[var(--admin-success-border)] transition-all touch-manipulation active:scale-95"
                         aria-label="Tandai terbaca"
                         title="Tandai terbaca"
                       >
-                        <Check size={12} className="text-[var(--admin-text-muted)] hover:text-[var(--admin-success)]" />
+                        <Check size={16} className="text-[var(--admin-text-muted)] hover:text-[var(--admin-success)]" />
                       </button>
                     )}
                     <button
                       onClick={(e) => handleDelete(e, notification.id)}
-                      className="p-1.5 rounded-lg bg-[var(--admin-bg-card)] hover:bg-[var(--admin-accent)]/20 border border-[var(--admin-border)] hover:border-[var(--admin-accent)]/30 transition-all"
+                      className="p-2.5 rounded-lg bg-[var(--admin-bg-card)] hover:bg-[var(--admin-accent)]/20 border border-[var(--admin-border)] hover:border-[var(--admin-accent)]/30 transition-all touch-manipulation active:scale-95"
                       aria-label="Hapus"
                       title="Hapus"
                     >
-                      <Trash2 size={12} className="text-[var(--admin-text-muted)] hover:text-[var(--admin-accent-light)]" />
+                      <Trash2 size={16} className="text-[var(--admin-text-muted)] hover:text-[var(--admin-accent-light)]" />
                     </button>
                   </div>
                 </div>

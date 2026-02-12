@@ -1192,11 +1192,23 @@ textarea.admin-input {
   gap: var(--cyber-space-xs);
 }
 
-/* Admin Page Container */
+/* Admin Page Container — Shell sudah beri p-3/p-4, jadi padding di sini minimal */
 .admin-page {
   min-height: calc(100vh - 4rem);
-  padding: var(--cyber-space-2xl);
+  padding: 0;
   background: #000000;
+}
+
+@media (min-width: 640px) {
+  .admin-page {
+    padding: var(--cyber-space-sm);
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-page {
+    padding: var(--cyber-space-base);
+  }
 }
 
 /* Admin Buttons */
@@ -1344,19 +1356,33 @@ textarea.admin-input {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--cyber-space-lg);
-  padding: var(--cyber-space-lg);
+  justify-content: center;
+  gap: var(--cyber-space-md);
+  padding: var(--cyber-space-md);
   background: rgba(255, 255, 255, 0.03);
   border-radius: var(--cyber-radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+@media (min-width: 640px) {
+  .admin-pagination {
+    justify-content: space-between;
+    gap: var(--cyber-space-lg);
+    padding: var(--cyber-space-lg);
+  }
+}
+
 .admin-pagination-info {
-  display: flex;
+  display: none;
   align-items: center;
   color: var(--cyber-text-secondary);
   font-size: var(--cyber-text-sm);
+}
+
+@media (min-width: 640px) {
+  .admin-pagination-info {
+    display: flex;
+  }
 }
 
 .admin-pagination-nav {

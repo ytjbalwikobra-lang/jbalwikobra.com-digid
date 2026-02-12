@@ -64,7 +64,7 @@ export const AdminHeroSection: React.FC<AdminHeroSectionProps> = ({
       className={cn(
         'relative overflow-hidden rounded-cyber-2xl border border-[var(--cyber-border)]',
         'bg-gradient-to-br from-[var(--cyber-bg-pure)] via-[var(--cyber-bg-surface)] to-[var(--cyber-bg-pure)]',
-        compact ? 'px-4 py-4' : 'px-5 py-6',
+        compact ? 'px-3 py-3 sm:px-4 sm:py-4' : 'px-3 py-4 sm:px-5 sm:py-6',
         className
       )}
     >

@@ -1,6 +1,7 @@
 # Analisis Komprehensif: Flow Login, Sign Up, dan Profile
 
 **Tanggal Analisis:** 31 Desember 2025  
+**Terakhir Diupdate:** 13 Februari 2026 (Auth Revamp V2 — Google OAuth)  
 **Repository:** jbalwikobra.com-digid  
 **Branch:** Production
 
@@ -8,92 +9,118 @@
 
 ## 📋 Executive Summary
 
-Aplikasi menggunakan **dual authentication system** dengan kombinasi:
-1. **Traditional Auth System** - Sistem custom berbasis phone/email untuk user biasa
-2. **Supabase Auth (Legacy)** - Masih ada referensi tapi tidak sepenuhnya digunakan
-3. **Session-based Authentication** - Menggunakan token tersimpan di localStorage
+> **UPDATE Feb 2026:** Auth system dirombak total. WhatsApp OTP dihapus, Google OAuth ditambahkan.
+
+Aplikasi menggunakan **hybrid authentication system**:
+1. **Google OAuth** — Login via Google menggunakan Supabase Auth sebagai OAuth provider
+2. **Email + Password** — Signup dan login tradisional berbasis email
+3. **Custom Session** — Semua metode login menghasilkan `session_token` custom (bukan Supabase Auth session)
+
+**Supabase Auth** digunakan HANYA sebagai OAuth relay untuk Google login. Setelah access_token didapat, custom session dibuat dan Supabase Auth session langsung di-signOut.
 
 **Status Kondisi:**
-- ✅ Login flow: **Fungsional lengkap** (Email & Phone)
-- ✅ Signup flow: **Fungsional dengan verifikasi WhatsApp**
+- ✅ Login flow: **Google OAuth + Email/Password**
+- ✅ Signup flow: **Email-first (tanpa WhatsApp OTP)**
 - ✅ Profile management: **Basic implementation dengan caching**
-- ⚠️ Security concerns: Token di localStorage (perlu review)
-- ⚠️ Dual system complexity: Ada overlapping antara custom auth dan Supabase
+- ✅ Custom session system: session_token di localStorage → validate_session() RPC
+- ❌ WhatsApp login/signup: **DIHAPUS** (Feb 2026)
+- ❌ Phone verification: **DIHAPUS** (Feb 2026)
+- ❌ Individual WA notifications: **DIHAPUS** (Feb 2026, grup WA tetap aktif)
 
 ---
 
 ## 🔐 1. LOGIN FLOW
 
-### 1.1 Arsitektur Login
+### 1.1 Arsitektur Login (Feb 2026 — Revamped)
+
+#### A. Google OAuth Login
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   FRONTEND (React)                          │
 │                                                             │
 │  TraditionalAuthPage.tsx                                   │
-│  ├─ Email Login Tab                                        │
-│  │  ├─ Email input                                         │
-│  │  ├─ Password input                                      │
-│  │  └─ Turnstile Captcha                                   │
-│  │                                                          │
-│  └─ Phone Login Tab                                        │
-│     ├─ Phone input (normalized)                            │
-│     ├─ Password input                                      │
-│     └─ Turnstile Captcha                                   │
+│  └─ Google OAuth Button                                    │
+│     └─ onClick → loginWithGoogle()                         │
+│                                                             │
+│  TraditionalAuthContext.tsx → loginWithGoogle()             │
+│  └─ supabase.auth.signInWithOAuth({                        │
+│       provider: 'google',                                  │
+│       redirectTo: '${origin}/auth?callback=google'         │
+│     })                                                      │
+└─────────────────────────────────────────────────────────────┘
+              ↓ Browser redirect
+┌─────────────────────────────────────────────────────────────┐
+│              GOOGLE OAUTH + SUPABASE AUTH                   │
+│                                                             │
+│  1. Browser → Google OAuth consent screen                  │
+│  2. Google → Supabase callback                             │
+│     (https://xxx.supabase.co/auth/v1/callback)             │
+│  3. Supabase → PKCE code exchange                          │
+│  4. Redirect ke: /auth?callback=google&code=xxx            │
+└─────────────────────────────────────────────────────────────┘
+              ↓ Page reload
+┌─────────────────────────────────────────────────────────────┐
+│              CALLBACK HANDLER (Context useEffect)           │
+│                                                             │
+│  1. Detect ?callback=google di URL                         │
+│  2. onAuthStateChange → tunggu PKCE code exchange selesai  │
+│  3. Dapat Supabase Auth session (access_token)             │
+│  4. POST /api/auth?action=google-callback                  │
+│     {access_token}                                         │
+│  5. Backend: validate token → find/create user →           │
+│     create custom session                                  │
+│  6. Simpan session_token di localStorage                   │
+│  7. SignOut dari Supabase Auth (pakai custom session saja) │
+│  8. Set user state → redirect ke home/admin                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**PKCE Flow Note:** Supabase JS v2.58+ menggunakan PKCE flow by default.
+Setelah OAuth redirect, URL mengandung `?code=xxx`. Supabase client
+secara async menukar code ini menjadi session. Handler menggunakan
+`onAuthStateChange` + `getSession()` fallback untuk menangkap session
+yang sudah siap.
+
+#### B. Email + Password Login
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TraditionalAuthPage.tsx                                   │
+│  ├─ Email input                                             │
+│  └─ Password input                                          │
 │                                                             │
 │  Context: TraditionalAuthContext.tsx                       │
-│  └─ login(identifier, password, turnstileToken)            │
+│  └─ login(email, password)                                 │
 └─────────────────────────────────────────────────────────────┘
                            ↓
                     POST /api/auth?action=login
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                   BACKEND (Vercel API)                      │
-│                                                             │
 │  api/auth.ts → handleLogin()                               │
 │  ├─ 1. Validate input (identifier & password)              │
-│  ├─ 2. Verify Turnstile token (if configured)             │
-│  ├─ 3. Find user by phone OR email                         │
-│  ├─ 4. Verify password (bcrypt)                            │
-│  ├─ 5. Check account status (is_active)                    │
-│  ├─ 6. Create session token (32 bytes crypto)              │
-│  ├─ 7. Store session in user_sessions table                │
-│  ├─ 8. Update last_login_at                                │
-│  └─ 9. Return user data + session_token                    │
-│                                                             │
-│  Database Tables:                                           │
-│  ├─ users (id, email, phone, password_hash, is_admin)      │
-│  └─ user_sessions (session_token, user_id, expires_at)     │
+│  ├─ 2. Find user by phone OR email                         │
+│  ├─ 3. Verify password (bcrypt)                            │
+│  ├─ 4. Check account status (is_active)                    │
+│  ├─ 5. Create session token (32 bytes crypto)              │
+│  ├─ 6. Store session in user_sessions table                │
+│  ├─ 7. Update last_login_at                                │
+│  └─ 8. Return user data + session_token                    │
 └─────────────────────────────────────────────────────────────┘
                            ↓
-                    Response dengan:
-                    - user (safe data tanpa password_hash)
-                    - session_token
-                    - expires_at (7 hari)
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   CLIENT SIDE STORAGE                       │
-│                                                             │
-│  localStorage:                                              │
-│  ├─ session_token → untuk API authentication               │
-│  ├─ user_data → JSON user profile                          │
-│  └─ session_expires → timestamp expiry                      │
-│                                                             │
-│  Context State:                                             │
-│  ├─ user (User object)                                      │
-│  └─ session (Session object)                                │
-└─────────────────────────────────────────────────────────────┘
+              localStorage: session_token, user_data
 ```
 
 ### 1.2 Login Features
 
-**Metode Login:**
+**Metode Login (Feb 2026):**
+- ✅ **Google OAuth** (via Supabase Auth → custom session)
 - ✅ **Email + Password**
-- ✅ **Phone + Password** (dengan normalisasi nomor Indonesia)
-- ✅ **Turnstile Captcha** (Cloudflare) - optional jika diconfig
+- ❌ ~~Phone + Password~~ (masih bisa secara teknis, tapi UI sudah dihapus)
+- ❌ ~~WhatsApp OTP~~ (DIHAPUS)
 
 **Security Features:**
-- ✅ Rate limiting (5 request/menit per IP)
+- ✅ Rate limiting (5 request/menit per IP untuk login, 10 untuk google-callback)
 - ✅ Password hashing dengan bcrypt (10 rounds)
 - ✅ Session expiry (7 hari)
 - ✅ Account status check (is_active)
@@ -153,101 +180,123 @@ if (login success) {
 
 ## 📝 2. SIGN UP FLOW
 
-### 2.1 Arsitektur Sign Up (3-Step Process)
+### 2.1 Arsitektur Sign Up (Feb 2026 — Revamped)
+
+> **PERUBAHAN BESAR:** Signup sekarang **1-step** (email-first), tanpa WhatsApp OTP.
+> User juga bisa signup langsung via Google OAuth.
+
+#### A. Google OAuth Signup
+
+Sama dengan Google OAuth Login (Section 1.1A). Jika user belum ada di database,
+backend otomatis membuat akun baru dengan `auth_provider: 'google'`.
+
+#### B. Email + Password Signup (1-Step)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   STEP 1: REGISTRATION                      │
+│                   REGISTRATION (1-Step)                     │
 │                                                             │
 │  TraditionalAuthPage.tsx (mode='signup')                   │
 │  ├─ Name input                                              │
-│  ├─ Phone input (WhatsApp number)                          │
+│  ├─ Email input                                             │
 │  ├─ Password input                                          │
-│  ├─ Confirm password                                        │
-│  └─ Turnstile Captcha                                       │
+│  └─ Confirm password                                        │
 │                                                             │
 │  Validations:                                               │
 │  ├─ Name not empty                                          │
-│  ├─ Phone not empty                                         │
+│  ├─ Email not empty                                         │
 │  ├─ Password min 6 chars                                    │
 │  └─ Password === confirmPassword                            │
 └─────────────────────────────────────────────────────────────┘
                            ↓
                     POST /api/auth?action=signup
-                    {phone, password, name, turnstile_token}
+                    {email, password, name}
                            ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                   BACKEND: SIGNUP HANDLER                   │
 │                                                             │
 │  api/auth.ts → handleSignup()                              │
 │  ├─ 1. Validate inputs                                      │
-│  ├─ 2. Verify Turnstile token                              │
-│  ├─ 3. Check if user exists                                 │
-│  │     ├─ If exists & verified → Error                      │
-│  │     ├─ If exists & not verified → Update                 │
-│  │     └─ If not exists → Create new                        │
-│  ├─ 4. Hash password (bcrypt)                               │
-│  ├─ 5. Insert/Update users table                            │
-│  │     └─ phone_verified = false                            │
-│  │     └─ profile_completed = false                         │
-│  ├─ 6. Generate 6-digit verification code                   │
-│  ├─ 7. Store in phone_verifications table                   │
-│  │     └─ expires_at: 15 minutes                            │
-│  ├─ 8. Send WhatsApp verification code                      │
-│  │     └─ DynamicWhatsAppService                            │
-│  └─ 9. Return user_id for verification step                 │
+│  ├─ 2. Check if email already exists                        │
+│  │     └─ If exists → Error                                 │
+│  ├─ 3. Hash password (bcrypt)                               │
+│  ├─ 4. Insert users table                                   │
+│  │     ├─ profile_completed = true                          │
+│  │     └─ auth_provider = 'email'                           │
+│  ├─ 5. Create session token (langsung, tanpa verifikasi)    │
+│  └─ 6. Return user + session_token                          │
 └─────────────────────────────────────────────────────────────┘
                            ↓
-                    Response: {success, user_id, message}
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   STEP 2: PHONE VERIFICATION                │
-│                                                             │
-│  TraditionalAuthPage.tsx (mode='verify')                   │
-│  └─ 6-digit code input (auto-format)                        │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-                    POST /api/auth?action=verify-phone
-                    {user_id, verification_code}
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   BACKEND: VERIFY HANDLER                   │
-│                                                             │
-│  api/auth.ts → handleVerifyPhone()                         │
-│  ├─ 1. Find verification record                             │
-│  │     └─ user_id, code, is_used=false                      │
-│  ├─ 2. Check if expired (15 min)                            │
-│  ├─ 3. Mark verification as used                            │
-│  ├─ 4. Update user: phone_verified = true                   │
-│  ├─ 5. Create session token                                 │
-│  ├─ 6. Store in user_sessions table                         │
-│  └─ 7. Return user + session + next_step                    │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-                    Response: {user, session_token, next_step='complete_profile'}
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   STEP 3: PROFILE COMPLETION                │
-│                                                             │
-│  TraditionalAuthPage.tsx (mode='complete')                 │
-│  ├─ Email input                                             │
-│  ├─ Full name input                                         │
-│  ├─ Password input                                          │
-│  └─ Confirm password input                                  │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-                    POST /api/auth?action=complete-profile
-                    {user_id, email, name, password}
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   BACKEND: COMPLETE PROFILE                 │
-│                                                             │
-│  api/auth.ts → handleCompleteProfile()                     │
-│  ├─ 1. Validate all fields                                  │
-│  ├─ 2. Hash password                                        │
-│  ├─ 3. Update users table:                                  │
-│  │     ├─ name = new name                                   │
-│  │     ├─ email = email                                     │
+              localStorage: session_token, user_data
+              → Redirect ke home (sudah login)
+```
+
+**Yang DIHAPUS dari signup (Feb 2026):**
+- ❌ Phone input (WhatsApp number)
+- ❌ Turnstile Captcha
+- ❌ WhatsApp verification code (6-digit OTP)
+- ❌ Mode 'verify' (phone verification step)
+- ❌ `handleVerifyPhone()` di backend
+- ❌ `DynamicWhatsAppService.sendVerificationCode()`
+- ❌ `DynamicWhatsAppService.sendWelcomeMessage()`
+- ❌ `phone_verifications` table (masih ada di DB, tidak digunakan)
+
+### 2.2 Database Schema (Updated Feb 2026)
+
+**Users Table (kolom baru):**
+```sql
+-- Kolom ditambahkan migration 067
+ALTER TABLE users ADD COLUMN auth_provider VARCHAR(20) DEFAULT 'email';
+ALTER TABLE users ADD COLUMN avatar_url TEXT;
+ALTER TABLE users ADD COLUMN google_id TEXT;
+CREATE UNIQUE INDEX idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL;
+```
+
+### ~~2.3 WhatsApp Integration~~ (DIHAPUS Feb 2026)
+
+> WhatsApp tidak lagi digunakan untuk auth. `sendVerificationCode()` dan
+> `sendWelcomeMessage()` telah dihapus dari `DynamicWhatsAppService`.
+> WhatsApp masih digunakan untuk **grup notification** (admin) saja.
+
+---
+
+### 2.OLD — Arsitektur Sign Up Lama (DEPRECATED)
+
+<details>
+<summary>Klik untuk melihat flow signup lama (sebelum Feb 2026)</summary>
+
+Flow lama menggunakan 3-step process: Registration → Phone Verification → Profile Completion.
+Menggunakan WhatsApp OTP via `DynamicWhatsAppService.sendVerificationCode()`.
+
+Endpoint `verify-phone` sudah DIHAPUS dari backend.
+
+</details>
+
+### 2.x Profile Completion (Simplified)
+
+Profile completion sekarang hanya untuk kasus edge (misal: user lama yang belum lengkap).
+
+```
+  TraditionalAuthPage.tsx (mode='complete')
+  └─ Email input
+```
+
+POST `/api/auth?action=complete-profile` → update user → return updated data.
+
+---
+
+## 📡 3. API ENDPOINTS (Updated Feb 2026)
+
+| Action | Method | Deskripsi |
+|---|---|---|
+| `login` | POST | Login email/password |
+| `signup` | POST | Signup email-first (langsung dapat session) |
+| `google-callback` | POST | Proses Google OAuth access_token → custom session |
+| `validate-session` | POST | Validasi session_token |
+| `logout` | POST | Logout (single/all devices) |
+| `complete-profile` | POST | Lengkapi profil user |
+| `update-profile` | POST | Update profil user |
+| ~~`verify-phone`~~ | ~~POST~~ | ~~DIHAPUS (Feb 2026)~~ |
 │  │     ├─ password_hash = new hash                          │
 │  │     ├─ profile_completed = true                          │
 │  │     └─ profile_completed_at = now                        │

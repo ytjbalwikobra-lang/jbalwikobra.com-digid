@@ -28,7 +28,7 @@ export async function updateProductFields(id: string, fields: Partial<Pick<Produ
     // Fallback ke Supabase langsung
     if (!supabase) throw new Error('Supabase client not available');
     const updatePayload: any = { ...fields, updated_at: new Date().toISOString() };
-    const { data, error } = await supabase.from('products').update(updatePayload).eq('id', id).select();
+    const { data, error } = await supabase.from('products').update(updatePayload).eq('id', id).select('id, name, price, stock, is_active, image, images, updated_at');
     if (error) { console.error('[updateProductFields] Supabase error:', error); throw error; }
     if (!data || data.length === 0) { console.error('[updateProductFields] UPDATE BLOCKED - Empty response'); return null; }
 
@@ -106,22 +106,30 @@ export async function getProducts(page: number = 1, limit: number = 10, searchTe
   });
 }
 
-/** Ambil statistik produk */
+/** Ambil statistik produk (via RPC — 1 query server-side) */
 export async function getProductStats(): Promise<{ total: number; active: number; soldViaWeb: number; soldViaWA: number; totalValue: number; activeValue: number }> {
   return adminCache.getOrFetch('admin:product-stats', async () => {
     if (!supabase) throw new Error('Supabase client not available');
     try {
-      const { data: allProducts, error } = await supabase.from('products').select('price, is_active, archived_at, sold_channel');
-      if (error) throw error;
-      const products = allProducts || [];
-      return {
-        total: products.length,
-        active: products.filter(p => p.is_active && !p.sold_channel).length,
-        soldViaWeb: products.filter(p => p.sold_channel === 'web').length,
-        soldViaWA: products.filter(p => p.sold_channel === 'wa').length,
-        totalValue: products.reduce((sum, p) => sum + (p.price || 0), 0),
-        activeValue: products.filter(p => p.is_active && !p.sold_channel).reduce((sum, p) => sum + (p.price || 0), 0),
-      };
+      // RPC: agregasi di database — menggantikan SELECT semua baris + filter di client
+      const { data, error } = await (supabase as any).rpc('get_product_stats');
+      if (!error && data) {
+        return {
+          total: Number(data.total) || 0,
+          active: Number(data.active) || 0,
+          soldViaWeb: Number(data.soldViaWeb) || 0,
+          soldViaWA: Number(data.soldViaWA) || 0,
+          totalValue: Number(data.totalValue) || 0,
+          activeValue: Number(data.activeValue) || 0,
+        };
+      }
+      console.warn('[getProductStats] RPC fallback:', error?.message);
+      // Fallback: gunakan count head:true untuk menghitung jumlah saja
+      const [{ count: total }, { count: active }] = await Promise.all([
+        supabase.from('products').select('id', { count: 'exact', head: true }),
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true).is('sold_channel', null),
+      ]);
+      return { total: total || 0, active: active || 0, soldViaWeb: 0, soldViaWA: 0, totalValue: 0, activeValue: 0 };
     } catch (error) { console.error('[getProductStats] error:', error); return { total: 0, active: 0, soldViaWeb: 0, soldViaWA: 0, totalValue: 0, activeValue: 0 }; }
   }, { ttl: 300000 });
 }
@@ -205,7 +213,7 @@ export async function updateProduct(id: string, data: {
 
   // Fallback ke Supabase langsung
   if (!supabase) throw new Error('Supabase client not available');
-  const { data: products, error } = await supabase.from('products').update(finalUpdateData).eq('id', id).select();
+  const { data: products, error } = await supabase.from('products').update(finalUpdateData).eq('id', id).select('id, name, description, price, original_price, image, images, is_active, stock, created_at, updated_at, category_id, game_title_id, tier_id, has_rental, archived_at');
   if (error) throw error;
   adminCache.clear();
 

@@ -14,6 +14,12 @@ interface ChatMessageViewProps {
   messages: ChatMessage[];
   /** Status loading pesan */
   loading: boolean;
+  /** Apakah ada pesan lebih lama yang bisa dimuat */
+  hasMore?: boolean;
+  /** Status loading pesan lama */
+  loadingMore?: boolean;
+  /** Handler muat pesan lebih lama */
+  onLoadMore?: () => void;
 }
 
 /** Kelompokkan pesan berdasarkan tanggal untuk separator */
@@ -35,14 +41,14 @@ function groupMessagesByDate(messages: ChatMessage[]): { date: string; msgs: Cha
 
 /** Tampilan daftar pesan LINE-style dengan bubble, avatar, tanggal, gambar, dan auto-scroll */
 export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
-  ({ messages, loading }, ref) => {
+  ({ messages, loading, hasMore, loadingMore, onLoadMore }, ref) => {
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
     const dateGroups = useMemo(() => groupMessagesByDate(messages), [messages]);
 
     return (
       <>
       {/* Latar belakang chat LINE-style dengan pattern halus */}
-      <div className="flex-1 overflow-y-auto bg-[#1a1a2e] relative">
+      <div className="flex-1 overflow-y-auto bg-[var(--admin-bg-pure)] relative">
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0px, currentColor 1px, transparent 1px, transparent 14px)',
         }} />
@@ -62,11 +68,24 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
             </p>
           </div>
         ) : (
-          dateGroups.map((group) => (
+          <>
+          {/* Tombol muat pesan lebih lama */}
+          {hasMore && (
+            <div className="flex justify-center mb-3">
+              <button
+                onClick={onLoadMore}
+                disabled={loadingMore}
+                className="px-4 py-1.5 bg-[var(--admin-bg-elevated)] text-[var(--admin-text-secondary)] text-[11px] font-medium rounded-full backdrop-blur-sm hover:bg-[var(--admin-bg-surface)] transition-colors disabled:opacity-50 touch-manipulation"
+              >
+                {loadingMore ? 'Memuat...' : 'Muat pesan sebelumnya'}
+              </button>
+            </div>
+          )}
+          {dateGroups.map((group) => (
             <div key={group.date}>
               {/* Separator tanggal — sticky & centered */}
               <div className="flex justify-center my-3">
-                <span className="px-3 py-1 bg-black/50 text-white/80 text-[11px] font-medium rounded-full backdrop-blur-sm shadow-sm">
+                <span className="px-3 py-1 bg-[var(--admin-bg-elevated)] text-[var(--admin-text-secondary)] text-[11px] font-medium rounded-full backdrop-blur-sm shadow-sm">
                   {group.date}
                 </span>
               </div>
@@ -82,7 +101,7 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                 if (isSystem) {
                   return (
                     <div key={msg.id} className="flex justify-center my-2">
-                      <span className="px-3 py-1 bg-black/40 text-white/70 text-[11px] rounded-full backdrop-blur-sm max-w-[85%] text-center">
+                      <span className="px-3 py-1 bg-[var(--admin-bg-elevated)] text-[var(--admin-text-tertiary)] text-[11px] rounded-full backdrop-blur-sm max-w-[85%] text-center">
                         {msg.message}
                       </span>
                     </div>
@@ -102,7 +121,7 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                     {isCustomer && (
                       <div className={cn(
                         'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
-                        'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-sm',
+                        'bg-gradient-to-br from-[var(--admin-info)] to-[var(--admin-accent)] text-white shadow-sm',
                         isSameSender ? 'invisible' : 'visible'
                       )}>
                         <span className="text-[11px] font-bold">
@@ -121,18 +140,18 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                         className={cn(
                           'relative px-3 py-2 shadow-sm',
                           isAdmin
-                            ? 'bg-[#06C755] text-white rounded-2xl rounded-br-sm'
-                            : 'bg-white text-gray-800 rounded-2xl rounded-bl-sm'
+                            ? 'bg-[var(--admin-success)] text-white rounded-2xl rounded-br-sm'
+                            : 'bg-[var(--admin-bg-elevated)] text-[var(--admin-text)] rounded-2xl rounded-bl-sm'
                         )}
                       >
                         {/* Nama pengirim */}
                         {isCustomer && !isSameSender && (
-                          <p className="text-[10px] font-semibold text-blue-600 mb-0.5">
+                          <p className="text-[10px] font-semibold text-[var(--admin-info)] mb-0.5">
                             {msg.senderName}
                           </p>
                         )}
                         {isAdmin && !isSameSender && (
-                          <p className="text-[10px] font-semibold text-white/80 mb-0.5">
+                          <p className="text-[10px] font-semibold text-[var(--admin-text-secondary)] mb-0.5">
                             {msg.senderName}
                           </p>
                         )}
@@ -151,13 +170,35 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                             />
                           </button>
                         )}
+                        {/* Lampiran dokumen (PDF, DOC, dll) */}
+                        {msg.messageType === 'file' && msg.attachmentUrl && (
+                          <a
+                            href={msg.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              'flex items-center gap-2 px-3 py-2 mb-1 rounded-lg max-w-[220px] transition-colors',
+                              isAdmin ? 'bg-[var(--admin-bg-surface)] hover:bg-[var(--admin-bg-elevated)]' : 'bg-[var(--admin-bg-surface)] hover:bg-[var(--admin-bg-elevated)]'
+                            )}
+                          >
+                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[11px] font-medium truncate">{msg.attachmentName || 'Dokumen'}</p>
+                              <p className={cn('text-[10px]', isAdmin ? 'text-[var(--admin-text-muted)]' : 'text-[var(--admin-text-muted)]')}>
+                                Klik untuk buka
+                              </p>
+                            </div>
+                          </a>
+                        )}
                         {msg.message && (
                           <p className="text-[13px] whitespace-pre-wrap leading-relaxed">{msg.message}</p>
                         )}
                       </div>
 
                       {/* Waktu — di samping bubble ala LINE */}
-                      <span className="text-[10px] text-white/40 shrink-0 pb-0.5 select-none">
+                      <span className="text-[10px] text-[var(--admin-text-muted)] shrink-0 pb-0.5 select-none">
                         {formatTime(msg.createdAt)}
                       </span>
                     </div>
@@ -166,7 +207,7 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                     {isAdmin && (
                       <div className={cn(
                         'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
-                        'bg-gradient-to-br from-[var(--admin-accent)] to-purple-500 text-white shadow-sm',
+                        'bg-gradient-to-br from-[var(--admin-accent)] to-[var(--admin-purple)] text-white shadow-sm',
                         isSameSender ? 'invisible' : 'visible'
                       )}>
                         <span className="text-[11px] font-bold">
@@ -178,22 +219,29 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                 );
               })}
             </div>
-          ))
+          ))}
+          </>
         )}
         {/* Elemen scroll anchor */}
         <div ref={ref} />
         </div>
       </div>
 
-      {/* Lightbox gambar — fullscreen overlay */}
+      {/* Lightbox gambar — fullscreen overlay, L1: keyboard escape */}
       {lightboxUrl && (
         <div
-          className="fixed inset-0 z-[500] bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[500] bg-[var(--admin-bg-pure)]/90 flex items-center justify-center p-4"
           onClick={() => setLightboxUrl(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Lightbox gambar"
+          tabIndex={-1}
         >
           <button
             onClick={() => setLightboxUrl(null)}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/15 text-white rounded-full flex items-center justify-center text-lg hover:bg-white/25 transition-colors backdrop-blur-sm"
+            className="absolute top-4 right-4 w-10 h-10 bg-[var(--admin-bg-elevated)] text-white rounded-full flex items-center justify-center text-lg hover:bg-[var(--admin-bg-surface)] transition-colors backdrop-blur-sm"
+            aria-label="Tutup lightbox"
           >
             ✕
           </button>

@@ -356,7 +356,7 @@ const AdminProductsDirect: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Cari produk..."
-              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:border-pink-500/50 focus:outline-none focus:ring-1 focus:ring-pink-500/50 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-2 bg-white/5 border border-white/10 rounded-lg text-sm sm:text-xs text-white placeholder-white/40 focus:border-pink-500/50 focus:outline-none focus:ring-1 focus:ring-pink-500/50 transition-all"
             />
           </div>
           
@@ -364,7 +364,7 @@ const AdminProductsDirect: React.FC = () => {
           <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg border border-white/10">
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded text-xs font-medium transition-all touch-manipulation ${
                 viewMode === 'list'
                   ? 'bg-pink-500 text-white shadow-lg'
                   : 'text-white/60 hover:text-white/80'
@@ -375,7 +375,7 @@ const AdminProductsDirect: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded text-xs font-medium transition-all touch-manipulation ${
                 viewMode === 'grid'
                   ? 'bg-pink-500 text-white shadow-lg'
                   : 'text-white/60 hover:text-white/80'
@@ -563,7 +563,7 @@ const AdminProductsDirect: React.FC = () => {
                                   cancelEditing();
                                 }
                               }}
-                              className={`w-32 px-2 py-1 bg-white/5 border rounded-lg text-white text-xs ${
+                              className={`w-32 px-3 py-2 bg-white/5 border rounded-lg text-white text-base sm:text-sm ${
                                 saving 
                                   ? 'border-pink-500 opacity-50 cursor-not-allowed' 
                                   : 'border-pink-500 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500'
@@ -599,22 +599,22 @@ const AdminProductsDirect: React.FC = () => {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleViewProduct(product)}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/5 text-white/70 hover:bg-white/10 transition-colors"
+                            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-white/5 text-white/70 hover:bg-white/10 active:bg-white/15 active:scale-95 transition-colors touch-manipulation"
                           >
-                            <Eye size={12} />
+                            <Eye size={14} className="sm:w-3 sm:h-3" />
                             <span>Lihat</span>
                           </button>
                           <button
                             onClick={() => handleEditProduct(product)}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 active:bg-pink-500/40 active:scale-95 transition-colors touch-manipulation"
                           >
-                            <Edit2 size={12} />
+                            <Edit2 size={14} className="sm:w-3 sm:h-3" />
                             <span>Edit</span>
                           </button>
                           <button
                             onClick={() => markSoldViaWA(product)}
                             disabled={!!product.sold_channel || !product.is_active}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
+                            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors touch-manipulation active:scale-95 ${
                               product.sold_channel || !product.is_active
                                 ? 'bg-white/5 text-white/30 cursor-not-allowed'
                                 : 'bg-pink-600/20 text-pink-400 hover:bg-pink-600/30'
@@ -707,7 +707,7 @@ const AdminProductsDirect: React.FC = () => {
                             cancelEditing();
                           }
                         }}
-                        className={`w-full px-2 py-1 bg-white/5 border rounded-lg text-white text-xs ${
+                        className={`w-full px-3 py-2 bg-white/5 border rounded-lg text-white text-base sm:text-sm ${
                           saving 
                             ? 'border-pink-500 opacity-50 cursor-not-allowed' 
                             : 'border-pink-500 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500'
@@ -737,14 +737,14 @@ const AdminProductsDirect: React.FC = () => {
                   <div className="flex items-center gap-1.5 pt-1">
                     <button
                       onClick={() => handleViewProduct(product)}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-white/5 text-white/70 hover:bg-white/10 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-white/5 text-white/70 hover:bg-white/10 active:bg-white/15 active:scale-95 transition-colors touch-manipulation"
                     >
                       <Eye size={12} />
                       <span>Lihat</span>
                     </button>
                     <button
                       onClick={() => handleEditProduct(product)}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 active:bg-pink-500/40 active:scale-95 transition-colors touch-manipulation"
                     >
                       <Edit2 size={12} />
                       <span>Edit</span>
@@ -752,7 +752,7 @@ const AdminProductsDirect: React.FC = () => {
                     <button
                       onClick={() => markSoldViaWA(product)}
                       disabled={!!product.sold_channel || !product.is_active}
-                      className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors touch-manipulation active:scale-95 ${
                         product.sold_channel || !product.is_active
                           ? 'bg-white/5 text-white/30 cursor-not-allowed'
                           : 'bg-pink-600/20 text-pink-400 hover:bg-pink-600/30'

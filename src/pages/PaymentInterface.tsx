@@ -99,7 +99,7 @@ const PaymentInterface: React.FC = () => {
             if (found) {
               clearInterval(pollInterval);
             }
-          }, 5000); // Poll every 5 seconds
+          }, 15000); // Poll setiap 15 detik (hemat egress)
           
           // Stop polling after 60 seconds
           setTimeout(() => {
@@ -171,12 +171,12 @@ const PaymentInterface: React.FC = () => {
           } catch (error) {
             console.error('Error polling for VA number:', error);
           }
-        }, 5000); // Poll every 5 seconds
+        }, 15000); // Poll setiap 15 detik (hemat egress)
         
-        // Stop polling after 60 seconds
+        // Stop polling after 90 seconds
         setTimeout(() => {
           clearInterval(pollForVA);
-        }, 60000);
+        }, 90000);
         
         return () => clearInterval(pollForVA);
       }, 2000); // Wait 2 seconds before starting polling
@@ -203,8 +203,7 @@ const PaymentInterface: React.FC = () => {
 
     const pollInterval = setInterval(async () => {
       try {
-        
-        // Try primary method - check by payment ID
+        // Cek status pembayaran via API
         const response = await fetch(`/api/xendit/get-payment?id=${paymentId}`);
         if (response.ok) {
           const data = await response.json();
@@ -250,7 +249,7 @@ const PaymentInterface: React.FC = () => {
       } catch (error) {
         console.error('Payment status polling error:', error);
       }
-    }, 5000); // Poll every 5 seconds for faster detection
+    }, 15000); // Poll setiap 15 detik — hemat egress, cukup cepat untuk deteksi pembayaran
 
     return () => clearInterval(pollInterval);
   }, [paymentData, paymentId, navigate]);

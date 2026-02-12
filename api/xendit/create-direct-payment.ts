@@ -167,14 +167,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .from('orders')
             .update(orderData)
             .eq('id', existing.id)
-            .select()
+            .select('id, status, amount')
             .single();
           createdOrder = data;
         } else {
           const { data } = await supabase
             .from('orders')
             .insert(orderData)
-            .select()
+            .select('id, status, amount')
             .single();
           createdOrder = data;
         }
@@ -310,9 +310,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const { error: saveError } = await supabase
           .from('payments')
-          .upsert(paymentRecord, { onConflict: 'xendit_id' })
-          .select()
-          .single();
+          .upsert(paymentRecord, { onConflict: 'xendit_id' });
 
         if (saveError) {
           console.error('[Payment] Failed to save payment:', saveError);
@@ -360,183 +358,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // Send WhatsApp notification to customer AFTER invoice is created
-    
-    // Send WhatsApp if we have customer mobile and payment was created successfully
-    // Don't require createdOrder because database might not be configured
-    if (customer?.mobile_number && xenditData?.id && order) {
-      try {
-        const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService.js');
-        const wa = new DynamicWhatsAppService();
-        
-        // Get contact phone for customer support
-        const contactPhone = await wa.getContactPhone();
-        
-        // Normalize phone number
-        let customerPhone = String(customer.mobile_number || '').replace(/\D/g, '');
-        if (customerPhone.startsWith('8')) customerPhone = '62' + customerPhone;
-        else if (customerPhone.startsWith('08')) customerPhone = '62' + customerPhone.substring(1);
-        else if (customerPhone.startsWith('0')) customerPhone = '62' + customerPhone.substring(1);
-        else if (!customerPhone.startsWith('62') && customerPhone.length >= 8) customerPhone = '62' + customerPhone;
-        
-        if (/^62\d{8,15}$/.test(customerPhone)) {
-          // Use order data from request, fallback to createdOrder if available
-          const productName = order.product_name || createdOrder?.product_name || 'Produk Digital';
-          const productId = order.product_id || createdOrder?.product_id;
-          const productUrl = productId ? `https://jbalwikobra.com/products/${productId}` : 'https://jbalwikobra.com/products';
-          const orderId = createdOrder?.id || xenditData.external_id;
-          
-          // Generate payment URL to our own payment page
-          const paymentUrl = `https://jbalwikobra.com/payment?id=${xenditData.id}&method=${payment_method_id}`;
-          
-          // Determine if it's rental or purchase
-          const isRental = order.order_type === 'rental';
-          
-          // Get expiry time in hours
-          const expiryHours = xenditData.expiry_date 
-            ? Math.max(0, Math.floor((new Date(xenditData.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60)))
-            : 24;
-          
-          const message = isRental
-            ? `🔥 *ORDER RENTAL BERHASIL DIBUAT!* 🎮
-
-Halo Bosku *${customer.given_names || 'Customer'}* 👋
-
-Alhamdulillah, pesanan rental Bosku udah berhasil kami catat! Tinggal bayar aja nih biar bisa langsung diproses 🚀
-
-━━━━━━━━━━━━━━━━━━━━━━━
-📋 *DETAIL PESANAN RENTAL*
-━━━━━━━━━━━━━━━━━━━━━━━
-
-🎮 Produk: *${productName}*
-⏱️ Durasi: *${order.rental_duration || 'Sesuai paket'}*
-💰 Total Bayar: *Rp ${Number(amount || 0).toLocaleString('id-ID')}*
-🆔 Order ID: *${orderId}*
-
-🔗 *Link Produk:*
-${productUrl}
-
-━━━━━━━━━━━━━━━━━━━━━━━
-💳 *CARA BAYAR*
-━━━━━━━━━━━━━━━━━━━━━━━
-
-Klik link di bawah ini ya Bosku:
-
-🔗 *BAYAR SEKARANG:*
-${paymentUrl}
-
-Bisa bayar pakai:
-✅ QRIS (Scan & bayar)
-✅ Virtual Account (BCA, BRI, Mandiri, dll)
-✅ E-Wallet (OVO, Dana, LinkAja, Gopay)
-✅ Retail (Alfamart, Indomaret)
-
-━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ *PENTING - BACA YA BOSKU!*
-━━━━━━━━━━━━━━━━━━━━━━━
-
-⏰ *Batas Waktu:* ${expiryHours} jam dari sekarang
-Kalau lewat ${expiryHours} jam, order otomatis dibatalkan sistem ya Bosku.
-
-📞 *Setelah Bayar:*
-• Tim kami langsung hubungi untuk video call verification
-• Siapkan KTP/SIM untuk verifikasi
-• Akun rental langsung dikirim setelah verif OK
-
-🔒 *Deposit & Aturan:*
-Nanti akan dijelaskan lengkap setelah pembayaran ya Bosku
-
-━━━━━━━━━━━━━━━━━━━━━━━
-
-Jangan lupa simpan Order ID ini ya: *${orderId}*
-
-Ada pertanyaan? Chat aja:
-💬 wa.me/${contactPhone}
-🌐 jbalwikobra.com
-
-Ditunggu pembayarannya Bosku! 🔥`
-            : `🔥 *ORDER PURCHASE BERHASIL DIBUAT!* 🎮
-
-Halo Bosku *${customer.given_names || 'Customer'}* 👋
-
-Alhamdulillah, pesanan Bosku udah berhasil kami catat! Tinggal bayar aja nih biar akun langsung diproses 🚀
-
-━━━━━━━━━━━━━━━━━━━━━━━
-📋 *DETAIL PESANAN PURCHASE*
-━━━━━━━━━━━━━━━━━━━━━━━
-
-🎮 Produk: *${productName}*
-💰 Total Bayar: *Rp ${Number(amount || 0).toLocaleString('id-ID')}*
-🆔 Order ID: *${orderId}*
-
-🔗 *Link Produk:*
-${productUrl}
-
-━━━━━━━━━━━━━━━━━━━━━━━
-💳 *CARA BAYAR*
-━━━━━━━━━━━━━━━━━━━━━━━
-
-Klik link di bawah ini ya Bosku:
-
-🔗 *BAYAR SEKARANG:*
-${paymentUrl}
-
-Bisa bayar pakai:
-✅ QRIS (Scan & bayar)
-✅ Virtual Account (BCA, BRI, Mandiri, dll)
-✅ E-Wallet (OVO, Dana, LinkAja, Gopay)
-✅ Retail (Alfamart, Indomaret)
-
-━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ *PENTING - BACA YA BOSKU!*
-━━━━━━━━━━━━━━━━━━━━━━━
-
-⏰ *Batas Waktu:* ${expiryHours} jam dari sekarang
-Kalau lewat ${expiryHours} jam, order otomatis dibatalkan sistem ya Bosku.
-
-🎁 *Setelah Bayar - Bosku Dapat:*
-• Login credentials lengkap
-• Panduan ganti email & bind akun
-• Tips keamanan akun
-• Warranty 30 hari
-• Support after-sales
-
-✨ *Full Ownership:*
-Akun 100% jadi milik Bosku! Bebas ganti email, password, dll.
-
-━━━━━━━━━━━━━━━━━━━━━━━
-
-Jangan lupa simpan Order ID ini ya: *${orderId}*
-
-Ada pertanyaan? Chat aja:
-💬 wa.me/${contactPhone}
-🌐 jbalwikobra.com
-
-Ditunggu pembayarannya Bosku! 🔥`;
-
-          const contextId = `order:${xenditData.external_id}:created`;
-                    
-          const sendRes = await wa.sendMessage({
-            phone: customerPhone,
-            message,
-            contextType: 'order-created-customer',
-            contextId
-          });
-          
-                    
-          if (sendRes.success) {
-          } else {
-            console.error('[WhatsApp] ❌ Failed to send notification. Error:', sendRes.error);
-          }
-        } else {
-          console.error('[Payment] Invalid phone number format after normalization:', customerPhone);
-        }
-      } catch (waError: any) {
-        console.error('[WhatsApp] ❌ Error sending notification:', waError);
-        console.error('[WhatsApp] ❌ Error stack:', waError?.stack);
-      }
-    } else {
-    }
+    // Notifikasi WhatsApp ke customer individual DIHAPUS (auth revamp)
+    // Customer notification sekarang melalui in-app notification
 
     // Return standardized response (Invoice API format)
     return res.status(200).json({

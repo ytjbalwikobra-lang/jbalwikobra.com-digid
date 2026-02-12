@@ -183,6 +183,7 @@ export async function customerStopTyping(conversationId: string): Promise<void> 
 
 /**
  * Langganan indikator mengetik untuk percakapan
+ * Menggunakan data dari payload realtime langsung — tanpa refetch tambahan
  */
 export function subscribeToTypingIndicators(
   conversationId: string,
@@ -191,6 +192,10 @@ export function subscribeToTypingIndicators(
   if (!supabase) {
     return { unsubscribe: () => {} };
   }
+
+  // Track indikator aktif secara lokal (menghindari refetch setiap event)
+  const activeIndicators = new Map<string, ChatTypingIndicator>();
+  const TYPING_TIMEOUT_MS = 10000; // 10 detik
 
   const channel = supabase
     .channel(`typing:${conversationId}`)
@@ -202,25 +207,36 @@ export function subscribeToTypingIndicators(
         table: 'chat_typing_indicators',
         filter: `conversation_id=eq.${conversationId}`
       },
-      async () => {
-        // Ambil indikator mengetik saat ini setiap ada perubahan
-        const { data } = await supabase!
-          .from('chat_typing_indicators')
-          .select('*')
-          .eq('conversation_id', conversationId)
-          .gte('updated_at', new Date(Date.now() - 10000).toISOString());
-        
-        const indicators: ChatTypingIndicator[] = (data || []).map((row: any) => ({
-          id: row.id,
-          conversationId: row.conversation_id,
-          userId: row.user_id,
-          userType: row.user_type,
-          userName: row.user_name,
-          startedAt: row.started_at || row.created_at,
-          updatedAt: row.updated_at
-        }));
-        
-        callback(indicators);
+      (payload) => {
+        const now = Date.now();
+
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const row = payload.new as any;
+          const updatedAt = new Date(row.updated_at).getTime();
+          // Hanya tampilkan jika masih dalam window timeout
+          if (now - updatedAt < TYPING_TIMEOUT_MS) {
+            activeIndicators.set(row.id, {
+              id: row.id,
+              conversationId: row.conversation_id,
+              userId: row.user_id,
+              userType: row.user_type,
+              userName: row.user_name,
+              startedAt: row.started_at || row.created_at,
+              updatedAt: row.updated_at
+            });
+          }
+        } else if (payload.eventType === 'DELETE') {
+          const row = payload.old as any;
+          if (row?.id) activeIndicators.delete(row.id);
+        }
+
+        // Filter indikator yang sudah expired
+        const cutoff = new Date(now - TYPING_TIMEOUT_MS).toISOString();
+        for (const [id, ind] of activeIndicators) {
+          if (ind.updatedAt < cutoff) activeIndicators.delete(id);
+        }
+
+        callback(Array.from(activeIndicators.values()));
       }
     )
     .subscribe();
@@ -266,6 +282,8 @@ function mapConversationFromRealtime(row: any): ChatConversation {
     userId: row.user_id,
     status: row.status,
     subject: row.subject,
+    topic: row.topic || 'lainnya',
+    gameTitle: row.game_title,
     assignedAdminId: row.assigned_admin_id,
     orderId: row.order_id,
     metadata: row.metadata,

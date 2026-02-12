@@ -54,6 +54,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Use static methods but with proper source designation
     const methods = getStaticFallbackMethods(amount);
+
+    // Cache: payment methods jarang berubah, cache 10 menit
+    res.setHeader('Cache-Control', 'public, max-age=600, stale-while-revalidate=300');
     
     return res.status(200).json({
       payment_methods: methods,

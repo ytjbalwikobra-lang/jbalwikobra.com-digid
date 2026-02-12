@@ -3,8 +3,8 @@
  * Komponen form input pesan dengan picker template respon cepat dan upload gambar
  */
 
-import React, { useRef, useState, useCallback } from 'react';
-import { Send, Zap, Image as ImageIcon, X } from 'lucide-react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
+import { Send, Zap, Image as ImageIcon, X, Lock } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { compressImage } from '../../../utils/imageCompression';
 import type { ChatCannedResponse, ChatConversationStatus } from '../../../types/chat';
@@ -63,23 +63,55 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
   onFileSelect,
   onSendImage
 }) => {
-  const isDisabled = !['open', 'assigned'].includes(conversationStatus);
+  const isDisabled = conversationStatus !== 'assigned';
+  const isUnassigned = conversationStatus === 'open';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
-  /** Handler pilih file */
-  const attachImage = useCallback(async (file: File) => {
-    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) return;
-    const compressed = await compressImage(file);
-    if (compressed.size > 3 * 1024 * 1024) return;
-    onFileSelect(compressed);
-    setPreviewUrl(URL.createObjectURL(compressed));
+  // H1: Cleanup blob URL saat unmount untuk mencegah memory leak
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  /** Tipe MIME yang diizinkan untuk lampiran */
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const ALLOWED_DOC_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOC_TYPES];
+
+  /** Handler pilih file — gambar dikompresi, dokumen langsung */
+  const attachFile = useCallback(async (file: File) => {
+    setFileError(null);
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError('Tipe file tidak didukung. Hanya JPEG, PNG, GIF, WebP, PDF, DOC, DOCX.');
+      return;
+    }
+    // Gambar: kompresi dulu
+    if (ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      const compressed = await compressImage(file);
+      if (compressed.size > 3 * 1024 * 1024) {
+        setFileError('File terlalu besar (maks 3MB setelah kompresi)');
+        return;
+      }
+      onFileSelect(compressed);
+      setPreviewUrl(URL.createObjectURL(compressed));
+    } else {
+      // Dokumen: langsung tanpa kompresi
+      if (file.size > 3 * 1024 * 1024) {
+        setFileError('File terlalu besar (maks 3MB)');
+        return;
+      }
+      onFileSelect(file);
+      setPreviewUrl(null); // Tidak ada preview gambar untuk dokumen
+    }
   }, [onFileSelect]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      attachImage(file);
+      attachFile(file);
     }
     e.target.value = '';
   };
@@ -87,17 +119,18 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file) await attachImage(file);
+    if (file) await attachFile(file);
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
     const file = e.clipboardData.files?.[0];
-    if (file) await attachImage(file);
+    if (file) await attachFile(file);
   };
 
   /** Batalkan file */
   const handleCancelFile = () => {
     onFileSelect(null);
+    setFileError(null);
     if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
   };
 
@@ -168,12 +201,30 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
         onPaste={handlePaste}
         className="p-3 border-t border-[var(--admin-border)] bg-[var(--admin-bg-card)]"
       >
+        {/* Error feedback saat file ditolak */}
+        {fileError && (
+          <div className="mb-2 px-3 py-1.5 bg-[var(--admin-error)]/15 border border-[var(--admin-error)]/30 rounded-lg flex items-center justify-between">
+            <p className="text-xs text-[var(--admin-error)]">{fileError}</p>
+            <button type="button" onClick={() => setFileError(null)} className="text-[var(--admin-error)] hover:brightness-125 ml-2 shrink-0">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         {/* Preview lampiran */}
-        {selectedFile && previewUrl && (
+        {selectedFile && (previewUrl || !selectedFile.type.startsWith('image/')) && (
           <div className="mb-2 relative inline-block">
-            <img src={previewUrl} alt="Preview" className="w-16 h-16 object-cover rounded-xl border border-[var(--admin-border)]" />
+            {previewUrl ? (
+              <img src={previewUrl} alt="Preview" className="w-16 h-16 object-cover rounded-xl border border-[var(--admin-border)]" />
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2 bg-[var(--admin-bg-surface)] rounded-xl border border-[var(--admin-border)]">
+                <svg className="w-5 h-5 text-[var(--admin-accent)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs text-[var(--admin-text)] truncate max-w-[150px]">{selectedFile.name}</span>
+              </div>
+            )}
             {isUploading ? (
-              <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
+              <div className="absolute inset-0 bg-[var(--admin-bg-pure)]/50 rounded-xl flex items-center justify-center">
                 <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -186,15 +237,22 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
             )}
           </div>
         )}
+        {/* Banner info: percakapan belum ditangani */}
+        {isUnassigned && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--admin-warning)]/10 border border-[var(--admin-warning)]/30 rounded-xl mb-0">
+            <Lock className="w-4 h-4 text-[var(--admin-warning)] shrink-0" />
+            <span className="text-xs text-[var(--admin-warning)]">Tangani percakapan ini terlebih dahulu untuk mulai membalas.</span>
+          </div>
+        )}
         <div className="flex items-end gap-2">
           {/* Tombol upload gambar */}
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={handleFileChange} className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.doc,.docx" onChange={handleFileChange} className="hidden" />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={sendingMessage || isDisabled || isUploading}
             className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--admin-text-muted)] hover:text-[var(--admin-accent)] hover:bg-[var(--admin-accent)]/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
-            title="Upload gambar"
+            title="Upload file"
           >
             <ImageIcon className="w-5 h-5" />
           </button>
@@ -204,7 +262,7 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
               type="text"
               value={newMessage}
               onChange={(e) => onMessageChange(e.target.value)}
-              placeholder="Ketik pesan..."
+              placeholder={isUnassigned ? 'Tangani percakapan dulu...' : 'Ketik pesan...'}
               disabled={sendingMessage || isDisabled || isUploading}
               className="w-full px-4 py-2.5 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-full text-base sm:text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] disabled:opacity-50 transition-colors"
               onKeyDown={(e) => {
@@ -234,7 +292,8 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
               type="button"
               disabled={sendingMessage || isUploading}
               onClick={onSendImage}
-              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-50 shrink-0 shadow-sm active:scale-95 touch-manipulation"
+              className="w-10 h-10 rounded-full bg-[var(--admin-success)] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-50 shrink-0 shadow-sm active:scale-95 touch-manipulation"
+              aria-label="Kirim gambar"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -242,7 +301,8 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
             <button
               type="submit"
               disabled={sendingMessage || !newMessage.trim() || isDisabled}
-              className="w-10 h-10 rounded-full bg-[#06C755] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-30 shrink-0 shadow-sm active:scale-95 touch-manipulation"
+              className="w-10 h-10 rounded-full bg-[var(--admin-success)] text-white flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-30 shrink-0 shadow-sm active:scale-95 touch-manipulation"
+              aria-label="Kirim pesan"
             >
               <Send className="w-4 h-4" />
             </button>

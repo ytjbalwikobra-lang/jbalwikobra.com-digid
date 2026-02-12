@@ -37,6 +37,8 @@ interface ChatStartFormProps {
   isLoading: boolean;
   /** Pesan error */
   error: string | null;
+  /** Apakah user sudah login */
+  isLoggedIn?: boolean;
   /** Handler perubahan nama */
   onNameChange: (value: string) => void;
   /** Handler perubahan email */
@@ -53,6 +55,8 @@ interface ChatStartFormProps {
   onGameTitleChange: (value: string) => void;
   /** Handler submit form */
   onSubmit: (e: React.FormEvent) => void;
+  /** Handler kembali ke daftar percakapan (hanya untuk user login) */
+  onBackToList?: () => void;
 }
 
 /** Form memulai percakapan baru dengan data pelanggan dan topik */
@@ -67,6 +71,7 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
   gameTitles,
   isLoading,
   error,
+  isLoggedIn = false,
   onNameChange,
   onEmailChange,
   onSubjectChange,
@@ -74,7 +79,8 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
   onTopicChange,
   onOrderIdChange,
   onGameTitleChange,
-  onSubmit
+  onSubmit,
+  onBackToList
 }) => {
   /** Kelas input yang konsisten */
   const inputCls = "w-full pl-9 pr-3 py-2.5 bg-[var(--cyber-bg-surface)] border border-[var(--cyber-border)] rounded-lg text-[var(--cyber-text-primary)] placeholder-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-accent)] focus:ring-1 focus:ring-[var(--cyber-accent)]/30 transition-all text-base sm:text-sm";
@@ -83,52 +89,85 @@ export const ChatStartForm: React.FC<ChatStartFormProps> = ({
     <form onSubmit={onSubmit} className="flex flex-col h-full overflow-y-auto">
       {/* Teks sambutan */}
       <div className="px-4 pt-4 pb-2">
-        <p className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed">
-          Halo! 👋 Isi form di bawah untuk memulai percakapan dengan tim support kami.
-        </p>
+        {isLoggedIn ? (
+          <div className="flex items-center gap-2">
+            {onBackToList && (
+              <button
+                type="button"
+                onClick={onBackToList}
+                className="p-1.5 -ml-1 hover:bg-[var(--cyber-bg-surface)] rounded-lg transition-colors touch-manipulation"
+                aria-label="Kembali ke daftar percakapan"
+              >
+                <svg className="w-4 h-4 text-[var(--cyber-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--cyber-success)]/10 border border-[var(--cyber-success)]/20 rounded-full text-[10px] font-medium text-[var(--cyber-success)]">
+                  <span className="w-1.5 h-1.5 bg-[var(--cyber-success)] rounded-full" />
+                  Login sebagai {customerName || customerEmail}
+                </span>
+              </div>
+              <p className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed mt-1">
+                Mulai percakapan baru dengan tim support.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--cyber-text-secondary)] leading-relaxed">
+            Halo! 👋 Isi form di bawah untuk memulai percakapan dengan tim support kami.
+          </p>
+        )}
       </div>
 
       {/* Form fields */}
       <div className="px-4 space-y-3 flex-1">
-        {/* Nama — wajib */}
-        <div>
-          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
-            Nama <span className="text-[var(--cyber-error)]">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
-              <UserIcon />
-            </span>
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => onNameChange(e.target.value)}
-              className={inputCls}
-              placeholder="Nama Anda"
-              required
-            />
-          </div>
-        </div>
+        {/* Nama & Email — tersembunyi jika sudah login (data otomatis dari akun) */}
+        {!isLoggedIn && (
+          <>
+            {/* Nama — wajib */}
+            <div>
+              <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+                Nama <span className="text-[var(--cyber-error)]">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+                  <UserIcon />
+                </span>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => onNameChange(e.target.value)}
+                  className={inputCls}
+                  placeholder="Nama Anda"
+                  required
+                />
+              </div>
+            </div>
 
-        {/* Email — wajib */}
-        <div>
-          <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
-            Email <span className="text-[var(--cyber-error)]">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
-              <MailIcon />
-            </span>
-            <input
-              type="email"
-              value={customerEmail}
-              onChange={(e) => onEmailChange(e.target.value)}
-              className={inputCls}
-              placeholder="email@example.com"
-              required
-            />
-          </div>
-        </div>
+            {/* Email — wajib */}
+            <div>
+              <label className="block text-xs font-medium text-[var(--cyber-text-secondary)] mb-1.5">
+                Email <span className="text-[var(--cyber-error)]">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cyber-text-muted)]">
+                  <MailIcon />
+                </span>
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => onEmailChange(e.target.value)}
+                  className={inputCls}
+                  placeholder="email@example.com"
+                  required
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Topik — wajib, dropdown selector */}
         <div>

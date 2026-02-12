@@ -68,8 +68,8 @@ const PurchaseNotificationTicker: React.FC = () => {
 
   useEffect(() => {
     fetchRecentPurchases();
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchRecentPurchases, 5 * 60 * 1000);
+    // Refresh setiap 15 menit (sebelumnya 5 menit — hemat egress 3x)
+    const interval = setInterval(fetchRecentPurchases, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

@@ -99,7 +99,7 @@ const BASE_RECONNECT_DELAY = 1_000; // 1 second base
 
 // Fallback polling state
 let pollingTimer: ReturnType<typeof setInterval> | null = null;
-const POLLING_INTERVAL = 30_000; // 30 seconds
+const POLLING_INTERVAL = 60_000; // 60 detik — minimum sesuai aturan egress
 let pollingActive = false;
 
 // Cross-tab broadcast

@@ -18,8 +18,11 @@ export {
   getCustomerMessages,
   submitRating,
   uploadChatAttachment,
-  getConversationDetails
+  getConversationDetails,
+  getCustomerConversations
 } from './chatCustomerService';
+
+export type { CustomerConversationSummary } from './chatCustomerService';
 
 // Fungsi admin
 export {
@@ -39,6 +42,7 @@ export {
   adminCreateCannedResponse,
   adminUpdateCannedResponse,
   adminDeleteCannedResponse,
+  incrementCannedResponseUsage,
   getChatSettings,
   adminUpdateChatSettings,
   isWithinBusinessHours

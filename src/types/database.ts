@@ -1771,6 +1771,7 @@ export type Database = {
       }
       users: {
         Row: {
+          auth_provider: string | null
           auth_user_id: string | null
           avatar_url: string | null
           bio: string | null
@@ -1778,6 +1779,7 @@ export type Database = {
           date_of_birth: string | null
           email: string | null
           gender: string | null
+          google_id: string | null
           id: string
           is_active: boolean | null
           is_admin: boolean | null
@@ -1796,6 +1798,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          auth_provider?: string | null
           auth_user_id?: string | null
           avatar_url?: string | null
           bio?: string | null
@@ -1803,6 +1806,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           gender?: string | null
+          google_id?: string | null
           id?: string
           is_active?: boolean | null
           is_admin?: boolean | null
@@ -1821,6 +1825,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          auth_provider?: string | null
           auth_user_id?: string | null
           avatar_url?: string | null
           bio?: string | null
@@ -1828,6 +1833,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           gender?: string | null
+          google_id?: string | null
           id?: string
           is_active?: boolean | null
           is_admin?: boolean | null
@@ -2465,6 +2471,7 @@ export type Database = {
           total_users: number
         }[]
       }
+      increment_canned_usage: { Args: { row_id: string }; Returns: undefined }
       insert_global_notification: {
         Args: {
           n_body: string
@@ -2521,6 +2528,8 @@ export type Database = {
         Returns: {
           expires_at: string
           is_admin: boolean
+          user_auth_provider: string
+          user_avatar_url: string
           user_created_at: string
           user_email: string
           user_id: string

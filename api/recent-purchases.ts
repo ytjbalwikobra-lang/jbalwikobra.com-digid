@@ -90,8 +90,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tier: order.products?.tiers || undefined
     }));
 
-    // Cache for 2 minutes (dynamic data but can have short cache)
-    setCacheHeaders(res, { maxAge: 120, staleWhileRevalidate: 240 });
+    // Cache 5 menit + SWR 10 menit — data pembelian tidak perlu real-time
+    setCacheHeaders(res, { maxAge: 300, staleWhileRevalidate: 600 });
 
     return res.status(200).json({
       success: true,

@@ -83,7 +83,7 @@ export const AdminPagination: React.FC<AdminPaginationProps> = ({
           aria-label="Previous page"
         >
           <ChevronLeft size={18} />
-          <span>Previous</span>
+          <span className="hidden sm:inline">Previous</span>
         </button>
 
         <div className="admin-pagination-pages">
@@ -113,7 +113,7 @@ export const AdminPagination: React.FC<AdminPaginationProps> = ({
           className="admin-pagination-button"
           aria-label="Next page"
         >
-          <span>Next</span>
+          <span className="hidden sm:inline">Next</span>
           <ChevronRight size={18} />
         </button>
       </div>

@@ -5,6 +5,12 @@
 
 import type { ChatConversationStatus } from '../../../types/chat';
 
+// Import untuk penggunaan lokal + re-export untuk konsumen lain
+import { formatTime as _formatTime, formatDate as _formatDate, getInitials as _getInitials } from '../../../utils/chatFormatters';
+export const formatTime = _formatTime;
+export const formatDate = _formatDate;
+export const getInitials = _getInitials;
+
 /** Tipe filter status termasuk opsi 'all' */
 export type FilterStatus = 'all' | ChatConversationStatus;
 
@@ -16,24 +22,6 @@ export const STATUS_OPTIONS: { value: FilterStatus; label: string; color: string
   { value: 'resolved', label: 'Selesai', color: 'var(--admin-success)' },
   { value: 'closed', label: 'Ditutup', color: 'var(--admin-text-muted)' }
 ];
-
-/** Format waktu sederhana tanpa date-fns */
-export const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-};
-
-/** Format tanggal lengkap dengan jam */
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
 
 /** Format waktu relatif dalam Bahasa Indonesia */
 export const formatRelativeTime = (dateString: string): string => {
@@ -53,13 +41,6 @@ export const formatRelativeTime = (dateString: string): string => {
   if (diffDay < 7) return `${diffDay}h lalu`;
   
   return formatDate(dateString);
-};
-
-/** Ambil inisial dari nama (1-2 huruf) */
-export const getInitials = (name: string): string => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
 };
 
 /** Label aktivitas percakapan dalam Bahasa Indonesia */

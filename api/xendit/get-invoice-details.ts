@@ -58,6 +58,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     }
 
+    // Cache: private karena data invoice spesifik, short TTL untuk polling
+    res.setHeader('Cache-Control', 'private, max-age=10, stale-while-revalidate=20');
+
     return res.status(200).json({
       id: invoiceData.id,
       status: invoiceData.status,

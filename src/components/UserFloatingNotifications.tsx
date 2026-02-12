@@ -26,17 +26,19 @@ const UserFloatingNotifications: React.FC = () => {
       } catch { /* ignore */ }
 
       if (canRealtime && supabase) {
-        // Subscribe to new notification inserts
+        // Subscribe hanya ke notifikasi untuk user ini (filter server-side)
+        // Jika tidak ada user_id, subscribe ke global notifications saja (user_id IS NULL)
+        const filterConfig = user?.id
+          ? { event: 'INSERT' as const, schema: 'public', table: 'customer_notifications', filter: `user_id=eq.${user.id}` }
+          : { event: 'INSERT' as const, schema: 'public', table: 'customer_notifications', filter: `user_id=is.null` };
+
         channel = supabase
-          .channel('public:customer_notifications:insert')
+          .channel(`customer_notifications:${user?.id || 'global'}`)
           .on(
             'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'customer_notifications' },
+            filterConfig,
             (payload: any) => {
               const n = payload?.new as CustomerNotification;
-              // Show if global or for current user
-              const visible = !n.user_id || (user?.id && n.user_id === user.id);
-              if (!visible) return;
               push(n);
             }
           )
@@ -54,7 +56,7 @@ const UserFloatingNotifications: React.FC = () => {
               push(newest);
             }
           } catch { /* ignore */ }
-        }, 15000);
+        }, 60000); // 60 detik (sebelumnya 15 detik — hemat egress 4x)
       }
     }
 

@@ -68,6 +68,12 @@ const ConnectionStatusIndicator: React.FC<{ status: ConnectionStatus }> = ({ sta
 
 export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Baca preferensi dari localStorage, default collapsed pada layar < 1280px
+    const saved = localStorage.getItem('admin_sidebar_collapsed');
+    if (saved !== null) return saved === 'true';
+    return window.innerWidth < 1280;
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
@@ -80,6 +86,27 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
     const pageName = location.pathname.split('/').pop() || 'dashboard';
     prefetchManager.setCurrentPage(pageName);
   }, [location.pathname]);
+
+  // Auto-collapse sidebar pada layar kecil
+  useEffect(() => {
+    const handleResize = () => {
+      const saved = localStorage.getItem('admin_sidebar_collapsed');
+      // Hanya auto-toggle jika user belum set preferensi manual
+      if (saved === null) {
+        setSidebarCollapsed(window.innerWidth < 1280);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('admin_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   const handleLogout = async () => {
     try {
@@ -103,27 +130,29 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
           <AdminNavigation
             mobileOpen={mobileMenuOpen}
             onMobileClose={() => setMobileMenuOpen(false)}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleSidebar}
           />
 
         {/* Main Content Area */}
-        <div className="lg:ml-64">
+        <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
           {/* Top Header Bar */}
           <header className="sticky top-0 z-40 border-b bg-black/80 backdrop-blur-md border-white/10">
-            <div className="flex items-center justify-between px-4 lg:px-6 h-16">
+            <div className="flex items-center justify-between px-3 sm:px-4 lg:px-6 h-14 sm:h-16">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-full hover:bg-white/5 transition-colors"
-              aria-label="Open menu"
+              className="lg:hidden p-2.5 -ml-1 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
+              aria-label="Buka menu"
             >
-              <Menu size={24} className="text-white/60" />
+              <Menu size={22} className="text-white/60" />
             </button>
 
             {/* Desktop: Empty space for alignment */}
             <div className="hidden lg:block" />
 
             {/* Right Side Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* Enhancement E: Connection Status Indicator */}
               <ConnectionStatusIndicator status={connectionStatus} />
               
@@ -143,8 +172,8 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               {/* Notifications */}
               <button
                 onClick={() => navigate('/admin/notifications')}
-                className="relative p-2 rounded-full hover:bg-white/5 transition-colors"
-                aria-label="Notifications"
+                className="relative p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
+                aria-label="Notifikasi"
               >
                 <Bell size={20} className="text-white/60" />
                 {unreadCount > 0 && (
@@ -160,7 +189,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-full hover:bg-white/5 transition-colors"
+                className="p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
                 aria-label="Logout"
                 title="Logout"
               >

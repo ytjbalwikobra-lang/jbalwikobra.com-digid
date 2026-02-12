@@ -286,6 +286,13 @@ export async function adminDeleteCannedResponse(id: string): Promise<{ data: any
   return chatApiCall('admin-delete-canned-response', 'POST', undefined, { id });
 }
 
+/**
+ * Increment usage count template respon cepat (fire-and-forget)
+ */
+export async function incrementCannedResponseUsage(id: string): Promise<void> {
+  await chatApiCall('admin-increment-canned-usage', 'POST', undefined, { id });
+}
+
 // =============================================================================
 // PENGATURAN CHAT
 // =============================================================================

@@ -251,7 +251,7 @@ export class SettingsService {
       const { data, error } = await (supabase as any)
         .from('website_settings')
         .upsert({ id: current.id === 'default' ? undefined : current.id, ...payload }, { onConflict: 'id' })
-        .select()
+        .select('id, site_name, logo_url, favicon_url, contact_email, support_email, contact_phone, whatsapp_number, updated_at')
         .maybeSingle();
       if (error) throw error;
       const row = data || payload;

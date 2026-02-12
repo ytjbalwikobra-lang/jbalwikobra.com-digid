@@ -63,16 +63,20 @@ export async function getFlashSaleStats(): Promise<{ total: number; active: numb
     if (!supabase) throw new Error('Supabase client not available');
     try {
       const now = new Date().toISOString();
-      const { data, error } = await supabase.from('flash_sales').select('id, is_active, start_time, end_time');
-      if (error) throw error;
-      const sales = data || [];
-      const current = new Date(now);
+      // Gunakan head-only count queries — nol transfer data
+      const [totalRes, activeRes, ongoingRes, upcomingRes, expiredRes] = await Promise.all([
+        supabase.from('flash_sales').select('id', { count: 'exact', head: true }),
+        supabase.from('flash_sales').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('flash_sales').select('id', { count: 'exact', head: true }).eq('is_active', true).lte('start_time', now).gte('end_time', now),
+        supabase.from('flash_sales').select('id', { count: 'exact', head: true }).eq('is_active', true).gt('start_time', now),
+        supabase.from('flash_sales').select('id', { count: 'exact', head: true }).lt('end_time', now),
+      ]);
       return {
-        total: sales.length,
-        active: sales.filter(s => s.is_active).length,
-        ongoing: sales.filter(s => { const st = new Date(s.start_time); const en = new Date(s.end_time); return s.is_active && current >= st && current <= en; }).length,
-        upcoming: sales.filter(s => { const st = new Date(s.start_time); return s.is_active && current < st; }).length,
-        expired: sales.filter(s => { const en = new Date(s.end_time); return current > en; }).length,
+        total: totalRes.count ?? 0,
+        active: activeRes.count ?? 0,
+        ongoing: ongoingRes.count ?? 0,
+        upcoming: upcomingRes.count ?? 0,
+        expired: expiredRes.count ?? 0,
       };
     } catch (error) { console.error('[getFlashSaleStats] error:', error); return { total: 0, active: 0, ongoing: 0, upcoming: 0, expired: 0 }; }
   }, { ttl: 60000 });
@@ -96,7 +100,7 @@ export async function getBanners(page: number = 1, limit: number = 10): Promise<
 
 export async function createBanner(banner: Omit<Banner, 'id' | 'created_at' | 'updated_at'>): Promise<Banner> {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('banners').insert([banner]).select();
+  const { data, error } = await supabase.from('banners').insert([banner]).select('id, title, subtitle, image_url, link_url, cta_text, sort_order, is_active, created_at, updated_at');
   if (error) throw error;
   adminCache.invalidatePattern('admin:banner');
   if (!data || data.length === 0) {
@@ -107,7 +111,7 @@ export async function createBanner(banner: Omit<Banner, 'id' | 'created_at' | 'u
 
 export async function updateBanner(id: string, updates: Partial<Omit<Banner, 'id' | 'created_at' | 'updated_at'>>): Promise<Banner> {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('banners').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select();
+  const { data, error } = await supabase.from('banners').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select('id, title, subtitle, image_url, link_url, cta_text, sort_order, is_active, created_at, updated_at');
   if (error) throw error;
   adminCache.invalidatePattern('admin:banner');
   if (!data || data.length === 0) return { ...updates, id, updated_at: new Date().toISOString() } as Banner;
@@ -125,10 +129,14 @@ export async function getBannerStats(): Promise<{ total: number; active: number;
   return adminCache.getOrFetch('admin:banner-stats', async () => {
     if (!supabase) throw new Error('Supabase client not available');
     try {
-      const { data, error } = await supabase.from('banners').select('id, is_active');
-      if (error) throw error;
-      const banners = data || [];
-      return { total: banners.length, active: banners.filter(b => b.is_active).length, inactive: banners.filter(b => !b.is_active).length };
+      // Gunakan head-only count queries — nol transfer data
+      const [totalRes, activeRes] = await Promise.all([
+        supabase.from('banners').select('id', { count: 'exact', head: true }),
+        supabase.from('banners').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      ]);
+      const total = totalRes.count ?? 0;
+      const active = activeRes.count ?? 0;
+      return { total, active, inactive: total - active };
     } catch (error) { console.error('[getBannerStats] error:', error); return { total: 0, active: 0, inactive: 0 }; }
   }, { ttl: 60000 });
 }
@@ -137,7 +145,7 @@ export async function toggleBannerStatus(id: string): Promise<Banner> {
   if (!supabase) throw new Error('Supabase client not available');
   const { data: currentBanner, error: fetchError } = await supabase.from('banners').select('is_active').eq('id', id).single();
   if (fetchError) throw fetchError;
-  const { data, error } = await supabase.from('banners').update({ is_active: !currentBanner.is_active, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+  const { data, error } = await supabase.from('banners').update({ is_active: !currentBanner.is_active, updated_at: new Date().toISOString() }).eq('id', id).select('id, title, subtitle, image_url, link_url, cta_text, sort_order, is_active, created_at, updated_at').single();
   if (error) throw error;
   adminCache.clear();
   return data;

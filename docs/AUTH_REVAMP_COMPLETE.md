@@ -1,12 +1,64 @@
 # AUTH FLOW REVAMP - COMPLETE SUMMARY
-## Date: January 20, 2026
 
-## 🎯 OBJECTIVE
+---
+
+## 🔄 V2 REVAMP — 13 Februari 2026 (Google OAuth + Remove WhatsApp)
+
+### Perubahan Utama
+
+| Aspek | Sebelum (V1) | Sesudah (V2) |
+|---|---|---|
+| **Login** | Email + Phone | **Google OAuth** + Email |
+| **Signup** | Phone + WhatsApp OTP (3-step) | **Email-first** 1-step (langsung dapat session) |
+| **Verifikasi** | WhatsApp 6-digit OTP | Tidak ada (direct signup) |
+| **Notif Customer** | WhatsApp individual | In-app notification |
+| **Grup WA Admin** | Aktif | **Tetap aktif** |
+
+### File yang Diubah (V2)
+
+| File | Perubahan |
+|---|---|
+| `supabase/migrations/00000000000067_*.sql` | Tambah `auth_provider`, `avatar_url`, `google_id` ke users |
+| `supabase/migrations/00000000000068_*.sql` | Update `validate_session()` return type |
+| `api/auth.ts` | Hapus `handleVerifyPhone()`, tambah `handleGoogleCallback()`, rewrite `handleSignup()` email-first |
+| `src/contexts/TraditionalAuthContext.tsx` | Tambah `loginWithGoogle()`, `onAuthStateChange` PKCE handler, hapus `verifyPhone()` |
+| `src/pages/TraditionalAuthPage.tsx` | Google OAuth button, hapus phone input & verify mode |
+| `api/xendit/webhook.ts` | Hapus blok notifikasi WA individual customer |
+| `api/xendit/create-direct-payment.ts` | Hapus blok notifikasi WA individual customer |
+| `api/cron/payment-reminder.ts` | Dinonaktifkan (100% WA reminders) |
+| `api/_utils/dynamicWhatsAppService.ts` | Hapus `sendVerificationCode()` & `sendWelcomeMessage()` |
+
+### Google OAuth Flow (PKCE)
+
+```
+User klik "Login dengan Google"
+  → supabase.auth.signInWithOAuth({ provider: 'google' })
+  → Browser redirect ke Google → consent → Supabase callback
+  → Supabase redirect ke /auth?callback=google&code=xxx
+  → onAuthStateChange menangkap PKCE session
+  → POST /api/auth?action=google-callback { access_token }
+  → Backend: getUser(token) → find/create user → custom session
+  → Frontend: simpan session_token → set user → redirect
+  → SignOut dari Supabase Auth (pakai custom session saja)
+```
+
+### Technical Notes
+
+- **Supabase JS v2.58+** menggunakan PKCE flow (bukan implicit)
+- **`onAuthStateChange`** diperlukan karena `getSession()` bisa return null saat PKCE exchange belum selesai
+- **Custom session** tetap dipakai (session_token di localStorage), BUKAN Supabase Auth session
+- **`window.history.replaceState`** tidak men-update React Router — URL dibersihkan via navigate
+
+---
+
+## ✅ V1 REVAMP — 20 Januari 2026 (Performance + Egress Optimization)
+
+### 🎯 OBJECTIVE
 Revamp login and signup flows to eliminate duplicates, redundancies, and improve ISO compliance, best practices, and egress efficiency.
 
 ---
 
-## ✅ COMPLETED WORK
+## ✅ COMPLETED WORK (V1)
 
 ### 1. DATABASE MIGRATION
 **File**: `supabase/migrations/20260120_auth_system_optimization.sql`

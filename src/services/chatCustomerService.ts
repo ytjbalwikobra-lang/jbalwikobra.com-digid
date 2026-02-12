@@ -16,6 +16,22 @@ import type {
   SubmitRatingRequest
 } from '../types/chat';
 
+/** Ringkasan percakapan untuk daftar conversation list pelanggan */
+export interface CustomerConversationSummary {
+  id: string;
+  customerName?: string;
+  customerEmail?: string;
+  subject?: string;
+  topic?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt: string;
+  lastMessagePreview?: string;
+  lastMessageSender?: string;
+  unreadCount?: number;
+}
+
 /**
  * Ambil detail percakapan pelanggan (termasuk nama admin yang menangani)
  */
@@ -160,4 +176,27 @@ export async function submitRating(
   }
 
   return { rating: result.data.rating, error: null };
+}
+
+/**
+ * Ambil daftar percakapan milik user yang login (hanya open/assigned)
+ */
+export async function getCustomerConversations(
+  params: { userId?: string; customerEmail?: string }
+): Promise<{ conversations: CustomerConversationSummary[]; error: string | null }> {
+  if (!params.userId && !params.customerEmail) {
+    return { conversations: [], error: 'userId or customerEmail required' };
+  }
+
+  const result = await chatApiCall<{ conversations: CustomerConversationSummary[] }>(
+    'customer-list-conversations',
+    'GET',
+    params
+  );
+
+  if (result.error || !result.data?.conversations) {
+    return { conversations: [], error: result.error || 'Gagal memuat percakapan' };
+  }
+
+  return { conversations: result.data.conversations, error: null };
 }

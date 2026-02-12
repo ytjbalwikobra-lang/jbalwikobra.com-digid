@@ -31,8 +31,10 @@ export async function getAllProducts(opts?: { includeArchived?: boolean }): Prom
     let query = supabase
       .from('products')
       .select(`
-        *,
-        rental_options (*),
+        id, name, description, price, original_price, image, images,
+        category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time,
+        has_rental, stock, is_active, sold_channel, archived_at, created_at, updated_at,
+        rental_options (id, product_id, duration, price, description),
         tiers (
           id, name, slug, description, color, border_color, 
           background_gradient, icon, price_range_min, price_range_max,
@@ -52,7 +54,7 @@ export async function getAllProducts(opts?: { includeArchived?: boolean }): Prom
       query = (query as any).is('archived_at', null);
     }
 
-    const { data, error } = await (query as any).order('created_at', { ascending: false });
+    const { data, error } = await (query as any).order('created_at', { ascending: false }).limit(500);
 
     if (!error && data) {
       capState.hasRelations = true;
@@ -92,7 +94,7 @@ export async function getAllProducts(opts?: { includeArchived?: boolean }): Prom
       q2 = q2.is('archived_at', null);
     }
 
-    const { data: basic, error: err2 } = await q2.order('created_at', { ascending: false });
+    const { data: basic, error: err2 } = await q2.order('created_at', { ascending: false }).limit(500);
     if (err2) {
       console.error('Supabase error (basic products):', err2);
       return sampleProducts;
@@ -330,7 +332,7 @@ export async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 
       if (payload[k] === undefined) delete payload[k];
     });
 
-    const { data, error } = await supabase.from('products').insert([payload]).select().single();
+    const { data, error } = await supabase.from('products').insert([payload]).select('id, name, description, price, original_price, image, images, category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, stock, is_active, sold_channel, archived_at, created_at, updated_at').single();
 
     if (error) {
       console.error('❌ Database insert error:', {
@@ -353,7 +355,7 @@ export async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 
 
       throw error;
     }
-    return data;
+    return data as unknown as Product;
   } catch (error) {
     console.error('💥 ProductService.createProduct error:', error);
     return null;
@@ -430,7 +432,7 @@ export async function updateProduct(id: string, updates: Partial<Product> & Reco
       }
     });
 
-    const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
+    const { data, error } = await supabase.from('products').update(payload).eq('id', id).select('id, name, description, price, original_price, image, images, category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time, has_rental, stock, is_active, sold_channel, archived_at, created_at, updated_at').single();
 
     if (error) {
       console.error('❌ Database update error:', {
@@ -442,7 +444,7 @@ export async function updateProduct(id: string, updates: Partial<Product> & Reco
       });
       throw error;
     }
-    return data;
+    return data as unknown as Product;
   } catch (error) {
     console.error('💥 ProductService.updateProduct error:', error);
     return null;

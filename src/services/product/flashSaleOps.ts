@@ -40,11 +40,13 @@ export async function getFlashSales(): Promise<(FlashSale & { product: Product }
     const { data, error } = await supabase
       .from('flash_sales')
       .select(`
-        *,
+        id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at, updated_at,
         products (
-          *,
-          game_titles (*),
-          tiers (*)
+          id, name, description, price, original_price, image, images,
+          category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time,
+          has_rental, stock, is_active, sold_channel, archived_at, created_at, updated_at,
+          game_titles (id, name, slug, icon, color, logo_url),
+          tiers (id, name, slug, color, background_gradient, icon)
         )
       `)
       .eq('is_active', true)
@@ -270,7 +272,7 @@ export async function createFlashSale(sale: {
     const { data, error } = await (supabase as any)
       .from('flash_sales')
       .insert([payload])
-      .select()
+      .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at')
       .single();
     if (error) throw error;
     return data;
@@ -302,7 +304,7 @@ export async function updateFlashSale(id: string, updates: Partial<{
       .from('flash_sales')
       .update(payload)
       .eq('id', id)
-      .select()
+      .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, updated_at')
       .single();
     if (error) throw error;
     return data;

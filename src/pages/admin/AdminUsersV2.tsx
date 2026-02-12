@@ -176,7 +176,7 @@ const AdminUsersV2: React.FC = () => {
               placeholder="Search by name, email, phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
+              className="w-full h-11 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-base sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-pink-500/50 transition-colors"
             />
           </div>
           

@@ -204,9 +204,7 @@ class CustomerNotificationService {
     else if (notif.user_id === null) {
       await supabase
         .from('customer_notification_reads')
-        .insert({ notification_id: notificationId, user_id: userId, read_at: new Date().toISOString() })
-        .select()
-        .single();
+        .insert({ notification_id: notificationId, user_id: userId, read_at: new Date().toISOString() });
     }
   }
 

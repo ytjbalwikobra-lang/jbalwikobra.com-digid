@@ -74,8 +74,27 @@ async function dashboardStats() {
   }
   
   try {
+    // Gunakan RPC untuk mengurangi egress — 1 query menggantikan 7+ query terpisah
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_dashboard_stats');
+    if (!rpcError && rpcData) {
+      return {
+        orders: { 
+          count: rpcData.totalOrders || 0, 
+          completed: rpcData.completedOrders || 0, 
+          pending: rpcData.pendingOrders || 0, 
+          revenue: Number(rpcData.totalRevenue) || 0,
+          completedRevenue: Number(rpcData.totalRevenue) || 0
+        },
+        users: { count: rpcData.totalUsers || 0 },
+        products: { count: rpcData.totalProducts || 0 },
+        flashSales: { count: rpcData.totalFlashSales || 0 },
+        reviews: { count: rpcData.totalReviews || 0, averageRating: Number(rpcData.averageRating) || 0 }
+      };
+    }
+
+    console.warn('[API /api/admin] RPC fallback — error:', rpcError?.message);
     
-    // Use optimized approach with separate queries and error handling
+    // Fallback: query terpisah tapi TANPA mengunduh semua baris orders
     const [ordersRes, usersRes, productsRes] = await Promise.all([
       supabase.from('orders').select('id', { count: 'exact', head: true }),
       supabase.from('users').select('id', { count: 'exact', head: true }),
@@ -93,43 +112,42 @@ async function dashboardStats() {
     let reviewsCount = 0;
     let averageRating = 0;
     try {
-      const reviewsRes = await supabase.from('reviews').select('id, rating', { count: 'exact' });
-      reviewsCount = reviewsRes.count || 0;
-      if (reviewsRes.data && reviewsRes.data.length > 0) {
-        const totalRating = reviewsRes.data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
-        averageRating = totalRating / reviewsRes.data.length;
+      // Gunakan RPC get_average_rating jika tersedia
+      const { data: ratingData, error: ratingError } = await supabase.rpc('get_average_rating');
+      if (!ratingError && ratingData && ratingData.length > 0) {
+        reviewsCount = Number(ratingData[0].total_reviews) || 0;
+        averageRating = Number(ratingData[0].avg_rating) || 0;
+      } else {
+        // Fallback: hanya count (tanpa rating detail)
+        const reviewsRes = await supabase.from('reviews').select('id', { count: 'exact', head: true });
+        reviewsCount = reviewsRes.count || 0;
       }
     } catch (e) {
       console.warn('⚠️ [API /api/admin] dashboardStats: Reviews query failed:', e);
     }
     
-    // Get order statistics efficiently with separate targeted queries
-    
-    // Get completed/paid orders
-    const [completedRes, pendingRes, paidOrdersRes] = await Promise.all([
+    // Count-only queries (head: true = nol data transfer)
+    const [completedRes, pendingRes] = await Promise.all([
       supabase.from('orders').select('id', { count: 'exact', head: true }).in('status', ['completed', 'paid']),
       supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('orders').select('amount').in('status', ['completed', 'paid'])
     ]);
     
-    const completed = completedRes.count || 0;
-    const pending = pendingRes.count || 0;
-    
-    // Calculate revenue from paid/completed orders
+    // Revenue via RPC (1 angka, bukan ribuan baris)
     let revenue = 0;
-    if (paidOrdersRes.data) {
-      revenue = paidOrdersRes.data.reduce((sum, order) => {
-        return sum + (Number(order.amount) || 0);
-      }, 0);
-    }
+    try {
+      const { data: revData, error: revError } = await supabase.rpc('get_total_revenue');
+      if (!revError && revData !== null) {
+        revenue = Number(revData) || 0;
+      }
+    } catch { /* fallback: revenue = 0 */ }
     
     const stats = {
       orders: { 
         count: ordersRes.count || 0, 
-        completed, 
-        pending, 
+        completed: completedRes.count || 0, 
+        pending: pendingRes.count || 0, 
         revenue, 
-        completedRevenue: revenue // Same as revenue for completed/paid orders
+        completedRevenue: revenue
       },
       users: { count: usersRes.count || 0 },
       products: { count: productsRes.count || 0 },
@@ -141,7 +159,6 @@ async function dashboardStats() {
     return stats;
   } catch (error) {
     console.error('❌ [API /api/admin] dashboardStats: Unexpected error:', error);
-    // Return mock data but log the error for debugging
     console.error('❌ [API /api/admin] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return mockDashboard();
   }
@@ -380,8 +397,30 @@ async function listProducts(page: number, limit: number, search?: string) {
 async function timeSeries(days?: number, startDate?: string, endDate?: string) {
   if (!supabase) return [];
   let fromDate: Date;
-  if (startDate && endDate) { fromDate = new Date(startDate); } else { const d = days && days>0 ? days : 7; fromDate = new Date(Date.now() - d*86400000); }
-  const { data, error } = await supabase.from('orders').select('created_at,status,amount').gte('created_at', fromDate.toISOString()).order('created_at');
+  let toDate: Date;
+  if (startDate && endDate) { fromDate = new Date(startDate); toDate = new Date(endDate); } else { const d = days && days>0 ? days : 7; fromDate = new Date(Date.now() - d*86400000); toDate = new Date(); }
+  
+  // Gunakan RPC untuk server-side aggregation — mengurangi transfer ribuan baris ke ~7-30 baris
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_orders_time_series', {
+      p_start_date: fromDate.toISOString(),
+      p_end_date: toDate.toISOString()
+    });
+    if (!rpcError && rpcData) {
+      return (rpcData as any[]).map((row: any) => ({
+        date: row.date,
+        pending: Number(row.pending_count) || 0,
+        completed: Number(row.completed_count) || 0,
+        cancelled: Number(row.cancelled_count) || 0,
+        paid: Number(row.paid_count) || 0,
+        total: Number(row.total_count) || 0,
+      }));
+    }
+    console.warn('[timeSeries] RPC error, fallback:', rpcError?.message);
+  } catch { /* fallback di bawah */ }
+
+  // Fallback: query dengan limit untuk mencegah transfer berlebihan
+  const { data, error } = await supabase.from('orders').select('created_at,status,amount').gte('created_at', fromDate.toISOString()).order('created_at').limit(2000);
   if (error) return [];
   const bucket = new Map<string,{pending:number;completed:number;cancelled:number;paid:number;total:number}>();
   (data||[]).forEach(r => { const day = r.created_at.substring(0,10); if(!bucket.has(day)) bucket.set(day,{pending:0,completed:0,cancelled:0,paid:0,total:0}); const b=bucket.get(day)!; b.total++; switch(r.status){case 'completed': b.completed++; break; case 'cancelled': b.cancelled++; break; case 'paid': b.paid++; break; case 'pending': b.pending++; break;} });
@@ -453,7 +492,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { data, error } = await supabase
           .from('products')
           .insert(insertData)
-          .select()
+          .select('id, name, price, image, is_active, stock, created_at')
           .single();
         
         if (error) {
@@ -484,7 +523,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .from('products')
           .update(fields)
           .eq('id', id)
-          .select()
+          .select('id, name, price, image, is_active, stock, updated_at')
           .single();
         
         if (error) {
@@ -533,7 +572,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .from('users')
           .update(sanitizedFields)
           .eq('id', id)
-          .select()
+          .select('id, name, email, is_active, is_admin, role, updated_at')
           .single();
         
         if (error) {
@@ -660,7 +699,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .from('website_settings')
             .update(settingsData)
             .eq('id', current.id)
-            .select()
+            .select('id, site_name, updated_at')
             .single();
             
           if (error) {
@@ -673,7 +712,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const { data, error } = await supabase
             .from('website_settings')
             .insert(settingsData)
-            .select()
+            .select('id, site_name, updated_at')
             .single();
             
           if (error) {
@@ -694,7 +733,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     switch (action) {
       case 'dashboard-stats': {
         const data = await dashboardStats();
-                return respond(res, 200, data, 0); // No cache - always fresh data
+                return respond(res, 200, data, 60); // Cache 60 detik — mengurangi hits berulang
       }
       case 'recent-notifications': {
         const data = await recentNotifications(limit);
@@ -758,7 +797,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               is_active: false 
             })
             .eq('id', productId)
-            .select()
+            .select('id, is_active, archived_at')
             .single();
             
           if (error) {

@@ -17,6 +17,7 @@ import {
   submitRating,
   uploadChatAttachment,
   getConversationDetails,
+  getCustomerConversations,
   subscribeToMessages,
   subscribeToConversations,
   subscribeToTypingIndicators,
@@ -25,6 +26,8 @@ import {
   getChatSettings,
   isWithinBusinessHours
 } from '../../../services/chatService';
+import type { CustomerConversationSummary } from '../../../services/chatCustomerService';
+import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { getGameTitles } from '../../../services/product/catalogOps';
 import type { ChatConversation, ChatMessage, ChatTopic, ChatSettings } from '../../../types/chat';
 import type { GameTitle } from '../../../types';
@@ -34,6 +37,8 @@ import { ChatIcon, CloseIcon } from './ChatIcons';
 import { ChatStartForm } from './ChatStartForm';
 import { ChatView } from './ChatView';
 import { ChatRatingView } from './ChatRatingView';
+import { ConversationListView } from './ConversationListView';
+import { ChatErrorBoundary } from '../../ChatErrorBoundary';
 
 interface ChatWidgetProps {
   /** Posisi widget di layar */
@@ -45,13 +50,17 @@ interface ChatWidgetProps {
 }
 
 /** State tampilan widget chat */
-type ViewState = 'start' | 'chat' | 'rating' | 'closed';
+type ViewState = 'conversations' | 'start' | 'chat' | 'rating' | 'closed';
 
 const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   position = 'bottom-right',
   defaultOpen = false,
   onConversationStart
 }) => {
+  // Auth — deteksi user yang login
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
+  
   // State umum
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [viewState, setViewState] = useState<ViewState>('start');
@@ -60,6 +69,10 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // State daftar percakapan user (untuk user yang login)
+  const [customerConversations, setCustomerConversations] = useState<CustomerConversationSummary[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
   
   // State form awal
   const [customerName, setCustomerName] = useState('');
@@ -160,20 +173,60 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     }).catch(err => console.error('[LiveChat] Gagal memuat chat settings:', err));
   }, []);
 
-  /** Muat percakapan dari localStorage */
+  /** Auto-fill nama dan email dari user yang login */
+  useEffect(() => {
+    if (user) {
+      if (user.name && !customerName) setCustomerName(user.name);
+      if (user.email && !customerEmail) setCustomerEmail(user.email);
+    }
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Muat percakapan dari localStorage dan validasi status */
   useEffect(() => {
     const savedConvId = localStorage.getItem('chat_conversation_id');
     const savedEmail = localStorage.getItem('chat_customer_email');
     const savedName = localStorage.getItem('chat_customer_name');
     
     if (savedConvId && savedEmail) {
-      setConversation({ id: savedConvId } as ChatConversation);
-      setCustomerEmail(savedEmail);
-      setCustomerName(savedName || '');
-      setViewState('chat');
-      loadMessages(savedConvId);
+      // Validasi: cek apakah percakapan masih aktif (bukan closed/resolved)
+      getConversationDetails(savedConvId).then(result => {
+        if (!result.error) {
+          const status = result.status;
+          if (status === 'closed' || status === 'resolved') {
+            // Percakapan sudah selesai — hapus data lama
+            localStorage.removeItem('chat_conversation_id');
+            localStorage.removeItem('chat_customer_email');
+            localStorage.removeItem('chat_customer_name');
+            console.info('[LiveChat] Percakapan lama sudah closed/resolved, kembali ke form awal');
+            // Jika user login, tampilkan conversation list
+            if (isLoggedIn) setViewState('conversations');
+            return;
+          }
+          // Percakapan masih aktif — lanjutkan
+          setConversation({ id: savedConvId } as ChatConversation);
+          setCustomerEmail(savedEmail);
+          setCustomerName(savedName || '');
+          setViewState('chat');
+          loadMessages(savedConvId);
+        } else {
+          // Percakapan tidak ditemukan atau error — bersihkan localStorage
+          localStorage.removeItem('chat_conversation_id');
+          localStorage.removeItem('chat_customer_email');
+          localStorage.removeItem('chat_customer_name');
+          // Jika user login, tampilkan conversation list
+          if (isLoggedIn) setViewState('conversations');
+        }
+      }).catch(() => {
+        // Error saat validasi — bersihkan untuk safety
+        localStorage.removeItem('chat_conversation_id');
+        localStorage.removeItem('chat_customer_email');
+        localStorage.removeItem('chat_customer_name');
+      });
+    } else if (isLoggedIn) {
+      // User login tapi tidak ada percakapan tersimpan — tampilkan conversation list
+      setViewState('conversations');
     }
-  }, []);
+  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Reset unread saat widget dibuka */
   useEffect(() => {
@@ -257,6 +310,32 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
 
   // --- Fungsi utilitas ---
 
+  /** Muat daftar percakapan milik user yang login */
+  const loadCustomerConversations = useCallback(async () => {
+    if (!user) return;
+    setConversationsLoading(true);
+    try {
+      const result = await getCustomerConversations({
+        userId: user.id,
+        customerEmail: user.email
+      });
+      if (!result.error) {
+        setCustomerConversations(result.conversations);
+      }
+    } catch (err) {
+      console.error('[LiveChat] Gagal memuat daftar percakapan:', err);
+    } finally {
+      setConversationsLoading(false);
+    }
+  }, [user]);
+
+  /** Muat percakapan saat viewState = conversations */
+  useEffect(() => {
+    if (viewState === 'conversations' && isOpen && isLoggedIn) {
+      loadCustomerConversations();
+    }
+  }, [viewState, isOpen, isLoggedIn, loadCustomerConversations]);
+
   /** Muat pesan dari server */
   const loadMessages = async (convId: string) => {
     setIsLoading(true);
@@ -269,6 +348,21 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
       setIsLoading(false);
     }
   };
+
+  /** Handler pilih percakapan dari daftar */
+  const handleSelectConversation = useCallback((conv: CustomerConversationSummary) => {
+    setConversation({ id: conv.id } as ChatConversation);
+    setCustomerEmail(conv.customerEmail || user?.email || '');
+    setCustomerName(conv.customerName || user?.name || '');
+    
+    // Simpan ke localStorage
+    localStorage.setItem('chat_conversation_id', conv.id);
+    if (conv.customerEmail) localStorage.setItem('chat_customer_email', conv.customerEmail);
+    if (conv.customerName) localStorage.setItem('chat_customer_name', conv.customerName);
+    
+    setViewState('chat');
+    loadMessages(conv.id);
+  }, [user]);
 
   // --- Handler ---
 
@@ -285,6 +379,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         subject,
         initialMessage,
         topic,
+        userId: user?.id,
         gameTitle: topic === 'jual_akun' ? gameTitle : undefined,
         orderId: topic === 'pembelian_rental' ? orderId : undefined
       });
@@ -454,8 +549,13 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
         setRating(0);
         setFeedback('');
         setRatingSubmitted(false);
-        setViewState('start');
-        setIsOpen(false);
+        // User login kembali ke daftar percakapan, guest kembali ke form
+        if (isLoggedIn) {
+          setViewState('conversations');
+        } else {
+          setViewState('start');
+          setIsOpen(false);
+        }
       }, 2000);
     } catch (err: any) {
       setError(err.message || 'Gagal mengirim rating');
@@ -489,7 +589,8 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
                 )}
               </div>
               <p className="text-xs text-white/70 truncate mt-0.5">
-                {viewState === 'start' ? (isOfflineHours ? 'Balasan mungkin lebih lambat dari biasanya' : 'Biasanya membalas dalam beberapa menit') : 
+                {viewState === 'conversations' ? `Halo, ${user?.name || 'User'}` :
+                 viewState === 'start' ? (isOfflineHours ? 'Balasan mungkin lebih lambat dari biasanya' : 'Biasanya membalas dalam beberapa menit') : 
                  viewState === 'rating' ? 'Berikan penilaian Anda' : 
                  assignedAdminName ? `Terhubung dengan ${assignedAdminName}` : 'Tim support siap membantu'}
               </p>
@@ -520,6 +621,14 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
             )}
             
             <div className="flex-1 overflow-hidden">
+            {viewState === 'conversations' && (
+              <ConversationListView
+                conversations={customerConversations}
+                isLoading={conversationsLoading}
+                onSelectConversation={handleSelectConversation}
+                onNewConversation={() => setViewState('start')}
+              />
+            )}
             {viewState === 'start' && (
               <ChatStartForm
                 customerName={customerName}
@@ -532,6 +641,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
                 gameTitles={gameTitles}
                 isLoading={isLoading}
                 error={error}
+                isLoggedIn={isLoggedIn}
                 onNameChange={setCustomerName}
                 onEmailChange={setCustomerEmail}
                 onSubjectChange={setSubject}
@@ -540,6 +650,7 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
                 onOrderIdChange={setOrderId}
                 onGameTitleChange={setGameTitle}
                 onSubmit={handleStartConversation}
+                onBackToList={isLoggedIn ? () => setViewState('conversations') : undefined}
               />
             )}
             {viewState === 'chat' && (
@@ -600,4 +711,11 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   );
 };
 
-export default LiveChatWidget;
+/** Wrapped dengan ErrorBoundary untuk mencegah widget crash */
+const LiveChatWidgetWithBoundary: React.FC<ChatWidgetProps> = (props) => (
+  <ChatErrorBoundary fallbackMessage="Chat widget mengalami masalah">
+    <LiveChatWidget {...props} />
+  </ChatErrorBoundary>
+);
+
+export default LiveChatWidgetWithBoundary;

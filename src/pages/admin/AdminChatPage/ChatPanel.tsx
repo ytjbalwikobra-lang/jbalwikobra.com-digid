@@ -4,7 +4,7 @@
  * Menampilkan detail percakapan yang dipilih.
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   MessageSquare,
   UserPlus,
@@ -15,7 +15,8 @@ import {
   History,
   Clock,
   ChevronLeft,
-  X
+  X,
+  Search
 } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { ChatMessageView } from './ChatMessageView';
@@ -90,6 +91,12 @@ interface ChatPanelProps {
   onToggleActivityLog: () => void;
   /** Handler kembali ke list (mobile) */
   onBack?: () => void;
+  /** Apakah ada pesan lebih lama */
+  hasMore?: boolean;
+  /** Status loading pesan lama */
+  loadingMore?: boolean;
+  /** Handler muat pesan lebih lama */
+  onLoadMore?: () => void;
 }
 
 /** Panel chat utama dengan header aksi, area pesan, dan sidebar — dimemoize */
@@ -121,14 +128,32 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
   onAssignToSelf,
   onLeaveConversation,
   onToggleActivityLog,
-  onBack
+  onBack,
+  hasMore,
+  loadingMore,
+  onLoadMore
 }) => {
+  // State pencarian di dalam pesan
+  const [messageSearch, setMessageSearch] = useState('');
+  const [showMessageSearch, setShowMessageSearch] = useState(false);
+
+  // Filter pesan berdasarkan pencarian
+  const displayMessages = useMemo(() => {
+    if (!messageSearch.trim()) return messages;
+    const q = messageSearch.toLowerCase();
+    return messages.filter(m =>
+      m.message?.toLowerCase().includes(q) ||
+      m.senderName?.toLowerCase().includes(q)
+    );
+  }, [messages, messageSearch]);
+
   return (
     <div className="h-full bg-[var(--admin-bg-card)] sm:rounded-xl sm:border sm:border-[var(--admin-border)] flex flex-col overflow-hidden">
       {selectedConversation ? (
         <>
           {/* Header Chat — responsive compact */}
           <div className="px-3 py-2 sm:px-4 sm:py-2.5 border-b border-[var(--admin-border)]">
+            {/* Baris 1: Back + Avatar + Nama + Status */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Tombol kembali — hanya mobile */}
               {onBack && (
@@ -142,7 +167,7 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
               )}
 
               {/* Avatar pelanggan */}
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[var(--admin-info)] to-[var(--admin-accent)] flex items-center justify-center shrink-0">
                 <span className="text-xs sm:text-sm font-bold text-white">
                   {getInitials(selectedConversation.customerName || selectedConversation.customerEmail || 'U')}
                 </span>
@@ -186,29 +211,29 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 </div>
               </div>
 
-              {/* Tombol aksi — icon-only on mobile, labeled on sm+ */}
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              {/* Tombol aksi — Desktop/Tablet: inline. Mobile: hanya toggle log */}
+              <div className="hidden sm:flex items-center gap-1.5 shrink-0">
                 {selectedConversation.status === 'open' && (
                   <button
                     onClick={onAssignToSelf}
-                    className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 rounded-lg bg-[var(--admin-accent)] text-white text-xs font-medium hover:brightness-110 active:scale-95 touch-manipulation transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--admin-accent)] text-white text-xs font-medium hover:brightness-110 active:scale-95 touch-manipulation transition-all"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Tangani</span>
+                    <span>Tangani</span>
                   </button>
                 )}
                 {selectedConversation.status === 'assigned' && (
                   <>
                     <button
                       onClick={() => onStatusChange('resolved')}
-                      className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 rounded-lg bg-[var(--admin-success)]/15 text-[var(--admin-success)] text-xs font-medium hover:bg-[var(--admin-success)]/25 active:scale-95 touch-manipulation transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--admin-success)]/15 text-[var(--admin-success)] text-xs font-medium hover:bg-[var(--admin-success)]/25 active:scale-95 touch-manipulation transition-all"
                     >
                       <CheckCircle className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Selesai</span>
+                      <span>Selesai</span>
                     </button>
                     <button
                       onClick={onLeaveConversation}
-                      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[var(--admin-text-secondary)] text-xs hover:bg-[var(--admin-bg-surface)] active:scale-95 touch-manipulation transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[var(--admin-text-secondary)] text-xs hover:bg-[var(--admin-bg-surface)] active:scale-95 touch-manipulation transition-all"
                     >
                       <UserMinus className="w-3.5 h-3.5" />
                       <span className="hidden lg:inline">Keluar</span>
@@ -218,10 +243,10 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 {selectedConversation.status === 'resolved' && (
                   <button
                     onClick={() => onStatusChange('closed')}
-                    className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 rounded-lg text-[var(--admin-text-secondary)] text-xs hover:bg-[var(--admin-bg-surface)] active:scale-95 touch-manipulation transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[var(--admin-text-secondary)] text-xs hover:bg-[var(--admin-bg-surface)] active:scale-95 touch-manipulation transition-all"
                   >
                     <XCircle className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Tutup</span>
+                    <span>Tutup</span>
                   </button>
                 )}
 
@@ -229,7 +254,7 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 <button
                   onClick={onToggleActivityLog}
                   className={cn(
-                    'p-1.5 sm:p-2 rounded-lg transition-colors touch-manipulation',
+                    'p-2 rounded-lg transition-colors touch-manipulation',
                     showActivityLog
                       ? 'bg-[var(--admin-accent)] text-white'
                       : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-elevated)]'
@@ -239,8 +264,79 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 >
                   <History className="w-4 h-4" />
                 </button>
+
+                {/* Toggle pencarian dalam pesan */}
+                <button
+                  onClick={() => { setShowMessageSearch(prev => !prev); if (showMessageSearch) setMessageSearch(''); }}
+                  className={cn(
+                    'p-2 rounded-lg transition-colors touch-manipulation',
+                    showMessageSearch
+                      ? 'bg-[var(--admin-accent)] text-white'
+                      : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-elevated)]'
+                  )}
+                  aria-label="Cari pesan"
+                  title="Cari Pesan"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
               </div>
+
+              {/* Mobile: hanya toggle log */}
+              <button
+                onClick={onToggleActivityLog}
+                className={cn(
+                  'sm:hidden p-1.5 rounded-lg transition-colors touch-manipulation shrink-0',
+                  showActivityLog
+                    ? 'bg-[var(--admin-accent)] text-white'
+                    : 'bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)]'
+                )}
+                aria-label="Log aktivitas"
+              >
+                <History className="w-4 h-4" />
+              </button>
             </div>
+
+            {/* Baris 2 — Mobile: Tombol aksi penuh, selalu terlihat */}
+            {onBack && (
+              <div className="flex items-center gap-2 mt-2 sm:hidden">
+                {selectedConversation.status === 'open' && (
+                  <button
+                    onClick={onAssignToSelf}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--admin-accent)] text-white text-xs font-semibold active:scale-[0.97] touch-manipulation transition-all shadow-sm"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Tangani
+                  </button>
+                )}
+                {selectedConversation.status === 'assigned' && (
+                  <>
+                    <button
+                      onClick={() => onStatusChange('resolved')}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--admin-success)]/15 text-[var(--admin-success)] text-xs font-semibold active:scale-[0.97] touch-manipulation transition-all"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Selesai
+                    </button>
+                    <button
+                      onClick={onLeaveConversation}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] text-xs font-medium active:scale-[0.97] touch-manipulation transition-all"
+                    >
+                      <UserMinus className="w-4 h-4" />
+                      Keluar
+                    </button>
+                  </>
+                )}
+                {selectedConversation.status === 'resolved' && (
+                  <button
+                    onClick={() => onStatusChange('closed')}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--admin-bg-surface)] text-[var(--admin-text-secondary)] text-xs font-medium active:scale-[0.97] touch-manipulation transition-all"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Tutup
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Partisipan & Waktu — hidden on mobile */}
             <div className="hidden lg:flex items-center gap-3 mt-2">
@@ -261,6 +357,32 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
             </div>
           </div>
 
+          {/* Search bar — tampilkan di bawah header saat aktif */}
+          {showMessageSearch && (
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg-surface)]">
+              <Search className="w-4 h-4 text-[var(--admin-text-muted)] shrink-0" />
+              <input
+                type="text"
+                value={messageSearch}
+                onChange={(e) => setMessageSearch(e.target.value)}
+                placeholder="Cari dalam pesan..."
+                autoFocus
+                className="flex-1 bg-transparent text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] outline-none"
+              />
+              {messageSearch && (
+                <span className="text-[10px] text-[var(--admin-text-muted)] shrink-0">
+                  {displayMessages.length} hasil
+                </span>
+              )}
+              <button
+                onClick={() => { setShowMessageSearch(false); setMessageSearch(''); }}
+                className="p-1 text-[var(--admin-text-muted)] hover:text-[var(--admin-text)] rounded transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-1 overflow-hidden relative">
             {/* Area Pesan */}
             <div className={cn(
@@ -268,8 +390,11 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
               showActivityLog && 'lg:border-r border-[var(--admin-border)]'
             )}>
               <ChatMessageView
-                messages={messages}
+                messages={displayMessages}
                 loading={messageLoading}
+                hasMore={hasMore && !messageSearch}
+                loadingMore={loadingMore}
+                onLoadMore={onLoadMore}
                 ref={messagesEndRef}
               />
 
@@ -300,7 +425,7 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
               <>
                 {/* Backdrop — mobile/tablet only */}
                 <div
-                  className="fixed inset-0 bg-black/50 z-[200] lg:hidden"
+                  className="fixed inset-0 bg-[var(--admin-bg-pure)]/50 z-[200] lg:hidden"
                   onClick={onToggleActivityLog}
                 />
                 <div className={cn(

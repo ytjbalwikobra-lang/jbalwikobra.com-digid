@@ -14,12 +14,30 @@ const supabaseAnonKey = (process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_
 const supabaseAdminKey = supabaseServiceKey || supabaseAnonKey;
 const supabaseAdmin = supabaseUrl && supabaseAdminKey ? createClient(supabaseUrl, supabaseAdminKey) : null;
 
-// Pembatasan rate
+// Rate limiting dasar — CATATAN: Map direset setiap cold start di serverless.
+// Untuk proteksi penuh, gunakan Vercel Firewall / Upstash Redis rate limiter.
+// Map ini hanya melindungi dalam satu instance (warm invocation burst).
 const rateMap = new Map<string, { count: number; ts: number }>();
 const RATE_WINDOW_MS = 10_000;
 const RATE_LIMIT = 60;
+const RATE_CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // Cleanup setiap 5 menit
+
+// Cleanup rateMap secara periodik untuk mencegah memory leak
+let lastCleanup = Date.now();
+function cleanupRateMap() {
+  const now = Date.now();
+  if (now - lastCleanup < RATE_CLEANUP_INTERVAL_MS) return;
+  
+  for (const [key, entry] of rateMap.entries()) {
+    if (now - entry.ts > RATE_WINDOW_MS * 2) {
+      rateMap.delete(key);
+    }
+  }
+  lastCleanup = now;
+}
 
 function rateLimit(key: string): boolean {
+  cleanupRateMap(); // Cleanup stale entries
   const now = Date.now();
   const entry = rateMap.get(key);
   if (!entry || now - entry.ts > RATE_WINDOW_MS) {
@@ -84,6 +102,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       case 'get-conversation':
         return await handleCustomerGetConversation(req, res);
+
+      case 'customer-list-conversations':
+        return await handleCustomerListConversations(req, res);
 
       // =========================================================================
       // ENDPOINT ADMIN (perlu autentikasi)
@@ -154,6 +175,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'admin-delete-canned-response':
         return await handleDeleteCannedResponse(req, res);
 
+      case 'admin-increment-canned-usage':
+        return await handleIncrementCannedUsage(req, res);
+
       // =========================================================================
       // ENDPOINT PENGATURAN CHAT
       // =========================================================================
@@ -204,22 +228,129 @@ async function handleCustomerGetConversation(req: VercelRequest, res: VercelResp
   });
 }
 
-/** Handler upload lampiran gambar ke Supabase Storage */
+/** Handler daftar percakapan milik user yang login (hanya open/assigned) */
+async function handleCustomerListConversations(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const { userId, customerEmail } = req.query;
+
+  if (!userId && !customerEmail) {
+    return respond(res, 400, { error: 'userId or customerEmail required' });
+  }
+
+  const sb = supabaseAdmin!;
+
+  try {
+    let query = sb
+      .from('chat_conversations')
+      .select('id, customer_name, customer_email, subject, topic, status, created_at, updated_at, last_message_at')
+      .in('status', ['open', 'assigned'])
+      .order('last_message_at', { ascending: false })
+      .limit(20);
+
+    if (userId) {
+      query = query.eq('user_id', userId as string);
+    } else {
+      query = query.eq('customer_email', customerEmail as string);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('[chat.ts] Error listing customer conversations:', error);
+      return respond(res, 500, { error: 'Failed to list conversations' });
+    }
+
+    // Ambil pesan terakhir untuk setiap percakapan
+    const conversations = (data || []).map((c: any) => ({
+      id: c.id,
+      customerName: c.customer_name,
+      customerEmail: c.customer_email,
+      subject: c.subject,
+      topic: c.topic,
+      status: c.status,
+      createdAt: c.created_at,
+      updatedAt: c.updated_at,
+      lastMessageAt: c.last_message_at,
+    }));
+
+    // Ambil pesan terakhir dan unread count secara batch
+    if (conversations.length > 0) {
+      const convIds = conversations.map((c: any) => c.id);
+      const { data: recentMsgs } = await sb
+        .from('chat_messages')
+        .select('conversation_id, message, sender_type, is_read, created_at')
+        .in('conversation_id', convIds)
+        .order('created_at', { ascending: false })
+        .limit(convIds.length * 3);
+
+      if (recentMsgs) {
+        const lastByConv = new Map<string, any>();
+        const unreadByConv = new Map<string, number>();
+        
+        for (const msg of recentMsgs) {
+          if (!lastByConv.has(msg.conversation_id)) {
+            lastByConv.set(msg.conversation_id, msg);
+          }
+          if (msg.sender_type === 'admin' && !msg.is_read) {
+            unreadByConv.set(msg.conversation_id, (unreadByConv.get(msg.conversation_id) || 0) + 1);
+          }
+        }
+
+        for (const conv of conversations) {
+          const last = lastByConv.get(conv.id);
+          if (last) {
+            (conv as any).lastMessagePreview = last.message?.substring(0, 80) || '';
+            (conv as any).lastMessageSender = last.sender_type;
+          }
+          (conv as any).unreadCount = unreadByConv.get(conv.id) || 0;
+        }
+      }
+    }
+
+    return respond(res, 200, { conversations });
+  } catch (err) {
+    console.error('[chat.ts] Exception listing customer conversations:', err);
+    return respond(res, 500, { error: 'Internal server error' });
+  }
+}
+
+/** Handler upload lampiran file ke Supabase Storage (gambar + dokumen) */
 async function handleUploadAttachment(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const { conversationId, base64Data, fileName, mimeType } = req.body || {};
+  const { conversationId, base64Data, fileName, mimeType, customerEmail } = req.body || {};
 
   if (!conversationId || !base64Data || !fileName || !mimeType) {
     return respond(res, 400, { error: 'conversationId, base64Data, fileName, and mimeType required' });
   }
 
-  // Validasi tipe MIME — hanya gambar
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  // Validasi ownership: cek apakah admin (via auth) atau customer (via email)
+  const authResult = await validateAdminAuth(req);
+  if (!authResult.valid) {
+    // Bukan admin — validasi sebagai customer
+    if (!customerEmail) {
+      return respond(res, 400, { error: 'customerEmail required for customer uploads' });
+    }
+    const conv = await chatService.getConversation(supabaseAdmin, conversationId);
+    if (!conv || conv.customerEmail !== customerEmail) {
+      return respond(res, 403, { error: 'Forbidden' });
+    }
+  }
+
+  // Validasi tipe MIME — gambar + dokumen
+  const allowedMimes = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
   if (!allowedMimes.includes(mimeType)) {
-    return respond(res, 400, { error: 'Tipe file tidak didukung. Hanya JPEG, PNG, GIF, WebP.' });
+    return respond(res, 400, { error: 'Tipe file tidak didukung. Hanya JPEG, PNG, GIF, WebP, PDF, DOC, DOCX.' });
   }
 
   // Decode base64
@@ -267,7 +398,7 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
-  const { customerEmail, customerName, customerPhone, subject, topic, gameTitle, initialMessage, orderId, metadata } = req.body || {};
+  const { customerEmail, customerName, customerPhone, subject, topic, gameTitle, initialMessage, orderId, userId, metadata } = req.body || {};
 
   if (!customerEmail && !customerPhone) {
     return respond(res, 400, { error: 'Email or phone required' });
@@ -280,6 +411,7 @@ async function handleStartConversation(req: VercelRequest, res: VercelResponse) 
     customerEmail,
     customerName,
     customerPhone,
+    userId,
     subject,
     topic,
     gameTitle,
@@ -321,17 +453,25 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
 
   const { conversationId, message, messageType, attachmentUrl, attachmentName, attachmentType } = req.body || {};
 
-  if (!conversationId || !message) {
-    return respond(res, 400, { error: 'conversationId and message required' });
+  if (!conversationId || (!message && !attachmentUrl)) {
+    return respond(res, 400, { error: 'conversationId and (message or attachmentUrl) required' });
+  }
+
+  // Validasi panjang pesan — maks 5000 karakter
+  if (message && message.length > 5000) {
+    return respond(res, 400, { error: 'Pesan terlalu panjang (maks 5000 karakter)' });
   }
 
   const sb = isAdmin ? supabaseAdmin : (supabaseAdmin!);
 
-  // Untuk pelanggan, pastikan mereka pemilik percakapan atau berikan email yang benar
+  // Untuk pelanggan, WAJIB sertakan customerEmail dan validasi ownership
   if (!isAdmin) {
     const { customerEmail } = req.body || {};
+    if (!customerEmail) {
+      return respond(res, 400, { error: 'customerEmail required' });
+    }
     const conv = await chatService.getConversation(sb, conversationId);
-    if (!conv || (customerEmail && conv.customerEmail !== customerEmail)) {
+    if (!conv || conv.customerEmail !== customerEmail) {
       return respond(res, 403, { error: 'Forbidden' });
     }
   }
@@ -346,7 +486,7 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     senderType,
     senderId: isAdmin ? authAdmin?.userId : undefined,
     senderName,
-    message,
+    message: message || '',
     messageType,
     attachmentUrl,
     attachmentName,
@@ -474,7 +614,8 @@ async function handleAdminGetConversation(req: VercelRequest, res: VercelRespons
   return respond(res, 200, {
     ...conversation,
     participants,
-    messages: messagesResult.messages
+    messages: messagesResult.messages,
+    hasMore: messagesResult.hasMore
   });
 }
 
@@ -715,6 +856,16 @@ async function handleSetTyping(req: VercelRequest, res: VercelResponse) {
     return respond(res, 400, { error: 'conversationId and userType required' });
   }
 
+  // Validasi: admin harus autentikasi, customer harus tipe customer
+  if (userType === 'admin') {
+    const authResult = await validateAdminAuth(req);
+    if (!authResult.valid) {
+      return respond(res, 401, { error: 'Unauthorized' });
+    }
+  } else if (userType !== 'customer') {
+    return respond(res, 400, { error: 'Invalid userType' });
+  }
+
   const sb = supabaseAdmin!;
   
   const success = await chatService.setTypingIndicator(sb, {
@@ -740,6 +891,16 @@ async function handleStopTyping(req: VercelRequest, res: VercelResponse) {
 
   if (!conversationId || !userType) {
     return respond(res, 400, { error: 'conversationId and userType required' });
+  }
+
+  // Validasi: admin harus autentikasi
+  if (userType === 'admin') {
+    const authResult = await validateAdminAuth(req);
+    if (!authResult.valid) {
+      return respond(res, 401, { error: 'Unauthorized' });
+    }
+  } else if (userType !== 'customer') {
+    return respond(res, 400, { error: 'Invalid userType' });
   }
 
   const sb = supabaseAdmin!;
@@ -827,7 +988,7 @@ async function handleCreateCannedResponse(req: VercelRequest, res: VercelRespons
 }
 
 async function handleUpdateCannedResponse(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'PUT' && req.method !== 'PATCH') {
+  if (req.method !== 'PUT' && req.method !== 'PATCH' && req.method !== 'POST') {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
@@ -859,7 +1020,7 @@ async function handleUpdateCannedResponse(req: VercelRequest, res: VercelRespons
 }
 
 async function handleDeleteCannedResponse(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'DELETE') {
+  if (req.method !== 'DELETE' && req.method !== 'POST') {
     return respond(res, 405, { error: 'Method not allowed' });
   }
 
@@ -868,7 +1029,8 @@ async function handleDeleteCannedResponse(req: VercelRequest, res: VercelRespons
     return respond(res, 401, { error: authResult.error || 'Unauthorized' });
   }
 
-  const { id } = req.query;
+  // Dukung id dari query param (DELETE) atau body (POST)
+  const id = (req.query.id as string) || req.body?.id;
 
   if (!id) {
     return respond(res, 400, { error: 'id required' });
@@ -880,6 +1042,26 @@ async function handleDeleteCannedResponse(req: VercelRequest, res: VercelRespons
     return respond(res, 500, { error: 'Failed to delete canned response' });
   }
 
+  return respond(res, 200, { success: true });
+}
+
+/** Increment usage count template respon cepat */
+async function handleIncrementCannedUsage(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return respond(res, 405, { error: 'Method not allowed' });
+  }
+
+  const authResult = await validateAdminAuth(req);
+  if (!authResult.valid) {
+    return respond(res, 401, { error: authResult.error || 'Unauthorized' });
+  }
+
+  const { id } = req.body || {};
+  if (!id) {
+    return respond(res, 400, { error: 'id required' });
+  }
+
+  await chatService.incrementCannedResponseUsage(supabaseAdmin, id);
   return respond(res, 200, { success: true });
 }
 
@@ -896,7 +1078,7 @@ async function handleGetChatSettings(req: VercelRequest, res: VercelResponse) {
   try {
     const { data, error } = await supabaseAdmin!
       .from('chat_settings')
-      .select('*')
+      .select('id, business_hours_enabled, business_hours_start, business_hours_end, business_hours_timezone, offline_message, welcome_message, auto_reply_message, max_concurrent_chats, session_timeout_minutes, created_at, updated_at')
       .eq('id', 'default')
       .single();
 

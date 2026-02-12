@@ -188,6 +188,7 @@ export interface StartChatRequest {
   customerEmail?: string;
   customerName?: string;
   customerPhone?: string;
+  userId?: string;
   subject?: string;
   topic?: ChatTopic;
   gameTitle?: string;

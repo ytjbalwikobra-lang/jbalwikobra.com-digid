@@ -8,7 +8,24 @@ import { Search, RefreshCw, Inbox } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { AdminLoadingState } from '../components/ui/AdminLoadingState';
 import { STATUS_OPTIONS, formatRelativeTime, getInitials, type FilterStatus } from './chatHelpers';
-import type { ChatConversation, ChatConversationStatus } from '../../../types/chat';
+import type { ChatConversation, ChatConversationStatus, ChatTopic } from '../../../types/chat';
+
+/** Helper untuk styling badge topic */
+function getTopicStyle(topic: ChatTopic): string {
+  return topic === 'pembelian_rental'
+    ? 'bg-[var(--admin-info)]/15 text-[var(--admin-info)]'
+    : 'bg-[var(--admin-orange)]/15 text-[var(--admin-orange)]';
+}
+
+/** Helper untuk icon badge topic */
+function getTopicIcon(topic: ChatTopic): string {
+  return topic === 'pembelian_rental' ? '🛒' : '💰';
+}
+
+/** Helper untuk label badge topic */
+function getTopicLabel(topic: ChatTopic): string {
+  return topic === 'pembelian_rental' ? 'Beli' : 'Jual';
+}
 
 interface ChatConversationListProps {
   /** Daftar percakapan yang sudah difilter */
@@ -73,6 +90,7 @@ export const ChatConversationList = React.memo<ChatConversationListProps>(({
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Cari percakapan..."
+              aria-label="Cari percakapan"
               className="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-[var(--admin-bg-surface)] border border-[var(--admin-border)] rounded-lg text-base sm:text-sm text-[var(--admin-text)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:border-[var(--admin-accent)] transition-colors"
             />
           </div>
@@ -172,12 +190,10 @@ export const ChatConversationList = React.memo<ChatConversationListProps>(({
                       <div className="flex items-center gap-1.5 mb-0.5">
                         {conv.topic && conv.topic !== 'lainnya' && (
                           <span className={`inline-flex items-center gap-0.5 px-1 py-0 text-[9px] font-medium rounded shrink-0 ${
-                            conv.topic === 'pembelian_rental'
-                              ? 'bg-[var(--admin-info)]/15 text-[var(--admin-info)]'
-                              : 'bg-[var(--admin-orange)]/15 text-[var(--admin-orange)]'
+                            getTopicStyle(conv.topic)
                           }`}>
-                            {conv.topic === 'pembelian_rental' ? '🛒' : '💰'}
-                            {conv.topic === 'pembelian_rental' ? 'Beli' : 'Jual'}
+                            {getTopicIcon(conv.topic)}
+                            {getTopicLabel(conv.topic)}
                           </span>
                         )}
                         {conv.subject && (

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Phone, User, Lock, Shield, MessageCircle } from 'lucide-react';
+import { Mail, User, Lock, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useToast } from '../components/Toast';
-import PhoneInput from '../components/PhoneInput';
 import PasswordInput from '../components/PasswordInput';
 import { useTracking } from '../hooks/useTracking';
 import { SettingsService } from '../services/settingsService';
@@ -16,13 +15,17 @@ import {
   PNHeading,
   PNText,
   PNInput,
-  PNTabSwitcher,
   PNLinkButton,
 } from '../components/ui/CyberDesignSystem';
 
 /**
- * TraditionalAuthPage - Unified Login/Signup page
- * Uses CyberDesignSystem for consistent styling with ProfilePage
+ * TraditionalAuthPage - Halaman Login/Signup (Revamped)
+ * 
+ * Perubahan:
+ * - Tambah Google OAuth login
+ * - Signup email-first (tanpa WhatsApp OTP)
+ * - Hapus mode verifikasi WhatsApp
+ * - Mode: login | signup | complete
  * 
  * Design System Tokens:
  * - Spacing: 16px (md), 24px (lg), 32px (xl)
@@ -32,16 +35,17 @@ import {
  */
 
 const AuthPage: React.FC = () => {
-  const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'complete'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'complete'>('login');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login, signup, verifyPhone, completeProfile } = useAuth();
+  const { user, login, signup, loginWithGoogle, completeProfile } = useAuth();
   const { showToast } = useToast();
   const { trackLogin, trackSignUp } = useTracking();
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
 
-  // Fetch settings for admin WhatsApp URL
+  // Ambil settings untuk admin WhatsApp URL (untuk lupa password)
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -49,61 +53,52 @@ const AuthPage: React.FC = () => {
         const data = await SettingsService.get();
         if (mounted) setSettings(data);
       } catch {
-        // silent fail – use default WhatsApp URL
+        // silent fail
       }
     })();
     return () => { mounted = false; };
   }, []);
 
-  // Get admin WhatsApp URL from settings
+  // Redirect jika sudah login
+  // Tidak perlu guard callback Google — saat callback diproses, user masih null
+  // Setelah callback berhasil, user di-set → redirect otomatis
+  useEffect(() => {
+    if (user) {
+      if (user.isAdmin) {
+        navigate('/admin', { replace: true });
+      } else {
+        const redirect = searchParams.get('redirect');
+        navigate(redirect ? decodeURIComponent(redirect) : '/', { replace: true });
+      }
+    }
+  }, [user, navigate, searchParams]);
+
+  // URL WhatsApp admin untuk lupa password
   const adminWhatsAppUrl = ensureUrlProtocol(
     settings?.jualAkunWhatsappUrl || 'https://wa.me/6282242417788?text=Halo,%20saya%20lupa%20password%20akun%20saya'
   );
 
-  // Login tab state
-  const [loginTab, setLoginTab] = useState<'email' | 'phone'>('email');
+  // State form login
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
 
-  // Email login state
-  const [emailLoginData, setEmailLoginData] = useState({
-    email: '',
-    password: ''
-  });
-
-  // Phone login state
-  const [phoneLoginData, setPhoneLoginData] = useState({
-    phone: '',
-    password: ''
-  });
-
-  // Signup form state
+  // State form signup (email-first)
   const [signupData, setSignupData] = useState({
     name: '',
-    phone: '',
+    email: '',
     password: '',
     confirmPassword: ''
   });
 
-  // Verification state
-  const [verificationData, setVerificationData] = useState({
-    userId: '',
-    code: ''
-  });
+  // State profile completion
+  const [profileData, setProfileData] = useState({ email: '', name: '' });
 
-  // Profile completion state
-  const [profileData, setProfileData] = useState({
-    email: '',
-    name: ''
-  });
-
+  // Handler login email + password
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const identifier = loginTab === 'email' ? emailLoginData.email : phoneLoginData.phone;
-      const password = loginTab === 'email' ? emailLoginData.password : phoneLoginData.password;
-      
-      const result = await login(identifier, password);
+      const result = await login(loginData.email, loginData.password);
       
       if (result.error) {
         showToast(result.error, 'error');
@@ -111,34 +106,45 @@ const AuthPage: React.FC = () => {
       }
 
       showToast('Login berhasil!', 'success');
-      try {
-        trackLogin(loginTab === 'email' ? 'email' : 'phone');
-      } catch (error) {
-        console.warn('Failed to track login:', error);
-      }
+      try { trackLogin('email'); } catch { /* silent */ }
       
       if (!result.profileCompleted) {
         setMode('complete');
         return;
       }
 
-      // Admin langsung diarahkan ke dashboard admin
       if (result.user?.isAdmin) {
         navigate('/admin', { replace: true });
         return;
       }
 
       const redirect = searchParams.get('redirect');
-      const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
-      navigate(decodedRedirect, { replace: true });
+      navigate(redirect ? decodeURIComponent(redirect) : '/', { replace: true });
       
-    } catch (error) {
+    } catch {
       showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  // Handler login Google
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (result.error) {
+        showToast(result.error, 'error');
+        setGoogleLoading(false);
+      }
+      // Redirect otomatis jika sukses
+    } catch {
+      showToast('Gagal memulai login Google', 'error');
+      setGoogleLoading(false);
+    }
+  };
+
+  // Handler signup email-first
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -147,8 +153,8 @@ const AuthPage: React.FC = () => {
       return;
     }
 
-    if (!signupData.phone.trim()) {
-      showToast('Nomor WhatsApp harus diisi', 'error');
+    if (!signupData.email.trim()) {
+      showToast('Email harus diisi', 'error');
       return;
     }
 
@@ -165,51 +171,27 @@ const AuthPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const result = await signup(signupData.phone, signupData.password, signupData.name);
+      const result = await signup(signupData.email, signupData.password, signupData.name);
       
       if (result.error) {
         showToast(result.error, 'error');
         return;
       }
 
-      setVerificationData({ userId: result.userId!, code: '' });
-      setMode('verify');
-      showToast(result.message || 'Kode verifikasi telah dikirim ke WhatsApp', 'success');
-      try {
-        trackSignUp('phone');
-      } catch (error) {
-        console.warn('Failed to track signup:', error);
-      }
+      showToast('Akun berhasil dibuat! Selamat datang!', 'success');
+      try { trackSignUp('email'); } catch { /* silent */ }
+
+      const redirect = searchParams.get('redirect');
+      navigate(redirect ? decodeURIComponent(redirect) : '/', { replace: true });
       
-    } catch (error) {
+    } catch {
       showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const result = await verifyPhone(verificationData.userId, verificationData.code);
-      
-      if (result.error) {
-        showToast(result.error, 'error');
-        return;
-      }
-
-      showToast('Nomor HP berhasil diverifikasi!', 'success');
-      setMode('complete');
-      
-    } catch (error) {
-      showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Handler profile completion
   const handleProfileCompletion = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -231,34 +213,55 @@ const AuthPage: React.FC = () => {
       showToast('Profil berhasil dilengkapi! Selamat datang!', 'success');
       
       const redirect = searchParams.get('redirect');
-      const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
-      navigate(decodedRedirect, { replace: true });
+      navigate(redirect ? decodeURIComponent(redirect) : '/', { replace: true });
       
-    } catch (error) {
+    } catch {
       showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Page titles and subtitles
+  // Google button component (dipakai di login dan signup)
+  const GoogleButton = ({ label }: { label: string }) => (
+    <button
+      onClick={handleGoogleLogin}
+      disabled={googleLoading}
+      className="w-full flex items-center justify-center gap-3 px-4 py-3 min-h-[48px] bg-white text-gray-800 font-medium rounded-cyber-lg hover:bg-gray-100 active:bg-gray-200 active:scale-[0.98] transition-all touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {googleLoading ? (
+        <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-800 rounded-full animate-spin" />
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+      )}
+      {googleLoading ? 'Menghubungkan...' : label}
+    </button>
+  );
+
+  // Divider component
+  const OrDivider = ({ text }: { text: string }) => (
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-[var(--cyber-border)]" />
+      </div>
+      <div className="relative flex justify-center text-xs">
+        <span className="bg-[var(--cyber-bg-card)] px-3 text-[var(--cyber-text-muted)]">
+          {text}
+        </span>
+      </div>
+    </div>
+  );
+
+  // Judul dan subtitle halaman
   const pageContent = {
-    login: {
-      title: 'Masuk ke Akun',
-      subtitle: 'Pilih metode masuk yang Anda inginkan'
-    },
-    signup: {
-      title: 'Daftar Akun Baru',
-      subtitle: 'Buat akun dengan nomor WhatsApp'
-    },
-    verify: {
-      title: 'Verifikasi WhatsApp',
-      subtitle: 'Masukkan kode yang dikirim ke WhatsApp'
-    },
-    complete: {
-      title: 'Lengkapi Profil',
-      subtitle: 'Tambahkan email dan nama lengkap'
-    }
+    login: { title: 'Masuk ke Akun', subtitle: 'Login dengan Google atau email' },
+    signup: { title: 'Daftar Akun Baru', subtitle: 'Buat akun dengan email' },
+    complete: { title: 'Lengkapi Profil', subtitle: 'Tambahkan email dan nama lengkap' }
   };
 
   return (
@@ -267,11 +270,9 @@ const AuthPage: React.FC = () => {
         <PNCard className="p-6 sm:p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            {/* Logo/Icon */}
             <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-cyber-2xl flex items-center justify-center shadow-lg shadow-[var(--cyber-pink-muted)]">
               {mode === 'login' && <Lock size={28} className="text-white" />}
               {mode === 'signup' && <User size={28} className="text-white" />}
-              {mode === 'verify' && <Phone size={28} className="text-white" />}
               {mode === 'complete' && <Shield size={28} className="text-white" />}
             </div>
             
@@ -283,59 +284,28 @@ const AuthPage: React.FC = () => {
             </PNText>
           </div>
 
-          {/* Login Form */}
+          {/* ========== LOGIN FORM ========== */}
           {mode === 'login' && (
             <div className="space-y-6">
-              <PNTabSwitcher
-                tabs={[
-                  { key: 'email', label: 'Email' },
-                  { key: 'phone', label: 'Nomor HP' }
-                ]}
-                activeTab={loginTab}
-                onTabChange={(key) => setLoginTab(key as 'email' | 'phone')}
-              />
+              <GoogleButton label="Lanjutkan dengan Google" />
+              <OrDivider text="atau login dengan email" />
 
               <form onSubmit={handleLogin} className="space-y-5">
-                {loginTab === 'email' ? (
-                  <>
-                    <PNInput
-                      type="email"
-                      label="Email"
-                      value={emailLoginData.email}
-                      onChange={(e) => setEmailLoginData({ ...emailLoginData, email: e.target.value })}
-                      placeholder="email@example.com"
-                      icon={<Mail size={18} />}
-                      required
-                    />
-                    <PasswordInput
-                      value={emailLoginData.password}
-                      onChange={(value) => setEmailLoginData({ ...emailLoginData, password: value })}
-                      placeholder="Masukkan password"
-                      required
-                    />
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
-                        Nomor HP
-                      </label>
-                      <PhoneInput
-                        value={phoneLoginData.phone}
-                        onChange={(value) => setPhoneLoginData({ ...phoneLoginData, phone: value })}
-                        placeholder="Masukkan Nomor WhatsApp"
-                        required
-                        disableAutoDetection={true}
-                      />
-                    </div>
-                    <PasswordInput
-                      value={phoneLoginData.password}
-                      onChange={(value) => setPhoneLoginData({ ...phoneLoginData, password: value })}
-                      placeholder="Masukkan password"
-                      required
-                    />
-                  </>
-                )}
+                <PNInput
+                  type="email"
+                  label="Email"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                  placeholder="email@example.com"
+                  icon={<Mail size={18} />}
+                  required
+                />
+                <PasswordInput
+                  value={loginData.password}
+                  onChange={(value) => setLoginData({ ...loginData, password: value })}
+                  placeholder="Masukkan password"
+                  required
+                />
 
                 <PNButton
                   type="submit"
@@ -345,10 +315,10 @@ const AuthPage: React.FC = () => {
                   loading={loading}
                   className="mt-6"
                 >
-                  Masuk dengan {loginTab === 'email' ? 'Email' : 'Nomor HP'}
+                  Masuk dengan Email
                 </PNButton>
 
-                {/* Forgot Password Button */}
+                {/* Lupa Password */}
                 <div className="pt-4">
                   <a 
                     href={adminWhatsAppUrl}
@@ -364,7 +334,6 @@ const AuthPage: React.FC = () => {
                       className="group"
                     >
                       <span className="flex items-center justify-center gap-2">
-                        <MessageCircle size={18} className="group-hover:scale-110 transition-transform" />
                         Lupa Password? Hubungi Admin
                       </span>
                     </PNButton>
@@ -380,118 +349,69 @@ const AuthPage: React.FC = () => {
             </div>
           )}
 
-          {/* Signup Form */}
+          {/* ========== SIGNUP FORM (Email-first) ========== */}
           {mode === 'signup' && (
-            <form onSubmit={handleSignup} className="space-y-5">
-              <PNInput
-                type="text"
-                label="Nama Lengkap"
-                value={signupData.name}
-                onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
-                placeholder="Masukkan nama lengkap"
-                icon={<User size={18} />}
-                required
-              />
+            <div className="space-y-6">
+              <GoogleButton label="Daftar dengan Google" />
+              <OrDivider text="atau daftar dengan email" />
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
-                  Nomor WhatsApp
-                </label>
-                <PhoneInput
-                  value={signupData.phone}
-                  onChange={(value) => setSignupData({ ...signupData, phone: value })}
-                  placeholder="Masukkan Nomor WhatsApp"
-                  required
-                  disableAutoDetection={true}
-                />
-                <p className="text-xs text-[var(--cyber-text-muted)]">
-                  Kode verifikasi akan dikirim ke nomor ini
-                </p>
-              </div>
-
-              <PasswordInput
-                value={signupData.password}
-                onChange={(value) => setSignupData({ ...signupData, password: value })}
-                placeholder="Minimal 6 karakter"
-                required
-              />
-
-              <PasswordInput
-                value={signupData.confirmPassword}
-                onChange={(value) => setSignupData({ ...signupData, confirmPassword: value })}
-                placeholder="Ulangi password"
-                label="Konfirmasi Password"
-                required
-              />
-
-              <PNButton
-                type="submit"
-                fullWidth
-                size="lg"
-                disabled={loading}
-                loading={loading}
-                className="mt-6"
-              >
-                Daftar
-              </PNButton>
-
-              <div className="text-center pt-2">
-                <PNLinkButton onClick={() => setMode('login')}>
-                  Sudah punya akun? Masuk di sini
-                </PNLinkButton>
-              </div>
-            </form>
-          )}
-
-          {/* Verification Form */}
-          {mode === 'verify' && (
-            <form onSubmit={handleVerification} className="space-y-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-2xl flex items-center justify-center mx-auto mb-4">
-                  <Phone size={28} className="text-green-400" />
-                </div>
-                <PNText color="muted" className="text-sm">
-                  Kode verifikasi telah dikirim ke WhatsApp Anda
-                </PNText>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[var(--cyber-text-secondary)]">
-                  Kode Verifikasi (6 digit)
-                </label>
-                <input
+              <form onSubmit={handleSignup} className="space-y-5">
+                <PNInput
                   type="text"
-                  value={verificationData.code}
-                  onChange={(e) => setVerificationData({ 
-                    ...verificationData, 
-                    code: e.target.value.replace(/\D/g, '').slice(0, 6)
-                  })}
-                  className="w-full px-4 py-4 min-h-[56px] bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg text-white text-center text-2xl tracking-[0.5em] font-mono placeholder:text-[var(--cyber-text-disabled)] placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[var(--cyber-pink-muted)] focus:border-[var(--cyber-pink-muted)]"
-                  placeholder="123456"
-                  maxLength={6}
+                  label="Nama Lengkap"
+                  value={signupData.name}
+                  onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                  placeholder="Masukkan nama lengkap"
+                  icon={<User size={18} />}
                   required
                 />
-              </div>
 
-              <PNButton
-                type="submit"
-                fullWidth
-                size="lg"
-                disabled={loading || verificationData.code.length !== 6}
-                loading={loading}
-              >
-                Verifikasi
-              </PNButton>
+                <PNInput
+                  type="email"
+                  label="Email"
+                  value={signupData.email}
+                  onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                  placeholder="email@example.com"
+                  icon={<Mail size={18} />}
+                  required
+                />
 
-              <div className="text-center pt-2">
-                <PNLinkButton onClick={() => setMode('signup')}>
-                  Kembali ke pendaftaran
-                </PNLinkButton>
-              </div>
-            </form>
+                <PasswordInput
+                  value={signupData.password}
+                  onChange={(value) => setSignupData({ ...signupData, password: value })}
+                  placeholder="Minimal 6 karakter"
+                  required
+                />
+
+                <PasswordInput
+                  value={signupData.confirmPassword}
+                  onChange={(value) => setSignupData({ ...signupData, confirmPassword: value })}
+                  placeholder="Ulangi password"
+                  label="Konfirmasi Password"
+                  required
+                />
+
+                <PNButton
+                  type="submit"
+                  fullWidth
+                  size="lg"
+                  disabled={loading}
+                  loading={loading}
+                  className="mt-6"
+                >
+                  Daftar
+                </PNButton>
+
+                <div className="text-center pt-2">
+                  <PNLinkButton onClick={() => setMode('login')}>
+                    Sudah punya akun? Masuk di sini
+                  </PNLinkButton>
+                </div>
+              </form>
+            </div>
           )}
 
-          {/* Profile Completion Form */}
+          {/* ========== PROFILE COMPLETION FORM ========== */}
           {mode === 'complete' && (
             <form onSubmit={handleProfileCompletion} className="space-y-5">
               <div className="text-center mb-6">
@@ -512,17 +432,6 @@ const AuthPage: React.FC = () => {
                 icon={<Mail size={18} />}
                 required
               />
-
-              <div className="bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-cyber-lg p-4 space-y-2">
-                <p className="text-sm text-[var(--cyber-text-muted)] flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  Nama dan password sudah diatur saat pendaftaran
-                </p>
-                <p className="text-sm text-[var(--cyber-text-muted)] flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  Nomor WhatsApp terverifikasi
-                </p>
-              </div>
 
               <PNButton
                 type="submit"

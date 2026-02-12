@@ -157,7 +157,7 @@ const PaymentStatus: React.FC = () => {
                     className="flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={18} />
-                    <span>💬 Chat dengan Support</span>
+                    <span>Chat dengan Support</span>
                   </PNButton>
                   <div className="text-center">
                     <PNText className="text-sm text-[var(--cyber-text-muted)]">• Pesanan Anda sedang diproses</PNText>
@@ -257,7 +257,7 @@ const PaymentStatus: React.FC = () => {
                     className="flex items-center justify-center gap-2 !border-[var(--cyber-accent)]"
                   >
                     <MessageCircle size={18} />
-                    <span>💬 Chat dengan Support</span>
+                    <span>Chat dengan Support</span>
                   </PNButton>
                   <div className="text-center">
                     <PNText className="text-sm text-[var(--cyber-text-muted)]">Butuh bantuan? Gunakan Live Chat di atas</PNText>

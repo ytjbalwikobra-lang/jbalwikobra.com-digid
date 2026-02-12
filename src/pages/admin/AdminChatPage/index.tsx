@@ -16,10 +16,8 @@ import {
   adminSetTyping,
   adminStopTyping,
   adminGetCannedResponses,
-  subscribeToMessages,
-  subscribeToAllMessages,
-  subscribeToConversations,
-  subscribeToTypingIndicators,
+  adminGetMessages,
+  incrementCannedResponseUsage,
   uploadChatAttachment
 } from '../../../services/chatService';
 import type {
@@ -36,6 +34,8 @@ import type {
 import { type FilterStatus } from './chatHelpers';
 import { ChatConversationList } from './ChatConversationList';
 import { ChatPanel } from './ChatPanel';
+import { useChatRealtime } from './hooks/useChatRealtime';
+import { ChatErrorBoundary } from '../../../components/ChatErrorBoundary';
 
 const AdminChatPage: React.FC = () => {
   const toast = useToast();
@@ -78,10 +78,12 @@ const AdminChatPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   
+  // State infinite scroll pesan
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const unsubscribeMessagesRef = useRef<(() => void) | null>(null);
-  const unsubscribeTypingRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const isFirstLoadRef = useRef(true);
@@ -104,6 +106,26 @@ const AdminChatPage: React.FC = () => {
     }
   }, [isMobile]);
 
+  /** Play suara notifikasi untuk pesan customer baru */
+  const playNotificationSound = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(830, ctx.currentTime);
+      osc.frequency.setValueAtTime(980, ctx.currentTime + 0.08);
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } catch {
+      // Browser tidak support Web Audio — abaikan
+    }
+  }, []);
+
   /** Muat daftar percakapan — tanpa flicker saat background refresh */
   const loadConversations = useCallback(async () => {
     // Hanya tampilkan spinner pada initial load pertama kali
@@ -124,17 +146,18 @@ const AdminChatPage: React.FC = () => {
       // Smart merge: hanya update state jika data berubah — hindari re-render percuma
       setConversations(prev => {
         const next = result.conversations;
-        if (prev.length === next.length && next.length > 0) {
-          const isSame = prev.every((p, i) =>
-            p.id === next[i].id &&
-            p.updatedAt === next[i].updatedAt &&
-            p.unreadCount === next[i].unreadCount &&
-            p.status === next[i].status &&
-            p.lastMessageAt === next[i].lastMessageAt
-          );
-          if (isSame) return prev;
-        }
-        return next;
+        if (prev.length !== next.length) return next;
+        if (next.length === 0) return prev; // Empty, no change needed
+        
+        // Optimized: cek hanya first & last item — likely change point
+        const firstSame = prev[0].id === next[0].id &&
+          prev[0].updatedAt === next[0].updatedAt &&
+          prev[0].unreadCount === next[0].unreadCount;
+        const lastSame = prev[prev.length - 1].id === next[next.length - 1].id &&
+          prev[prev.length - 1].updatedAt === next[next.length - 1].updatedAt;
+        
+        if (firstSame && lastSame) return prev; // Most likely unchanged
+        return next; // Something changed, update
       });
     } catch (err) {
       console.error('[AdminChat] Gagal memuat percakapan:', err);
@@ -148,7 +171,7 @@ const AdminChatPage: React.FC = () => {
     }
   }, [statusFilter, toast]);
 
-  /** Muat detail percakapan yang dipilih */
+  /** Muat detail percakapan yang dipilih — markRead fire-and-forget */
   const loadConversationDetails = useCallback(async (convId: string) => {
     setMessageLoading(true);
     try {
@@ -157,7 +180,9 @@ const AdminChatPage: React.FC = () => {
         setSelectedConversation(conv);
         setMessages(conv.messages || []);
         setParticipants(conv.participants || []);
-        await adminMarkRead(convId);
+        setHasMoreMessages((conv as any).hasMore ?? false);
+        // Fire-and-forget: markRead tidak perlu ditunggu
+        adminMarkRead(convId).catch(() => {});
       }
     } catch (err) {
       console.error('[AdminChat] Gagal memuat detail percakapan:', err);
@@ -182,102 +207,15 @@ const AdminChatPage: React.FC = () => {
     loadConversations();
   }, [loadConversations]);
 
-  /** Silent polling setiap 15 detik — tanpa spinner, data di-update di background */
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadConversations();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [loadConversations]);
-
-  /** Langganan pembaruan percakapan secara realtime */
-  useEffect(() => {
-    const { unsubscribe } = subscribeToConversations((conv) => {
-      setConversations(prev => {
-        const idx = prev.findIndex(c => c.id === conv.id);
-        if (idx >= 0) {
-          const updated = [...prev];
-          // Pertahankan lastMessage dan unreadCount dari state lokal jika realtime tidak punya
-          updated[idx] = {
-            ...updated[idx],
-            ...conv,
-            lastMessage: conv.lastMessage || updated[idx].lastMessage,
-            unreadCount: conv.unreadCount ?? updated[idx].unreadCount
-          };
-          return updated;
-        }
-        return [conv, ...prev];
-      });
-    });
-    return () => { unsubscribe(); };
-  }, []);
-
-  /** Langganan SEMUA pesan baru untuk update preview di daftar percakapan */
-  useEffect(() => {
-    const { unsubscribe } = subscribeToAllMessages((msg) => {
-      setConversations(prev => {
-        const idx = prev.findIndex(c => c.id === msg.conversationId);
-        if (idx < 0) return prev; // Percakapan tidak ada di list — abaikan
-        const updated = [...prev];
-        updated[idx] = {
-          ...updated[idx],
-          lastMessage: msg,
-          lastMessageAt: msg.createdAt,
-          // Increment unread hanya jika pesan dari customer
-          unreadCount: msg.senderType !== 'admin'
-            ? (updated[idx].unreadCount || 0) + 1
-            : updated[idx].unreadCount
-        };
-        // Pindahkan ke atas list (pesan terbaru)
-        const [moved] = updated.splice(idx, 1);
-        updated.unshift(moved);
-        return updated;
-      });
-    });
-    return () => { unsubscribe(); };
-  }, []);
-
-  /** Langganan pesan untuk percakapan yang dipilih */
-  useEffect(() => {
-    if (selectedConversation?.id) {
-      unsubscribeMessagesRef.current?.();
-      const { unsubscribe } = subscribeToMessages(selectedConversation.id, (msg) => {
-        // Tambahkan pesan ke daftar pesan percakapan aktif
-        setMessages(prev => {
-          if (prev.some(m => m.id === msg.id)) return prev;
-          return [...prev, msg];
-        });
-        
-        // Update preview pesan terakhir di daftar percakapan
-        setConversations(prev => prev.map(c => {
-          if (c.id !== msg.conversationId) return c;
-          return {
-            ...c,
-            lastMessage: msg,
-            lastMessageAt: msg.createdAt,
-            // Increment unread jika pesan dari customer dan bukan percakapan aktif
-            unreadCount: msg.senderType !== 'admin'
-              ? (c.unreadCount || 0) + 1
-              : c.unreadCount
-          };
-        }));
-      });
-      unsubscribeMessagesRef.current = unsubscribe;
-      return () => { unsubscribe(); };
-    }
-  }, [selectedConversation?.id]);
-
-  /** Langganan indikator mengetik untuk percakapan yang dipilih */
-  useEffect(() => {
-    if (selectedConversation?.id) {
-      unsubscribeTypingRef.current?.();
-      const { unsubscribe } = subscribeToTypingIndicators(selectedConversation.id, (indicators) => {
-        setTypingUsers(indicators.filter(i => i.userType !== 'admin'));
-      });
-      unsubscribeTypingRef.current = unsubscribe;
-      return () => { unsubscribe(); setTypingUsers([]); };
-    }
-  }, [selectedConversation?.id]);
+  /** Silent polling setiap 60 detik + semua langganan realtime */
+  useChatRealtime({
+    selectedConversationId: selectedConversation?.id,
+    playNotificationSound,
+    setConversations,
+    setMessages,
+    setTypingUsers,
+    loadConversations,
+  });
 
   /** Muat template respon cepat saat komponen dimount */
   useEffect(() => {
@@ -320,12 +258,16 @@ const AdminChatPage: React.FC = () => {
     }
   }, [selectedConversation?.id]);
 
-  /** Handler pemilihan template respon cepat */
+  /** Handler pemilihan template respon cepat — increment usage tracking */
   const handleSelectCannedResponse = useCallback((response: ChatCannedResponse) => {
     setNewMessage(response.message);
     setShowCannedPicker(false);
     setCannedFilter('');
     messageInputRef.current?.focus();
+    // Fire-and-forget: increment usage count di backend
+    if (response.id) {
+      incrementCannedResponseUsage(response.id).catch(() => {});
+    }
   }, []);
 
   /** Filter template respon cepat berdasarkan pencarian — dimemoize */
@@ -389,17 +331,20 @@ const AdminChatPage: React.FC = () => {
   }, [newMessage, selectedConversation?.id, toast]);
 
   /** Handler kirim gambar — upload lalu kirim pesan dengan lampiran */
+  /** Handler kirim file — upload lalu kirim pesan dengan lampiran (gambar atau dokumen) */
   const handleSendImage = useCallback(async () => {
     if (!selectedFile || !selectedConversation?.id) return;
     setIsUploading(true);
     try {
       const uploadResult = await uploadChatAttachment(selectedConversation.id, selectedFile);
       if (!uploadResult.url) {
-        toast?.showToast(uploadResult.error || 'Gagal mengunggah gambar', 'error');
+        toast?.showToast(uploadResult.error || 'Gagal mengunggah file', 'error');
         return;
       }
+      // Deteksi tipe pesan: gambar vs dokumen
+      const isImage = selectedFile.type.startsWith('image/');
       const result = await adminSendMessage(selectedConversation.id, '', {
-        messageType: 'image',
+        messageType: isImage ? 'image' : 'file',
         attachmentUrl: uploadResult.url,
         attachmentName: selectedFile.name,
         attachmentType: selectedFile.type
@@ -422,73 +367,143 @@ const AdminChatPage: React.FC = () => {
     }
   }, [selectedFile, selectedConversation?.id, toast]);
 
-  /** Handler ubah status percakapan */
+  /** Handler ubah status percakapan — optimistic UI */
   const handleStatusChange = useCallback(async (status: ChatConversationStatus) => {
     if (!selectedConversation?.id) return;
+    const prevStatus = selectedConversation.status;
+    const convId = selectedConversation.id;
+
+    // Optimistic: update UI dulu agar instant
+    setSelectedConversation(prev => prev ? { ...prev, status } : null);
+    setConversations(prev => prev.map(c => 
+      c.id === convId ? { ...c, status } : c
+    ));
+
     try {
-      const result = await adminUpdateStatus(selectedConversation.id, status);
+      const result = await adminUpdateStatus(convId, status);
       if (result.error) {
+        // Rollback jika gagal
+        setSelectedConversation(prev => prev ? { ...prev, status: prevStatus } : null);
+        setConversations(prev => prev.map(c => 
+          c.id === convId ? { ...c, status: prevStatus } : c
+        ));
         toast?.showToast(result.error, 'error');
         return;
       }
-      setSelectedConversation(prev => prev ? { ...prev, status } : null);
-      // Update juga di daftar percakapan langsung tanpa full reload
-      setConversations(prev => prev.map(c => 
-        c.id === selectedConversation.id ? { ...c, status } : c
-      ));
       toast?.showToast(`Status diubah ke ${status}`, 'success');
     } catch (err: any) {
+      // Rollback jika error
+      setSelectedConversation(prev => prev ? { ...prev, status: prevStatus } : null);
+      setConversations(prev => prev.map(c => 
+        c.id === convId ? { ...c, status: prevStatus } : c
+      ));
       toast?.showToast(err.message || 'Gagal mengubah status', 'error');
     }
-  }, [selectedConversation?.id, toast]);
+  }, [selectedConversation?.id, selectedConversation?.status, toast]);
 
-  /** Handler tangani percakapan — assign ke diri sendiri */
+  /** Handler tangani percakapan — optimistic UI, tanpa re-fetch */
   const handleAssignToSelf = useCallback(async () => {
     if (!selectedConversation?.id || !user?.id) return;
+    const prevStatus = selectedConversation.status;
+    const convId = selectedConversation.id;
+
+    // Optimistic: update UI dulu agar instant
+    setSelectedConversation(prev => prev ? { ...prev, status: 'assigned', assignedAdminId: user.id } : null);
+    setConversations(prev => prev.map(c =>
+      c.id === convId ? { ...c, status: 'assigned', assignedAdminId: user.id } : c
+    ));
+    toast?.showToast('Percakapan berhasil ditangani', 'success');
+
     try {
-      const result = await adminAssignConversation(selectedConversation.id, user.id);
+      const result = await adminAssignConversation(convId, user.id);
       if (result.error) {
+        // Rollback jika gagal
+        setSelectedConversation(prev => prev ? { ...prev, status: prevStatus, assignedAdminId: undefined } : null);
+        setConversations(prev => prev.map(c =>
+          c.id === convId ? { ...c, status: prevStatus, assignedAdminId: undefined } : c
+        ));
         toast?.showToast(result.error, 'error');
         return;
       }
-      // Update status lokal ke 'assigned'
-      setSelectedConversation(prev => prev ? { ...prev, status: 'assigned', assignedAdminId: user.id } : null);
-      setConversations(prev => prev.map(c =>
-        c.id === selectedConversation.id ? { ...c, status: 'assigned', assignedAdminId: user.id } : c
-      ));
-      toast?.showToast('Percakapan berhasil ditangani', 'success');
-      loadConversationDetails(selectedConversation.id);
+      // Refresh partisipan di background (non-blocking)
+      loadActivityLogs(convId);
     } catch (err: any) {
+      // Rollback jika error
+      setSelectedConversation(prev => prev ? { ...prev, status: prevStatus, assignedAdminId: undefined } : null);
+      setConversations(prev => prev.map(c =>
+        c.id === convId ? { ...c, status: prevStatus, assignedAdminId: undefined } : c
+      ));
       toast?.showToast(err.message || 'Gagal menangani percakapan', 'error');
     }
-  }, [selectedConversation?.id, user?.id, toast, loadConversationDetails]);
+  }, [selectedConversation?.id, selectedConversation?.status, user?.id, toast, loadActivityLogs]);
 
-  /** Handler keluar dari percakapan */
+  /** Handler keluar dari percakapan — optimistic UI */
   const handleLeaveConversation = useCallback(async () => {
     if (!selectedConversation?.id) return;
+    const convId = selectedConversation.id;
+
+    // Optimistic: update status ke 'open' karena admin keluar
+    setSelectedConversation(prev => prev ? { ...prev, status: 'open', assignedAdminId: undefined } : null);
+    setConversations(prev => prev.map(c =>
+      c.id === convId ? { ...c, status: 'open', assignedAdminId: undefined } : c
+    ));
+    toast?.showToast('Berhasil keluar dari percakapan', 'success');
+
     try {
-      const result = await adminLeaveConversation(selectedConversation.id);
+      const result = await adminLeaveConversation(convId);
       if (result.error) {
         toast?.showToast(result.error, 'error');
+        // Jangan rollback karena backend state mungkin sudah berubah
+        // Reload untuk sinkronisasi
+        loadConversationDetails(convId);
         return;
       }
-      toast?.showToast('Berhasil keluar dari percakapan', 'success');
-      loadConversationDetails(selectedConversation.id);
+      // Refresh activity log
+      loadActivityLogs(convId);
     } catch (err: any) {
       toast?.showToast(err.message || 'Gagal keluar', 'error');
+      loadConversationDetails(convId);
     }
-  }, [selectedConversation?.id, toast, loadConversationDetails]);
+  }, [selectedConversation?.id, toast, loadConversationDetails, loadActivityLogs]);
 
-  /** Handler pilih percakapan dari daftar */
+  /** Handler muat pesan lebih lama — cursor-based pagination */
+  const handleLoadOlderMessages = useCallback(async () => {
+    if (!selectedConversation?.id || loadingMoreMessages || !hasMoreMessages) return;
+    if (messages.length === 0) return;
+
+    setLoadingMoreMessages(true);
+    try {
+      // Gunakan created_at pesan tertua sebagai cursor
+      const oldestMessage = messages[0];
+      const result = await adminGetMessages(selectedConversation.id, {
+        limit: 50,
+        before: oldestMessage.createdAt
+      });
+      if (result.messages.length > 0) {
+        setMessages(prev => [...result.messages, ...prev]);
+      }
+      setHasMoreMessages(result.hasMore);
+    } catch (err) {
+      console.error('[AdminChat] Gagal memuat pesan lama:', err);
+      toast?.showToast('Gagal memuat pesan sebelumnya', 'error');
+    } finally {
+      setLoadingMoreMessages(false);
+    }
+  }, [selectedConversation?.id, loadingMoreMessages, hasMoreMessages, messages, toast]);
+
+  /** Handler pilih percakapan dari daftar — paralel fetch */
   const handleSelectConversation = useCallback((conv: ChatConversation) => {
     setSelectedConversation(conv);
     setSelectedFile(null); // Reset file saat pindah percakapan
-    loadConversationDetails(conv.id);
-    loadActivityLogs(conv.id);
     // Reset unread count di daftar percakapan karena akan di-markRead
     setConversations(prev => prev.map(c =>
       c.id === conv.id ? { ...c, unreadCount: 0 } : c
     ));
+    // Paralel: fetch detail + activity logs bersamaan
+    Promise.all([
+      loadConversationDetails(conv.id),
+      loadActivityLogs(conv.id)
+    ]);
     if (isMobile) {
       setShowMobileDetail(true);
     }
@@ -547,6 +562,9 @@ const AdminChatPage: React.FC = () => {
       onLeaveConversation={handleLeaveConversation}
       onToggleActivityLog={handleToggleActivityLog}
       onBack={isMobile ? () => setShowMobileDetail(false) : undefined}
+      hasMore={hasMoreMessages}
+      loadingMore={loadingMoreMessages}
+      onLoadMore={handleLoadOlderMessages}
     />
   );
 
@@ -592,4 +610,11 @@ const AdminChatPage: React.FC = () => {
   );
 };
 
-export default AdminChatPage;
+/** Wrapped dengan ErrorBoundary untuk mencegah white screen */
+const AdminChatPageWithBoundary: React.FC = () => (
+  <ChatErrorBoundary fallbackMessage="Terjadi kesalahan pada halaman chat admin">
+    <AdminChatPage />
+  </ChatErrorBoundary>
+);
+
+export default AdminChatPageWithBoundary;

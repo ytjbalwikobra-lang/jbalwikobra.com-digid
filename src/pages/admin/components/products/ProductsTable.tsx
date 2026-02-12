@@ -81,7 +81,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
             value={draft.price||''}
             onChange={e=>setDraft(d=>({...d,price:e.target.value}))}
             onKeyDown={(e)=>{ if(e.key==='Enter') saveEdit(p.id); if(e.key==='Escape') cancelEdit(); }}
-            className="admin-input w-28 text-xs !py-1.5 !min-h-[32px]"
+            className="admin-input w-28 text-base sm:text-sm !py-2 !min-h-[44px]"
           />
         ) : (
           <button onClick={()=>startEdit(p)} className="text-left text-ds-pink hover:opacity-80 focus:outline-none">
@@ -102,7 +102,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({ products, onView, 
             value={draft.stock||''}
             onChange={e=>setDraft(d=>({...d,stock:e.target.value.replace(/[^0-9]/g,'')}))}
             onKeyDown={(e)=>{ if(e.key==='Enter') saveEdit(p.id); if(e.key==='Escape') cancelEdit(); }}
-            className="admin-input w-20 text-xs !py-1.5 !min-h-[32px]"
+            className="admin-input w-20 text-base sm:text-sm !py-2 !min-h-[44px]"
           />
         ) : (
           <button onClick={()=>startEdit(p)} className={`text-left ${p.stock && p.stock>0 ? 'text-[var(--admin-success)]' : 'text-[var(--admin-error)]'} hover:opacity-80`}>{p.stock ?? 0}</button>

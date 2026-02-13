@@ -63,14 +63,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem('session_token');
         const storedUser = localStorage.getItem('user_data');
         
+        // Deteksi apakah ini OAuth callback — jika ya, jangan restore session lama
+        // agar tidak trigger redirect sebelum OAuth selesai
+        const hashHasOAuth = window.location.hash.includes('access_token') ||
+          window.location.hash.includes('refresh_token') ||
+          new URLSearchParams(window.location.search).has('code');
+        
         // DEBUG: Auth initialization trace
         console.log('[AUTH DEBUG] initAuth started', {
           hasToken: !!storedToken,
           tokenPreview: storedToken ? storedToken.substring(0, 8) + '...' : null,
-          hasUser: !!storedUser
+          hasUser: !!storedUser,
+          isOAuthCallback: hashHasOAuth
         });
 
-        if (storedToken && storedUser) {
+        // Jika ini OAuth callback, skip restore — biarkan onAuthStateChange yang handle
+        if (hashHasOAuth) {
+          console.log('[AUTH DEBUG] OAuth callback detected, skipping session restore');
+        } else if (storedToken && storedUser) {
           const userData = JSON.parse(storedUser);
           console.log('[AUTH DEBUG] Stored user data:', { id: userData.id, isAdmin: userData.isAdmin, name: userData.name });
           
@@ -251,18 +261,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Handle Google OAuth callback
   // Supabase Auth redirect bisa ke URL manapun (implicit flow: #access_token=... di hash)
-  // Deteksi: jika ada Supabase Auth session TAPI TIDAK ada custom session → ini OAuth callback
+  // Deteksi: jika ada hash OAuth token → selalu proses, abaikan stale session
   useEffect(() => {
     if (!supabase) return;
 
     let processed = false;
 
+    // Deteksi apakah URL saat ini mengandung OAuth callback hash
+    const isOAuthCallback = window.location.hash.includes('access_token') ||
+      window.location.hash.includes('refresh_token') ||
+      new URLSearchParams(window.location.search).has('code');
+
+    // Jika ini OAuth callback, hapus stale session tokens dulu agar tidak mengganggu
+    if (isOAuthCallback) {
+      console.log('[Auth] OAuth callback detected in URL, clearing stale session if any');
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('user_data');
+      localStorage.removeItem('session_expires');
+    }
+
     const processOAuthSession = async (authSession: { access_token: string }) => {
       if (processed || !authSession?.access_token) return;
 
       // Cek apakah sudah punya custom session (bukan OAuth callback)
+      // Hanya skip jika BUKAN OAuth callback — karena OAuth callback sudah hapus stale tokens di atas
       const existingToken = localStorage.getItem('session_token');
-      if (existingToken) {
+      if (existingToken && !isOAuthCallback) {
         // Sudah login dengan custom session, cleanup Supabase session saja
         console.log('[Auth] Custom session exists, cleaning up Supabase session');
         await supabase?.auth.signOut();

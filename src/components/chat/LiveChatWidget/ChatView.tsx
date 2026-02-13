@@ -5,9 +5,10 @@
 
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { SendIcon } from './ChatIcons';
+import { PurchaseHistoryEmbed } from './PurchaseHistoryEmbed';
 import { compressImage } from '../../../utils/imageCompression';
 import { formatTime, formatDateLong as formatDate, getInitials } from '../../../utils/chatFormatters';
-import type { ChatMessage } from '../../../types/chat';
+import type { ChatMessage, PurchaseEmbedData } from '../../../types/chat';
 
 /** Ikon lampiran gambar (SVG inline) */
 const ImageAttachIcon = () => (
@@ -176,7 +177,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {group.date}
               </span>
             </div>
-            {group.items.map((msg) => (
+            {group.items.map((msg) => {
+              // Deteksi pesan embed riwayat pembelian
+              const isPurchaseEmbed = msg.senderType === 'system' &&
+                (msg.metadata as Record<string, unknown>)?.embedType === 'purchase_history';
+
+              // Pesan embed riwayat pembelian — kartu khusus di tengah
+              if (isPurchaseEmbed) {
+                return (
+                  <div key={msg.id} className="flex justify-center my-2">
+                    <PurchaseHistoryEmbed
+                      data={msg.metadata as unknown as PurchaseEmbedData}
+                      variant="customer"
+                    />
+                  </div>
+                );
+              }
+
+              return (
               <div
                 key={msg.id}
                 className={`flex gap-2 ${msg.senderType === 'customer' ? 'justify-end' : 'justify-start'}`}
@@ -227,7 +245,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         ))}
         <div ref={messagesEndRef} />

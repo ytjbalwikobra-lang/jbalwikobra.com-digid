@@ -147,8 +147,8 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
   };
 
   // Style untuk nav item — py-2.5 = 44px touch target minimum
-  const getNavItemClasses = (active: boolean) => `
-    w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-2.5 ${collapsed ? 'px-0 py-2.5' : 'px-3 py-2.5'} rounded-lg
+  const getNavItemClasses = (active: boolean, isCollapsed: boolean = collapsed) => `
+    w-full flex items-center ${isCollapsed ? 'justify-center' : ''} gap-2.5 ${isCollapsed ? 'px-0 py-2.5' : 'px-3 py-2.5'} rounded-lg
     transition-all duration-200 text-[13px] font-medium touch-manipulation
     ${active
       ? 'bg-[var(--admin-accent)] text-white shadow-[0_0_20px_rgba(245,0,87,0.25)]'
@@ -157,8 +157,8 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
   `;
 
   // Style untuk settings sub-item — sedikit lebih kecil
-  const getSubItemClasses = (active: boolean) => `
-    w-full flex items-center gap-2.5 ${collapsed ? 'px-0 py-2 justify-center' : 'pl-9 pr-3 py-2'} rounded-lg
+  const getSubItemClasses = (active: boolean, isCollapsed: boolean = collapsed) => `
+    w-full flex items-center gap-2.5 ${isCollapsed ? 'px-0 py-2 justify-center' : 'pl-9 pr-3 py-2'} rounded-lg
     transition-all duration-200 text-xs font-medium touch-manipulation
     ${active
       ? 'bg-[var(--admin-accent)]/80 text-white'
@@ -194,8 +194,11 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
   );
 
   // Daftar navigasi dengan settings group
-  const NavigationList = () => (
-    <nav className={`flex-1 ${collapsed ? 'px-2 py-3' : 'px-3 py-3'} overflow-y-auto`} aria-label="Main Navigation">
+  // Parameter forceExpanded: mobile drawer selalu tampil expanded (dengan teks)
+  const NavigationList = ({ forceExpanded = false }: { forceExpanded?: boolean }) => {
+    const isCollapsed = forceExpanded ? false : collapsed;
+    return (
+    <nav className={`flex-1 ${isCollapsed ? 'px-2 py-3' : 'px-3 py-3'} overflow-y-auto`} aria-label="Main Navigation">
       {/* Item utama */}
       <ul className="space-y-0.5">
         {filteredMainItems.map((item) => {
@@ -206,12 +209,12 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
               <button
                 onClick={() => handleNavigate(item.path)}
                 onMouseEnter={() => handleMouseEnter(item.path)}
-                className={getNavItemClasses(active)}
+                className={getNavItemClasses(active, isCollapsed)}
                 aria-current={active ? 'page' : undefined}
-                title={collapsed ? item.label : undefined}
+                title={isCollapsed ? item.label : undefined}
               >
-                <Icon size={collapsed ? 18 : 16} aria-hidden="true" />
-                {!collapsed && <span>{item.label}</span>}
+                <Icon size={isCollapsed ? 18 : 16} aria-hidden="true" />
+                {!isCollapsed && <span>{item.label}</span>}
               </button>
             </li>
           );
@@ -225,20 +228,20 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
           <div>
             {/* Settings trigger */}
             <button
-              onClick={() => collapsed ? handleNavigate('/admin/settings') : setSettingsOpen(prev => !prev)}
+              onClick={() => isCollapsed ? handleNavigate('/admin/settings') : setSettingsOpen(prev => !prev)}
               className={`
-                w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-2.5 ${collapsed ? 'px-0 py-2.5' : 'px-3 py-2.5'} rounded-lg
+                w-full flex items-center ${isCollapsed ? 'justify-center' : ''} gap-2.5 ${isCollapsed ? 'px-0 py-2.5' : 'px-3 py-2.5'} rounded-lg
                 transition-all duration-200 text-[13px] font-medium touch-manipulation
                 ${isSettingsActive
                   ? 'bg-white/[0.08] text-white'
                   : 'text-white/50 hover:bg-white/[0.05] hover:text-white active:bg-white/[0.08]'
                 }
               `}
-              title={collapsed ? 'Settings' : undefined}
+              title={isCollapsed ? 'Settings' : undefined}
               aria-expanded={settingsOpen}
             >
-              <Settings size={collapsed ? 18 : 16} aria-hidden="true" />
-              {!collapsed && (
+              <Settings size={isCollapsed ? 18 : 16} aria-hidden="true" />
+              {!isCollapsed && (
                 <>
                   <span className="flex-1 text-left">Settings</span>
                   {settingsOpen ? (
@@ -250,7 +253,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
               )}
             </button>
             {/* Sub-item settings */}
-            {!collapsed && settingsOpen && (
+            {!isCollapsed && settingsOpen && (
               <ul className="mt-0.5 space-y-0.5">
                 {filteredSettingsItems.map((item) => {
                   const Icon = item.icon;
@@ -259,7 +262,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
                     <li key={item.path}>
                       <button
                         onClick={() => handleNavigate(item.path)}
-                        className={getSubItemClasses(active)}
+                        className={getSubItemClasses(active, isCollapsed)}
                         aria-current={active ? 'page' : undefined}
                       >
                         <Icon size={14} aria-hidden="true" />
@@ -274,7 +277,8 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
         </>
       )}
     </nav>
-  );
+    );
+  };
 
   return (
     <>
@@ -330,7 +334,7 @@ export const AdminNavigation: React.FC<AdminNavigationProps> = ({
         aria-label="Mobile Admin Navigation"
       >
         <SidebarHeader showClose />
-        <NavigationList />
+        <NavigationList forceExpanded />
       </aside>
     </>
   );

@@ -14,14 +14,19 @@ import { sampleProducts } from './sampleData';
  * Mendukung relational select (tiers, game_titles, categories) dengan fallback ke basic select
  */
 export async function getAllProducts(opts?: { includeArchived?: boolean }): Promise<Product[]> {
+  const isDev = process.env.NODE_ENV === 'development';
+
   try {
     // Cek apakah Supabase sudah dikonfigurasi
     if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
-      console.warn('Supabase not configured, using sample data');
-      return sampleProducts;
+      console.warn('[Products] Supabase not configured');
+      return isDev ? sampleProducts : [];
     }
 
-    if (!supabase) return sampleProducts;
+    if (!supabase) {
+      console.warn('[Products] Supabase client not initialized');
+      return isDev ? sampleProducts : [];
+    }
 
     // Jika sudah diketahui relasi tidak didukung, langsung skip relational select
     if (capState.hasRelations === false) {
@@ -96,8 +101,8 @@ export async function getAllProducts(opts?: { includeArchived?: boolean }): Prom
 
     const { data: basic, error: err2 } = await q2.order('created_at', { ascending: false }).limit(500);
     if (err2) {
-      console.error('Supabase error (basic products):', err2);
-      return sampleProducts;
+      console.error('[Products] Basic select failed:', err2);
+      return isDev ? sampleProducts : [];
     }
 
     // Enrichment: ambil nama kategori dari tabel categories via category_id
@@ -152,9 +157,8 @@ export async function getAllProducts(opts?: { includeArchived?: boolean }): Prom
       };
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
-    console.warn('Using sample data due to error');
-    return sampleProducts;
+    console.error('[Products] Error fetching products:', error);
+    return isDev ? sampleProducts : [];
   }
 }
 
@@ -174,13 +178,13 @@ export async function getProductById(id: string): Promise<Product | null> {
 
     // Cek apakah Supabase dikonfigurasi
     if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
-      console.warn('[ProductService] Supabase not configured, using sample data');
-      return sampleProducts.find(p => p.id === trimmedId) || null;
+      console.warn('[ProductService] Supabase not configured');
+      return process.env.NODE_ENV === 'development' ? (sampleProducts.find(p => p.id === trimmedId) || null) : null;
     }
 
     if (!supabase) {
-      console.warn('[ProductService] No supabase client available, using sample data');
-      return sampleProducts.find(p => p.id === trimmedId) || null;
+      console.warn('[ProductService] No supabase client available');
+      return process.env.NODE_ENV === 'development' ? (sampleProducts.find(p => p.id === trimmedId) || null) : null;
     }
 
     const isProduction = process.env.NODE_ENV === 'production';
@@ -218,7 +222,7 @@ export async function getProductById(id: string): Promise<Product | null> {
         });
       }
 
-      return sampleProducts.find(p => p.id === trimmedId) || null;
+      return process.env.NODE_ENV === 'development' ? (sampleProducts.find(p => p.id === trimmedId) || null) : null;
     }
 
     if (!data) return null;
@@ -256,7 +260,7 @@ export async function getProductById(id: string): Promise<Product | null> {
       timestamp: new Date().toISOString()
     });
 
-    return sampleProducts.find(p => p.id === id) || null;
+    return process.env.NODE_ENV === 'development' ? (sampleProducts.find(p => p.id === id) || null) : null;
   }
 }
 

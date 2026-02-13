@@ -6,8 +6,9 @@
 import { forwardRef, useState, useMemo } from 'react';
 import { cn } from '../../../utils/cn';
 import { AdminLoadingState } from '../components/ui/AdminLoadingState';
+import { PurchaseHistoryEmbed } from '../../../components/chat/LiveChatWidget/PurchaseHistoryEmbed';
 import { formatTime, getInitials } from './chatHelpers';
-import type { ChatMessage } from '../../../types/chat';
+import type { ChatMessage, PurchaseEmbedData } from '../../../types/chat';
 
 interface ChatMessageViewProps {
   /** Daftar pesan untuk ditampilkan */
@@ -96,6 +97,21 @@ export const ChatMessageView = forwardRef<HTMLDivElement, ChatMessageViewProps>(
                 const isAdmin = msg.senderType === 'admin';
                 const isSystem = msg.senderType === 'system';
                 const isCustomer = msg.senderType === 'customer';
+
+                // Pesan embed riwayat pembelian — kartu khusus di tengah
+                const isPurchaseEmbed = isSystem &&
+                  (msg.metadata as Record<string, unknown>)?.embedType === 'purchase_history';
+
+                if (isPurchaseEmbed) {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-2">
+                      <PurchaseHistoryEmbed
+                        data={msg.metadata as unknown as PurchaseEmbedData}
+                        variant="admin"
+                      />
+                    </div>
+                  );
+                }
 
                 // Pesan sistem — center, pill
                 if (isSystem) {

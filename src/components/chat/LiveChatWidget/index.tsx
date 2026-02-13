@@ -29,7 +29,7 @@ import {
 import type { CustomerConversationSummary } from '../../../services/chatCustomerService';
 import { useAuth } from '../../../contexts/TraditionalAuthContext';
 import { getGameTitles } from '../../../services/product/catalogOps';
-import type { ChatConversation, ChatMessage, ChatTopic, ChatSettings } from '../../../types/chat';
+import type { ChatConversation, ChatMessage, ChatTopic, ChatSettings, PurchaseEmbedData } from '../../../types/chat';
 import type { GameTitle } from '../../../types';
 
 // Komponen sub-modules
@@ -108,6 +108,9 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
   const [chatSettings, setChatSettings] = useState<ChatSettings | null>(null);
   const [isOfflineHours, setIsOfflineHours] = useState(false);
   
+  // Data embed pembelian yang akan dikirim setelah percakapan dimulai
+  const [pendingPurchaseEmbed, setPendingPurchaseEmbed] = useState<PurchaseEmbedData | null>(null);
+  
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +139,8 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
 
   /** Muat daftar game untuk selector topik jual akun */
   useEffect(() => {
-    notificationAudioRef.current = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
+    // Gunakan file WAV asli untuk notifikasi chat
+    notificationAudioRef.current = new Audio('/assets/mixkit-bell-notification-933.wav');
     if (notificationAudioRef.current) {
       notificationAudioRef.current.volume = 0.4;
     }
@@ -150,6 +154,27 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     if (autoOpen === 'true') {
       sessionStorage.removeItem('open_live_chat');
       setIsOpen(true);
+
+      // Cek data embed pembelian dari halaman payment
+      const purchaseRaw = sessionStorage.getItem('chat_purchase_embed');
+      if (purchaseRaw) {
+        sessionStorage.removeItem('chat_purchase_embed');
+        try {
+          const embedData = JSON.parse(purchaseRaw) as PurchaseEmbedData;
+          if (embedData.embedType === 'purchase_history') {
+            setPendingPurchaseEmbed(embedData);
+            // Pre-fill form: topik pembelian dan order ID
+            setTopic('pembelian_rental');
+            if (embedData.orderId) setOrderId(embedData.orderId);
+            if (embedData.productName) setSubject(embedData.productName);
+            // Pre-fill nama & email dari data pembelian (jika belum login)
+            if (embedData.customerName && !customerName) setCustomerName(embedData.customerName);
+            if (embedData.customerEmail && !customerEmail) setCustomerEmail(embedData.customerEmail);
+          }
+        } catch (err) {
+          console.error('[LiveChat] Gagal parse purchase embed data:', err);
+        }
+      }
     }
     
     // Cek URL param ?chat=open (dari link WhatsApp)
@@ -400,6 +425,27 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
 
       if (initialMessage) {
         await loadMessages(result.conversation.id);
+      }
+
+      // Kirim pesan embed riwayat pembelian jika tersedia
+      if (pendingPurchaseEmbed) {
+        try {
+          await sendCustomerMessage(
+            result.conversation.id,
+            '📦 Riwayat Pembelian',
+            customerEmail,
+            'System',
+            {
+              messageType: 'system' as any,
+              metadata: pendingPurchaseEmbed as unknown as Record<string, unknown>
+            }
+          );
+          // Muat ulang pesan agar embed tampil
+          await loadMessages(result.conversation.id);
+        } catch (embedErr) {
+          console.error('[LiveChat] Gagal mengirim purchase embed:', embedErr);
+        }
+        setPendingPurchaseEmbed(null);
       }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan');

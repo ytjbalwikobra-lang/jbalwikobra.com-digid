@@ -68,7 +68,8 @@ const AuthPage: React.FC = () => {
         navigate('/admin', { replace: true });
       } else {
         const redirect = searchParams.get('redirect');
-        navigate(redirect ? decodeURIComponent(redirect) : '/', { replace: true });
+        // Default redirect ke /profile (bukan homepage) agar user bisa lihat akun mereka
+        navigate(redirect ? decodeURIComponent(redirect) : '/profile', { replace: true });
       }
     }
   }, [user, navigate, searchParams]);

@@ -162,8 +162,8 @@ const AdminFloatingNotifications: React.FC = () => {
       if (!notification.is_read) {
         handleMarkAsRead(notification.id);
       }
-      // Navigate to order detail page
-      navigate(`/admin/orders/${notification.order_id}`);
+      // Gunakan state { ts } agar React Router selalu re-render walau path sama
+      navigate(`/admin/orders/${notification.order_id}`, { state: { ts: Date.now() } });
     }
   }, [handleMarkAsRead, navigate]);
 

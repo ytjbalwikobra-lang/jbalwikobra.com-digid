@@ -106,23 +106,16 @@ const AdminChatPage: React.FC = () => {
     }
   }, [isMobile]);
 
-  /** Play suara notifikasi untuk pesan customer baru */
+  /** Play suara notifikasi untuk pesan customer baru — WAV file */
   const playNotificationSound = useCallback(() => {
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(830, ctx.currentTime);
-      osc.frequency.setValueAtTime(980, ctx.currentTime + 0.08);
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
+      const audio = new Audio('/assets/mixkit-bell-notification-933.wav');
+      audio.volume = 0.4;
+      audio.play().catch(() => {
+        // Browser memblokir autoplay — abaikan
+      });
     } catch {
-      // Browser tidak support Web Audio — abaikan
+      // Audio not available — abaikan
     }
   }, []);
 

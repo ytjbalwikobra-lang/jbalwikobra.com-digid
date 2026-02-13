@@ -365,3 +365,25 @@ export interface ChatSettings {
   offlineMessage: string;
   offlineLabel: string;
 }
+
+// =============================================================================
+// EMBED DATA — Data terstruktur yang disisipkan dalam pesan chat
+// =============================================================================
+
+/**
+ * Data embed riwayat pembelian
+ * Digunakan untuk menampilkan kartu ringkasan pembelian di dalam percakapan chat.
+ * Disimpan dalam field `metadata` pesan dengan `embedType: 'purchase_history'`.
+ */
+export interface PurchaseEmbedData {
+  embedType: 'purchase_history';
+  orderId?: string;
+  paymentId?: string;
+  productName?: string;
+  amount?: number;
+  paymentMethod?: string;
+  status?: string;
+  paidAt?: string;
+  customerName?: string;
+  customerEmail?: string;
+}

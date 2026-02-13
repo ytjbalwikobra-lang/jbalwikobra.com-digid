@@ -71,6 +71,24 @@ const PaymentStatus: React.FC = () => {
   const handleOpenChat = () => {
     // Simpan flag agar widget chat terbuka otomatis di beranda
     sessionStorage.setItem('open_live_chat', 'true');
+
+    // Simpan data pembelian agar otomatis di-embed ke percakapan chat
+    if (paymentData) {
+      const embedData = {
+        embedType: 'purchase_history',
+        orderId: paymentData.external_id || paymentData.id || paymentId,
+        paymentId: paymentData.id || paymentId,
+        productName: paymentData.description || undefined,
+        amount: paymentData.amount || undefined,
+        paymentMethod: paymentData.payment_method || paymentData.payment_channel || undefined,
+        status: isSuccess ? 'paid' : (status || 'unknown'),
+        paidAt: paymentData.paid_at || paymentData.updated || new Date().toISOString(),
+        customerName: paymentData.customer_name || paymentData.payer_email || undefined,
+        customerEmail: paymentData.payer_email || undefined,
+      };
+      sessionStorage.setItem('chat_purchase_embed', JSON.stringify(embedData));
+    }
+
     navigate('/');
   };
 

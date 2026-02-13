@@ -451,7 +451,7 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     authAdmin = authResult;
   }
 
-  const { conversationId, message, messageType, attachmentUrl, attachmentName, attachmentType } = req.body || {};
+  const { conversationId, message, messageType, attachmentUrl, attachmentName, attachmentType, metadata } = req.body || {};
 
   if (!conversationId || (!message && !attachmentUrl)) {
     return respond(res, 400, { error: 'conversationId and (message or attachmentUrl) required' });
@@ -476,10 +476,13 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     }
   }
 
-  const senderType = isAdmin ? 'admin' : 'customer';
-  const senderName = isAdmin 
-    ? (authAdmin?.userName || authAdmin?.userEmail || 'Admin')
-    : (req.body.senderName || req.body.customerName || 'Customer');
+  // Jika messageType = 'system' dan ada metadata purchaseEmbed, sender = system
+  const isSystemEmbed = messageType === 'system' && metadata?.embedType === 'purchase_history';
+  const senderType = isSystemEmbed ? 'system' : (isAdmin ? 'admin' : 'customer');
+  const senderName = isSystemEmbed ? 'System'
+    : isAdmin 
+      ? (authAdmin?.userName || authAdmin?.userEmail || 'Admin')
+      : (req.body.senderName || req.body.customerName || 'Customer');
 
   const msg = await chatService.sendMessage(sb, {
     conversationId,
@@ -487,10 +490,11 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     senderId: isAdmin ? authAdmin?.userId : undefined,
     senderName,
     message: message || '',
-    messageType,
+    messageType: isSystemEmbed ? 'system' : messageType,
     attachmentUrl,
     attachmentName,
-    attachmentType
+    attachmentType,
+    metadata: metadata || undefined
   });
 
   if (!msg) {

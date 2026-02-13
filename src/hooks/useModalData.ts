@@ -84,7 +84,7 @@ export function useModalData<T>(
     }
   }, [entityId, fetchFn, requiresId, onError]);
 
-  // Fetch when modal opens or dependencies change
+  // Fetch when modal opens, entityId changes, or dependencies change
   useEffect(() => {
     if (!isOpen) {
       // Clear data when modal closes for security
@@ -94,7 +94,7 @@ export function useModalData<T>(
     }
 
     fetchData();
-  }, [isOpen, ...dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, entityId, ...dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset data and error
   const reset = useCallback(() => {

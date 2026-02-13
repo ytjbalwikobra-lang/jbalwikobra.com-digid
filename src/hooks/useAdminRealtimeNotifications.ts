@@ -110,31 +110,14 @@ const BROADCAST_CHANNEL_NAME = 'admin-notifications-sync';
 // HELPERS
 // ========================================
 
-// Sound notification helper
-const playNotificationSound = (type: string) => {
+// Sound notification helper — menggunakan file WAV
+const playNotificationSound = (_type: string) => {
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    if (type === 'paid_order' || type === 'paid_rent') {
-      oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1);
-      oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.4);
-    } else {
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.2);
-    }
+    const audio = new Audio('/assets/mixkit-bell-notification-933.wav');
+    audio.volume = 0.4;
+    audio.play().catch(() => {
+      // Browser memblokir autoplay — abaikan
+    });
   } catch {
     // Audio not available - silently ignore
   }

@@ -87,7 +87,10 @@ export const useProductsData = (options: UseProductsDataOptions = {}) => {
       searchTerm: searchParams.get('search') ?? (stored.searchTerm ?? ''),
       selectedCategory: (() => {
         const c = searchParams.get('category');
-        if (!c || c.toLowerCase() === 'all') return stored.selectedCategory ?? '';
+        // Jika URL punya category=all, artinya user klik "Lihat Semua" — hapus filter kategori
+        if (c && c.toLowerCase() === 'all') return '';
+        // Jika tidak ada param category di URL, gunakan stored state
+        if (!c) return stored.selectedCategory ?? '';
         return c;
       })(),
       selectedGame: searchParams.get('game') ?? (stored.selectedGame ?? ''),

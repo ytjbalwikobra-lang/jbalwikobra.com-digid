@@ -16,8 +16,13 @@ export async function getTiers(): Promise<Tier[]> {
     return hit.v;
   }
 
+  const isDev = process.env.NODE_ENV === 'development';
+
   try {
-    if (!supabase) return sampleTiers;
+    if (!supabase) {
+      console.warn('[Catalog] Supabase not available for tiers');
+      return isDev ? sampleTiers : [];
+    }
 
     const { data, error } = await supabase
       .from('tiers')
@@ -26,8 +31,8 @@ export async function getTiers(): Promise<Tier[]> {
       .order('sort_order', { ascending: true });
 
     if (error) {
-      console.error('Error fetching tiers:', error);
-      return sampleTiers;
+      console.error('[Catalog] Error fetching tiers:', error);
+      return isDev ? sampleTiers : [];
     }
 
     const result = data?.map(tier => ({
@@ -40,13 +45,13 @@ export async function getTiers(): Promise<Tier[]> {
       priceRangeMax: tier.price_range_max,
       createdAt: tier.created_at,
       updatedAt: tier.updated_at
-    })) || sampleTiers;
+    })) || (isDev ? sampleTiers : []);
 
     g._productServiceCache.set(cacheKey, { v: result, t: Date.now() });
     return result;
   } catch (error) {
-    console.error('Error fetching tiers:', error);
-    return sampleTiers;
+    console.error('[Catalog] Error fetching tiers:', error);
+    return isDev ? sampleTiers : [];
   }
 }
 
@@ -58,8 +63,13 @@ export async function getGameTitles(): Promise<GameTitle[]> {
     return hit.v;
   }
 
+  const isDev = process.env.NODE_ENV === 'development';
+
   try {
-    if (!supabase) return sampleGameTitles;
+    if (!supabase) {
+      console.warn('[Catalog] Supabase not available for game titles');
+      return isDev ? sampleGameTitles : [];
+    }
 
     const { data, error } = await supabase
       .from('game_titles')
@@ -68,8 +78,8 @@ export async function getGameTitles(): Promise<GameTitle[]> {
       .order('sort_order', { ascending: true });
 
     if (error) {
-      console.error('Error fetching game titles:', error);
-      return sampleGameTitles;
+      console.error('[Catalog] Error fetching game titles:', error);
+      return isDev ? sampleGameTitles : [];
     }
 
     const result = data?.map(gameTitle => {
@@ -96,13 +106,13 @@ export async function getGameTitles(): Promise<GameTitle[]> {
         createdAt: gameTitle.created_at,
         updatedAt: gameTitle.updated_at
       };
-    }) || sampleGameTitles;
+    }) || (isDev ? sampleGameTitles : []);
 
     g._productServiceCache.set(cacheKey, { v: result, t: Date.now() });
     return result;
   } catch (error) {
-    console.error('Error fetching game titles:', error);
-    return sampleGameTitles;
+    console.error('[Catalog] Error fetching game titles:', error);
+    return isDev ? sampleGameTitles : [];
   }
 }
 
@@ -151,8 +161,11 @@ export async function getPopularGames(limit = 12): Promise<Array<{ id: string; n
       return hit.v;
     }
 
-    // Fallback ke sample data saat Supabase tidak dikonfigurasi
+    // Fallback ke sample data saat Supabase tidak dikonfigurasi (hanya dev)
+    const isDev = process.env.NODE_ENV === 'development';
     if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY || !supabase) {
+      console.warn('[Catalog] Supabase not available for popular games');
+      if (!isDev) return [];
       const counts = new Map<string, number>();
       for (const p of sampleProducts) {
         const key = p.gameTitleData?.name || 'Lainnya';

@@ -89,10 +89,11 @@ export async function sendCustomerMessage(
   customerEmail?: string,
   senderName?: string,
   options?: {
-    messageType?: 'text' | 'image' | 'file';
+    messageType?: 'text' | 'image' | 'file' | 'system';
     attachmentUrl?: string;
     attachmentName?: string;
     attachmentType?: string;
+    metadata?: Record<string, unknown>;
   }
 ): Promise<{ message: ChatMessage | null; error: string | null }> {
   const result = await chatApiCall<{ success: boolean; message: ChatMessage }>(

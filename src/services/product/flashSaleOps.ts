@@ -21,15 +21,18 @@ export async function getFlashSales(): Promise<(FlashSale & { product: Product }
     return hit.v;
   }
 
+  const isDev = process.env.NODE_ENV === 'development';
+
   try {
     // Cek konfigurasi Supabase
     if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
-      console.warn('Supabase not configured, using sample data');
-      return _sampleFlashSales();
+      console.warn('[FlashSales] Supabase not configured');
+      return isDev ? _sampleFlashSales() : [];
     }
 
     if (!supabase) {
-      return _sampleFlashSales();
+      console.warn('[FlashSales] Supabase client not initialized');
+      return isDev ? _sampleFlashSales() : [];
     }
 
     // Jika sudah diketahui join tidak didukung, langsung skip
@@ -40,7 +43,7 @@ export async function getFlashSales(): Promise<(FlashSale & { product: Product }
     const { data, error } = await supabase
       .from('flash_sales')
       .select(`
-        id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at, updated_at,
+        id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at,
         products (
           id, name, description, price, original_price, image, images,
           category_id, tier_id, game_title_id, is_flash_sale, flash_sale_end_time,
@@ -65,14 +68,14 @@ export async function getFlashSales(): Promise<(FlashSale & { product: Product }
       // Fallback: basic select
       const { data: basic, error: err2 } = await supabase
         .from('flash_sales')
-        .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at, updated_at')
+        .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at')
         .eq('is_active', true)
         .gte('end_time', new Date().toISOString())
         .order('end_time', { ascending: true });
 
       if (err2) {
-        console.error('Supabase error:', err2);
-        return _sampleFlashSalesSorted();
+        console.error('[FlashSales] Basic query failed:', err2);
+        return isDev ? _sampleFlashSalesSorted() : [];
       }
 
       capState.hasFlashSaleJoin = false;
@@ -186,8 +189,8 @@ export async function getFlashSales(): Promise<(FlashSale & { product: Product }
     g._productServiceCache.set(cacheKey, { v: result, t: Date.now() });
     return result;
   } catch (error) {
-    console.error('Error fetching flash sales:', error);
-    return _sampleFlashSalesSorted();
+    console.error('[FlashSales] Error fetching flash sales:', error);
+    return isDev ? _sampleFlashSalesSorted() : [];
   }
 }
 
@@ -221,7 +224,7 @@ export async function getActiveFlashSaleByProductId(productId: string): Promise<
     const nowIso = new Date().toISOString();
     const { data, error } = await supabase
       .from('flash_sales')
-      .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at, updated_at')
+      .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at')
       .eq('product_id', productId)
       .eq('is_active', true)
       .lte('start_time', nowIso)
@@ -304,7 +307,7 @@ export async function updateFlashSale(id: string, updates: Partial<{
       .from('flash_sales')
       .update(payload)
       .eq('id', id)
-      .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, updated_at')
+      .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at')
       .single();
     if (error) throw error;
     return data;

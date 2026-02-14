@@ -1,472 +1,307 @@
-import React from 'react';
-import { SettingsService } from '../services/settingsService';
-import { 
-  HelpCircle, 
-  ShieldCheck, 
-  CreditCard, 
-  MessageSquare, 
-  ChevronDown, 
-  Search, 
-  User,
-  ShoppingBag,
-  Heart,
-  Settings,
-  Zap,
-  Star,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  ArrowLeft,
-  Home,
-  Phone,
-  Mail
-} from 'lucide-react';
-import { 
-  PNSection, 
-  PNContainer, 
-  PNCard, 
-  PNButton,
-  PNHeading,
-  PNText,
-  PNSectionHeader,
-  PNPill 
-} from '../components/ui/CyberDesignSystem';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SettingsService } from '../services/settingsService';
+import {
+  HelpCircle, ShieldCheck, CreditCard, MessageSquare, ChevronDown, Search,
+  User, ShoppingBag, Zap, Clock, Phone, Mail, ArrowLeft, Home,
+  CheckCircle, Star, Key
+} from 'lucide-react';
+import {
+  PNSection, PNContainer, PNCard, PNButton, PNHeading, PNText,
+  PNSectionHeader, PNPill
+} from '../components/ui/CyberDesignSystem';
 import { SEOHead, Breadcrumb, FAQPageSchema } from '../components/seo';
+import { faqs, guides, topicCategories } from './helpData';
 
-const faqs = [
-  {
-    category: 'Akun & Registrasi',
-    q: 'Bagaimana cara daftar akun?',
-    a: 'Klik "Masuk" → pilih "Daftar" → masukkan email dan password → verifikasi WhatsApp (opsional). Setelah daftar, Anda akan mendapat notifikasi selamat datang.'
-  },
-  {
-    category: 'Pembelian',
-    q: 'Bagaimana cara beli akun game?',
-    a: 'Pilih produk → klik "Beli Sekarang" → isi form lengkap → pilih metode pembayaran → bayar sesuai invoice → akun dikirim otomatis setelah pembayaran konfirmasi.'
-  },
-  {
-    category: 'Pembelian',
-    q: 'Apa itu sistem rental?',
-    a: 'Rental adalah sewa akun untuk durasi tertentu (harian/bulanan). Klik "Sewa" → pilih durasi → bayar → gunakan akun sesuai periode → akun dikembalikan otomatis.'
-  },
-  {
-    category: 'Pembayaran',
-    q: 'Metode pembayaran apa saja tersedia?',
-    a: 'Semua pembayaran via Xendit: Transfer Bank, E-Wallet (DANA, GoPay, OVO, ShopeePay), Virtual Account, QRIS, dan Kartu Kredit/Debit. Pilih metode saat checkout.'
-  },
-  {
-    category: 'Pembayaran',
-    q: 'Berapa lama konfirmasi pembayaran?',
-    a: 'Otomatis via webhook Xendit: Transfer bank 1-15 menit, e-wallet instan, virtual account 1-5 menit. Status order update real-time di "Riwayat Order".'
-  },
-  {
-    category: 'Keamanan',
-    q: 'Apakah data saya aman?',
-    a: 'Ya, sangat aman. Kami gunakan Row Level Security (RLS), enkripsi data sensitif, payment gateway Xendit (PCI DSS compliant), dan monitoring 24/7. Data kartu tidak disimpan.'
-  },
-  {
-    category: 'Keamanan',
-    q: 'Jika akun bermasalah gimana?',
-    a: 'Garansi 100% untuk semua akun. Jika ada masalah (login gagal, data salah), hubungi admin dengan bukti beli. Tim support siap troubleshoot atau replacement sesuai kebijakan.'
-  },
-  {
-    category: 'Fitur',
-    q: 'Bagaimana cara pakai wishlist?',
-    a: 'Klik ❤️ pada produk → akses via profile dashboard → tersimpan otomatis tersinkron → dapat notifikasi flash sale item wishlist.'
-  },
-  {
-    category: 'Fitur',
-    q: 'Apa itu Flash Sale?',
-    a: 'Diskon besar waktu terbatas dengan stok terbatas. Akses via menu "Flash Sale" atau notifikasi. Timer countdown show sisa waktu. Tips: Add ke wishlist untuk notifikasi otomatis.'
-  },
-  {
-    category: 'Bantuan',
-    q: 'Bagaimana hubungi customer service?',
-    a: 'WhatsApp (respon tercepat, 09:00-21:00 WIB), Email support, atau chat admin via tombol bantuan. Untuk urgent, gunakan WhatsApp dengan nomor order.'
-  }
-];
-
-const guides = [
-  {
-    title: 'Panduan Pembelian',
-    steps: [
-      'Daftar dengan email valid',
-      'Verifikasi WhatsApp (opsional)',
-      'Browse katalog produk',
-      'Pilih dan baca detail produk',
-      'Klik "Beli Sekarang"',
-      'Isi data lengkap',
-      'Pilih metode pembayaran',
-      'Bayar dalam 24 jam',
-      'Terima akun via WhatsApp'
-    ]
-  },
-  {
-    title: 'Tips Keamanan',
-    steps: [
-      'Gunakan akun resmi',
-      'Periksa detail dan harga',
-      'Bayar via metode resmi',
-      'Simpan bukti pembayaran',
-      'Jangan share data akun',
-      'Update password berkala',
-      'Report aktivitas mencurigakan'
-    ]
-  }
-];
+// Mapping ikon per topik (dipisahkan dari data agar data file bebas JSX)
+const topicIcons: Record<string, React.ElementType> = {
+  user: User,
+  shopping: ShoppingBag,
+  credit: CreditCard,
+  shield: ShieldCheck,
+  zap: Zap,
+  message: MessageSquare,
+};
 
 const HelpPage: React.FC = () => {
   const navigate = useNavigate();
-  const [open, setOpen] = React.useState<number | null>(0);
-  const [selectedCategory, setSelectedCategory] = React.useState<string>('Semua');
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [whatsappNumber, setWhatsappNumber] = React.useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
-  
-  React.useEffect(() => {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState(
+    process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890'
+  );
+
+  // Ambil nomor WhatsApp dari settings
+  useEffect(() => {
     (async () => {
       try {
         const s = await SettingsService.get();
         if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber);
       } catch (_e) {
-        // ignore settings fetch error in help page
+        // abaikan error fetch settings di help page
       }
     })();
   }, []);
 
-  const categories = ['Semua', ...Array.from(new Set(faqs.map(faq => faq.category)))];
-  
+  const categories = ['Semua', ...Array.from(new Set(faqs.map(f => f.category)))];
+
   const filteredFaqs = faqs.filter(faq => {
-    const matchesCategory = selectedCategory === 'Semua' || faq.category === selectedCategory;
-    const matchesSearch = searchTerm === '' || 
-      faq.q.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      faq.a.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchCat = selectedCategory === 'Semua' || faq.category === selectedCategory;
+    const term = searchTerm.toLowerCase();
+    const matchSearch = !term || faq.q.toLowerCase().includes(term) || faq.a.toLowerCase().includes(term);
+    return matchCat && matchSearch;
   });
 
   return (
     <div className="min-h-screen bg-[var(--cyber-bg-pure)]">
       <SEOHead
         title="Pusat Bantuan & FAQ | JBal WiKobra"
-        description="Temukan jawaban cepat untuk pertanyaan seputar pembelian akun game, pembayaran, keamanan, dan fitur wishlist. Panduan lengkap dan customer support 24/7."
-        keywords="bantuan, faq, cara beli akun game, pembayaran xendit, keamanan akun, customer service"
+        description="Jawaban lengkap seputar pembelian, rental akun game, pembayaran, keamanan, live chat, dan fitur platform. Panduan & customer support."
+        keywords="bantuan, faq, cara beli akun game, rental akun, pembayaran xendit, keamanan, live chat, customer service"
         url="/help"
       />
-      <Breadcrumb
-        items={[
-          { label: 'Pusat Bantuan', href: '/help' }
-        ]}
-      />
-      <FAQPageSchema
-        faqs={faqs.map(faq => ({
-          question: faq.q,
-          answer: faq.a
-        }))}
-      />
+      <Breadcrumb items={[{ label: 'Pusat Bantuan', href: '/help' }]} />
+      <FAQPageSchema faqs={faqs.map(f => ({ question: f.q, answer: f.a }))} />
 
-  {/* Pink Neon Hero Section - PN black theme */}
-  <PNSection padding="lg" className="border-b border-[var(--cyber-border)]">
+      {/* ========== Hero Section ========== */}
+      <PNSection padding="lg" className="border-b border-[var(--cyber-border)]">
         <PNContainer>
-          {/* Back Button */}
-          <div className="mb-8">
-            <PNButton 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/')}
-      className="group flex items-center gap-2"
-            >
-      <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-      <span className="font-medium">Kembali ke Beranda</span>
+          <div className="mb-6">
+            <PNButton variant="ghost" size="sm" onClick={() => navigate('/')} className="group flex items-center gap-2 touch-manipulation active:scale-95">
+              <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">Kembali</span>
             </PNButton>
           </div>
 
-          {/* Hero Content */}
-          <div className="text-center mb-12">
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-full flex items-center justify-center">
-                <HelpCircle className="text-white" size={40} />
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-5">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] rounded-full flex items-center justify-center shadow-[var(--cyber-glow-md)]">
+                <HelpCircle className="text-white" size={32} />
               </div>
             </div>
-            
-            <PNHeading level={1} gradient className="mb-4 text-3xl lg:text-4xl">
+            <PNHeading level={1} gradient className="mb-3 text-2xl sm:text-3xl lg:text-4xl">
               Pusat Bantuan
             </PNHeading>
-            
-            <PNText className="text-lg lg:text-xl text-[var(--cyber-text-secondary)] max-w-2xl mx-auto mb-8">
-              Temukan jawaban cepat, panduan lengkap, dan kontak support untuk pengalaman terbaik di JBalwikobra
+            <PNText className="text-base sm:text-lg text-[var(--cyber-text-secondary)] max-w-2xl mx-auto mb-6">
+              Temukan jawaban, panduan langkah demi langkah, dan hubungi support kapan saja
             </PNText>
 
-            {/* Search Bar */}
-      <div className="max-w-md mx-auto relative">
-              <input 
+            {/* Search — text-base mencegah auto-zoom iOS */}
+            <div className="max-w-md mx-auto relative">
+              <input
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full bg-[var(--cyber-bg-card)]/50 backdrop-blur-sm border border-[var(--cyber-border)] rounded-cyber-2xl pl-14 pr-4 py-4 text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-pink-primary)] focus:ring-2 focus:ring-[var(--cyber-pink-muted)]/20 text-base" 
-                placeholder="Cari: pembelian, pembayaran, keamanan..." 
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] rounded-[var(--cyber-radius-2xl)] pl-12 pr-4 py-3.5 text-white placeholder:text-[var(--cyber-text-muted)] focus:outline-none focus:border-[var(--cyber-pink-primary)] focus:ring-2 focus:ring-[var(--cyber-pink-muted)]/20 text-base sm:text-sm"
+                placeholder="Cari pertanyaan atau topik..."
               />
-              <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--cyber-pink-primary)]" />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--cyber-pink-primary)]" />
             </div>
           </div>
         </PNContainer>
       </PNSection>
 
+      {/* ========== Konten Utama ========== */}
       <PNSection padding="lg">
         <PNContainer>
-
-          {/* Quick Topics */}
-          <div className="mb-12">
-            <PNHeading level={2} className="mb-6 text-center">
-              Topik Populer
-            </PNHeading>
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-              <PNButton 
-                variant="ghost"
-                onClick={() => setSelectedCategory('Akun & Registrasi')}
-                className="h-20 flex flex-col items-center justify-center gap-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/10 group"
-              >
-                <User className="text-[var(--cyber-pink-primary)] group-hover:scale-110 transition-transform" size={28} />
-                <span className="text-sm font-medium text-white">Akun</span>
-              </PNButton>
-              
-              <PNButton 
-                variant="ghost"
-                onClick={() => setSelectedCategory('Pembelian')}
-                className="h-20 flex flex-col items-center justify-center gap-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/10 group"
-              >
-                <ShoppingBag className="text-[var(--cyber-pink-primary)] group-hover:scale-110 transition-transform" size={28} />
-                <span className="text-sm font-medium text-white">Pembelian</span>
-              </PNButton>
-              
-              <PNButton 
-                variant="ghost"
-                onClick={() => setSelectedCategory('Pembayaran')}
-                className="h-20 flex flex-col items-center justify-center gap-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/10 group"
-              >
-                <CreditCard className="text-[var(--cyber-pink-primary)] group-hover:scale-110 transition-transform" size={28} />
-                <span className="text-sm font-medium text-white">Pembayaran</span>
-              </PNButton>
-              
-              <PNButton 
-                variant="ghost"
-                onClick={() => setSelectedCategory('Keamanan')}
-                className="h-20 flex flex-col items-center justify-center gap-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/10 group"
-              >
-                <ShieldCheck className="text-[var(--cyber-pink-primary)] group-hover:scale-110 transition-transform" size={28} />
-                <span className="text-sm font-medium text-white">Keamanan</span>
-              </PNButton>
-              
-              <PNButton 
-                variant="ghost"
-                onClick={() => setSelectedCategory('Fitur')}
-                className="h-20 flex flex-col items-center justify-center gap-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/10 group"
-              >
-                <Heart className="text-[var(--cyber-pink-primary)] group-hover:scale-110 transition-transform" size={28} />
-                <span className="text-sm font-medium text-white">Wishlist</span>
-              </PNButton>
-              
-              <PNButton 
-                variant="ghost"
-                onClick={() => setSelectedCategory('Fitur')}
-                className="h-20 flex flex-col items-center justify-center gap-2 bg-[var(--cyber-bg-card)] border border-[var(--cyber-border)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/10 group"
-              >
-                <Zap className="text-[var(--cyber-pink-primary)] group-hover:scale-110 transition-transform" size={28} />
-                <span className="text-sm font-medium text-white">Flash Sale</span>
-              </PNButton>
+          {/* Topik Cepat — grid 3 kolom mobile, 6 desktop */}
+          <div className="mb-10">
+            <PNHeading level={2} className="mb-5 text-center text-lg sm:text-xl">Topik Populer</PNHeading>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {topicCategories.map(topic => {
+                const Icon = topicIcons[topic.iconKey];
+                const isActive = selectedCategory === topic.key;
+                return (
+                  <button
+                    key={topic.key}
+                    onClick={() => setSelectedCategory(isActive ? 'Semua' : topic.key)}
+                    className={`flex flex-col items-center justify-center gap-2 p-4 rounded-[var(--cyber-radius-xl)] border transition touch-manipulation active:scale-95 ${
+                      isActive
+                        ? 'border-[var(--cyber-pink-primary)] bg-[var(--cyber-pink-primary)]/10'
+                        : 'border-[var(--cyber-border)] bg-[var(--cyber-bg-card)] hover:border-[var(--cyber-pink-primary)]/40 hover:bg-[var(--cyber-pink-primary)]/5'
+                    }`}
+                  >
+                    <Icon className="text-[var(--cyber-pink-primary)]" size={24} />
+                    <span className="text-xs sm:text-sm font-medium text-[var(--cyber-text-primary)]">{topic.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Category Filter */}
-          <div className="mb-8">
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className="focus:outline-none"
-                >
-                  <PNPill active={selectedCategory === category}>
-                    {category}
-                  </PNPill>
-                </button>
-              ))}
-            </div>
+          {/* Filter Kategori Pills */}
+          <div className="mb-6 flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button key={cat} onClick={() => setSelectedCategory(cat)} className="focus:outline-none touch-manipulation">
+                <PNPill active={selectedCategory === cat}>{cat}</PNPill>
+              </button>
+            ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* FAQ Section */}
+          {/* FAQ + Sidebar */}
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* FAQ Accordion */}
             <div className="lg:col-span-2">
-              <PNSectionHeader title="Pertanyaan Umum" subtitle="Jawaban cepat untuk pertanyaan paling sering" padX={false} />
-              
-              <PNCard className="divide-y divide-[var(--cyber-border)]">
-                {filteredFaqs.map((item, idx) => (
-                  <div key={idx} className="p-6">
-                    <PNButton
-                      variant="ghost"
-                      fullWidth
-                      onClick={() => setOpen(open === idx ? null : idx)}
-                      className="text-left h-auto p-0"
-                    >
-                      <div className="flex items-start justify-between w-full gap-4">
-                        <div className="flex-1">
-                          <span className="inline-block px-3 py-1 bg-[var(--cyber-pink-primary)]/20 text-[var(--cyber-pink-primary)] text-xs rounded-full mb-3 font-medium">
+              <PNSectionHeader title="Pertanyaan Umum" subtitle={`${filteredFaqs.length} pertanyaan ditemukan`} padX={false} />
+
+              {filteredFaqs.length > 0 ? (
+                <PNCard className="divide-y divide-[var(--cyber-border)]">
+                  {filteredFaqs.map((item, idx) => (
+                    <div key={idx} className="p-4 sm:p-5">
+                      <button
+                        onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                        className="w-full text-left flex items-start justify-between gap-3 touch-manipulation"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <span className="inline-block px-2.5 py-0.5 bg-[var(--cyber-pink-primary)]/15 text-[var(--cyber-pink-primary)] text-xs rounded-full mb-2 font-medium">
                             {item.category}
                           </span>
-                          <PNHeading level={3} className="text-base lg:text-lg pr-2">{item.q}</PNHeading>
+                          <PNHeading level={3} className="text-sm sm:text-base">{item.q}</PNHeading>
                         </div>
-                        <ChevronDown 
-                          className={`transition-transform text-[var(--cyber-pink-primary)] flex-shrink-0 mt-1 ${open === idx ? 'rotate-180' : ''}`} 
-                          size={20}
+                        <ChevronDown
+                          className={`transition-transform text-[var(--cyber-pink-primary)] flex-shrink-0 mt-1 ${openFaq === idx ? 'rotate-180' : ''}`}
+                          size={18}
                         />
-                      </div>
-                    </PNButton>
-                    {open === idx && (
-                      <div className="mt-4 text-[var(--cyber-text-secondary)] leading-relaxed text-sm lg:text-base">
-                        {item.a}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </PNCard>
-
-              {filteredFaqs.length === 0 && (
-                <PNCard className="text-center p-12">
-                  <Search className="mx-auto text-[var(--cyber-text-muted)] mb-4" size={48} />
-                  <PNHeading level={3} className="mb-2">Tidak Ada Hasil</PNHeading>
-                  <PNText className="text-[var(--cyber-text-muted)]">Tidak ada FAQ yang cocok dengan pencarian Anda.</PNText>
-                  <PNText className="text-[var(--cyber-text-muted)] text-sm mt-2">Coba kata kunci lain atau hubungi support.</PNText>
+                      </button>
+                      {openFaq === idx && (
+                        <p className="mt-3 text-[var(--cyber-text-secondary)] leading-relaxed text-sm">{item.a}</p>
+                      )}
+                    </div>
+                  ))}
+                </PNCard>
+              ) : (
+                <PNCard className="text-center p-10">
+                  <Search className="mx-auto text-[var(--cyber-text-muted)] mb-3" size={40} />
+                  <PNHeading level={3} className="mb-2 text-base">Tidak Ada Hasil</PNHeading>
+                  <PNText color="muted" className="text-sm">Coba kata kunci lain atau hubungi support via live chat.</PNText>
                 </PNCard>
               )}
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Contact */}
-              <PNCard className="p-6 relative overflow-hidden">
-                <PNHeading level={3} className="mb-4 flex items-center gap-2">
-                  <MessageSquare className="text-[var(--cyber-pink-primary)]" />
-                  Butuh Bantuan?
-                </PNHeading>
-                <PNText className="text-[var(--cyber-text-secondary)] mb-4">
-                  Tim support siap membantu 24/7 via WhatsApp
-                </PNText>
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-[var(--cyber-pink-subtle)]" />
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20JBalwikobra`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block relative z-10"
-                >
-                  <PNButton variant="primary" fullWidth className="mb-4 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 text-white">
-                    <MessageSquare size={18} />
-                    <span className="font-semibold">Chat WhatsApp</span>
-                  </PNButton>
-                </a>
-                <div className="space-y-2 text-sm text-[var(--cyber-text-muted)] relative z-10">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={16} className="text-green-400" />
-                    <span>Respon dalam 5 menit</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-[var(--cyber-pink-primary)]" />
-                    <span>Online: 09:00 - 21:00 WIB</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Star size={16} className="text-yellow-400" />
-                    <span>Rating 4.9/5</span>
+            <div className="space-y-5">
+              {/* Live Chat — metode utama */}
+              <PNCard className="p-5 relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[var(--cyber-pink-subtle)] to-transparent" />
+                <div className="relative z-10">
+                  <PNHeading level={3} className="mb-2 text-base flex items-center gap-2">
+                    <MessageSquare className="text-[var(--cyber-pink-primary)]" size={20} />
+                    Live Chat
+                  </PNHeading>
+                  <PNText color="secondary" className="text-sm mb-4">
+                    Cara tercepat — klik ikon chat di pojok kanan bawah layar
+                  </PNText>
+                  <div className="space-y-2 text-sm text-[var(--cyber-text-muted)]">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={14} className="text-[var(--cyber-success)]" />
+                      <span>Respon dalam hitungan menit</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-[var(--cyber-pink-primary)]" />
+                      <span>Jam operasional: 09:00 – 21:00 WIB</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Star size={14} className="text-[var(--cyber-warning)]" />
+                      <span>Kirim gambar & detail order</span>
+                    </div>
                   </div>
                 </div>
               </PNCard>
 
-              {/* System Status */}
-              <PNCard className="p-6">
-                <PNHeading level={3} className="mb-4 flex items-center gap-2">
-                  <Settings className="text-[var(--cyber-pink-primary)]" />
-                  Status Sistem
+              {/* WhatsApp — alternatif */}
+              <PNCard className="p-5">
+                <PNHeading level={3} className="mb-2 text-base flex items-center gap-2">
+                  <Phone className="text-[var(--cyber-success)]" size={20} />
+                  WhatsApp Support
                 </PNHeading>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[var(--cyber-text-secondary)]">Website</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-400 text-sm font-medium">Online</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[var(--cyber-text-secondary)]">Pembayaran</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-400 text-sm font-medium">Normal</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[var(--cyber-text-secondary)]">Database</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-400 text-sm font-medium">Optimal</span>
-                    </div>
-                  </div>
-                </div>
-                <PNText className="text-xs text-[var(--cyber-text-muted)] mt-4">
-                  Update: {new Date().toLocaleString('id-ID')}
+                <PNText color="secondary" className="text-sm mb-3">
+                  Untuk masalah urgent di luar jam operasional
                 </PNText>
+                <a
+                  href={`https://wa.me/${whatsappNumber}?text=Halo%20admin,%20saya%20butuh%20bantuan`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <PNButton variant="secondary" fullWidth className="flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]">
+                    <MessageSquare size={16} />
+                    <span>Chat WhatsApp</span>
+                  </PNButton>
+                </a>
+              </PNCard>
+
+              {/* Navigasi Cepat */}
+              <PNCard className="p-5">
+                <PNHeading level={3} className="mb-3 text-base">Navigasi Cepat</PNHeading>
+                <nav className="space-y-1.5">
+                  {[
+                    { to: '/products', label: 'Katalog Produk', icon: ShoppingBag },
+                    { to: '/orders', label: 'Riwayat Order', icon: Key },
+                    { to: '/flash-sales', label: 'Flash Sale', icon: Zap },
+                    { to: '/feed', label: 'Feed & Review', icon: Star },
+                    { to: '/settings', label: 'Pengaturan Akun', icon: User },
+                  ].map(link => (
+                    <button
+                      key={link.to}
+                      onClick={() => navigate(link.to)}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-[var(--cyber-radius-lg)] text-[var(--cyber-text-secondary)] hover:text-[var(--cyber-text-primary)] hover:bg-[var(--cyber-bg-elevated)] transition touch-manipulation active:scale-[0.98] text-left text-sm"
+                    >
+                      <link.icon size={16} className="text-[var(--cyber-pink-primary)] flex-shrink-0" />
+                      <span>{link.label}</span>
+                    </button>
+                  ))}
+                </nav>
               </PNCard>
             </div>
           </div>
 
-          {/* Guides Section */}
-          <div className="mt-16">
-            <PNSectionHeader title="Panduan Lengkap" subtitle="Langkah-langkah praktis agar transaksi lancar" />
-            
-            <div className="grid md:grid-cols-2 gap-6">
+          {/* ========== Panduan Langkah demi Langkah ========== */}
+          <div className="mt-12">
+            <PNSectionHeader title="Panduan Langkah demi Langkah" subtitle="Ikuti panduan praktis agar transaksi lancar" />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {guides.map((guide, idx) => (
-                <PNCard key={idx} className="p-6">
-                  <PNHeading level={3} className="mb-6">{guide.title}</PNHeading>
-                  <div className="space-y-4">
-                    {guide.steps.map((step, stepIdx) => (
-                      <div key={stepIdx} className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white rounded-full flex items-center justify-center text-sm font-bold">
-                          {stepIdx + 1}
-                        </div>
-                        <PNText className="text-[var(--cyber-text-secondary)] pt-1">{step}</PNText>
-                      </div>
+                <PNCard key={idx} className="p-5">
+                  <PNHeading level={3} className="mb-1 text-base">{guide.title}</PNHeading>
+                  <PNText color="muted" className="text-xs mb-4">{guide.description}</PNText>
+                  <ol className="space-y-2.5">
+                    {guide.steps.map((step, si) => (
+                      <li key={si} className="flex items-start gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 bg-gradient-to-r from-[var(--cyber-pink-primary)] to-[var(--cyber-pink-glow)] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                          {si + 1}
+                        </span>
+                        <span className="text-sm text-[var(--cyber-text-secondary)] pt-0.5">{step}</span>
+                      </li>
                     ))}
-                  </div>
+                  </ol>
                 </PNCard>
               ))}
             </div>
           </div>
 
-          {/* Still Need Help CTA */}
-          <div className="mt-16">
-            <PNCard className="text-center p-12 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-[var(--cyber-purple)]/5 to-[var(--cyber-pink-subtle)] pointer-events-none" />
-              <div className="max-w-2xl mx-auto">
-                <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                    <AlertTriangle className="text-white" size={32} />
+          {/* ========== CTA: Tidak Menemukan Jawaban ========== */}
+          <div className="mt-12">
+            <PNCard className="text-center p-8 sm:p-10 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--cyber-pink-subtle)] via-transparent to-[var(--cyber-pink-subtle)] pointer-events-none" />
+              <div className="relative z-10 max-w-xl mx-auto">
+                <div className="flex justify-center mb-4">
+                  <div className="w-14 h-14 bg-gradient-to-r from-[var(--cyber-warning)] to-[var(--cyber-orange)] rounded-full flex items-center justify-center">
+                    <HelpCircle className="text-white" size={28} />
                   </div>
                 </div>
-                
-                <PNHeading level={2} className="mb-4">Masih Butuh Bantuan?</PNHeading>
-                <PNText className="text-[var(--cyber-text-secondary)] mb-8">
-                  Tim support kami siap membantu menyelesaikan masalah spesifik Anda. Jangan ragu menghubungi kapan saja.
+                <PNHeading level={2} className="mb-3 text-lg sm:text-xl">Tidak Menemukan Jawaban?</PNHeading>
+                <PNText color="secondary" className="mb-6 text-sm sm:text-base">
+                  Tim support kami siap membantu. Gunakan live chat untuk respon tercepat, atau hubungi via WhatsApp &amp; email.
                 </PNText>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto relative z-10">
-                  <a
-                    href={`https://wa.me/${whatsappNumber}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <PNButton variant="primary" size="lg" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 text-white">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer">
+                    <PNButton variant="primary" size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]">
                       <Phone size={18} />
-                      <span className="font-semibold">WhatsApp Support</span>
+                      <span className="font-semibold">WhatsApp</span>
                     </PNButton>
                   </a>
                   <a href="mailto:support@jbalwikobra.com">
-                    <PNButton variant="secondary" size="lg" className="w-full flex items-center justify-center gap-2">
+                    <PNButton variant="secondary" size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]">
                       <Mail size={18} />
-                      <span className="font-semibold">Email Support</span>
+                      <span className="font-semibold">Email</span>
                     </PNButton>
                   </a>
                 </div>
@@ -474,16 +309,11 @@ const HelpPage: React.FC = () => {
             </PNCard>
           </div>
 
-          {/* Bottom Navigation */}
-          <div className="mt-16 text-center">
-            <PNButton 
-              onClick={() => navigate('/')}
-              variant="ghost"
-              size="lg"
-              className="group inline-flex items-center justify-center gap-2"
-            >
-              <Home size={18} className="group-hover:scale-110 transition-transform" />
-              <span className="font-semibold">Kembali ke Beranda</span>
+          {/* Bottom — kembali ke beranda */}
+          <div className="mt-10 text-center pb-4">
+            <PNButton variant="ghost" onClick={() => navigate('/')} className="group inline-flex items-center gap-2 touch-manipulation active:scale-95">
+              <Home size={16} className="group-hover:scale-110 transition-transform" />
+              <span className="font-medium">Kembali ke Beranda</span>
             </PNButton>
           </div>
         </PNContainer>

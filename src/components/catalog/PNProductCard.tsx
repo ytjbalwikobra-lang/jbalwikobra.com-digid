@@ -7,6 +7,11 @@ import React, { useCallback } from 'react';
 import { TIER_DOT_COLORS } from '../../utils/tierStyles';
 import { prefetchRoute } from '../../utils/linkPrefetch';
 
+interface RentalStatusInfo {
+  rentalStatus: 'active' | 'expiring_soon';
+  rentalDuration: string;
+}
+
 interface PNProductCardProps {
   id: string;
   title: string;
@@ -15,6 +20,8 @@ interface PNProductCardProps {
   children?: React.ReactNode;
   onClick?: () => void;
   rentalAvailable?: boolean;
+  /** Data status rental aktif — null jika tersedia, undefined jika belum di-fetch */
+  rentalStatusData?: RentalStatusInfo | null;
   className?: string;
   discountPercent?: number | null;
   gameName?: string;
@@ -34,6 +41,7 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
   children, 
   onClick, 
   rentalAvailable,
+  rentalStatusData,
   className = '',
   discountPercent,
   gameName,
@@ -104,9 +112,21 @@ const PNProductCard: React.FC<PNProductCardProps> = ({
         
         {/* Rental Badge - Top Left (hide when sold) */}
         {!isSold && rentalAvailable && (
-          <div className="absolute top-2 left-2 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-success)]/90 backdrop-blur-sm text-white text-[10px] font-semibold">
-            Rental
-          </div>
+          rentalStatusData ? (
+            // Sedang di-rental: tampilkan status aktif
+            <div className={`absolute top-2 left-2 px-2 py-1 rounded-cyber-lg backdrop-blur-sm text-white text-[10px] font-semibold ${
+              rentalStatusData.rentalStatus === 'expiring_soon'
+                ? 'bg-[var(--cyber-warning)]/90'
+                : 'bg-[var(--cyber-accent)]/90'
+            }`}>
+              {rentalStatusData.rentalStatus === 'expiring_soon' ? 'Hampir Selesai' : 'Sedang Di-rental'}
+            </div>
+          ) : (
+            // Tersedia untuk rental
+            <div className="absolute top-2 left-2 px-2 py-1 rounded-cyber-lg bg-[var(--cyber-success)]/90 backdrop-blur-sm text-white text-[10px] font-semibold">
+              Rental
+            </div>
+          )
         )}
 
         {/* Badges - Bottom */}

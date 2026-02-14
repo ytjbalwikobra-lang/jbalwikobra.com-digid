@@ -511,3 +511,21 @@ export async function getProductRentalStatus(productId: string): Promise<Product
     return null;
   }
 }
+
+/**
+ * Batch: Ambil status rental untuk banyak produk sekaligus (maks 50)
+ * Mengembalikan Map<productId, data | null>
+ */
+export async function getBatchRentalStatuses(productIds: string[]): Promise<Record<string, ProductRentalStatusData | null>> {
+  if (productIds.length === 0) return {};
+  try {
+    const ids = productIds.slice(0, 50).join(',');
+    const res = await fetch(`/api/product-rental-status?productIds=${encodeURIComponent(ids)}`);
+    if (!res.ok) return {};
+    const json = await res.json();
+    return json.data || {};
+  } catch (e) {
+    console.error('[getBatchRentalStatuses] Error:', e);
+    return {};
+  }
+}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Package, RefreshCw, Plus, ShoppingCart, MessageCircle, DollarSign, Eye, Edit2, CheckCircle, Search, List, Grid3x3 } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Package, RefreshCw, Plus, ShoppingCart, MessageCircle, DollarSign, Eye, Edit2, CheckCircle, Search, List, Grid3x3, Clock } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import ProductModal from './components/ProductModal';
 import { AdminButton } from './components/ui/AdminButton';
@@ -15,6 +15,7 @@ import { AdminErrorState } from './components/ui/AdminErrorState';
 import { AdminHeroSection } from './components/ui/AdminHeroSection';
 import { AdminBentoCard } from './components/ui/AdminBentoCard';
 import { AdminPagination } from './components/AdminPagination';
+import { useRentalStatuses } from '../../hooks/useRentalStatuses';
 // Design system: cyber-compact.css (loaded via index.css)
 
 interface Product {
@@ -244,6 +245,14 @@ const AdminProductsDirect: React.FC = () => {
   };
 
   const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
+
+  // Batch-fetch status rental untuk semua produk rental yang tampil
+  const allProductIds = useMemo(() => products.map(p => p.id), [products]);
+  const rentalProductIds = useMemo(
+    () => products.filter(p => p.has_rental).map(p => p.id),
+    [products]
+  );
+  const rentalStatuses = useRentalStatuses(allProductIds, rentalProductIds);
 
   const markSoldViaWA = async (product: Product) => {
     if (markingSoldId) return; // Prevent multiple clicks
@@ -589,9 +598,28 @@ const AdminProductsDirect: React.FC = () => {
 
                       {/* Status */}
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${getStatusStyle(product)}`}>
-                          {getStatusLabel(product)}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${getStatusStyle(product)}`}>
+                            {getStatusLabel(product)}
+                          </span>
+                          {/* Indikator rental */}
+                          {product.has_rental && (
+                            rentalStatuses[product.id] ? (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold ${
+                                rentalStatuses[product.id]!.rentalStatus === 'expiring_soon'
+                                  ? 'bg-[var(--admin-warning)]/20 text-[var(--admin-warning)]'
+                                  : 'bg-[var(--admin-accent)]/20 text-[var(--admin-accent)]'
+                              }`}>
+                                <Clock size={10} />
+                                {rentalStatuses[product.id]!.rentalStatus === 'expiring_soon' ? 'Hampir Selesai' : 'Di-rental'}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-[var(--admin-success)]/20 text-[var(--admin-success)]">
+                                Rental
+                              </span>
+                            )
+                          )}
+                        </div>
                       </td>
 
                       {/* Actions */}
@@ -676,6 +704,26 @@ const AdminProductsDirect: React.FC = () => {
                       {getStatusLabel(product)}
                     </span>
                   </div>
+
+                  {/* Rental Badge - Top Left */}
+                  {product.has_rental && (
+                    <div className="absolute top-2 left-2">
+                      {rentalStatuses[product.id] ? (
+                        <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-semibold ${
+                          rentalStatuses[product.id]!.rentalStatus === 'expiring_soon'
+                            ? 'bg-[var(--admin-warning)]/90 text-white'
+                            : 'bg-[var(--admin-accent)]/90 text-white'
+                        }`}>
+                          <Clock size={9} />
+                          {rentalStatuses[product.id]!.rentalStatus === 'expiring_soon' ? 'Hampir' : 'Rental'}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-[var(--admin-success)]/90 text-white">
+                          Rental
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Info */}

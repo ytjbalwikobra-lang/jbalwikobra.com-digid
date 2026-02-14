@@ -3,7 +3,7 @@
  * Features responsive grid layout with empty state and Quick Buy
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
 import { PNProductCard } from '../catalog';
@@ -12,6 +12,7 @@ import { formatCurrency } from '../../utils/helpers';
 import { EmptyState } from './EmptyState';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
 import { useCart } from '../../contexts/CartContext';
+import { useRentalStatuses } from '../../hooks/useRentalStatuses';
 
 interface ProductsGridProps {
   products: Product[];
@@ -28,6 +29,14 @@ export const ProductsGrid = React.memo(({
 }: ProductsGridProps) => {
   const navigate = useNavigate();
   const { quickBuy } = useCart();
+
+  // Batch-fetch status rental untuk semua produk rental yang terlihat
+  const allProductIds = useMemo(() => products.map(p => String(p.id)), [products]);
+  const rentalProductIds = useMemo(
+    () => products.filter(p => p.hasRental || (p.rentalOptions && p.rentalOptions.length > 0)).map(p => String(p.id)),
+    [products]
+  );
+  const rentalStatuses = useRentalStatuses(allProductIds, rentalProductIds);
 
   const handleNavigate = (product: Product) => {
     if (!product.id) return;
@@ -89,6 +98,7 @@ export const ProductsGrid = React.memo(({
                   price={formatCurrency(product.price)}
                   onClick={() => handleNavigate(product)}
                   rentalAvailable={Boolean(product.hasRental || product.rentalOptions?.length)}
+                  rentalStatusData={rentalStatuses[String(product.id)]}
                   discountPercent={discountPercent}
                   gameName={product.gameTitleData?.name}
                   tierName={product.tierData?.name}

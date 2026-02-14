@@ -17,6 +17,7 @@ import {
   updateProduct,
   deleteProduct,
   getProductRentalStatus,
+  getBatchRentalStatuses,
 } from './productOps';
 import {
   getFlashSales,
@@ -50,6 +51,7 @@ export class ProductService {
   static updateProduct = updateProduct;
   static deleteProduct = deleteProduct;
   static getProductRentalStatus = getProductRentalStatus;
+  static getBatchRentalStatuses = getBatchRentalStatuses;
 
   // --- Flash Sale ---
   static getFlashSales = getFlashSales;

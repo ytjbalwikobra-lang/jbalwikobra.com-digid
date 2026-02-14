@@ -33,6 +33,8 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     '/admin/notifications',
     '/admin/settings',
     '/admin/chat-settings',
+    '/admin/rental-tracking',
+    '/admin/activity-log',
   ],
   admin_viewer: [
     '/admin/dashboard',
@@ -40,6 +42,7 @@ export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
     '/admin/products',
     '/admin/chat',
     '/admin/notifications',
+    '/admin/rental-tracking',
   ],
 };
 

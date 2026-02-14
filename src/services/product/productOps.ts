@@ -5,7 +5,7 @@
 
 import { supabase } from '../supabase';
 import { deletePublicUrls } from '../storageService';
-import { Product } from '../../types';
+import { Product, ProductRentalStatusData } from '../../types';
 import { capState, isUuid, normalizeFk, emptyToNull } from './helpers';
 import { sampleProducts } from './sampleData';
 
@@ -493,5 +493,21 @@ export async function deleteProduct(id: string, options?: { images?: string[] })
   } catch (error) {
     console.error('Error deleting product:', error);
     return false;
+  }
+}
+
+/**
+ * Ambil status rental publik dari API /api/product-rental-status
+ * Mengembalikan null jika tidak ada rental aktif
+ */
+export async function getProductRentalStatus(productId: string): Promise<ProductRentalStatusData | null> {
+  try {
+    const res = await fetch(`/api/product-rental-status?productId=${encodeURIComponent(productId)}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.data || null;
+  } catch (e) {
+    console.error('[getProductRentalStatus] Error:', e);
+    return null;
   }
 }

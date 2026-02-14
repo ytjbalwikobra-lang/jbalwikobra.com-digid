@@ -1025,3 +1025,141 @@ When providing recommendations or next steps to the user:
 4. **Testing**: Manually test feature at `/admin/new-feature` route
 5. **Documentation**: Update `README.md` with new feature usage
 ```
+
+---
+
+## 🏠 Rental Tracking System
+
+**Konteks**: Produk rental memiliki lifecycle tracking di tabel `orders`.
+
+### Kolom Rental di Tabel Orders
+
+| Kolom | Tipe | Deskripsi |
+|---|---|---|
+| `rental_start_date` | TIMESTAMPTZ | Waktu mulai rental (di-set saat admin mark completed) |
+| `rental_end_date` | TIMESTAMPTZ | Waktu berakhir rental (dihitung otomatis dari durasi) |
+| `rental_status` | VARCHAR(30) | Status: `pending_activation`, `active`, `expiring_soon`, `expired`, `returned` |
+| `completed_by` | UUID | Admin yang menyelesaikan pesanan |
+| `completed_at` | TIMESTAMPTZ | Waktu penyelesaian pesanan |
+
+### Lifecycle Rental
+
+```
+Order dibuat → paid → admin mark completed → rental_status: active
+  → 24 jam sebelum habis → expiring_soon
+  → waktu habis → expired
+  → admin mark dikembalikan → returned
+```
+
+### API Endpoints
+
+| Endpoint | Auth | Deskripsi |
+|---|---|---|
+| `GET /api/admin?action=active-rentals` | Admin | Daftar semua rental aktif |
+| `GET /api/admin?action=product-rental-status&productId=X` | Admin | Status rental + antrian per produk |
+| `GET /api/admin?action=mark-rental-returned` | Admin | Tandai rental sudah dikembalikan |
+| `GET /api/product-rental-status?productId=X` | **Publik** | Status rental publik (tanpa data sensitif) |
+
+### Aturan Pengembangan Rental
+
+1. **Aktivasi rental otomatis** saat `updateOrderStatus` ke `completed` untuk `order_type='rental'`
+2. **Durasi dihitung dari string** seperti "1 Hari", "3 Hari", "1 Minggu", "1 Bulan"
+3. **Status refresh** dilakukan on-demand (saat halaman diakses) bukan via cron
+4. **API publik** tidak boleh mengembalikan data sensitif (order ID, customer info)
+5. **Tipe `ProductRentalStatusData`** di `src/types/index.ts` untuk response publik
+
+---
+
+## 📝 Admin Activity Logging
+
+Tabel `admin_activity_logs` mencatat semua aksi admin untuk audit trail.
+
+### Penggunaan
+
+```typescript
+// Di backend API — setelah aksi penting
+await logAdminActivity(
+  supabase,
+  adminId,     // auth.userId
+  adminName,   // auth.userName
+  adminEmail,  // auth.userEmail
+  'update_order_status', // action
+  'order',     // entity_type
+  orderId,     // entity_id
+  { oldStatus, newStatus, notes } // details (JSONB)
+);
+```
+
+### Aturan
+
+1. **Selalu log aksi yang mengubah data** (update order, mark rental, dll)
+2. **Jangan log aksi read-only** (list, get, search)
+3. **details field** berisi context JSONB yang relevan
+4. **Halaman Activity Log** hanya untuk super_admin (`/admin/activity-log`)
+5. **API `activity-logs`** memvalidasi role super_admin sebelum return data
+
+---
+
+## 🔒 Chat Access Control
+
+**Aturan**: Chat yang sudah ditangani (assigned) dikunci untuk admin yang menangani.
+
+### Mekanisme
+
+1. **Backend** (`api/chat.ts` → `handleSendMessage`): Cek `assigned_admin_id` vs `auth.userId`
+   - Jika berbeda DAN bukan super_admin → return 403 `chat_locked`
+2. **Frontend** (`AdminChatPage/index.tsx`): Hitung `isLockedByOtherAdmin` dari user context
+3. **UI** (`ChatInputForm.tsx`): Tampilkan banner merah + disable input saat locked
+
+### Pengecualian
+
+- **super_admin** selalu bisa membalas semua chat
+- Chat dengan status **open** (belum diambil) bisa diambil admin manapun
+
+---
+
+## ⚠️ Lessons Learned — Pitfalls Tambahan
+
+### Import Path Relatif di Admin Pages
+
+File di `src/pages/admin/` HARUS menggunakan path relatif yang benar:
+
+```typescript
+// ✅ BENAR: File di src/pages/admin/SomePage.tsx
+import AdminHeroSection from './components/ui/AdminHeroSection';
+import { useToast } from '../../components/Toast';
+
+// ❌ SALAH: Path terlalu banyak ../
+import AdminHeroSection from '../components/ui/AdminHeroSection';
+import { useToast } from '../../../components/Toast';
+```
+
+### AdminHeroSection Badge Colors
+
+Hanya warna berikut yang valid untuk `badgeColor`:
+- `'pink'` (default)
+- `'success'`
+- `'warning'`
+- `'info'`
+
+❌ JANGAN gunakan `'purple'`, `'error'`, `'orange'` — tidak ada di type definition.
+
+### Lucide Icons — Tidak Menerima `style` Prop
+
+```tsx
+// ❌ GAGAL: style prop tidak ada di type lucide-react
+<SomeIcon className="w-4 h-4" style={{ color: 'red' }} />
+
+// ✅ BENAR: Bungkus dengan span
+<span style={{ color: 'red' }}><SomeIcon className="w-4 h-4" /></span>
+```
+
+### AuthResult Field Names
+
+Field di `AuthResult` (dari `authMiddleware.ts`):
+- `auth.userId` (bukan `auth.id`)
+- `auth.userName` (bukan `auth.name`)
+- `auth.userEmail` (bukan `auth.email`)
+- `auth.role` (string: `'super_admin'` | `'admin_viewer'`)
+
+Selalu cek interface `AuthResult` sebelum menggunakan field-nya.

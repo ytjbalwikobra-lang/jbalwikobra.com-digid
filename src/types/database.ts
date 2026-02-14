@@ -39,6 +39,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_logs: {
+        Row: {
+          action: string
+          admin_email: string | null
+          admin_id: string
+          admin_name: string | null
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_email?: string | null
+          admin_id: string
+          admin_name?: string | null
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_email?: string | null
+          admin_id?: string
+          admin_name?: string | null
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           amount: number | null
@@ -1164,6 +1206,8 @@ export type Database = {
         Row: {
           amount: number
           client_external_id: string | null
+          completed_at: string | null
+          completed_by: string | null
           created_at: string | null
           currency: string | null
           customer_email: string
@@ -1181,6 +1225,9 @@ export type Database = {
           product_id: string | null
           product_name: string | null
           rental_duration: string | null
+          rental_end_date: string | null
+          rental_start_date: string | null
+          rental_status: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
@@ -1190,6 +1237,8 @@ export type Database = {
         Insert: {
           amount: number
           client_external_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
           created_at?: string | null
           currency?: string | null
           customer_email: string
@@ -1207,6 +1256,9 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           rental_duration?: string | null
+          rental_end_date?: string | null
+          rental_start_date?: string | null
+          rental_status?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -1216,6 +1268,8 @@ export type Database = {
         Update: {
           amount?: number
           client_external_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
           created_at?: string | null
           currency?: string | null
           customer_email?: string
@@ -1233,6 +1287,9 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           rental_duration?: string | null
+          rental_end_date?: string | null
+          rental_start_date?: string | null
+          rental_status?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -2372,6 +2429,24 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_average_rating: {
+        Args: never
+        Returns: {
+          avg_rating: number
+          total_reviews: number
+        }[]
+      }
+      get_chat_statistics: {
+        Args: never
+        Returns: {
+          assigned_conversations: number
+          avg_rating: number
+          open_conversations: number
+          ratings_count: number
+          resolved_conversations: number
+          total_conversations: number
+        }[]
+      }
       get_daily_revenue: { Args: { days_back?: number }; Returns: Json }
       get_dashboard_analytics_admin: {
         Args: never
@@ -2395,6 +2470,7 @@ export type Database = {
         }
       }
       get_dashboard_data: { Args: never; Returns: Json }
+      get_dashboard_stats: { Args: never; Returns: Json }
       get_eligible_products: {
         Args: { input_user_id: string }
         Returns: {
@@ -2433,6 +2509,27 @@ export type Database = {
         }[]
       }
       get_order_stats_optimized: { Args: never; Returns: Json }
+      get_order_status_time_series: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          completed_count: number
+          created_count: number
+          date: string
+        }[]
+      }
+      get_orders_time_series: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          cancelled_count: number
+          completed_count: number
+          date: string
+          paid_count: number
+          pending_count: number
+          revenue: number
+          total_count: number
+        }[]
+      }
+      get_product_stats: { Args: never; Returns: Json }
       get_products_catalog: {
         Args: {
           filter_category?: string
@@ -2459,6 +2556,16 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_top_products: {
+        Args: { p_end_date: string; p_limit?: number; p_start_date: string }
+        Returns: {
+          order_count: number
+          product_id: string
+          product_name: string
+          revenue: number
+        }[]
+      }
+      get_total_revenue: { Args: never; Returns: number }
       get_unread_notification_count: { Args: { u_id: string }; Returns: number }
       get_user_activity_summary: {
         Args: never

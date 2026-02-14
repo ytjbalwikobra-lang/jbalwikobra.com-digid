@@ -262,12 +262,12 @@ async function listOrders(page: number, limit: number, status?: string) {
   return { data: mappedOrders, count: count || 0, page };
 }
 
-async function updateOrderStatus(orderId: string, newStatus: string) {
+async function updateOrderStatus(orderId: string, newStatus: string, adminId?: string, adminName?: string, adminEmail?: string) {
   if (!supabase) return false;
   if (!orderId || !newStatus) return false;
   
   try {
-    // Get the current order data before updating
+    // Ambil data order sebelum update
     const { data: order, error: fetchError } = await supabase
       .from('orders')
       .select(`
@@ -295,10 +295,29 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
     
     const oldStatus = order.status;
     
-    // Update the order status
+    // Siapkan data update
+    const updateData: Record<string, unknown> = { status: newStatus };
+    
+    // Jika order rental di-mark completed → aktifkan rental tracking
+    const isCompleted = newStatus === 'completed' && oldStatus !== 'completed';
+    if (isCompleted && order.order_type === 'rental' && order.rental_duration) {
+      const now = new Date();
+      const endDate = calculateRentalEndDate(now, order.rental_duration);
+      updateData.rental_start_date = now.toISOString();
+      updateData.rental_end_date = endDate.toISOString();
+      updateData.rental_status = 'active';
+      updateData.completed_at = now.toISOString();
+      if (adminId) updateData.completed_by = adminId;
+      console.log(`[updateOrderStatus] Rental activated: ${order.rental_duration}, end: ${endDate.toISOString()}`);
+    } else if (isCompleted) {
+      updateData.completed_at = new Date().toISOString();
+      if (adminId) updateData.completed_by = adminId;
+    }
+    
+    // Update order
     const { error: updateError } = await supabase
       .from('orders')
-      .update({ status: newStatus })
+      .update(updateData)
       .eq('id', orderId);
     
     if (updateError) {
@@ -306,22 +325,28 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
       return false;
     }
     
-    // Create notifications for relevant status changes
-    // 'paid' = payment confirmed (can be set by webhook or admin)
-    // 'completed' = order fulfilled/delivered
+    // Catat activity log
+    if (adminId) {
+      try {
+        await logAdminActivity(adminId, adminName, adminEmail, 
+          isCompleted ? 'order_completed' : 'order_status_changed',
+          'order', orderId, {
+            old_status: oldStatus, new_status: newStatus,
+            order_type: order.order_type,
+            rental_duration: order.rental_duration,
+            ...(isCompleted && order.order_type === 'rental' ? { rental_activated: true } : {})
+          });
+      } catch (e) { console.error('[updateOrderStatus] Activity log failed:', e); }
+    }
+    
+    // Buat notifikasi untuk perubahan status relevan
     const isPaid = newStatus === 'paid' && oldStatus !== 'paid';
-    const isCompleted = newStatus === 'completed' && oldStatus !== 'completed';
     
     if (isPaid || isCompleted) {
       try {
-        // Get product name using shared utility
         const productName = await getProductName(supabase, order.product_id, order.order_type);
-        
-        // Always use 'paid_order' - createOrderNotification will auto-convert
-        // to 'paid_rent' when orderType is 'rental'
         const notificationType = 'paid_order';
         
-        // Create the admin notification
         await createOrderNotification(
           supabase,
           order.id,
@@ -338,7 +363,6 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
         console.log(`[updateOrderStatus] Notification created: ${finalType} for order ${orderId}`);
       } catch (notificationError) {
         console.error('[updateOrderStatus] Failed to create notification:', notificationError);
-        // Don't fail the update if notification fails
       }
     }
     
@@ -346,6 +370,189 @@ async function updateOrderStatus(orderId: string, newStatus: string) {
   } catch (error) {
     console.error('[updateOrderStatus] Exception:', error);
     return false;
+  }
+}
+
+/** Hitung tanggal akhir rental berdasarkan string durasi */
+function calculateRentalEndDate(startDate: Date, duration: string): Date {
+  const end = new Date(startDate);
+  const lower = duration.toLowerCase();
+  
+  // Parse angka dari string
+  const numMatch = lower.match(/(\d+)/);
+  const num = numMatch ? parseInt(numMatch[1], 10) : 1;
+  
+  if (lower.includes('jam') || lower.includes('hour')) {
+    end.setHours(end.getHours() + num);
+  } else if (lower.includes('hari') || lower.includes('day')) {
+    end.setDate(end.getDate() + num);
+  } else if (lower.includes('minggu') || lower.includes('week')) {
+    end.setDate(end.getDate() + num * 7);
+  } else if (lower.includes('bulan') || lower.includes('month')) {
+    end.setMonth(end.getMonth() + num);
+  } else {
+    // Default: asumsikan hari
+    end.setDate(end.getDate() + num);
+  }
+  
+  return end;
+}
+
+/** Catat aktivitas admin ke tabel admin_activity_logs */
+async function logAdminActivity(
+  adminId: string, adminName?: string, adminEmail?: string,
+  action: string = 'unknown', entityType: string = 'unknown',
+  entityId?: string, details?: Record<string, unknown>
+) {
+  if (!supabase) return;
+  try {
+    await supabase.from('admin_activity_logs').insert({
+      admin_id: adminId,
+      admin_name: adminName || null,
+      admin_email: adminEmail || null,
+      action,
+      entity_type: entityType,
+      entity_id: entityId || null,
+      details: details || {}
+    });
+  } catch (e) {
+    console.error('[logAdminActivity] Error:', e);
+  }
+}
+
+/** Ambil daftar rental aktif */
+async function listActiveRentals() {
+  if (!supabase) return { data: [], count: 0 };
+  
+  try {
+    const { data, error, count } = await supabase
+      .from('orders')
+      .select(`
+        id, customer_name, customer_email, customer_phone,
+        product_name, product_id, amount, rental_duration,
+        rental_start_date, rental_end_date, rental_status, 
+        status, completed_at, completed_by, created_at
+      `, { count: 'exact' })
+      .eq('order_type', 'rental')
+      .in('status', ['paid', 'completed'])
+      .not('rental_status', 'is', null)
+      .order('rental_end_date', { ascending: true });
+    
+    if (error) {
+      console.error('[listActiveRentals] Error:', error);
+      return { data: [], count: 0 };
+    }
+    return { data: data || [], count: count || 0 };
+  } catch (e) {
+    console.error('[listActiveRentals] Exception:', e);
+    return { data: [], count: 0 };
+  }
+}
+
+/** Ambil rental aktif berdasarkan product_id (untuk tampilan publik) */
+async function getProductRentalStatus(productId: string) {
+  if (!supabase || !productId) return null;
+  
+  try {
+    // Cari rental aktif untuk produk ini
+    const { data } = await supabase
+      .from('orders')
+      .select('id, rental_duration, rental_start_date, rental_end_date, rental_status')
+      .eq('product_id', productId)
+      .eq('order_type', 'rental')
+      .in('rental_status', ['active', 'expiring_soon'])
+      .order('rental_end_date', { ascending: true })
+      .limit(1);
+    
+    if (!data || data.length === 0) return null;
+    
+    // Cek antrian — rental yang pending di belakangnya
+    const { data: queue } = await supabase
+      .from('orders')
+      .select('id, rental_duration, rental_start_date, rental_end_date, rental_status, created_at')
+      .eq('product_id', productId)
+      .eq('order_type', 'rental')
+      .in('status', ['paid', 'completed'])
+      .in('rental_status', ['active', 'expiring_soon'])
+      .order('rental_end_date', { ascending: true });
+    
+    return {
+      currentRental: data[0],
+      queueCount: (queue?.length || 1) - 1,
+      estimatedAvailable: data[0].rental_end_date
+    };
+  } catch (e) {
+    console.error('[getProductRentalStatus] Error:', e);
+    return null;
+  }
+}
+
+/** Update rental_status berdasarkan waktu (dipanggil dari cron atau on-demand) */
+async function refreshRentalStatuses() {
+  if (!supabase) return 0;
+  
+  const now = new Date().toISOString();
+  let updated = 0;
+  
+  try {
+    // Active → expiring_soon (kurang dari 24 jam)
+    const soonThreshold = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { data: expiringSoon } = await supabase
+      .from('orders')
+      .update({ rental_status: 'expiring_soon' })
+      .eq('rental_status', 'active')
+      .lte('rental_end_date', soonThreshold)
+      .gt('rental_end_date', now)
+      .select('id');
+    updated += expiringSoon?.length || 0;
+    
+    // Active/expiring_soon → expired (lewat deadline)
+    const { data: expired } = await supabase
+      .from('orders')
+      .update({ rental_status: 'expired' })
+      .in('rental_status', ['active', 'expiring_soon'])
+      .lte('rental_end_date', now)
+      .select('id');
+    updated += expired?.length || 0;
+    
+    if (updated > 0) {
+      console.log(`[refreshRentalStatuses] Updated ${updated} rental statuses`);
+    }
+    return updated;
+  } catch (e) {
+    console.error('[refreshRentalStatuses] Error:', e);
+    return 0;
+  }
+}
+
+/** Ambil activity logs admin (hanya untuk super_admin) */
+async function listAdminActivityLogs(page: number, limit: number, entityType?: string) {
+  if (!supabase) return { data: [], count: 0, page };
+  
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+  
+  try {
+    let query: any = supabase
+      .from('admin_activity_logs')
+      .select('id, admin_id, admin_name, admin_email, action, entity_type, entity_id, details, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    
+    if (entityType) {
+      query = query.eq('entity_type', entityType);
+    }
+    
+    const { data, error, count } = await query;
+    
+    if (error) {
+      console.error('[listAdminActivityLogs] Error:', error);
+      return { data: [], count: 0, page };
+    }
+    return { data: data || [], count: count || 0, page };
+  } catch (e) {
+    console.error('[listAdminActivityLogs] Exception:', e);
+    return { data: [], count: 0, page };
   }
 }
 
@@ -616,7 +823,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'POST' && action === 'update-order') {
       const { orderId, status } = req.body || {};
-      const ok = await updateOrderStatus(orderId, status);
+      const ok = await updateOrderStatus(orderId, status, auth.userId, auth.userName, auth.userEmail);
       return respond(res, ok ? 200 : 400, ok ? { success: true } : { error: 'update_failed' });
     }
 
@@ -639,6 +846,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             amount,
             order_type,
             rental_duration,
+            rental_start_date,
+            rental_end_date,
+            rental_status,
+            completed_at,
+            completed_by,
             status,
             payment_method,
             payment_channel,
@@ -808,6 +1020,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch (e: any) {
           console.error('❌ Admin API: Archive product failed', e);
           return respond(res, 500, { error: 'archive_operation_failed', message: e.message });
+        }
+      }
+      case 'active-rentals': {
+        // Refresh status rental dulu lalu ambil daftar
+        await refreshRentalStatuses();
+        const result = await listActiveRentals();
+        return respond(res, 200, { success: true, ...result }, 30);
+      }
+      case 'product-rental-status': {
+        const productId = typeof req.query.productId === 'string' ? req.query.productId : '';
+        if (!productId) return respond(res, 400, { error: 'missing_product_id' });
+        await refreshRentalStatuses();
+        const result = await getProductRentalStatus(productId);
+        return respond(res, 200, { data: result }, 60);
+      }
+      case 'activity-logs': {
+        // Hanya super_admin yang bisa akses
+        if (auth.role !== 'super_admin') {
+          return respond(res, 403, { error: 'forbidden', message: 'Only super_admin can access activity logs' });
+        }
+        const entityType = typeof req.query.entityType === 'string' ? req.query.entityType : undefined;
+        const result = await listAdminActivityLogs(page, limit, entityType);
+        return respond(res, 200, { success: true, ...result }, 0);
+      }
+      case 'mark-rental-returned': {
+        if (!supabase) return respond(res, 500, { error: 'database_unavailable' });
+        const { orderId: rentalOrderId } = req.body || {};
+        if (!rentalOrderId) return respond(res, 400, { error: 'missing_order_id' });
+        
+        try {
+          const { error } = await supabase
+            .from('orders')
+            .update({ rental_status: 'returned' })
+            .eq('id', rentalOrderId)
+            .eq('order_type', 'rental');
+          
+          if (error) return respond(res, 400, { error: 'update_failed', details: error.message });
+          
+          // Log aktivitas
+          await logAdminActivity(auth.userId || '', auth.userName, auth.userEmail,
+            'rental_returned', 'rental', rentalOrderId, { marked_returned: true });
+          
+          return respond(res, 200, { success: true });
+        } catch (e: any) {
+          return respond(res, 500, { error: 'internal_error', message: e.message });
         }
       }
       default:

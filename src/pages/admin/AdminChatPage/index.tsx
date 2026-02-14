@@ -539,6 +539,20 @@ const AdminChatPage: React.FC = () => {
   const handleCloseCannedPicker = useCallback(() => setShowCannedPicker(false), []);
   const handleToggleActivityLog = useCallback(() => setShowActivityLog(prev => !prev), []);
 
+  // Hitung apakah percakapan di-lock karena ditangani admin lain
+  // Hanya admin biasa yang terpengaruh — super_admin selalu bisa membalas
+  const isLockedByOtherAdmin = (() => {
+    if (!selectedConversation || !user) return false;
+    // Super admin selalu bisa membalas
+    if (user.role === 'super_admin') return false;
+    // Jika ada assigned admin dan bukan kita
+    if (selectedConversation.assignedAdminId && selectedConversation.assignedAdminId !== user.id) {
+      const st = selectedConversation.status;
+      return st === 'assigned' || st === 'resolved' || st === 'closed';
+    }
+    return false;
+  })();
+
   const listPane = (
     <ChatConversationList
       conversations={filteredConversations}
@@ -586,6 +600,7 @@ const AdminChatPage: React.FC = () => {
       hasMore={hasMoreMessages}
       loadingMore={loadingMoreMessages}
       onLoadMore={handleLoadOlderMessages}
+      isLockedByOtherAdmin={isLockedByOtherAdmin}
     />
   );
 

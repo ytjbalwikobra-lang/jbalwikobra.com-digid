@@ -27,6 +27,8 @@ import {
   MessageSquare,
   FileText,
   Clock,
+  KeyRound,
+  Activity,
   ChevronsLeft,
   ChevronsRight,
   ChevronDown,
@@ -53,6 +55,8 @@ const mainNavItems: NavItem[] = [
   { path: '/admin/banners', label: 'Banners', icon: Image },
   { path: '/admin/chat', label: 'Live Chat', icon: MessageSquare },
   { path: '/admin/notifications', label: 'Notifications', icon: Bell },
+  { path: '/admin/rental-tracking', label: 'Rental', icon: KeyRound },
+  { path: '/admin/activity-log', label: 'Activity Log', icon: Activity },
 ];
 
 /** Item Settings submenu — semua pengaturan di satu grup */

@@ -4,7 +4,7 @@
  */
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Send, Zap, Image as ImageIcon, X, Lock } from 'lucide-react';
+import { Send, Zap, Image as ImageIcon, X, Lock, ShieldAlert } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { compressImage } from '../../../utils/imageCompression';
 import type { ChatCannedResponse, ChatConversationStatus } from '../../../types/chat';
@@ -42,6 +42,8 @@ interface ChatInputFormProps {
   onFileSelect: (file: File | null) => void;
   /** Handler kirim lampiran gambar */
   onSendImage: () => void;
+  /** Apakah percakapan di-lock karena ditangani admin lain (bukan kita/bukan super_admin) */
+  isLockedByOtherAdmin?: boolean;
 }
 
 /** Form input pesan dengan integrasi template respon cepat dan upload gambar */
@@ -61,9 +63,10 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
   onToggleCannedPicker,
   onCloseCannedPicker,
   onFileSelect,
-  onSendImage
+  onSendImage,
+  isLockedByOtherAdmin = false
 }) => {
-  const isDisabled = conversationStatus !== 'assigned';
+  const isDisabled = conversationStatus !== 'assigned' || isLockedByOtherAdmin;
   const isUnassigned = conversationStatus === 'open';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -242,6 +245,13 @@ export const ChatInputForm: React.FC<ChatInputFormProps> = ({
           <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--admin-warning)]/10 border border-[var(--admin-warning)]/30 rounded-xl mb-0">
             <Lock className="w-4 h-4 text-[var(--admin-warning)] shrink-0" />
             <span className="text-xs text-[var(--admin-warning)]">Tangani percakapan ini terlebih dahulu untuk mulai membalas.</span>
+          </div>
+        )}
+        {/* Banner info: percakapan ditangani admin lain */}
+        {isLockedByOtherAdmin && !isUnassigned && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--admin-error)]/10 border border-[var(--admin-error)]/30 rounded-xl mb-0">
+            <ShieldAlert className="w-4 h-4 text-[var(--admin-error)] shrink-0" />
+            <span className="text-xs text-[var(--admin-error)]">Percakapan ini sedang ditangani admin lain. Anda hanya bisa melihat.</span>
           </div>
         )}
         <div className="flex items-end gap-2">

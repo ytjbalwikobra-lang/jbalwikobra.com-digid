@@ -17,6 +17,7 @@ import {
   ProductImageGallery,
   ProductInfo,
   ProductRentalOptions,
+  ProductRentalStatusBadge,
   ProductActions,
   CheckoutModal
 } from '../components/product-detail';
@@ -174,6 +175,12 @@ const ProductDetailPage: React.FC = () => {
                 effectivePrice={effectivePrice}
                 isFlashSaleActive={isFlashSaleActive}
                 description={product.description || 'Tidak ada deskripsi tersedia.'}
+              />
+
+              {/* Status Rental — indikator publik apakah akun sedang di-rental */}
+              <ProductRentalStatusBadge
+                productId={product.id}
+                hasRental={product.hasRental || false}
               />
 
               {/* Rental Options */}

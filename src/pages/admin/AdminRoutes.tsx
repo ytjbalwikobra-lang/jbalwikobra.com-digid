@@ -17,6 +17,8 @@ import AdminNotificationsPage from './AdminNotificationsPage';
 import AdminChatPage from './AdminChatPage';
 import AdminCannedResponsesPage from './AdminCannedResponsesPage';
 import AdminChatSettingsPage from './AdminChatSettingsPage';
+import AdminRentalTrackingPage from './AdminRentalTrackingPage';
+import AdminActivityLogPage from './AdminActivityLogPage';
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -31,6 +33,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/products" element={<AdminProductsDirect />} />
           <Route path="/chat" element={<AdminChatPage />} />
           <Route path="/notifications" element={<AdminNotificationsPage />} />
+          <Route path="/rental-tracking" element={<AdminRentalTrackingPage />} />
         </Route>
 
         {/* Route yang hanya bisa diakses super_admin */}
@@ -42,6 +45,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/whatsapp" element={<AdminWhatsAppSettings />} />
           <Route path="/canned-responses" element={<AdminCannedResponsesPage />} />
           <Route path="/chat-settings" element={<AdminChatSettingsPage />} />
+          <Route path="/activity-log" element={<AdminActivityLogPage />} />
         </Route>
 
         {/* Redirect route yang tidak dikenal ke dashboard */}

@@ -77,6 +77,18 @@ export interface RentalOption {
   description?: string;
 }
 
+/** Data status rental produk — dari API publik /api/product-rental-status */
+export interface ProductRentalStatusData {
+  /** Durasi rental, misal "1 Hari", "1 Minggu" */
+  rentalDuration: string;
+  /** Tanggal berakhirnya rental aktif (ISO 8601) */
+  rentalEndDate: string;
+  /** Status: active | expiring_soon */
+  rentalStatus: 'active' | 'expiring_soon';
+  /** Jumlah antrian rental di belakang rental aktif ini */
+  queueCount: number;
+}
+
 export interface FlashSale {
   id: string;
   productId: string;

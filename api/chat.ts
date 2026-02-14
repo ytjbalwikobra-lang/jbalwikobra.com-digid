@@ -476,6 +476,23 @@ async function handleSendMessage(req: VercelRequest, res: VercelResponse, isAdmi
     }
   }
 
+  // Kontrol akses chat: jika percakapan sudah ditangani (assigned/resolved/closed),
+  // hanya admin yang menangani atau super_admin yang boleh mengirim pesan
+  if (isAdmin && authAdmin) {
+    const isSuperAdmin = authAdmin.role === 'super_admin';
+    if (!isSuperAdmin) {
+      const conv = await chatService.getConversation(sb, conversationId);
+      if (conv && conv.assignedAdminId && conv.assignedAdminId !== authAdmin.userId) {
+        if (conv.status === 'assigned' || conv.status === 'resolved' || conv.status === 'closed') {
+          return respond(res, 403, { 
+            error: 'chat_locked',
+            message: 'Percakapan ini sedang ditangani admin lain. Hanya admin yang menangani atau super admin yang bisa membalas.'
+          });
+        }
+      }
+    }
+  }
+
   // Jika messageType = 'system' dan ada metadata purchaseEmbed, sender = system
   const isSystemEmbed = messageType === 'system' && metadata?.embedType === 'purchase_history';
   const senderType = isSystemEmbed ? 'system' : (isAdmin ? 'admin' : 'customer');

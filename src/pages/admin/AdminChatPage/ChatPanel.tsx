@@ -97,6 +97,8 @@ interface ChatPanelProps {
   loadingMore?: boolean;
   /** Handler muat pesan lebih lama */
   onLoadMore?: () => void;
+  /** Percakapan di-lock karena ditangani admin lain */
+  isLockedByOtherAdmin?: boolean;
 }
 
 /** Panel chat utama dengan header aksi, area pesan, dan sidebar — dimemoize */
@@ -131,7 +133,8 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
   onBack,
   hasMore,
   loadingMore,
-  onLoadMore
+  onLoadMore,
+  isLockedByOtherAdmin = false
 }) => {
   // State pencarian di dalam pesan
   const [messageSearch, setMessageSearch] = useState('');
@@ -417,6 +420,7 @@ export const ChatPanel = React.memo<ChatPanelProps>(({
                 onCloseCannedPicker={onCloseCannedPicker}
                 onFileSelect={onFileSelect}
                 onSendImage={onSendImage}
+                isLockedByOtherAdmin={isLockedByOtherAdmin}
               />
             </div>
 

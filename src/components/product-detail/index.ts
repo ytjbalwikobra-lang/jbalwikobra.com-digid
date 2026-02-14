@@ -1,6 +1,7 @@
 export { ProductImageGallery } from './ProductImageGallery';
 export { ProductInfo } from './ProductInfo';
 export { ProductRentalOptions } from './ProductRentalOptions';
+export { ProductRentalStatusBadge } from './ProductRentalStatusBadge';
 export { ProductActions } from './ProductActions';
 export { ProductDetailLoadingSkeleton } from './ProductDetailLoadingSkeleton';
 export { FlashSaleProductDetailLoadingSkeleton } from './FlashSaleProductDetailLoadingSkeleton';

@@ -1163,3 +1163,31 @@ Field di `AuthResult` (dari `authMiddleware.ts`):
 - `auth.role` (string: `'super_admin'` | `'admin_viewer'`)
 
 Selalu cek interface `AuthResult` sebelum menggunakan field-nya.
+
+### Supabase Gen Types — Stderr Kontaminasi Output
+
+`npx supabase gen types typescript --linked` mencetak `Initialising login role...` ke stderr.
+Jika redirect output ke file dengan `>`, stderr bisa tercampur ke baris pertama file.
+
+```bash
+# ❌ BURUK: stderr tercampur → TypeScript error TS1434
+npx supabase gen types typescript --linked > src/types/database.ts 2>&1
+
+# ✅ BENAR: Redirect hanya stdout, stderr ke terminal
+npx supabase gen types typescript --linked > src/types/database.ts
+
+# ✅ ALTERNATIF: Jika tetap mau capture stderr terpisah
+npx supabase gen types typescript --linked 1> src/types/database.ts 2> nul
+```
+
+**Jika sudah terlanjur tercampur:** Buka `src/types/database.ts`, hapus baris pertama (`Initialising login role...`) secara manual.
+
+### Public API — Harus File Terpisah di `api/`
+
+Endpoint yang tidak perlu autentikasi (publik) HARUS diletakkan di file terpisah, bukan di `api/admin.ts`.
+Contoh: [api/product-rental-status.ts](../api/product-rental-status.ts) untuk status rental publik.
+
+**Alasan:**
+- `api/admin.ts` selalu memvalidasi session admin (`validateAdminAuth`)
+- Endpoint publik yang ditaruh di `admin.ts` akan selalu 401
+- Pisahkan ke file sendiri agar tidak butuh auth header

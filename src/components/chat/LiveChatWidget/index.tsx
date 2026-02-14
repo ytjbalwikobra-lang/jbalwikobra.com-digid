@@ -139,11 +139,27 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
 
   /** Muat daftar game untuk selector topik jual akun */
   useEffect(() => {
-    // Gunakan file WAV asli untuk notifikasi chat
+    // Gunakan file WAV asli untuk notifikasi chat — preload agar siap di mobile
     notificationAudioRef.current = new Audio('/assets/mixkit-bell-notification-933.wav');
     if (notificationAudioRef.current) {
+      notificationAudioRef.current.preload = 'auto';
       notificationAudioRef.current.volume = 0.4;
     }
+
+    // Unlock audio saat user pertama kali berinteraksi (wajib untuk iOS/Android)
+    const unlockAudio = () => {
+      const audio = notificationAudioRef.current;
+      if (!audio) return;
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
+      }
+      // Hapus listener setelah unlock
+      ['click', 'touchstart'].forEach(e => document.removeEventListener(e, unlockAudio, true));
+    };
+    ['click', 'touchstart'].forEach(e =>
+      document.addEventListener(e, unlockAudio, { capture: true, passive: true, once: false })
+    );
 
     getGameTitles()
       .then(games => setGameTitles(games))
@@ -281,10 +297,19 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
           try {
             if (notificationAudioRef.current) {
               notificationAudioRef.current.currentTime = 0;
-              notificationAudioRef.current.play().catch(() => undefined);
+              const p = notificationAudioRef.current.play();
+              if (p && typeof p.then === 'function') {
+                p.catch(() => {
+                  // Audio diblokir — fallback vibrate di mobile
+                  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                });
+              }
             }
           } catch (err) {
-            console.error('[LiveChat] Gagal memutar suara notif:', err);
+            // Fallback vibrate jika Audio sama sekali gagal
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              navigator.vibrate([100, 50, 100]);
+            }
           }
         }
       });
@@ -518,8 +543,8 @@ const LiveChatWidget: React.FC<ChatWidgetProps> = ({
     setError(null);
 
     try {
-      // Upload file ke Supabase Storage via backend
-      const uploadResult = await uploadChatAttachment(conversation.id, selectedFile);
+      // Upload file ke Supabase Storage via backend (sertakan customerEmail untuk guest)
+      const uploadResult = await uploadChatAttachment(conversation.id, selectedFile, customerEmail);
       if (uploadResult.error || !uploadResult.url) {
         setError(uploadResult.error || 'Gagal upload gambar');
         return;

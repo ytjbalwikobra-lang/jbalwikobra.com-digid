@@ -110,16 +110,81 @@ const BROADCAST_CHANNEL_NAME = 'admin-notifications-sync';
 // HELPERS
 // ========================================
 
-// Sound notification helper — menggunakan file WAV
+// ========================================
+// NOTIFICATION SOUND — Cross-device (Desktop + Mobile + Tablet)
+// ========================================
+// Mobile/tablet browsers memblokir Audio.play() tanpa interaksi user.
+// Strategi: Pre-load audio saat user pertama kali tap/click/scroll,
+// lalu reuse Audio element yang sudah ter-unlock untuk notifikasi berikutnya.
+// ========================================
+
+let _notifAudio: HTMLAudioElement | null = null;
+let _audioUnlocked = false;
+
+/** Buat atau ambil Audio element yang sudah di-cache */
+function getNotifAudio(): HTMLAudioElement {
+  if (!_notifAudio) {
+    _notifAudio = new Audio('/assets/mixkit-bell-notification-933.wav');
+    _notifAudio.preload = 'auto';
+    _notifAudio.volume = 0.4;
+  }
+  return _notifAudio;
+}
+
+/** Unlock audio context saat user berinteraksi pertama kali (wajib untuk iOS/Android) */
+function unlockAudio() {
+  if (_audioUnlocked) return;
+  try {
+    const audio = getNotifAudio();
+    // Play silent → langsung pause — untuk membuka izin autoplay
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        _audioUnlocked = true;
+      }).catch(() => {
+        // Masih diblokir — akan coba lagi saat interaksi berikutnya
+      });
+    }
+  } catch {
+    // Abaikan
+  }
+}
+
+// Pasang listener unlock saat modul pertama kali dimuat
+if (typeof window !== 'undefined') {
+  const unlockEvents = ['click', 'touchstart', 'keydown', 'scroll'];
+  const handleUnlock = () => {
+    unlockAudio();
+    if (_audioUnlocked) {
+      unlockEvents.forEach(evt => window.removeEventListener(evt, handleUnlock, { capture: true }));
+    }
+  };
+  unlockEvents.forEach(evt =>
+    window.addEventListener(evt, handleUnlock, { capture: true, passive: true })
+  );
+}
+
+/** Play suara notifikasi — reuse Audio element yang sudah ter-unlock */
 const playNotificationSound = (_type: string) => {
   try {
-    const audio = new Audio('/assets/mixkit-bell-notification-933.wav');
-    audio.volume = 0.4;
-    audio.play().catch(() => {
-      // Browser memblokir autoplay — abaikan
-    });
+    const audio = getNotifAudio();
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.catch(() => {
+        // Autoplay masih diblokir — coba vibrate sebagai fallback di mobile
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100]);
+        }
+      });
+    }
   } catch {
-    // Audio not available - silently ignore
+    // Fallback: vibrate jika Audio sama sekali tidak tersedia
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
   }
 };
 

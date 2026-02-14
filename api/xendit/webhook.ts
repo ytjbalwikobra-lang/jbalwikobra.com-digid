@@ -601,34 +601,7 @@ export default async function handler(req: any, res: any) {
       console.error('[Webhook] This order will remain in pending status unless metadata fallback works!');
     }
 
-    // If paid/complete, mark product as sold via web (purchase only)
-    if (status === 'paid' || status === 'completed') {
-      try {
-        let orderRow: any | null = null;
-
-        if (foundOrderId) {
-          const { data: orderData } = await sb
-            .from('orders')
-            .select('id, order_type, product_id, status')
-            .eq('id', foundOrderId)
-            .single();
-          orderRow = orderData || null;
-        }
-
-        if (orderRow?.order_type === 'purchase' && orderRow.product_id) {
-          await sb
-            .from('products')
-            .update({
-              sold_channel: 'web',
-              is_active: false,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', orderRow.product_id);
-        }
-      } catch (soldErr) {
-        console.error('[Webhook] ❌ Failed to mark product as sold via web:', soldErr);
-      }
-    }
+    // NOTE: Product-sold marking dipindahkan SETELAH metadata fallback (lihat bawah)
 
     // CRITICAL FIX: Enhanced payment status synchronization with better error handling
     
@@ -741,7 +714,12 @@ export default async function handler(req: any, res: any) {
             })
             .eq('client_external_id', clientId)
             .select('id');
-          if (!e3) updated = (up3 || []).length;
+          if (!e3) {
+            updated = (up3 || []).length;
+            if (up3 && up3.length > 0) foundOrderId = up3[0].id;
+          } else {
+            console.error('[Webhook] ❌ Metadata fallback: gagal update status order:', e3);
+          }
 
           // Also update payments table for the upserted order
           const paymentUpdateData: any = {
@@ -788,6 +766,7 @@ export default async function handler(req: any, res: any) {
             .eq('client_external_id', externalId)
             .select('id');
           updated = (up4 || []).length;
+          if (up4 && up4.length > 0) foundOrderId = up4[0].id;
 
           // Also update payments table for the inserted order
           const paymentUpdateData: any = {
@@ -803,6 +782,67 @@ export default async function handler(req: any, res: any) {
             .update(paymentUpdateData)
             .eq('external_id', externalId);
         }
+      }
+    }
+
+    // ========================================
+    // MARK PRODUCT AS SOLD (setelah SEMUA path update order selesai)
+    // ========================================
+    if (status === 'paid' || status === 'completed') {
+      try {
+        // Re-query order — foundOrderId bisa dari primary update ATAU metadata fallback
+        let orderForSold: any = null;
+
+        if (foundOrderId) {
+          const { data: od } = await sb
+            .from('orders')
+            .select('id, order_type, product_id')
+            .eq('id', foundOrderId)
+            .single();
+          orderForSold = od || null;
+        }
+
+        // Fallback: cari via client_external_id jika foundOrderId null
+        if (!orderForSold && externalId) {
+          const { data: od2 } = await sb
+            .from('orders')
+            .select('id, order_type, product_id')
+            .eq('client_external_id', externalId)
+            .in('status', ['paid', 'completed'])
+            .limit(1);
+          orderForSold = od2?.[0] || null;
+        }
+
+        // Fallback: cari via xendit_invoice_id
+        if (!orderForSold && invoiceId) {
+          const { data: od3 } = await sb
+            .from('orders')
+            .select('id, order_type, product_id')
+            .eq('xendit_invoice_id', invoiceId)
+            .in('status', ['paid', 'completed'])
+            .limit(1);
+          orderForSold = od3?.[0] || null;
+        }
+
+        if (orderForSold?.order_type === 'purchase' && orderForSold.product_id) {
+          const { error: soldErr } = await sb
+            .from('products')
+            .update({
+              sold_channel: 'web',
+              is_active: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', orderForSold.product_id)
+            .is('sold_channel', null); // Idempotent: hanya update jika belum sold
+
+          if (soldErr) {
+            console.error('[Webhook] ❌ Failed to mark product as sold:', soldErr);
+          } else {
+            console.log('[Webhook] ✅ Product marked as sold:', orderForSold.product_id);
+          }
+        }
+      } catch (soldErr) {
+        console.error('[Webhook] ❌ Exception marking product as sold:', soldErr);
       }
     }
 

@@ -51,6 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     orders_checked: 0,
     admin_notifications_created: 0,
     customer_notifications_created: 0,
+    products_marked_sold: 0,
     already_exists: 0,
     errors: [] as string[]
   };
@@ -156,6 +157,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.warn(`[NotifSync] Customer notification gagal untuk order ${order.id}:`, custErr.message);
         }
 
+        // Sinkronisasi status produk: tandai sold jika order purchase sudah paid
+        if (order.order_type === 'purchase' && order.product_id) {
+          try {
+            const { data: product } = await supabase
+              .from('products')
+              .select('id, sold_channel, is_active')
+              .eq('id', order.product_id)
+              .single();
+            
+            if (product && !product.sold_channel) {
+              const { error: soldErr } = await supabase
+                .from('products')
+                .update({
+                  sold_channel: 'web',
+                  is_active: false,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', order.product_id);
+              
+              if (!soldErr) {
+                results.products_marked_sold++;
+                console.log(`[NotifSync] ✅ Product ${order.product_id} ditandai sold (fallback)`);
+              }
+            }
+          } catch (soldErr: any) {
+            console.warn(`[NotifSync] Gagal update product sold untuk order ${order.id}:`, soldErr.message);
+          }
+        }
+
       } catch (err: any) {
         console.error(`[NotifSync] Gagal proses order ${order.id}:`, err);
         results.errors.push(`Order ${order.id}: ${err.message}`);
@@ -164,7 +194,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const duration = Date.now() - startTime;
     
-    console.log(`[NotifSync] Selesai: ${results.admin_notifications_created} notif dibuat, ${results.already_exists} sudah ada, ${results.errors.length} error (${duration}ms)`);
+    console.log(`[NotifSync] Selesai: ${results.admin_notifications_created} notif dibuat, ${results.products_marked_sold} produk ditandai sold, ${results.already_exists} sudah ada, ${results.errors.length} error (${duration}ms)`);
 
     return res.status(200).json({
       success: true,

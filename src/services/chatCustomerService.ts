@@ -112,10 +112,12 @@ export async function sendCustomerMessage(
 
 /**
  * Upload lampiran gambar ke Supabase Storage via backend
+ * @param customerEmail - Wajib untuk guest (non-admin) agar lolos validasi API
  */
 export async function uploadChatAttachment(
   conversationId: string,
-  file: File
+  file: File,
+  customerEmail?: string
 ): Promise<{ url: string | null; fileName: string | null; mimeType: string | null; error: string | null }> {
   // Konversi file ke base64
   const base64Data = await new Promise<string>((resolve, reject) => {
@@ -133,7 +135,7 @@ export async function uploadChatAttachment(
     'upload-attachment',
     'POST',
     undefined,
-    { conversationId, base64Data, fileName: file.name, mimeType: file.type }
+    { conversationId, base64Data, fileName: file.name, mimeType: file.type, customerEmail }
   );
 
   if (result.error || !result.data?.url) {

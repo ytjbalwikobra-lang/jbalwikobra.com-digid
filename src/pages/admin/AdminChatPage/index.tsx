@@ -121,16 +121,27 @@ const AdminChatPage: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isMobile]);
 
-  /** Play suara notifikasi untuk pesan customer baru — WAV file */
+  /** Play suara notifikasi untuk pesan customer baru — WAV file, mobile-friendly */
+  const chatAudioRef = useRef<HTMLAudioElement | null>(null);
   const playNotificationSound = useCallback(() => {
     try {
-      const audio = new Audio('/assets/mixkit-bell-notification-933.wav');
-      audio.volume = 0.4;
-      audio.play().catch(() => {
-        // Browser memblokir autoplay — abaikan
-      });
+      if (!chatAudioRef.current) {
+        chatAudioRef.current = new Audio('/assets/mixkit-bell-notification-933.wav');
+        chatAudioRef.current.preload = 'auto';
+        chatAudioRef.current.volume = 0.4;
+      }
+      chatAudioRef.current.currentTime = 0;
+      const p = chatAudioRef.current.play();
+      if (p && typeof p.then === 'function') {
+        p.catch(() => {
+          // Autoplay diblokir — fallback vibrate
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        });
+      }
     } catch {
-      // Audio not available — abaikan
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
     }
   }, []);
 

@@ -87,6 +87,9 @@ const AdminChatPage: React.FC = () => {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const isFirstLoadRef = useRef(true);
+  // Ref untuk tracking state showMobileDetail di popstate handler (hindari stale closure)
+  const showMobileDetailRef = useRef(showMobileDetail);
+  showMobileDetailRef.current = showMobileDetail;
 
   // Deteksi breakpoint: mobile (<640px), tablet (640-1023px), desktop (≥1024px)
   useEffect(() => {
@@ -104,6 +107,18 @@ const AdminChatPage: React.FC = () => {
     if (!isMobile) {
       setShowMobileDetail(false);
     }
+  }, [isMobile]);
+
+  // Handler popstate (tombol back hardware) agar kembali ke conversation list, bukan dashboard
+  useEffect(() => {
+    if (!isMobile) return;
+    const handlePopState = () => {
+      if (showMobileDetailRef.current) {
+        setShowMobileDetail(false);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [isMobile]);
 
   /** Play suara notifikasi untuk pesan customer baru — WAV file */
@@ -499,6 +514,8 @@ const AdminChatPage: React.FC = () => {
     ]);
     if (isMobile) {
       setShowMobileDetail(true);
+      // Push state agar tombol back hardware kembali ke conversation list
+      window.history.pushState({ chatDetail: true }, '');
     }
   }, [loadConversationDetails, loadActivityLogs, isMobile]);
 
@@ -554,7 +571,7 @@ const AdminChatPage: React.FC = () => {
       onAssignToSelf={handleAssignToSelf}
       onLeaveConversation={handleLeaveConversation}
       onToggleActivityLog={handleToggleActivityLog}
-      onBack={isMobile ? () => setShowMobileDetail(false) : undefined}
+      onBack={isMobile ? () => window.history.back() : undefined}
       hasMore={hasMoreMessages}
       loadingMore={loadingMoreMessages}
       onLoadMore={handleLoadOlderMessages}
@@ -584,10 +601,17 @@ const AdminChatPage: React.FC = () => {
 
       {/* Layout Utama — three-tier responsive */}
       {isMobile ? (
-        /* Mobile: full-screen single panel, edge-to-edge */
-        <div className="h-[calc(100dvh-76px)] -mx-3 -mb-3">
-          {showMobileDetail ? detailPane : listPane}
-        </div>
+        showMobileDetail ? (
+          /* Mobile detail: overlay penuh layar — menutupi header admin */
+          <div className="fixed inset-0 z-50 bg-black">
+            {detailPane}
+          </div>
+        ) : (
+          /* Mobile list: layout normal edge-to-edge */
+          <div className="h-[calc(100dvh-76px)] -mx-3 -mb-3">
+            {listPane}
+          </div>
+        )
       ) : (
         /* Tablet & Desktop: side-by-side panels */
         <div className={`flex gap-3 ${isTablet ? 'h-[calc(100dvh-128px)]' : 'h-[calc(100vh-160px)]'}`}>

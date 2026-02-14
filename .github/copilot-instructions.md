@@ -1046,7 +1046,7 @@ When providing recommendations or next steps to the user:
 
 ```
 Order dibuat → paid → admin mark completed → rental_status: active
-  → 24 jam sebelum habis → expiring_soon
+  → sisa waktu < 10% dari total durasi → expiring_soon
   → waktu habis → expired
   → admin mark dikembalikan → returned
 ```
@@ -1065,10 +1065,13 @@ Order dibuat → paid → admin mark completed → rental_status: active
 1. **Aktivasi rental otomatis** saat `updateOrderStatus` ke `completed` untuk `order_type='rental'`
 2. **Durasi dihitung dari string** seperti "1 Hari", "3 Hari", "1 Minggu", "1 Bulan"
 3. **Status refresh** dilakukan on-demand (saat halaman diakses) bukan via cron
-4. **API publik** tidak boleh mengembalikan data sensitif (order ID, customer info)
+4. **Expiring soon** = sisa waktu < 10% dari total durasi rental (bukan fixed 24 jam)
+5. **API publik** tidak boleh mengembalikan data sensitif (order ID, customer info)
 5. **Tipe `ProductRentalStatusData`** di `src/types/index.ts` untuk response publik
 6. **Batch API** untuk listing page: `GET /api/product-rental-status?productIds=a,b,c` (maks 50 ID)
 7. **Gunakan `useRentalStatuses` hook** di listing pages — jangan N+1 fetch per produk
+8. **Realtime subscription** — `useRentalStatuses` hook subscribe ke `orders` table UPDATE via Supabase Realtime, auto-refresh saat rental_status berubah
+9. **Dashboard stats** — `get_dashboard_stats()` RPC menyertakan `activeRentals` count, ditampilkan di `MetricsGrid`
 
 ### Indikator Rental di Listing Page
 

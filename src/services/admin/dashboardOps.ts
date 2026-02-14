@@ -16,7 +16,7 @@ const _dashboardStatsCacheDuration = 60 * 1000; // 1 menit
 export async function getAdminStats(): Promise<AdminStats> {
   if (!supabase) {
     console.warn('⚠️ [getAdminStats] Supabase not configured, returning fallback');
-    return { totalOrders: 0, totalRevenue: 0, totalUsers: 0, totalProducts: 0, totalReviews: 0, averageRating: 0, pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0 };
+    return { totalOrders: 0, totalRevenue: 0, totalUsers: 0, totalProducts: 0, totalReviews: 0, averageRating: 0, pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0, activeRentals: 0 };
   }
 
   return adminCache.getOrFetch('admin:stats', async () => {
@@ -35,6 +35,7 @@ export async function getAdminStats(): Promise<AdminStats> {
           completedOrders: data.completedOrders || 0,
           totalFlashSales: data.totalFlashSales || 0,
           activeFlashSales: data.activeFlashSales || 0,
+          activeRentals: data.activeRentals || 0,
         };
       }
       console.warn('[getAdminStats] RPC fallback — error:', error?.message);
@@ -47,11 +48,11 @@ export async function getAdminStats(): Promise<AdminStats> {
       return {
         totalOrders: totalOrders || 0, totalRevenue: 0, totalUsers: totalUsers || 0,
         totalProducts: totalProducts || 0, totalReviews: 0, averageRating: 0,
-        pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0
+        pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0, activeRentals: 0
       };
     } catch (error) {
       console.error('❌ [getAdminStats] Error:', error);
-      return { totalOrders: 0, totalRevenue: 0, totalUsers: 0, totalProducts: 0, totalReviews: 0, averageRating: 0, pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0 };
+      return { totalOrders: 0, totalRevenue: 0, totalUsers: 0, totalProducts: 0, totalReviews: 0, averageRating: 0, pendingOrders: 0, completedOrders: 0, totalFlashSales: 0, activeFlashSales: 0, activeRentals: 0 };
     }
   });
 }
@@ -82,7 +83,8 @@ export async function getDashboardStats(): Promise<AdminStats> {
       totalUsers: data.users?.count || 0, totalProducts: data.products?.count || 0,
       totalReviews: data.reviews?.count || 0, averageRating: data.reviews?.averageRating || 0,
       pendingOrders: data.orders?.pending || 0, completedOrders: data.orders?.completed || 0,
-      totalFlashSales: data.flashSales?.count || 0, activeFlashSales: 0
+      totalFlashSales: data.flashSales?.count || 0, activeFlashSales: 0,
+      activeRentals: data.activeRentals || 0
     };
     _dashboardStatsCache = { data: stats, timestamp: now };
     return stats;

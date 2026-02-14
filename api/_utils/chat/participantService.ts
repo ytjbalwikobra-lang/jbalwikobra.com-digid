@@ -25,7 +25,7 @@ export async function addAdminParticipant(
   role: ChatAdminRole = 'participant'
 ): Promise<boolean> {
   try {
-    const ops: Promise<any>[] = [];
+    const ops: PromiseLike<any>[] = [];
     
     // Demote existing primary jika yang baru adalah primary
     if (role === 'primary') {

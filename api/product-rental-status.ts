@@ -18,18 +18,37 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 async function refreshExpiredStatuses() {
   if (!supabase) return;
   const now = new Date().toISOString();
-  const threshold24h = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const nowMs = Date.now();
 
-  // active → expiring_soon (24 jam sebelum habis)
-  await supabase
+  // 1. Ambil semua rental aktif untuk cek threshold 10%
+  const { data: activeRentals } = await supabase
     .from('orders')
-    .update({ rental_status: 'expiring_soon' })
+    .select('id, rental_start_date, rental_end_date')
     .eq('order_type', 'rental')
     .eq('rental_status', 'active')
-    .lte('rental_end_date', threshold24h)
     .gt('rental_end_date', now);
 
-  // active/expiring_soon → expired (sudah lewat)
+  if (activeRentals && activeRentals.length > 0) {
+    // Cek mana yang sisa waktunya < 10% → expiring_soon
+    const expiringSoonIds = activeRentals
+      .filter(r => {
+        const start = new Date(r.rental_start_date).getTime();
+        const end = new Date(r.rental_end_date).getTime();
+        const totalDuration = end - start;
+        const remaining = end - nowMs;
+        return remaining > 0 && remaining < totalDuration * 0.1;
+      })
+      .map(r => r.id);
+
+    if (expiringSoonIds.length > 0) {
+      await supabase
+        .from('orders')
+        .update({ rental_status: 'expiring_soon' })
+        .in('id', expiringSoonIds);
+    }
+  }
+
+  // 2. active/expiring_soon → expired (sudah lewat)
   await supabase
     .from('orders')
     .update({ rental_status: 'expired' })

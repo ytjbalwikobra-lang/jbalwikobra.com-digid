@@ -88,7 +88,8 @@ async function dashboardStats() {
         users: { count: rpcData.totalUsers || 0 },
         products: { count: rpcData.totalProducts || 0 },
         flashSales: { count: rpcData.totalFlashSales || 0 },
-        reviews: { count: rpcData.totalReviews || 0, averageRating: Number(rpcData.averageRating) || 0 }
+        reviews: { count: rpcData.totalReviews || 0, averageRating: Number(rpcData.averageRating) || 0 },
+        activeRentals: rpcData.activeRentals || 0
       };
     }
 
@@ -152,7 +153,8 @@ async function dashboardStats() {
       users: { count: usersRes.count || 0 },
       products: { count: productsRes.count || 0 },
       flashSales: { count: flashSalesCount },
-      reviews: { count: reviewsCount, averageRating: Math.round(averageRating * 10) / 10 }
+      reviews: { count: reviewsCount, averageRating: Math.round(averageRating * 10) / 10 },
+      activeRentals: 0
     };
     
         
@@ -165,7 +167,7 @@ async function dashboardStats() {
 }
 
 function mockDashboard() {
-  return { orders:{count:0,completed:0,pending:0,revenue:0,completedRevenue:0}, users:{count:0}, products:{count:0}, flashSales:{count:0}, reviews:{count:0, averageRating:0} };
+  return { orders:{count:0,completed:0,pending:0,revenue:0,completedRevenue:0}, users:{count:0}, products:{count:0}, flashSales:{count:0}, reviews:{count:0, averageRating:0}, activeRentals:0 };
 }
 
 async function recentNotifications(limit: number) {
@@ -492,21 +494,40 @@ async function refreshRentalStatuses() {
   if (!supabase) return 0;
   
   const now = new Date().toISOString();
+  const nowMs = Date.now();
   let updated = 0;
   
   try {
-    // Active → expiring_soon (kurang dari 24 jam)
-    const soonThreshold = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const { data: expiringSoon } = await supabase
+    // 1. Ambil semua rental aktif untuk cek threshold 10%
+    const { data: activeRentals } = await supabase
       .from('orders')
-      .update({ rental_status: 'expiring_soon' })
+      .select('id, rental_start_date, rental_end_date')
       .eq('rental_status', 'active')
-      .lte('rental_end_date', soonThreshold)
-      .gt('rental_end_date', now)
-      .select('id');
-    updated += expiringSoon?.length || 0;
+      .gt('rental_end_date', now);
+
+    if (activeRentals && activeRentals.length > 0) {
+      // Cek mana yang sisa waktunya < 10% dari total durasi → expiring_soon
+      const expiringSoonIds = activeRentals
+        .filter(r => {
+          const start = new Date(r.rental_start_date).getTime();
+          const end = new Date(r.rental_end_date).getTime();
+          const totalDuration = end - start;
+          const remaining = end - nowMs;
+          return remaining > 0 && remaining < totalDuration * 0.1;
+        })
+        .map(r => r.id);
+
+      if (expiringSoonIds.length > 0) {
+        const { data: expiringSoon } = await supabase
+          .from('orders')
+          .update({ rental_status: 'expiring_soon' })
+          .in('id', expiringSoonIds)
+          .select('id');
+        updated += expiringSoon?.length || 0;
+      }
+    }
     
-    // Active/expiring_soon → expired (lewat deadline)
+    // 2. Active/expiring_soon → expired (lewat deadline)
     const { data: expired } = await supabase
       .from('orders')
       .update({ rental_status: 'expired' })

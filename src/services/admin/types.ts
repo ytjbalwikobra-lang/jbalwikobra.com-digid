@@ -14,6 +14,7 @@ export interface AdminStats {
   completedOrders: number;
   totalFlashSales: number;
   activeFlashSales: number;
+  activeRentals: number;
 }
 
 export interface Order {

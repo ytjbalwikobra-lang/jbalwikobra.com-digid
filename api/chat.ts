@@ -1057,7 +1057,7 @@ async function handleDeleteCannedResponse(req: VercelRequest, res: VercelRespons
     return respond(res, 400, { error: 'id required' });
   }
 
-  const success = await chatService.deleteCannedResponse(supabaseAdmin, id as string);
+  const success = await chatService.deleteCannedResponse(supabaseAdmin!, id as string);
 
   if (!success) {
     return respond(res, 500, { error: 'Failed to delete canned response' });
@@ -1082,7 +1082,7 @@ async function handleIncrementCannedUsage(req: VercelRequest, res: VercelRespons
     return respond(res, 400, { error: 'id required' });
   }
 
-  await chatService.incrementCannedResponseUsage(supabaseAdmin, id);
+  await chatService.incrementCannedResponseUsage(supabaseAdmin!, id);
   return respond(res, 200, { success: true });
 }
 
@@ -1099,7 +1099,7 @@ async function handleGetChatSettings(req: VercelRequest, res: VercelResponse) {
   try {
     const { data, error } = await supabaseAdmin!
       .from('chat_settings')
-      .select('id, business_hours_enabled, business_hours_start, business_hours_end, business_hours_timezone, offline_message, welcome_message, auto_reply_message, max_concurrent_chats, session_timeout_minutes, created_at, updated_at')
+      .select('id, business_hours_enabled, business_hours_start, business_hours_end, business_hours_timezone, offline_message, offline_label, welcome_message, auto_reply_message, max_concurrent_chats, session_timeout_minutes, created_at, updated_at')
       .eq('id', 'default')
       .single();
 

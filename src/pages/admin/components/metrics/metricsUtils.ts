@@ -13,7 +13,8 @@ export const defaultStats: AdminStats = {
   pendingOrders: 0,
   completedOrders: 0,
   totalFlashSales: 0,
-  activeFlashSales: 0
+  activeFlashSales: 0,
+  activeRentals: 0
 };
 
 export const formatMetrics = (stats: AdminStats) => ({
@@ -40,6 +41,10 @@ export const formatMetrics = (stats: AdminStats) => ({
   flashSales: {
     formatted: formatAnalyticsValue(stats.totalFlashSales || 0),
     subtitle: `${stats.activeFlashSales || 0} currently active`
+  },
+  rentals: {
+    formatted: formatAnalyticsValue(stats.activeRentals || 0),
+    subtitle: 'sedang aktif'
   }
 });
 

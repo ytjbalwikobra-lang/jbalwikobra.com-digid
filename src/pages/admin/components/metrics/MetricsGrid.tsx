@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Users, Package, Star, Clock, Zap } from 'lucide-react';
+import { TrendingUp, Users, Package, Star, Clock, Zap, Key } from 'lucide-react';
 import { AdminStats } from '../../../../services/adminService';
 // NOTE: MetricCard deprecated in favor of AdminStatCard
 import { AdminStatCard } from './AdminStatCard';
@@ -80,6 +80,14 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ stats, loading, classN
         value={metrics.reviews.formatted}
         sub={metrics.reviews.subtitle}
         icon={<Star className="w-6 h-6" />}
+      />
+      
+      <AdminStatCard
+        label="Active Rentals"
+        variant="warning"
+        value={metrics.rentals?.formatted || "0"}
+        sub={metrics.rentals?.subtitle || "sedang aktif"}
+        icon={<Key className="w-6 h-6" />}
       />
     </div>
   );

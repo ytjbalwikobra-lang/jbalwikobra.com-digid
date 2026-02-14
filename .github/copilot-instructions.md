@@ -1067,6 +1067,36 @@ Order dibuat → paid → admin mark completed → rental_status: active
 3. **Status refresh** dilakukan on-demand (saat halaman diakses) bukan via cron
 4. **API publik** tidak boleh mengembalikan data sensitif (order ID, customer info)
 5. **Tipe `ProductRentalStatusData`** di `src/types/index.ts` untuk response publik
+6. **Batch API** untuk listing page: `GET /api/product-rental-status?productIds=a,b,c` (maks 50 ID)
+7. **Gunakan `useRentalStatuses` hook** di listing pages — jangan N+1 fetch per produk
+
+### Indikator Rental di Listing Page
+
+Semua halaman yang menampilkan daftar produk HARUS menunjukkan status rental:
+
+| Halaman | Komponen | Indikator |
+|---|---|---|
+| `/products` | `PNProductCard` via `ProductsGrid` | Badge overlay: hijau "Rental" (tersedia), pink "Sedang Di-rental" (aktif), kuning "Hampir Selesai" (expiring_soon) |
+| `/admin/products` | `AdminProductsDirect` list & grid | Badge di kolom Status (list) atau overlay di gambar (grid) |
+| `/products/:id` | `ProductRentalStatusBadge` | Detail lengkap: progress bar, countdown, estimasi tersedia |
+
+**Pattern untuk listing page:**
+```tsx
+// 1. Import hook
+import { useRentalStatuses } from '../../hooks/useRentalStatuses';
+
+// 2. Hitung ID produk rental
+const allIds = products.map(p => String(p.id));
+const rentalIds = products.filter(p => p.hasRental).map(p => String(p.id));
+const rentalStatuses = useRentalStatuses(allIds, rentalIds);
+
+// 3. Gunakan di card
+<PNProductCard
+  rentalAvailable={product.hasRental}
+  rentalStatusData={rentalStatuses[product.id]}
+  ...
+/>
+```
 
 ---
 

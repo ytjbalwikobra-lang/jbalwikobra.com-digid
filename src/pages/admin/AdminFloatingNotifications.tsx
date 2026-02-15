@@ -135,12 +135,15 @@ const AdminFloatingNotifications: React.FC = () => {
   }, []);
 
   const handleMarkAsRead = useCallback(async (id: string) => {
+    // OPTIMISTIC UPDATE: Dismiss INSTANTLY (hook handles optimistic update + rollback)
     handleDismiss(id);
 
     try {
       await markAsRead(id);
     } catch (error) {
       console.error('[FloatingNotifications] Failed to mark as read:', error);
+      // Note: Hook will rollback the read state, but we won't restore the floating notif
+      // to avoid annoying the user with a reappearing notification
     }
   }, [handleDismiss, markAsRead]);
 

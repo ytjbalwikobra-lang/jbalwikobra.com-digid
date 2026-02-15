@@ -74,6 +74,7 @@ const AdminOrderDetail: React.FC = () => {
 
   const handleMarkComplete = async () => {
     if (!order) return;
+    
     setUpdating(true);
     setActionError(null);
 
@@ -102,8 +103,6 @@ const AdminOrderDetail: React.FC = () => {
     } catch (err) {
       console.error('Gagal menyelesaikan order:', err);
       setActionError('Gagal menyelesaikan order');
-      // Rollback on error - refetch will restore original state
-      await refetch();
     } finally {
       setUpdating(false);
     }

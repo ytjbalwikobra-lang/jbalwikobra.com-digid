@@ -132,19 +132,24 @@ const AdminNotificationsPage: React.FC = () => {
 
   const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    
+    // OPTIMISTIC UPDATE: Remove from selection and show toast INSTANTLY
+    setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+    toast.showToast('Notifikasi dihapus', 'success');
+    
     try {
-      await deleteNotification(id);
-      setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
-      toast.showToast('Notifikasi dihapus', 'success');
+      await deleteNotification(id); // Hook handles optimistic update + rollback
     } catch {
       toast.showToast('Gagal menghapus', 'error');
     }
   }, [deleteNotification, toast]);
 
   const handleMarkAllRead = useCallback(async () => {
+    // OPTIMISTIC UPDATE: Show toast INSTANTLY
+    toast.showToast('Semua notifikasi ditandai terbaca', 'success');
+    
     try {
-      await markAllAsRead();
-      toast.showToast('Semua notifikasi ditandai terbaca', 'success');
+      await markAllAsRead(); // Hook handles optimistic update + rollback
     } catch {
       toast.showToast('Gagal menandai terbaca', 'error');
     }
@@ -153,10 +158,14 @@ const AdminNotificationsPage: React.FC = () => {
   const handleBulkDelete = useCallback(async () => {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
+    
+    // OPTIMISTIC UPDATE: Clear selection and show toast INSTANTLY
+    setSelectedIds(new Set());
+    toast.showToast(`${count} notifikasi dihapus`, 'success');
+    
     try {
       await Promise.all(Array.from(selectedIds).map(id => deleteNotification(id)));
-      setSelectedIds(new Set());
-      toast.showToast(`${count} notifikasi dihapus`, 'success');
+      // Hook handles optimistic update + rollback for each notification
     } catch {
       toast.showToast('Gagal menghapus notifikasi', 'error');
     }

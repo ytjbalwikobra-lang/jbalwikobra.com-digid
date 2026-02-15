@@ -131,39 +131,60 @@ const AdminCannedResponsesPage: React.FC = () => {
     }
   }, [form, editingId, toast, loadResponses]);
 
-  /** Hapus template */
+  /** Hapus template — dengan optimistic update */
   const handleDelete = useCallback(async () => {
     if (!deleteId) return;
+    
+    // Optimistic update: hapus dari list dulu untuk instant feedback
+    const previousResponses = [...responses];
+    setResponses(prev => prev.filter(r => r.id !== deleteId));
+    setDeleteId(null);
+    toast?.showToast('Template berhasil dihapus', 'success');
+    
+    // Background API call
     try {
       const result = await adminDeleteCannedResponse(deleteId);
       if (result.error) {
+        // Revert jika API gagal
+        setResponses(previousResponses);
         toast?.showToast(result.error, 'error');
         return;
       }
-      toast?.showToast('Template berhasil dihapus', 'success');
-      setDeleteId(null);
+      // Success - reload untuk sync final state
       loadResponses();
     } catch (err: any) {
+      // Revert jika exception
+      setResponses(previousResponses);
       toast?.showToast(err.message || 'Gagal menghapus', 'error');
     }
-  }, [deleteId, toast, loadResponses]);
+  }, [deleteId, toast, loadResponses, responses]);
 
-  /** Toggle aktif/nonaktif */
+  /** Toggle aktif/nonaktif — dengan optimistic update */
   const handleToggleActive = useCallback(async (item: ChatCannedResponse) => {
+    // Optimistic update: toggle isActive dulu untuk instant feedback
+    const previousResponses = [...responses];
+    setResponses(prev => prev.map(r => 
+      r.id === item.id ? { ...r, isActive: !r.isActive } : r
+    ));
+    
+    // Background API call
     try {
       const result = await adminUpdateCannedResponse(item.id, { isActive: !item.isActive });
       if (result.error) {
+        // Revert jika API gagal
+        setResponses(previousResponses);
         toast?.showToast(result.error, 'error');
         return;
       }
-      // Optimistic update
-      setResponses(prev => prev.map(r => 
-        r.id === item.id ? { ...r, isActive: !r.isActive } : r
-      ));
+      toast?.showToast(`Template ${!item.isActive ? 'diaktifkan' : 'dinonaktifkan'}`, 'success');
+      // Success - reload untuk sync final state
+      loadResponses();
     } catch (err: any) {
-      toast?.showToast(err.message || 'Gagal mengubah status', 'error');
+      // Revert jika exception
+      setResponses(previousResponses);
+      toast?.showToast(err.message || 'Gagal update', 'error');
     }
-  }, [toast]);
+  }, [toast, loadResponses, responses]);
 
   /** Filter template */
   const filtered = filterCategory === 'all'

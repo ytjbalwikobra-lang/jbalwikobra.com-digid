@@ -154,8 +154,17 @@ const AdminRentalTrackingPage: React.FC = () => {
     };
   }, [fetchRentals]);
 
-  /** Tandai rental dikembalikan */
+  /** Tandai rental dikembalikan — dengan optimistic update */
   const handleMarkReturned = async (orderId: string) => {
+    // Optimistic update: update state dulu untuk instant feedback
+    const previousRentals = [...rentals];
+    setRentals(prev => prev.map(r => 
+      r.id === orderId ? { ...r, rental_status: 'returned' as const } : r
+    ));
+    
+    toast?.showToast('Rental ditandai sebagai dikembalikan', 'success');
+
+    // Background API call
     try {
       const sessionToken = localStorage.getItem('session_token');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -168,10 +177,12 @@ const AdminRentalTrackingPage: React.FC = () => {
       });
 
       if (!response.ok) throw new Error('Gagal update status');
-      toast?.showToast('Rental ditandai sebagai dikembalikan', 'success');
+      // Success - state sudah diupdate via optimistic, fetch ulang untuk sync
       await fetchRentals(true);
     } catch (err: any) {
-      toast?.showToast(err.message || 'Gagal update', 'error');
+      // Revert optimistic update jika API gagal
+      setRentals(previousRentals);
+      toast?.showToast(err.message || 'Gagal update, status dikembalikan', 'error');
     }
   };
 

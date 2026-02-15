@@ -75,6 +75,7 @@ export async function createOrderNotification(
       paid_order: '💰 Pembayaran Diterima',
       new_rent: '🎮 Rental Baru',
       paid_rent: '💰 Rental Dibayar',
+      expiring_rent: '⏰ Rental Akan Berakhir',
       order_cancelled: '❌ Order Dibatalkan'
     };
 
@@ -88,6 +89,8 @@ export async function createOrderNotification(
       message = `[RENTAL] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
     } else if (finalType === 'paid_rent') {
       message = `[RENTAL PAID] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
+    } else if (finalType === 'expiring_rent') {
+      message = `[RENTAL EXPIRING] Nama: ${customerName} • Produk: ${productName} • Durasi: ${rentalDuration || '-'}`;
     } else if (finalType === 'order_cancelled') {
       const orderTypeLabel = isRental ? 'RENTAL' : 'PURCHASE';
       message = `[${orderTypeLabel} CANCELLED] Nama: ${customerName} • Produk: ${productName} • Nilai: ${formatAmount(amount)}`;
@@ -103,6 +106,7 @@ export async function createOrderNotification(
 
     // Determine if this is a payment notification
     const isPaidNotification = finalType === 'paid_order' || finalType === 'paid_rent';
+    const isExpiringRent = finalType === 'expiring_rent';
 
     const notification = {
       type: finalType,
@@ -114,8 +118,8 @@ export async function createOrderNotification(
       amount: Math.round(Number(amount)), // Ensure it's an integer for BIGINT
       is_read: false,
       metadata: {
-        priority: isPaidNotification ? 'high' : 'normal',
-        category: isPaidNotification ? 'payment' : 'order',
+        priority: (isPaidNotification || isExpiringRent) ? 'high' : 'normal',
+        category: isPaidNotification ? 'payment' : isExpiringRent ? 'expiring_rental' : 'order',
         order_type: orderType || 'purchase',
         customer_phone: customerPhone,
         original_order_id: orderId,

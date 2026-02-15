@@ -60,6 +60,8 @@ export function useRentalStatuses(
   useEffect(() => {
     if (!supabase || idsToFetchRef.current.length === 0) return;
 
+    let debounceTimer: NodeJS.Timeout | null = null;
+
     const channel = supabase
       .channel('rental-status-changes')
       .on(
@@ -74,13 +76,19 @@ export function useRentalStatuses(
           const changedProductId = (payload.new as any)?.product_id;
           const orderType = (payload.new as any)?.order_type;
           if (orderType === 'rental' && changedProductId && idsToFetchRef.current.includes(changedProductId)) {
-            refetch();
+            // Debounce: tunggu 500ms sebelum refetch untuk menghindari duplicate call
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+              refetch();
+              debounceTimer = null;
+            }, 500);
           }
         }
       )
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase?.removeChannel(channel);
     };
   }, [refetch]);

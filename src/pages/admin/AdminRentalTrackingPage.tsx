@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import AdminHeroSection from './components/ui/AdminHeroSection';
+import { supabase } from '../../services/supabase';
 
 /** Tipe data rental dari API */
 interface RentalOrder {
@@ -117,6 +118,40 @@ const AdminRentalTrackingPage: React.FC = () => {
 
   useEffect(() => {
     fetchRentals();
+  }, [fetchRentals]);
+
+  // Realtime subscription — auto-refresh saat rental_status berubah
+  useEffect(() => {
+    if (!supabase) return;
+
+    let debounceTimer: NodeJS.Timeout | null = null;
+
+    const channel = supabase
+      .channel('admin-rental-tracking')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: 'order_type=eq.rental'
+        },
+        (payload) => {
+          console.log('[AdminRentalTrackingPage] Rental updated:', payload);
+          // Debounce: tunggu 1 detik sebelum refetch untuk menghindari multiple calls
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            fetchRentals(true);
+            debounceTimer = null;
+          }, 1000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase?.removeChannel(channel);
+    };
   }, [fetchRentals]);
 
   /** Tandai rental dikembalikan */

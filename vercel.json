@@ -25,6 +25,10 @@
     {
       "path": "/api/cron/chat-cleanup",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/rental-status-refresh",
+      "schedule": "*/15 * * * *"
     }
   ],
   "functions": {
@@ -42,6 +46,9 @@
     },
     "api/cron/notification-sync.ts": {
       "maxDuration": 15
+    },
+    "api/cron/rental-status-refresh.ts": {
+      "maxDuration": 20
     }
   },
   "headers": [

@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { ShoppingBag, CreditCard, User, XCircle, Star, AlertCircle, Home, Info, DollarSign } from 'lucide-react';
+import { ShoppingBag, CreditCard, User, XCircle, Star, AlertCircle, Home, Info, DollarSign, Clock } from 'lucide-react';
 
 // Color constants referencing CSS variables in cyber-compact.css
 // Use var() in JSX class names; these raw values are for inline `style` props only
@@ -41,6 +41,7 @@ export type AdminNotificationType =
   | 'new_review'
   | 'new_rent'
   | 'paid_rent'
+  | 'expiring_rent'
   | 'system'
   | string;
 
@@ -101,6 +102,8 @@ export const getNotificationIcon = (type: AdminNotificationType): React.ReactNod
       return <Home className="w-5 h-5 text-[var(--admin-orange)]" />;
     case 'paid_rent':
       return <DollarSign className="w-5 h-5 text-[var(--admin-success)]" />;
+    case 'expiring_rent':
+      return <Clock className="w-5 h-5 text-[var(--admin-warning)]" />;
     case 'order_cancelled':
       return <XCircle className="w-5 h-5 text-[var(--admin-error)]" />;
     case 'new_user':
@@ -158,6 +161,16 @@ export const getNotificationStyle = (type: AdminNotificationType): NotificationS
         gradient: 'from-[var(--admin-warning)]/20 to-[var(--admin-success)]/10',
         border: 'border-[var(--admin-warning-border)]',
         icon: 'bg-gradient-to-br from-[var(--admin-warning)] to-[var(--admin-success-dark)]',
+        badge: 'bg-[var(--admin-warning-bg)] text-[var(--admin-warning)] border-[var(--admin-warning-border)]',
+        glow: 'shadow-[var(--admin-warning)]/20',
+        bg: 'bg-[var(--admin-warning-bg)]',
+        pulse: 'bg-[var(--admin-warning)]',
+      };
+    case 'expiring_rent':
+      return {
+        gradient: 'from-[var(--admin-warning)]/20 to-[var(--admin-error)]/10',
+        border: 'border-[var(--admin-warning-border)]',
+        icon: 'bg-gradient-to-br from-[var(--admin-warning)] to-[var(--admin-error)]',
         badge: 'bg-[var(--admin-warning-bg)] text-[var(--admin-warning)] border-[var(--admin-warning-border)]',
         glow: 'shadow-[var(--admin-warning)]/20',
         bg: 'bg-[var(--admin-warning-bg)]',
@@ -223,6 +236,8 @@ export const getNotificationTypeLabel = (type: AdminNotificationType): string =>
       return 'Sewa Baru';
     case 'paid_rent':
       return 'Pembayaran Sewa';
+    case 'expiring_rent':
+      return 'Rental Habis';
     case 'order_cancelled':
       return 'Dibatalkan';
     case 'new_user':
@@ -263,7 +278,7 @@ export const formatNotificationTime = (dateString: string): string => {
 /**
  * Order-related notification types
  */
-const ORDER_NOTIFICATION_TYPES = ['new_order', 'paid_order', 'new_rent', 'paid_rent', 'order_cancelled'] as const;
+const ORDER_NOTIFICATION_TYPES = ['new_order', 'paid_order', 'new_rent', 'paid_rent', 'expiring_rent', 'order_cancelled'] as const;
 
 /**
  * Check if notification is order-related
@@ -313,6 +328,13 @@ export const getStatusBadge = (notification: AdminNotificationData): StatusBadge
       bg: ADMIN_COLORS.warningBg
     };
   }
+  if (notification.type === 'expiring_rent') {
+    return { 
+      label: 'Expiring', 
+      color: ADMIN_COLORS.warning, 
+      bg: ADMIN_COLORS.warningBg
+    };
+  }
   if (notification.type === 'order_cancelled') {
     return { 
       label: 'Cancelled', 
@@ -331,7 +353,7 @@ export const getStatusBadge = (notification: AdminNotificationData): StatusBadge
  * Check if notification type is high priority (should play sound)
  */
 export const isHighPriorityNotification = (type: AdminNotificationType): boolean => {
-  return ['paid_order', 'paid_rent', 'new_order', 'new_rent'].includes(type);
+  return ['paid_order', 'paid_rent', 'new_order', 'new_rent', 'expiring_rent'].includes(type);
 };
 
 // ========================================

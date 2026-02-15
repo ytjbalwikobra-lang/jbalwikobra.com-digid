@@ -422,7 +422,7 @@ async function logAdminActivity(
   }
 }
 
-/** Ambil daftar rental aktif */
+/** Ambil daftar rental aktif — optimized query dengan kolom minimal */
 async function listActiveRentals() {
   if (!supabase) return { data: [], count: 0 };
   
@@ -430,10 +430,20 @@ async function listActiveRentals() {
     const { data, error, count } = await supabase
       .from('orders')
       .select(`
-        id, customer_name, customer_email, customer_phone,
-        product_name, product_id, amount, rental_duration,
-        rental_start_date, rental_end_date, rental_status, 
-        status, completed_at, completed_by, created_at
+        id, 
+        customer_name, 
+        customer_email, 
+        customer_phone,
+        product_name, 
+        product_id, 
+        amount, 
+        rental_duration,
+        rental_start_date, 
+        rental_end_date, 
+        rental_status, 
+        status, 
+        completed_at, 
+        created_at
       `, { count: 'exact' })
       .eq('order_type', 'rental')
       .in('status', ['paid', 'completed'])
@@ -1044,17 +1054,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
       case 'active-rentals': {
-        // Refresh status rental dulu lalu ambil daftar
+        // Refresh status rental dulu lalu ambil daftar (cache 1 menit)
         await refreshRentalStatuses();
         const result = await listActiveRentals();
-        return respond(res, 200, { success: true, ...result }, 30);
+        return respond(res, 200, { success: true, ...result }, 60);
       }
       case 'product-rental-status': {
         const productId = typeof req.query.productId === 'string' ? req.query.productId : '';
         if (!productId) return respond(res, 400, { error: 'missing_product_id' });
         await refreshRentalStatuses();
         const result = await getProductRentalStatus(productId);
-        return respond(res, 200, { data: result }, 60);
+        return respond(res, 200, { data: result }, 120);
       }
       case 'activity-logs': {
         // Hanya super_admin yang bisa akses

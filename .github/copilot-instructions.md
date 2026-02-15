@@ -1224,3 +1224,39 @@ Contoh: [api/product-rental-status.ts](../api/product-rental-status.ts) untuk st
 - `api/admin.ts` selalu memvalidasi session admin (`validateAdminAuth`)
 - Endpoint publik yang ditaruh di `admin.ts` akan selalu 401
 - Pisahkan ke file sendiri agar tidak butuh auth header
+
+### Orphaned Database Triggers — Selalu Drop Saat Migrasi Tabel
+
+**KRITIKAL**: Saat migrasi dari satu tabel ke tabel lain, WAJIB drop semua trigger yang reference tabel lama.
+
+**Contoh Kasus (Feb 2026):**
+- Migration 013 membuat tabel `profiles` dengan trigger `on_auth_user_created`
+- Migration 041 migrasi ke tabel `users` dengan trigger baru `sync_auth_user_to_users_trigger`
+- **Masalah**: Trigger lama TIDAK di-drop → kedua trigger berjalan bersamaan
+- Trigger lama mencoba INSERT ke `profiles` (tidak ada) → error: "relation public.profiles does not exist"
+- Google OAuth signup GAGAL total selama berbulan-bulan
+
+**Aturan Wajib:**
+```sql
+-- ✅ BENAR: Saat migrasi tabel, DROP semua trigger dan function lama
+DROP TRIGGER IF EXISTS old_trigger_name ON schema.table;
+DROP FUNCTION IF EXISTS public.old_function_name();
+
+-- Baru buat trigger & function baru
+CREATE OR REPLACE FUNCTION public.new_function_name() ...
+CREATE TRIGGER new_trigger_name ...
+```
+
+**Verifikasi di migration:**
+```sql
+-- Cek trigger yang masih aktif
+SELECT tgname, c.relname, n.nspname
+FROM pg_trigger t
+JOIN pg_class c ON t.tgrelid = c.oid
+JOIN pg_namespace n ON c.relnamespace = n.oid
+WHERE n.nspname = 'public' AND c.relname = 'your_table';
+
+-- Jika masih ada trigger lama, DROP eksplisit
+```
+
+**Ref**: Migrations 074, 075, 076 (fix Google OAuth error)
